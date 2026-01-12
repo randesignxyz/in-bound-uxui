@@ -59,41 +59,19 @@ export default function ProbationListPage() {
   }
   const pageRef = useRef<any>(null);
   Grid.useBreakpoint();
-  const [filter, setFilter] =
-    useState<TableViewSearchParams<ProbationAdvanceSearchParams>>({
-      pagination: { current: 1, pageSize: 20 },
-      criteria: {
-        status: "ALL",
-        advanceSearch: {
-          buIds: [],
-          depIds: [],
-          integratedStatus: "ALL",
-          status: "ALL",
-          pendingFilter: [],
-        },
+  const [filter, setFilter] = useState<TableViewSearchParams<ProbationAdvanceSearchParams>>({
+    pagination: { current: 1, pageSize: 20 },
+    criteria: {
+      status: 'ALL',
+      advanceSearch: {
+        buIds: [],
+        depIds: [],
+        integratedStatus: 'ALL',
+        status: 'ALL',
+        pendingFilter: [],
       },
-    });
-  const onFilterStatusHandler = (values: LightFilterProp) => {
-    setFilter((prev) => ({
-      ...prev,
-      criteria: {
-        ...prev.criteria,
-        advanceSearch: {
-          ...prev.criteria?.advanceSearch,
-          pendingFilter:
-            values?.pendingFilter && values.pendingFilter.length > 0
-              ? values.pendingFilter
-              : [],
-        },
-      },
-      pagination: { ...prev.pagination, current: 1 },
-    }));
-
-    actionRef.current?.reload?.();
-  };
-  const [advanceSearchParams, setAdvanceSearchParams] = useState<AppraisalEmpAdvanceSearchParams>({
-    status: 'ALL',
-  })
+    },
+  });
   const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
   const [total, setTotal] = useState<ProbationEmpStatusTotal | null>(null);
   const { data, isLoading, refetch } = useQuery(

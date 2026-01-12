@@ -1,7 +1,7 @@
 import DescriptionDisplay from '@/components/Descriptions';
 import { simpleRequestActions } from '@/services/model';
 import type { LeadDetail } from '@/services/sale/data';
-import { ProDescriptions, ProForm, ProList } from '@ant-design/pro-components';
+import { ProColumns, ProDescriptions, ProForm, ProList, ProTable } from '@ant-design/pro-components';
 import { Button, Card, Divider, Flex, message, Modal, Row, Space, Spin, Tabs, Tag, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { useEffect, useState } from 'react';
@@ -12,6 +12,8 @@ import ActivityLog from '@/components/ActivityLog';
 import ImagePreview from '@/components/ImagePreview';
 import { GoogleMap, Marker, Polyline, InfoWindow, useJsApiLoader } from '@react-google-maps/api';
 import { SupporterServiceAPI } from '../supporter/services';
+import moment from 'moment';
+import { renderDiffOnly } from '../supporter/po/dynamic_render';
 
 interface Props {
   onEdit: (data?: LeadDetail) => void;
@@ -269,33 +271,48 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
               label: "Activity",
               children: <Card>
                 <ProList
-                  dataSource={lead?.logs}
-
+                  // dataSource={lead?.logs}
+                  request={async () => {
+                    const res = await SupporterServiceAPI(requestActions).page({
+                      criteria: {
+                        entryId: lead?.id,
+                        type: "Lead"
+                      }
+                    })
+                    return {
+                      data: res.items,
+                      success: true,
+                      total: res.total
+                    }
+                  }}
                   metas={{
                     title: {
-                      dataIndex: "activityType"
+                      dataIndex: "changeType"
                     },
                     subTitle: {
-                      dataIndex: "login"
+                      dataIndex: "createdBy"
                     },
                     description: {
-                      render: (_, r) => <Space >
-                        <Typography.Text type='secondary'>{r.remarks}</Typography.Text>
-                        <Space>
-                          {r.attached?.split(",")?.map(p => {
-                            return p ?
-                              <ImagePreview
-                                height={50}
-                                fileId={p}
-                              />
-                              : <></>
-                          })}
-                        </Space>
-                      </Space>
+                      render: (_, r) => <ProTable
+                        size="small"
+                        // headerTitle={moment(data?.createdDate).format("DD-MM-YYYY")}
+                        columns={[
+                          {
+                            // title: "Changed Data",
+                            render: (_, record) =>
+                              renderDiffOnly(record.oldValue, record.newValue),
+                          },
+                        ]}
+                        dataSource={r ? [r] : []}
+                        pagination={false}
+                        rowKey="id"
+                        toolBarRender={false}
+                        search={false}
+                      />
                     },
                     actions: {
-                      dataIndex: "activityDate",
-                      valueType: "date"
+                      dataIndex: "createdDate",
+                      valueType: "dateTime"
                     }
                   }}
 

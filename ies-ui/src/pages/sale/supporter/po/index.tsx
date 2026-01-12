@@ -86,27 +86,30 @@ export default () => {
                         <Space size={12}>
                             <Input.Search placeholder="Search"
                                 onSearch={(value) => {
-                                    setFilter({
+                                    setFilter((prev) => ({
                                         criteria: {
+                                            ...prev.criteria,
                                             searchValue: value,
                                         }
-                                    })
+                                    }))
                                 }}
                             />
                             <Radio.Group
                                 optionType="button"
                                 defaultValue={"all"}
                                 onChange={(e) => {
-                                    setFilter({
+                                    setFilter((prev) => ({
                                         criteria: {
+                                            ...prev.criteria,
                                             type: e.target.value,
                                         }
-                                    })
+                                    }))
                                 }}
                                 options={[
                                     { label: "All", value: "all" },
                                     { label: "PO", value: "PurchaseOrder" },
                                     { label: "Invoice", value: "Invoice" },
+                                    // { label: "Lead", value: "Lead" },
                                 ]}
                             />
                         </Space>
@@ -185,13 +188,28 @@ export default () => {
                     rowKey={"id"}
                     columns={[
                         {
-                            title: "PO Code",
-                            render: (_, r) => r?.entry?.purchaseOrderCode ?? r.entry?.invoiceNo
+                            title: "Entity Code",
+                            dataIndex: "entityCode"
+                            // render: (_, r) => {
+                            //     switch (r.type) {
+                            //         case "PurchaseOrder":
+                            //             return r.entry?.purchaseOrderCode;
+                            //         case "Invoice":
+                            //             return r.entry?.invoiceNo;
+                            //         case "Lead":
+                            //             return r.entry?.leadCode;
+                            //         default:
+                            //             return "";
+                            //     }
+                            // }
                         },
                         {
-                            title: "Type",
+                            title: "Action",
                             dataIndex: "changeType",
-                            render: (_, r) => r?.changeType === "PO_ROLLBACK" ? "Update Purchase Order Into" : r.changeType === "PO_CHANGE_ITEM" ? "Update Item" : "Update Invoice"
+                            render: (_, r) => r?.changeType === "PO_ROLLBACK" ? "Update Purchase Order Into"
+                                : r.changeType === "PO_CHANGE_ITEM" ? "Update Item"
+                                    : r.changeType === "LEAD_TRANSFER" ? "Transfer"
+                                        : "Update Invoice"
                         },
                         {
                             title: "Issue By",

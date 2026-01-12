@@ -176,23 +176,38 @@ export default [
     access: 'canAccessDeliveryTruck',
     component: './delivery/truck',
   },
-  // {
-  //   path: '/delivery/associate/del/:view/*',
-  //   name: 'associateDel',
-  //   icon: 'UnorderedListOutlined',
-  //   hideInMenu: 'true',
-  //   access: 'canAccesAllocateDelView',
-  //   component: './delivery/associate/del',
-  // },
-  // {
-  //   path: '/delivery/associate/sale/:view/*',
-  //   name: 'associateSale',
-  //   icon: 'UnorderedListOutlined',
-  //   hideInMenu: 'true',
-  //   access: 'canAcceAllocateSale',
-  //   component: './delivery/associate/sale',
-  // },
-
+  {
+      path: '/delivery/allocate/:view/*',
+      name: 'allocateDel',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccesAllocateDelView',
+      component: './delivery/allocate',
+    },
+    {
+      path: '/sale/allocate/:view/*',
+      name: 'allocateDel',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccesAllocateSaleViewMenu',
+      component: './sale/allocate',
+    },
+    {
+      path: '/delivery/location',
+      name: 'delivery-tracking',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccesAllocateDelView',
+      component: './delivery/allocate/location',
+    },
+    {
+      path: '/sale/location',
+      name: 'delivery-tracking',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccesAllocateDelView',
+      component: './sale/allocate/location',
+    },
 
   /************************ Queque  ******************/
 

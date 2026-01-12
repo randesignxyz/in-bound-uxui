@@ -10,6 +10,8 @@ import CloseSo from './CloseSo';
 import OrderFormView from './OrderFormView';
 import SapPosting from './SapPosting';
 import SoFormView from './SoFormView';
+import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
+import { simpleRequestActions } from '@/services/model';
 
 interface Props {
   id?: number;
@@ -21,6 +23,7 @@ interface Props {
 }
 
 const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
+  const requestActions = simpleRequestActions();
   const { state, actions, modals } = Model();
   const access = useAccess();
   useEffect(() => {

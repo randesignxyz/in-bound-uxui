@@ -7,18 +7,16 @@ import { useAccess, useQuery } from "@umijs/max";
 import { fetchDataListService, singleRequest } from "@/services/apiGateway";
 import { Moment } from "moment";
 import { simpleRequestActions } from "@/services/model";
-// import { AreaList, Location } from "../data";
 import { ArrowLeftOutlined, ReloadOutlined, } from "@ant-design/icons";
 import DeliveryList from "./DeliveryList";
 import DeliveryView from "./DeliveryView";
 import { InstanceDetail } from "@/services/delivery/instance.types";
 import { InstanceSrvParams } from "@/services/delivery/instance-service-params";
 import dayjs from "dayjs";
-import { DNList, ListDnDetailParams } from "@/pages/delivery/allocate/data";
+import { DNList, AreaList, Location } from "@/pages/delivery/allocate/data";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FloatingCard } from "../displayCard";
 import { AllocateServiceAPI } from "@/pages/delivery/allocate/service";
-import { AreaList, Location } from "@/pages/delivery/allocate/data";
 
 interface DNListState {
     list: DNList[];
@@ -35,6 +33,7 @@ export default () => {
     const [visible, setVisible] = useState(false)
     const [select, setSelect] = useState<DNList[]>([])
     const [drawerVisible, setDrawerVisible] = useState(false);
+    const [claimLoading, setClaimLoading] = useState(false);
     const [drawerItems, setDrawerItems] = useState<DNList[]>([]);
     const access = useAccess();
     const [useExisting, setUseExisting] = useState(false);
@@ -76,12 +75,18 @@ export default () => {
     //         }
     //     })
     // };
+    useEffect(() => {
+        if (claimOpen) {
+            setUseExisting(false);
+            setSelectedClaimedLine(null);
+        }
+    }, [claimOpen]);
 
     const onViewHandler = (item: DNList) => {
         if (!state?.list) return;
-
+        console.log('state.list:', state.list);
         // find all DNs with the same shippingAddress + lat + lng
-        const sameGroup = state.list.filter(
+        const sameGroup = (state.list.items ?? []).filter(
             dn =>
                 dn.shippingAddress === item.shippingAddress &&
                 dn.latitude === item.latitude &&
@@ -239,6 +244,7 @@ export default () => {
             <Modal
                 open={claimOpen}
                 title="Pick"
+                confirmLoading={claimLoading}
                 onCancel={() => {
                     setClaimOpen(false);
                     setClaimIds([])
@@ -247,32 +253,68 @@ export default () => {
                     setCardOpen({ visible: false })
                 }}
                 onOk={async () => {
-                    const sapLines = select.flatMap(dn =>
-                        (dn.deliveryItems ?? []).map(it => ({
-                            lineNum: Number(it.sap_line_num),                 // SAP line number
-                            shipDate: (dn.deliveryDate)
-                        }))
-                    );
-                    const soDocEntries = [...new Set(
-                        select.map(v => v.so_doc_entry)
-                    )];
-                    for (const soDocEntry of soDocEntries) {
+                    // const sapLines = select.flatMap(dn =>
+                    //     (dn.deliveryItems ?? []).map(it => ({
+                    //         lineNum: Number(it.sap_line_num),                 // SAP line number
+                    //         shipDate: (dn.deliveryDate)
+                    //     }))
+                    // );
+                    // const soDocEntries = [...new Set(
+                    //     select.map(v => v.so_doc_entry)
+                    // )];
+                    setClaimLoading(true);
+                    try {
+                        const rawLines = select.flatMap(dn =>
+                            (dn.deliveryItems ?? []).map(it => ({
+                                soDocEntry: String(dn.so_doc_entry),
+                                lineNum: Number(it.sap_line_num),
+                                shipDate: dn.deliveryDate,
+                            }))
+                        );
+
+                        const uniqueMap = new Map<string, any>();
+                        rawLines.forEach(l => {
+                            const key = `${l.soDocEntry}_${l.lineNum}`;
+                            if (!uniqueMap.has(key)) uniqueMap.set(key, l);
+                        });
+
+                        const del_item = Array.from(uniqueMap.values()).sort((a, b) =>
+                            a.soDocEntry === b.soDocEntry
+                                ? a.lineNum - b.lineNum
+                                : a.soDocEntry.localeCompare(b.soDocEntry)
+                        );
                         await services.ClaimDn(
                             claimIds,
                             access.currentUser?.login,
                             'Pick',
                             'Pick DN',
                             useExisting ? selectedClaimedLine : null,
-                            soDocEntry,
-                            sapLines
+                            del_item
                         );
+                        // for (const soDocEntry of soDocEntries) {
+                        //     await services.ClaimDn(
+                        //         claimIds,
+                        //         access.currentUser?.login,
+                        //         'Pick',
+                        //         'Pick DN',
+                        //         useExisting ? selectedClaimedLine : null,
+                        //         soDocEntry,
+                        //         sapLines
+                        //     );
+                        // }
+                        message.success('Updated successfully');
+                        setClaimOpen(false);
+                        setClaimIds([])
+                        setClaimedLines([])
+                        setSelect([])
+                        setCardOpen({ visible: false })
+                        navigate("/sale/allocate/list")
+                    } catch (err: any) {
+                        console.error(err);
+                        message.error(err?.message || 'Claim failed');
+                    } finally {
+                        setClaimLoading(false);
                     }
-                    message.success('Updated successfully');
-                    setClaimOpen(false);
-                    setClaimIds([])
-                    setClaimedLines([])
-                    setSelect([])
-                    setCardOpen({ visible: false })
                 }}
             >
                 <Checkbox

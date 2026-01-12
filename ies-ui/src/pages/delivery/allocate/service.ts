@@ -155,6 +155,12 @@ const AllocateAction = {
         actionName: 'list-claimed-line',
         payload: {},
     }),
+    listCount: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-list-count',
+        payload: {},
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -235,6 +241,10 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             ),
         list_claimed_line: () =>
             singleRequest<AreaList>(AllocateAction.lisClaimedLine())(
+                requestAction
+            ),
+        list_count: () =>
+            singleRequest<AreaList>(AllocateAction.listCount())(
                 requestAction
             ),
     }

@@ -49,7 +49,6 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         try {
           const rs = await actions.postSo(id, comment);
           // const rs = await actions.postSoNew(id, comment);
-          await AllocateServiceAPI(requestActions).syncAllocate();
           actions.fetchSo(id);
           modals.hideModal('sap-posting');
           message.success(`So has been posted sucessfully. SAP Doc No: ${rs.data}.`);

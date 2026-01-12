@@ -73,6 +73,12 @@ export type ProbationAdvanceSearchParams = {
     depIds?: number[];
     integratedStatus?: string;
     status?: string;
+    pendingFilter?: (
+      | "REQUESTED"
+      | "SETTING"
+      | "IN_PROGRESS"
+      | "REVIEWING"
+      )[];
   };
 };
 

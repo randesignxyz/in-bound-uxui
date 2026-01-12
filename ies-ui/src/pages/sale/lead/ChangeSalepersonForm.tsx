@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import { LeadDetail } from "@/services/sale/data";
 import { useForm } from "antd/es/form/Form";
 import { UpdateCustomerOwnerEntry } from "./data";
+import { useQuery } from "@umijs/max";
+import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 
 interface Props extends FormModalProps {
     onSave: (data: UpdateCustomerOwnerEntry) => void
@@ -25,11 +27,21 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
     const [searchValue, setSearchValue] = useState('');
     const [split, setSplit] = useState(false);
 
+    const [filter, setFilter] = useState<TableViewSearchParams<any>>({
+    })
+
     useEffect(() => {
         props.open && form.resetFields();
         props.open && setDataSource([]);
         props.open && setKeySelected([]);
     }, [props.open]);
+
+    const { data, isFetching, refetch } = useQuery({
+        queryKey: ['lead', filter],
+        queryFn: async () => services.listLead(filter),
+        refetchOnWindowFocus: false,
+    });
+
 
     return (
         <FormModalComp
@@ -40,7 +52,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                 const dataForm = await form.validateFields(['saleperson']);
                 const entry = {
                     salePersonId: dataForm.saleperson,
-                    customerList: keySelected
+                    customerList: [...new Set(keySelected)]
                 }
                 onSave(entry);
             }}
@@ -56,8 +68,14 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                 placeholder={"Search by Saleperson"}
                                 width={"lg"}
                                 onChange={(e: string) => {
-                                    setParam({ empNo: e, });
-                                    actionRef.current?.reload();
+                                    setFilter((s) => ({
+                                        ...s,
+                                        criteria: {
+                                            ...s.criteria,
+                                            empNo: e,
+                                            searchValue: e
+                                        }
+                                    }));
                                 }}
                                 rules={[
                                     { required: true }
@@ -78,7 +96,16 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                 value={searchValue}
                                 allowClear
                                 onSearch={(e) => {
-                                    setParam({ empNo: e, split });
+                                    setFilter((s) => ({
+                                        criteria: {
+                                            ...s.criteria,
+                                            searchValue: e
+                                        },
+                                        pagination: {
+                                            current: 1,
+                                            pageSize: 20
+                                        }
+                                    }))
                                     actionRef.current?.reload?.();
                                 }}
                             />
@@ -110,6 +137,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                             size="small"
                             options={false}
                             rowSelection={{
+                                selections: ["SELECT_ALL"],
                                 selectedRowKeys: keySelected.filter((value, index, self) => self.indexOf(value) === index).filter(p => p != undefined),
                                 onSelect(item, selected) {
                                     if (selected) {
@@ -130,7 +158,23 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                         })
                                     }
                                 },
-                                onChange(_, selectedRows, { type },) {
+                                onChange: async (_, selectedRows, { type },) => {
+                                    if (type === "all") {
+                                        const total = data?.total || 0;
+                                        const max = total <= 3000 ? total : 3000;
+
+                                        // 🔹 force reload to fetch all rows
+                                        setFilter((prev) => ({
+                                            ...prev,
+                                            pagination: {
+                                                current: 1,
+                                                pageSize: max,
+                                            },
+                                        }));
+                                        // normal page selection
+                                        setKeySelected((v) => [...v, ...selectedRows.map(o => o?.id)]);
+                                    }
+
                                     if (type === "none") {
                                         setKeySelected([])
                                     }
@@ -138,30 +182,44 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                             }}
                             rowKey={"id"}
                             actionRef={actionRef}
-                            request={async ({ keyword, pageSize, current }) => {
-                                const data = await LeadServiceAPI(requestActions).listLead({
-                                    criteria: {
-                                        searchValue: keyword || param?.empNo,
-                                    },
-                                    pagination: {
-                                        current: current,
-                                        pageSize: pageSize
-                                    }
-                                });
-                                return Promise.resolve({
-                                    data: data.items,
-                                    sucess: true,
-                                    total: data.total
-                                });
+                            dataSource={data?.items}
+                            loading={isFetching}
+                            pagination={{
+                                total: data?.total,
+                                onChange(page, pageSize) {
+                                    setFilter({
+                                        ...filter,
+                                        pagination: {
+                                            current: page,
+                                            pageSize: pageSize
+                                        }
+                                    })
+                                },
                             }}
+                            // request={async ({ keyword, pageSize, current }) => {
+                            //     const data = await LeadServiceAPI(requestActions).listLead({
+                            //         criteria: {
+                            //             searchValue: keyword || param?.empNo,
+                            //         },
+                            //         pagination: {
+                            //             current: current,
+                            //             pageSize: pageSize
+                            //         }
+                            //     });
+                            //     return Promise.resolve({
+                            //         data: data.items,
+                            //         sucess: true,
+                            //         total: data.total
+                            //     });
+                            // }}
                             columns={[
                                 {
-                                    title: "Lead Name",
+                                    title: "Code",
                                     render: (_, r) => r.leadCode
                                     // render: (_, r) => [r.firstName, r.lastName || r.internalName]
                                 },
                                 {
-                                    title: "Lead Name",
+                                    title: "Name",
                                     render: (_, r) => [r.firstName, r.lastName || r.internalName]
                                 },
                                 {

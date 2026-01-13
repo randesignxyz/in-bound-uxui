@@ -54,7 +54,8 @@ export default ({
         <Flex >
             <Flex>
                 <Flex >
-                    <Input.Search allowClear onSearch={onSearch} />
+                  {onSearch && <Input.Search allowClear onSearch={onSearch} />}
+
                 </Flex>
                 {(onOpenAdvanceSearch || advanceSearchButton) && <Flex>
                     {advanceSearchButton || <Button icon={<FileSearchOutlined />} onClick={onOpenAdvanceSearch} />}

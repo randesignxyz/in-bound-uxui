@@ -36,7 +36,7 @@ export default function StaffRequisitionPage() {
           integratedStatus: "ALL",
           status: "ALL",
         },
-         pagination: { current: 1, pageSize: 20 },
+        pagination: { current: 1, pageSize: 20 },
       },
     });
 
@@ -66,7 +66,6 @@ export default function StaffRequisitionPage() {
           { searchValue?: string; advanceSearch?: StaffRequisitionAdvanceSearchParams },
           undefined
         >
-        actionRef={actionRef}  // important for open tab
         tabRender={(item) =>
           access.canRequestHrStaffRequisition
             ? [
@@ -191,7 +190,7 @@ export default function StaffRequisitionPage() {
                         action: 'view',
                         value: entity, // ✅ pass full entity
                         tabLabel: entity.formNo,
-                        key: entity.instanceId, // optional unique key
+                        key: entity.id, // optional unique key
                       });
                     }}
                   >

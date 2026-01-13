@@ -41,7 +41,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
   useEffect(() => {
     form.setFieldsValue({
       buIds: dataItem?.buIds || [],
-      depIds: dataItem?.departmentIds || [],
+      depIds: dataItem?.depIds || [],
     });
   }, [dataItem, form]);
 

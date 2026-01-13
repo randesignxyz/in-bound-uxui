@@ -5,7 +5,7 @@ import ListView from "./ListView"
 
 export default () => {
 
-  return <CrudWrapper baseURL={HrmPaths.employee} >
+  return <CrudWrapper baseURL={HrmPaths.employee} disablePageContainer={true}>
     {(view, id , navigate) => {
       switch (view) {
         case 'list':

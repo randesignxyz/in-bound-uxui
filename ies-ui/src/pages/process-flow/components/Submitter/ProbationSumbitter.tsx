@@ -32,20 +32,20 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
       onSetSubmitter?.(it)
       setRequestor(it)
       if(firstInit) {
-        form.setFieldsValue({requestorId: userId})  
-      } 
+        form.setFieldsValue({requestorId: userId})
+      }
       form.setFieldsValue({requestorBuId: it.buId})
       form1.setFieldsValue({requestorBuId: it.buId})
-    })  
-   
+    })
+
   }
 
-  const onSearchHandler = async (type: AccountType, searchValue?: string) => {  
+  const onSearchHandler = async (type: AccountType, searchValue?: string) => {
     const login =  currentUser.initialState?.currentUser?.login
     const it1 = await srvHR.fetchProbationEmpList( firstInit?login: searchValue)
     // const it1 = await srvHR.fetchProbationEmpList(searchValue)
     if(firstInit && login) {
-      let emp = (it1||[{id:0}]).at(0)       
+      let emp = (it1||[{id:0}]).at(0)
       await fetchUser(emp?.id||0)
     }
     setFirstInit(false)
@@ -55,7 +55,7 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
   return (<Spin spinning={requestActions.request?.loading}>
     <ProForm form={form1} submitter={false}>
       <ProCard title= {title || 'Submitter'}
-        bordered 
+        bordered
         headerBordered
         size="small">
         <ProFormGroup >
@@ -63,20 +63,20 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
             fieldProps={{
               dropdownMatchSelectWidth: 300 ,
               onChange(value: any) {
-              
+
                 fetchUser(value)
               },
             }}
             disabled = {onlyCurrentUser ||  !access.isAccessHRProbationEvaluationSupport}
-            name={"requestorId"}          
+            name={"requestorId"}
             allowClear
             showSearch
             rules={[{ required: true }]} debounceTime={1000}
             request={({ keyWords }) => onSearchHandler('user', keyWords)} />
-          <ProFormSelect         
-            rules={[{ required: true }]} 
-            name={'requestorBuId'} width={'sm'}           
-            label="Business Unit" 
+          <ProFormSelect
+            rules={[{ required: true }]}
+            name={'requestorBuId'} width={'sm'}
+            label="Business Unit"
             options={[{ label: requestor?.buName, value: requestor?.buId }]}
           />
           <ProFormText label ="Create Date" >{moment().format(formatConfig.date)}</ProFormText>
@@ -100,7 +100,7 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
           </Descriptions.Item>
         </Descriptions>
       </ProCard>
-    </ProForm>    
+    </ProForm>
   </Spin>
   );
 };

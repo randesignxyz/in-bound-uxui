@@ -24,6 +24,7 @@ import { ImportDataItem, ImportDataResponse } from '@/services/shared/data';
 import EmployeeModal from './EmployeeModal';
 import UploadData from '@/pages/hrm/employee/upload-data';
 import Profile from "../../profile/index";
+import Form from '@/pages/process-flow/form';
 
 interface Props {
   onAdd?: (id?: number) => void;
@@ -107,7 +108,6 @@ export default ({ onAdd, onEdit }: Props) => {
                 panel: () => (
                   <Profile
                     id={item?.id}
-                    onSuccess={refetch}
                   />
                 ),
               },
@@ -229,9 +229,10 @@ export default ({ onAdd, onEdit }: Props) => {
                   label: item.employeeCode,
                 }),
                 render: (_, entity) => (
+
                   <Flex gap={5} align="center">
                     <span style={{ color: "#1677ff", cursor: "pointer" }}>
-                  {entity.employeeCode}
+                  {entity.id}
                   </span>
                   </Flex>
                 ),

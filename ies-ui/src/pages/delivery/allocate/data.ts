@@ -328,7 +328,7 @@ export interface ListDnDetailParams {
   sap_from_date?: string
   sap_to_date?: string
   customer?: string
-  area?:string
+  zone?:string
 }
 
 export type Location = {

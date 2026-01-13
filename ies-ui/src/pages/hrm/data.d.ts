@@ -6,6 +6,7 @@ import { LookUpDataDTO } from "../fleet/lookupData/data";
 export interface EmployeeListItem {
   id: number;
   employeeId: number;
+  empNo: number;
   employeeCode: string;
   employeeLocalName: string;
   firstName: string;
@@ -24,7 +25,14 @@ export interface EmployeeListItem {
 
 export type EmployeeAdvanceSearchParams = {
   status: 'ALL' | 'ACTIVE' | 'INACTIVE';
-  department?: number;
+  integratedStatus?: string;
+  keyword?: string;
+  advanceSearch?: {
+    buIds?: number[];
+    depIds?: number[];
+    integratedStatus?: string;
+    status?: string;
+  };
 };
 
 
@@ -65,6 +73,12 @@ export type ProbationAdvanceSearchParams = {
     depIds?: number[];
     integratedStatus?: string;
     status?: string;
+    pendingFilter?: (
+      | "REQUESTED"
+      | "SETTING"
+      | "IN_PROGRESS"
+      | "REVIEWING"
+      )[];
   };
 };
 

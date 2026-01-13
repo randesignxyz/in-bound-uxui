@@ -6,8 +6,6 @@ import ViewForm from "./ViewForm"
 import { UserTask } from "@/services/process-workflow/data"
 import MoreInfo from "./MoreInfo"
 
-
-
 export const StaffRequisitionForms: DataForm[] = [
 
   {
@@ -27,15 +25,17 @@ export const StaffRequisitionForms: DataForm[] = [
       StaffRequisitionFormNames.DMBO2,
       StaffRequisitionFormNames.DMBO_OMR,
       StaffRequisitionFormNames.MBO,
-      StaffRequisitionFormNames.DMD,      
+      StaffRequisitionFormNames.DMD,
       StaffRequisitionFormNames.HRA_SR_MANAGER,
 
       StaffRequisitionOFLFormNames.processDefKey,
-      StaffRequisitionOFLFormNames.HRBP,
-      StaffRequisitionOFLFormNames.HRM_MANAGER,
-      StaffRequisitionOFLFormNames.SR_MANAGER_APPROVAL,
-      StaffRequisitionOFLFormNames.DMD,
-      StaffRequisitionOFLFormNames.HRA_SR_MANAGER
+      StaffRequisitionOFLFormNames.OFL_HRM_MANAGER,
+      StaffRequisitionOFLFormNames.OFL_SM_FUNCTION_APPROVAL,
+      StaffRequisitionOFLFormNames.OFL_SM_FUNCTION_REVIEW,
+      StaffRequisitionOFLFormNames.OFL_DMD_APPROVAL,
+      StaffRequisitionOFLFormNames.OFL_SM_FUNCTION_PROPOSE,
+      StaffRequisitionOFLFormNames.OFL_DMD_REVIEW,
+      StaffRequisitionOFLFormNames.OFL_ED_MD_APPROVAL
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,

@@ -8,7 +8,6 @@ export default (task: UserTask) => {
             <Descriptions.Item label="Requestor">{task.owner}</Descriptions.Item>
             <Descriptions.Item label="Requested Date">{formatDate(task.instanceInfo.submittedDate)}</Descriptions.Item>
             {task.instanceInfo.instanceComment && <Descriptions.Item label="Description">
-
                 <Typography.Paragraph ellipsis={{
                     expandable: true,
                     defaultExpanded: false,

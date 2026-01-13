@@ -3,13 +3,13 @@ import { Drawer, DrawerProps } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import { simpleRequestActions } from "@/services/model";
 import { MultiRequest } from "@/services/apiGateway";
-import { BU, Department, StaffRequisitionAdvanceSearchParams } from "../../hrm/data";
+import { BU, Department, EmployeeAdvanceSearchParams } from "../../hrm/data";
 import { useEffect, useState } from "react";
 import { EmployeeServices } from "../../hrm/services";
 
 interface Props extends DrawerProps {
-  dataItem?: StaffRequisitionAdvanceSearchParams;
-  onSearch: (params: StaffRequisitionAdvanceSearchParams) => void;
+  dataItem?: EmployeeAdvanceSearchParams;
+  onSearch: (params: EmployeeAdvanceSearchParams) => void;
   onReset: () => void;
 }
 
@@ -20,7 +20,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
                                                   ...props
                                                 }) => {
   const requestActions = simpleRequestActions();
-  const [form] = useForm<StaffRequisitionAdvanceSearchParams>();
+  const [form] = useForm<EmployeeAdvanceSearchParams>();
 
   const [data, setData] = useState<{
     buList: BU[];

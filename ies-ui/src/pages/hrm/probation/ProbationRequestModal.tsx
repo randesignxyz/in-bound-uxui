@@ -8,8 +8,9 @@ import {
   ProFormGroup,
   ProFormSelect,
   ProFormTextArea,
+  FooterToolbar,
 } from '@ant-design/pro-components';
-import { message, Modal, Space } from 'antd';
+import { Button, message, Modal, Space } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 import { BU, Department, ProbationEvaluationData, SubDepartment } from '../data';
@@ -127,6 +128,40 @@ export default ({
     <ProForm
       width={970}
       form={form}
+      submitter={{
+        render: () => (
+          <FooterToolbar>
+            <Button
+              onClick={() => {
+                // Reset main form and submittor form
+                form.resetFields();
+                formSubmittor.resetFields();
+
+                // Clear uploaded files
+                setUploadFileIds([]);
+
+                // Reset probation employee selection
+                setProbationEmp(undefined);
+
+                // Reset dependent lists
+                setProbationRef([]);
+                setProbationAssessor([]);
+                setFirstEvaluationUserId('');
+              }}
+            >
+              Reset
+            </Button>
+
+            <Button
+              type="primary"
+              onClick={() => form.submit()} // triggers onFinish
+            >
+              Submit
+            </Button>
+          </FooterToolbar>
+        ),
+      }}
+
       onFinish={async () => {
         const formData = await form.validateFields();
         await formSubmittor.validateFields()

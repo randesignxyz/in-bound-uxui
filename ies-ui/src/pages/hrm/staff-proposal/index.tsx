@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import PageWrapper from "@/components/PageWrapper";
 import { history, useAccess, useQuery } from "@umijs/max";
 import {
-  AdvanceSearchParams,
   SavePayLoad,
   SearchParams,
   StaffProposalDetail,
@@ -248,7 +247,19 @@ export default function StaffProposalPage() {
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          actionRef.current?.reloadAndRest?.();
+          setFilter((prev) => ({
+            ...prev,
+            criteria: {
+              ...prev.criteria,
+              advanceSearch: {
+                ...prev.criteria?.advanceSearch,
+                buIds: [],
+                depIds: [],
+              },
+            },
+            pagination: { ...prev.pagination, current: 1 },
+          }));
+          setAdvanceSearchVisible(false);
         }}
       />
     </>

@@ -59,10 +59,10 @@ export const AcquisitionOmmFormNames = {
   dmbo: 'requisition_omm_dmbo',
   smFinance: 'requisition_omm_sm_fin',
   md_dmd: 'requisition_omm_md_dmd',
-  // constructionFunManager: 'requisition_omm_contruction_hod',
-  // constructionMbo1: 'requisition_omm_construction_mbo1',
-  // constructionMbo2: 'requisition_omm_construction_mbo2',
-  // constructionEd: 'requisition_omm_contruction_ed',
+  constructionFunManager: 'requisition_omm_contruction_hod',
+  constructionMbo1: 'requisition_omm_construction_mbo1',
+  constructionMbo2: 'requisition_omm_construction_mbo2',
+  constructionEd: 'requisition_omm_contruction_ed',
 
 };
 

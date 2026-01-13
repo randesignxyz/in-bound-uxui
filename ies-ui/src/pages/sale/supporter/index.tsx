@@ -5,6 +5,8 @@ import { useState, useMemo } from "react";
 import POAdjustForm from "./component/POAdjustForm";
 import InvoiceCorrectForm from "./component/InvoiceCorrectForm";
 import { useAccess } from "@umijs/max";
+import { SupporterServiceAPI } from "./services";
+import { simpleRequestActions } from "@/services/model";
 
 /* ---------------------------------- */
 /* Types                              */
@@ -27,6 +29,7 @@ interface ActionState {
 /* ---------------------------------- */
 const Supporter: React.FC<Props> = () => {
   const access = useAccess();
+  const requestActions = simpleRequestActions();
 
   const [actionState, setActionState] = useState<ActionState>({
     open: false,
@@ -139,6 +142,9 @@ const Supporter: React.FC<Props> = () => {
           actionState.action !== "INVOICE"
         }
         actionType={actionState.action}
+        onClose={async () => {
+          setActionState({ open: false })
+        }}
         modalProps={{
           width:
             actionState.action === "PO_ROLLBACK" ? "80%" : "60%",
@@ -151,6 +157,7 @@ const Supporter: React.FC<Props> = () => {
         open={
           actionState.open && actionState.action === "INVOICE"
         }
+        onClose={() => setActionState({ open: false })}
         actionType={actionState.action}
         modalProps={{
           width: "80%",

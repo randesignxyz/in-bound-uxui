@@ -15,7 +15,7 @@ export default () => {
     const srv = createService(requestActions)
 
     return <BaseCrud<NewStaffListItem, NewStaffItemDetail, SearchParams, SavePayLoad >
-        services={srv}
+        
         listView={{
             columns: () => [
                 {
@@ -70,7 +70,7 @@ export default () => {
             },
             subStatusProps: undefined,
             onBeforeSearch: undefined
-        }} title={"ICT - New Staff Support Rquest"}
+        }} services={srv} title={"ICT - New Staff Support Rquest"}
 
     />
 }

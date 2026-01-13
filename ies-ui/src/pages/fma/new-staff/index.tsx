@@ -18,7 +18,7 @@ export default () => {
     // const actionRef = useRef<ActionType>();
 
     return <BaseCrud<NewStaffListItem, NewStaffItemDetail, SearchParams, SavePayLoad >
-        services={srv}
+       
         listView={{
 
             columns: () => [
@@ -71,7 +71,7 @@ export default () => {
                     { label: "Rejected", value: "REJECTED" },
                 ]
             },
-        }} title={"FMA - New Staff Support Request"}
+        }}  services={srv} title={"FMA - New Staff Support Request"}
 
     />
 }

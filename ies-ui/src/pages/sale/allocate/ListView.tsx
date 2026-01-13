@@ -1833,7 +1833,7 @@ export default () => {
                           width={150}
                           showSearch
                         />
-                        {/* <OfficerZoneFilter
+                        <OfficerZoneFilter
                           form={form}
                           name='zone'
                           requestActions={requestActions}
@@ -1853,7 +1853,7 @@ export default () => {
                             }));
                             actionRef.current?.reloadAndRest?.();
                           }}
-                        /> */}
+                        />
                         <ProFormDateRangePicker
                           name="sap_delivery_range_dn"
                           placeholder={['From Date', 'To Date']}
@@ -2011,7 +2011,21 @@ export default () => {
                             </Flex>
                           </Card>
                         </div>
-
+                        {officerArea?.length > 0 && (
+                          <div style={{ width: '100%', alignItems: 'flex-start', }}>   {/* 🔑 FORCE NEW ROW */}
+                            <Card
+                              size="small"
+                              style={{ border: 0, width: '100%', alignItems: 'flex-start', }}
+                              styles={{ body: { padding: 4 } }}
+                            >
+                              <Flex gap={4} align="center" wrap>
+                                {officerArea.map(p => (
+                                  <Tag key={p.value}>{p.label}</Tag>
+                                ))}
+                              </Flex>
+                            </Card>
+                          </div>
+                        )}
                       </ProForm>
 
                     </>

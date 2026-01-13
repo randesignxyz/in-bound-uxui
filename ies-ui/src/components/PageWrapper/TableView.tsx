@@ -3,7 +3,7 @@ import { TabRenderProps, TableViewProps } from "./type";
 import { Button, Flex, Space, Tooltip, Typography } from "antd";
 import { omit } from "lodash";
 
-export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
+export default <ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType>(
         { listView, tabRender, onAddTab }: {
             listView: TableViewProps<ListDataType, FilterType, ValueType>;
@@ -54,4 +54,4 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         search={false}
         options={false}
     />
-} 
+}

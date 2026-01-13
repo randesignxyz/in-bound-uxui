@@ -9,13 +9,14 @@ import { simpleRequestActions } from "@/services/model";
 import { useAccess, history } from "umi";
 import Status from "@/components/Status";
 import DataEntryFormView from '../../ProbationRequestModal';
-import { Button, Grid, Space } from 'antd';
+import { Button, Grid, Space, Select } from 'antd';
 import {
   ExportOutlined,
   EyeOutlined,
   FilterOutlined,
   SelectOutlined,
 } from "@ant-design/icons";
+import ProbationReportModalForm from "../../reports/ProbationReportModalForm";
 import { Model } from "../../model";
 import { formatDate, formatDateTime } from "@/pages/utils";
 import { ProbationEvaluationRequestFormNames } from "../../process-flow";
@@ -25,12 +26,20 @@ import {
 } from '@/pages/hrm/data';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import AdvanceSearchDrawer from './AdvanceEmployeeSearch';
-import { ActionType } from '@ant-design/pro-components';
+import { ActionType, LightFilter, ProFormSelect } from '@ant-design/pro-components';
 import ProbationEvaluationQuickView from '@/pages/hrm/probation/components/quick-view';
 import ProbationRequestModal from '../../ProbationRequestModal';
-import ViewForm from "../../process-flow/ViewForm"
 import Form from '@/pages/process-flow/form';
 
+export interface AppraisalEmpAdvanceSearchParams {
+  status?: string
+  pendingFilter?: string[]
+  drafted?: boolean
+}
+
+interface LightFilterProp {
+  pendingFilter?: string[]
+}
 export default function ProbationListPage() {
   const requestActions = simpleRequestActions();
   const [forceChange, setForceChange] = useState<number>(0)
@@ -40,6 +49,7 @@ export default function ProbationListPage() {
     setForceChange(v => v + 1)
     actionRef?.current?.reload?.()
   }
+  const [currentStatus, setCurrentStatus] = useState<string>('ALL');
   const srv = createService({ request: requestActions });
   const access = useAccess();
   const { modals } = Model();
@@ -50,16 +60,18 @@ export default function ProbationListPage() {
   const pageRef = useRef<any>(null);
   Grid.useBreakpoint();
   const [filter, setFilter] = useState<TableViewSearchParams<ProbationAdvanceSearchParams>>({
-    status: "ALL",
     pagination: { current: 1, pageSize: 20 },
-    advanceSearch: {
-      buIds: [],
-      depIds: [],
-      integratedStatus: "ALL",
-      status: "ALL",
+    criteria: {
+      status: 'ALL',
+      advanceSearch: {
+        buIds: [],
+        depIds: [],
+        integratedStatus: 'ALL',
+        status: 'ALL',
+        pendingFilter: [],
+      },
     },
   });
-
   const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
   const [total, setTotal] = useState<ProbationEmpStatusTotal | null>(null);
   const { data, isLoading, refetch } = useQuery(
@@ -70,7 +82,7 @@ export default function ProbationListPage() {
 
   useEffect(() => {
     srv.findProbationEmpStatusTotal().then(setTotal);
-  }, []);
+  }, [filter.criteria?.advanceSearch?.status]);
 
   const refreshTotals = () => {
     srv.findProbationEmpStatusTotal().then(setTotal);
@@ -93,7 +105,7 @@ export default function ProbationListPage() {
     );
   return (
     <>
-      <PageWrapper<ProbationEvaluationEmpList, ProbationAdvanceSearchParams, undefined>
+      <PageWrapper<ProbationEvaluationEmpList, { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }, undefined>
         ref={pageRef}
         title="Probation Evaluation"
         tabRender={(item) => {
@@ -140,6 +152,54 @@ export default function ProbationListPage() {
               }
             />
           ),
+          actionButtons: [
+            access.canAccessHRProbationEvaluationExportReport && (
+              <ProbationReportModalForm
+                key="export"
+                trigger={
+                  <Button type="link" icon={<ExportOutlined />}>
+                    Export
+                  </Button>
+                }
+              />
+            )
+          ],
+          onExtraFilterRender: () => {
+            if (currentStatus !== 'PENDING') return null;
+            return (
+              <LightFilter<LightFilterProp>
+                size="small"
+                onValuesChange={(_, values) => {
+                  setFilter((prev) => ({
+                    ...prev,
+                    criteria: {
+                      ...prev.criteria,
+                      advanceSearch: {
+                        ...prev.criteria?.advanceSearch,
+                        pendingFilter: values.pendingFilter || [],
+                      },
+                    },
+                    pagination: { ...prev.pagination, current: 1 },
+                  }));
+                  actionRef.current?.reload?.();
+                }}
+              >
+                <ProFormSelect
+                  name="pendingFilter"
+                  label="Pending Status"
+                  width={280}
+                  mode="multiple"
+                  initialValue={filter.criteria?.advanceSearch?.pendingFilter || []}
+                  options={[
+                    { label: 'Requested', value: 'REQUESTED' },
+                    { label: 'Setting', value: 'SETTING' },
+                    { label: 'In Progress', value: 'IN_PROGRESS' },
+                    { label: 'Reviewing', value: 'REVIEWING' },
+                  ]}
+                />
+              </LightFilter>
+            );
+          },
           statuses: [
             { option: { label: "All", value: "ALL", default: true } },
             {
@@ -153,15 +213,21 @@ export default function ProbationListPage() {
           ],
           onRefresh: refetch,
           onFilter: (params) => {
+            const status = params?.advanceSearch?.status || params?.status;
+            setCurrentStatus(status);
             setFilter((p) => ({
               ...p,
               criteria: {
                 ...p.criteria,
                 keyword: params?.searchValue,
-                status: params?.status,
+                status: params?.advanceSearch?.status,
                 advanceSearch: {
                   ...p.criteria?.advanceSearch,
                   status: params?.status,
+                  pendingFilter:
+                    params?.advanceSearch?.status === "PENDING"
+                      ? p.criteria?.advanceSearch?.advanceSearch?.pendingFilter
+                      : [],
                 },
               },
             }));

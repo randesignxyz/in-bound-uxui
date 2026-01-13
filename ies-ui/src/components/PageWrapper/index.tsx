@@ -33,7 +33,7 @@ import { ListViewProps, TabRenderProps, TableViewProps } from "./type";
 import TableView from "./TableView";
 import { uniqueId } from "lodash";
 
-interface Props<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType extends Record<string, any>, ValueType> {
+interface Props<ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType extends Record<string, any>, ValueType> {
 
     onNewRender?: (key: string) => React.ReactNode;
     tabRender?: (item?: ListDataType) => TabRenderProps[];
@@ -64,11 +64,9 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
     });
 };
 
-export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
-    extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string; subStatus2?: string }, ValueType>({
-        tabRender,
-        listView,
-    }: Props<ListDataType, FilterType, ValueType>) => {
+export default <ListDataType extends Record<string, any> & { id: string | number, code?: string },
+  FilterType extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string; subStatus2?: string },
+  ValueType>({ tabRender, listView }: Props<ListDataType, FilterType, ValueType>) => {
 
     const [forceReload, setForceReload] = useState(0)
     const actionRef = useRef<ActionType>()
@@ -193,8 +191,18 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         }
         actionRef.current?.reload(resetPageIndex);
     }
+  useEffect(() => {
+    if (listView.disableSearch) {
+      setFilterData(v => {
+        if (!v) return v;
+        const { searchValue, ...rest } = v;
+        return rest as FilterType;
+      });
+    }
+  }, [listView.disableSearch]);
 
-    useEffect(() => {
+
+  useEffect(() => {
         setTabList([{
             tab: listView.title || "List",
             key: 'list',
@@ -212,10 +220,15 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     const tabProps = tabRender?.().find(it => it.action == 'add')
                     tabProps && newTab(tabProps)
                 }}
-                onSearch={keyworkds => {
-                    setFilterData(v => ({ ...v, searchValue: keyworkds }) as any)
-                    reloadList(true)
-                }}
+                onSearch={
+                  listView.disableSearch
+                    ? undefined
+                    : (keywords) => {
+                      setFilterData(v => ({ ...v, searchValue: keywords }) as any);
+                      reloadList(true);
+                    }
+                }
+
                 onStatusChanged={status => {
                     setFilterData(v => ({ ...v, status: status }) as any)
                     reloadList(true)

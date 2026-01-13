@@ -28,9 +28,9 @@ const DefaultFilterComp = <T extends FilterItem>({
 
     <Space size={'small'}>
       <Search style={{ width: '272px' }} placeholder="Search" onSearch={value => onSearch({ searchValue: value.trim() })} />
-      {/* <Checkbox style={{ marginLeft: '16px' }} defaultChecked={isGlobal} onChange={e => onSearch({isGlobal: e.target.checked}) }>
-      Global
-      </Checkbox> */}
+      {/*<Checkbox style={{ marginLeft: '16px' }} defaultChecked={isGlobal} onChange={e => onSearch({isGlobal: e.target.checked}) }>*/}
+      {/*Global*/}
+      {/*</Checkbox>*/}
       <Select
         showSearch
         defaultValue={defaultValue}

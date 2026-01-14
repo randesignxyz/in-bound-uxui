@@ -3,11 +3,12 @@ import {
     EditableProTable,
     ModalForm,
     ModalFormProps,
+    ProFormDatePicker,
     ProFormMoney,
     ProFormSelect,
     ProFormTextArea,
 } from "@ant-design/pro-components";
-import { Divider, Form, Table } from "antd";
+import { Button, Divider, Form, message, Table } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useEffect, useMemo, useState } from "react";
 import { InvoiceServiceAPI } from "../../invoice/service";
@@ -17,6 +18,7 @@ import { SupporterServiceAPI } from "../services";
 interface Props extends ModalFormProps {
     open: boolean;
     actionType?: string;
+    onClose: () => void
 }
 
 const InvoiceCorrectForm = (props: Props) => {
@@ -74,6 +76,7 @@ const InvoiceCorrectForm = (props: Props) => {
         const invoice = invoiceList.find(o => o.id === invoiceId);
         const invoiceItems = Array.isArray(invoice?.items) ? invoice.items : [];
 
+        form.setFieldValue("invoiceDate", invoice?.invoiceDate);
         form.setFieldValue("items", invoiceItems);
         setEditableKeys(invoiceItems.map((i: any) => i.id));
     };
@@ -81,7 +84,7 @@ const InvoiceCorrectForm = (props: Props) => {
     /* ---------------------------------- */
     /* SUBMIT                             */
     /* ---------------------------------- */
-    const onFinish = async () => {
+    const onFinish = async (addNew: boolean) => {
         const dataForm = await form.validateFields();
 
         const payload = {
@@ -98,10 +101,15 @@ const InvoiceCorrectForm = (props: Props) => {
             })),
         };
 
-        await SupporterServiceAPI(requestActions).poTodo(payload);
+        const res = await SupporterServiceAPI(requestActions).poTodo(payload) as { id: number, message: string };
 
-        props.modalProps?.onCancel?.();
-        return true;
+
+        if (res?.id == -500) {
+            return message.error(res?.message);
+        }
+        message.success(res.message);
+        !addNew && props.onClose?.();
+        addNew && form.resetFields();
     };
 
     /* ---------------------------------- */
@@ -113,7 +121,30 @@ const InvoiceCorrectForm = (props: Props) => {
             form={form}
             layout="horizontal"
             title="Invoice Correction"
-            onFinish={onFinish}
+            submitter={{
+                searchConfig: {
+                    submitText: "Save"
+                },
+                submitButtonProps: {
+                    onClick: () => {
+                        onFinish(false)
+                    }
+                },
+                render: (props, defaultDoms) => {
+                    return [
+                        ...defaultDoms,
+                        <Button
+                            key="saveAndNew"
+                            type="primary"
+                            onClick={() => {
+                                onFinish(true)
+                            }}
+                        >
+                            Save & New
+                        </Button>,
+                    ];
+                },
+            }}
         >
             {/* ---------------- Invoice ---------------- */}
             <ProFormSelect
@@ -140,6 +171,10 @@ const InvoiceCorrectForm = (props: Props) => {
                         value: o.id,
                     }));
                 }}
+            />
+            <ProFormDatePicker
+                name={"invoiceDate"}
+                label={"Invoice Date"}
             />
 
             {/* ---------------- Items ---------------- */}

@@ -1,5 +1,5 @@
-import { EditableProTable, ModalForm, ModalFormProps, ProFormCheckbox, ProFormDatePicker, ProFormDependency, ProFormDigit, ProFormList, ProFormMoney, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
-import { Alert, Card, Divider, Flex, Form, Space } from "antd";
+import { EditableProTable, ModalForm, ModalFormProps, ProFormCheckbox, ProFormDatePicker, ProFormDependency, ProFormDigit, ProFormList, ProFormMoney, ProFormSelect, ProFormSwitch, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
+import { Alert, Button, Card, Divider, Flex, Form, message, Space } from "antd";
 import { useForm } from "antd/es/form/Form"
 import { PurchaseOrderServiceAPI } from "../../mpu/purchase_order/services";
 import { simpleRequestActions } from "@/services/model";
@@ -12,7 +12,8 @@ import { AimOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { AddressInfo } from '@/services/crm/data';
 
 interface Props extends ModalFormProps {
-    actionType?: string
+    actionType?: string;
+    onClose: () => void
 }
 const typeOption = [
     {
@@ -58,7 +59,7 @@ const getAddress = (address?: AddressInfo) => {
         : '';
 };
 
-const POAdjustForm: React.FC<Props> = ({ actionType, ...props }) => {
+const POAdjustForm: React.FC<Props> = ({ actionType, onClose, ...props }) => {
     const [form] = useForm<any>();
     const requestActions = simpleRequestActions();
 
@@ -70,6 +71,28 @@ const POAdjustForm: React.FC<Props> = ({ actionType, ...props }) => {
     const selectedType = typeOption.find(item => item.value === actionType);
     const [poIdState, setPoIdState] = useState<number>();
     const [addressList, setAddressList] = useState<AddressInfo[]>();
+    const onSubmit = async (addNew: Boolean) => {
+        const dataForm = await form.validateFields();
+        const distributor = dataForm.distributorId?.split(',');
+        const entry = {
+            ...dataForm,
+            distributorId: distributor?.[0],
+            distributorCode: distributor?.[1],
+            distributorName: distributor?.[2],
+            actionType: actionType,
+            items: dataForm.items?.map((p: { id: any; itemCode: any; itemId: any; quantity: any; pricing: any; status: any; }) => ({ id: p.id, itemCode: p.itemCode, itemId: p.itemId, qty: p.quantity, price: p.pricing, status: p.status }))
+        }
+        const res = await SupporterServiceAPI(requestActions).poTodo(entry) as { id: number, message: string };
+
+        if (res?.id == -500) {
+            return message.error(res?.message);
+        }
+        message.success(res.message);
+        !addNew && onClose?.();
+        addNew && form.resetFields();
+
+    }
+
     return (
         <>
             <ModalForm
@@ -100,26 +123,46 @@ const POAdjustForm: React.FC<Props> = ({ actionType, ...props }) => {
                         form.setFieldValue("currentDistributor", `${dd.distributorCode}-${dd.distributorName}`)
                         form.setFieldValue("currentAddress", dd.addressCode)
                         form.setFieldValue("currentAddressDetail", dd.address)
-                        // setPoIdState(values.poId);
                     }
                 }}
-                onFinish={async () => {
-                    const dataForm = await form.validateFields();
-                    const distributor = dataForm.distributorId?.split(',');
-                    const entry = {
-                        ...dataForm,
-                        distributorId: distributor?.[0],
-                        distributorCode: distributor?.[1],
-                        distributorName: distributor?.[2],
-                        actionType: actionType,
-                        items: dataForm.items?.map(p => ({ id: p.id, itemCode: p.itemCode, itemId: p.itemId, qty: p.quantity, price: p.pricing, status: p.status }))
-                    }
-                    await SupporterServiceAPI(requestActions).poTodo(entry);
+                // onFinish={async () => {
+                //     const dataForm = await form.validateFields();
+                //     const distributor = dataForm.distributorId?.split(',');
+                //     const entry = {
+                //         ...dataForm,
+                //         distributorId: distributor?.[0],
+                //         distributorCode: distributor?.[1],
+                //         distributorName: distributor?.[2],
+                //         actionType: actionType,
+                //         items: dataForm.items?.map((p: { id: any; itemCode: any; itemId: any; quantity: any; pricing: any; status: any; }) => ({ id: p.id, itemCode: p.itemCode, itemId: p.itemId, qty: p.quantity, price: p.pricing, status: p.status }))
+                //     }
 
-                    if (props.modalProps?.onCancel) {
-                        props?.modalProps?.onCancel();
-                    }
-                    return true
+                //     onSubmit(entry)
+                // }}
+
+                submitter={{
+                    searchConfig: {
+                        submitText: "Save"
+                    },
+                    submitButtonProps: {
+                        onClick: () => {
+                            onSubmit(false)
+                        }
+                    },
+                    render: (props, defaultDoms) => {
+                        return [
+                            ...defaultDoms,
+                            <Button
+                                key="saveAndNew"
+                                type="primary"
+                                onClick={() => {
+                                    onSubmit(true)
+                                }}
+                            >
+                                Save & New
+                            </Button>,
+                        ];
+                    },
                 }}
             >
                 <Alert
@@ -150,8 +193,8 @@ const POAdjustForm: React.FC<Props> = ({ actionType, ...props }) => {
                 {
                     (actionType == "PO_ROLLBACK" && (
                         <Flex vertical>
+                            <ProFormSwitch name={"toPending"} label="Rollback Status to Pending" />
                             <ProFormDatePicker name={"date"} label={"Date Change"} />
-                            <ProFormCheckbox name={"changeDistributor"} label="Change Distributor" />
                             <ProFormDependency dependencies={["changeDistributor"]} name={["changeDistributor"]}>
                                 {({ changeDistributor }) => {
                                     return changeDistributor && (
@@ -238,7 +281,7 @@ const POAdjustForm: React.FC<Props> = ({ actionType, ...props }) => {
                             size="small"
                             editable={{
                                 type: 'multiple',
-                                editableKeys: form.getFieldValue("items")?.map((p) => p.id) || [],
+                                editableKeys: form.getFieldValue("items")?.map((p: { id: any; }) => p.id) || [],
                                 onValuesChange: (_, recordList) => {
                                     form.setFieldValue("items", recordList);
                                 },

@@ -1823,7 +1823,7 @@ export default () => {
                             { value: 'all', label: 'ALL' },
                             { value: 'as_of_now', label: 'As Date' },
                             { value: 'today', label: 'Today' },
-                            { value: 'unplan', label: 'DO Pending' },
+                            { value: 'unplan', label: 'DOP Pending' },
                             { value: 'TBA', label: 'TBA' },
                           ]}
                           width={150}
@@ -2059,7 +2059,7 @@ export default () => {
                               { value: 'all', label: 'ALL' },
                               { value: 'as_of_now', label: 'As Date' },
                               { value: 'today', label: 'Today' },
-                              { value: 'unplan', label: 'DO Pending' },
+                              { value: 'unplan', label: 'DOP Pending' },
                               { value: 'TBA', label: 'TBA' },
                             ]}
                             width={150}

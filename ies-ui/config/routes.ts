@@ -215,6 +215,15 @@ export default [
     access: 'canAccessCRMVerification',
     component: './crm/verified-customer',
   },
+  {
+    path: '/crm/setting/:view',
+    name: 'Configuration',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMSetting',
+    component: './crm/setting',
+  },
   // =========== END ===========
 
   /**********<<Pro**************/

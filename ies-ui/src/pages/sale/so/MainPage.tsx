@@ -29,7 +29,6 @@ export default () => {
     const [form] = Form.useForm();
     const access = useAccess();
     const param = useParams();
-    const defaultSetRef = useRef(false)
     const [filter, setFilter] = useState<FetchPagingParams<SoAdvanceSearchParams>>({
         criteria: {
             status: 'Pending',
@@ -44,7 +43,8 @@ export default () => {
         divisionId: filter.criteria?.saleArea?.length ? filter.criteria?.saleArea : [0]
     }, filter.pagination, filter.sort), {
         refetchOnWindowFocus: false,
-        refetchInterval: 60000
+        // refetchInterval: 60000
+        refetchInterval: 3600000
     })
 
 
@@ -62,20 +62,22 @@ export default () => {
             filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect :
                 state.data?.soSummary?.pendingIndirect
 
-        let totalPending = 0;
+        let totalPending = (state.data?.soSummary?.pendingDirect ?? 0) + (state.data?.soSummary?.pendingIndirect ?? 0);
 
-        switch (filter.criteria?.customerType) {
-            case 'All':
-                totalPending = state.data?.soSummary?.allPending ?? 0;
-                break;
+        // switch (filter.criteria?.customerType) {
+        //     case 'All':
+        //         totalPending = state.data?.soSummary?.allPending ?? 0;
+        //         break;
 
-            case 'Direct':
-                totalPending = (state.data?.soSummary?.allPending ?? 0) - (state.data?.soSummary?.pendingIndirect ?? 0);
-                break;
+        //     case 'Direct':
+        //         totalPending = (state.data?.soSummary?.allPending ?? 0) - (state.data?.soSummary?.pendingIndirect ?? 0);
+        //         break;
 
-            default:
-                totalPending = (state.data?.soSummary?.allPending ?? 0) - (state.data?.soSummary?.pendingDirect ?? 0);
-        }
+        //     default:
+        //         break
+        //     // totalPending = (state.data?.soSummary?.pendingDirect ?? 0) + (state.data?.soSummary?.pendingIndirect ?? 0);
+        // }
+
         statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed, totalPending)
     }, [state.data?.soSummary])
 

@@ -7,8 +7,9 @@ import { ExportOutlined, PlusOutlined } from "@ant-design/icons";
 import { formatDateTime, toReadable } from "@/pages/utils";
 import FMANewStaffRequestForm from "./FMANewStaffRequestForm";
 import { useAccess } from "@umijs/max";
-import Status from "@/components/Status";
-import { Button, Flex } from "antd";
+import Status from '@/components/Status';
+import { Button, Flex, Space } from 'antd';
+import Export from "./Export";
 
 export default () => {
 
@@ -18,9 +19,8 @@ export default () => {
     // const actionRef = useRef<ActionType>();
 
     return <BaseCrud<NewStaffListItem, NewStaffItemDetail, SearchParams, SavePayLoad >
-       
-        listView={{
 
+        listView={{
             columns: () => [
                 {
                     title: 'Form No', sorter: 'formNo', render(_, entity) {
@@ -48,21 +48,29 @@ export default () => {
                 { title: 'Employee ID.', dataIndex: "empNo", sorter: 'empNo' },
                 { title: 'Employee Name', dataIndex: "empName", sorter: 'empName' },
                 { title: 'Employee Name (KH)', dataIndex: "empLocalName" },
+                {title: 'COMPANY', dataIndex: "bu"},
                 { title: 'Function', dataIndex: "department", sorter: 'dept' },
                 { title: 'Job Title', dataIndex: "jobTitle", sorter: 'jobTitle' },
                 { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} />, sorter: 'status' },
             ],
             quickSearch: true,
-            addNewAction: access.canRequestFMANewStaffRequest ? {
-                label: 'New Request',
-                icon: <PlusOutlined />,
-                key: 'new-request',
-                onRenderComp(props) {
-                    return <FMANewStaffRequestForm  {...props} />
-                },
-            } : undefined,
+          extra: (
+            <Space>
+              {access.canRequestFMANewStaffRequest && <Export />}
+            </Space>
+          ),
+          addNewAction: access.canRequestFMANewStaffRequest
+            ? {
+              label: "New Request",
+              icon: <PlusOutlined />,
+              key: "new-request",
+              onRenderComp(props) {
+                return <FMANewStaffRequestForm {...props} />;
+              },
+            }
+            : undefined,
 
-            statusProps: {
+          statusProps: {
                 defaultValue: "ALL",
                 options: [
                     { label: "All", value: "ALL" },

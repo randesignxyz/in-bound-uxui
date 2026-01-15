@@ -99,8 +99,7 @@ export default ({ onAdd, onEdit }: Props) => {
           undefined
         >
         tabRender={(item) =>
-          access.canAdmin
-            ? [
+             [
               {
                 action: 'view',
                 value: item?.id,
@@ -110,21 +109,6 @@ export default ({ onAdd, onEdit }: Props) => {
                     id={item?.id}
                   />
                 ),
-              },
-            ]
-            : [
-              {
-                action: 'view',
-                value: item?.id,
-                tabLabel: item?.employeeCode,
-                panel: () => (
-                  <DataEntry
-                    type="EDIT"
-                    id={item?.id}
-                    onSuccess={refetch}
-                  />
-                ),
-
               },
             ]
         }

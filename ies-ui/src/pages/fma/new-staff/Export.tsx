@@ -99,12 +99,27 @@ const Export: React.FC = () => {
       modalProps={{ maskClosable: false }}
       submitter={{
         render: (_, dom) => [
-          dom[0],
-          <Button key="export" loading={loading} onClick={handleExport}>
+          dom[0], // Cancel button
+          <Button
+            key="reset"
+            onClick={() => {
+              form.resetFields();
+              setLoading(false);
+            }}
+          >
+            Reset
+          </Button>,
+          <Button
+            key="export"
+            type="primary"
+            loading={loading}
+            onClick={handleExport}
+          >
             Export
           </Button>,
         ],
       }}
+
     >
       <ProFormDateRangePicker
         name="requestedDate"
@@ -147,12 +162,6 @@ const Export: React.FC = () => {
           { label: 'Rejected', value: 'REJECTED' },
         ]}
       />
-
-      {/*<ProFormText*/}
-      {/*  name="requestedBy"*/}
-      {/*  label="Requested By"*/}
-      {/*  placeholder="Employee name or ID"*/}
-      {/*/>*/}
     </ModalForm>
   );
 };

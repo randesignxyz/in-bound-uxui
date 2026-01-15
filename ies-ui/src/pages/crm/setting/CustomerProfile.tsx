@@ -1,101 +1,68 @@
-import React, { useState } from 'react';
-import { theme, Transfer, Tree } from 'antd';
-import type { GetProp, TransferProps, TreeDataNode } from 'antd';
+import { CrmServiceAPI } from "@/services/crm/services";
+import { simpleRequestActions } from "@/services/model";
+import { ArrowRightOutlined } from "@ant-design/icons";
+import { ProForm, ProFormSelect } from "@ant-design/pro-components";
+import { useQuery } from "@umijs/max";
+import { Button, Card, Flex } from "antd";
+import { useForm } from "antd/es/form/Form";
+import { CrmServices } from "../services";
 
-type TransferItem = GetProp<TransferProps, 'dataSource'>[number];
-
-interface TreeTransferProps {
-    dataSource: TreeDataNode[];
-    targetKeys: TransferProps['targetKeys'];
-    onChange: TransferProps['onChange'];
-}
-
-// Customize Table Transfer
-const isChecked = (selectedKeys: React.Key[], eventKey: React.Key) =>
-    selectedKeys.includes(eventKey);
-
-const generateTree = (
-    treeNodes: TreeDataNode[] = [],
-    checkedKeys: TreeTransferProps['targetKeys'] = [],
-): TreeDataNode[] =>
-    treeNodes.map(({ children, ...props }) => ({
-        ...props,
-        disabled: checkedKeys.includes(props.key as string),
-        children: generateTree(children, checkedKeys),
-    }));
-
-const TreeTransfer: React.FC<TreeTransferProps> = ({
-    dataSource,
-    targetKeys = [],
-    ...restProps
-}) => {
-    const { token } = theme.useToken();
-
-    const transferDataSource: TransferItem[] = [];
-    function flatten(list: TreeDataNode[] = []) {
-        list.forEach((item) => {
-            transferDataSource.push(item as TransferItem);
-            flatten(item.children);
-        });
-    }
-    flatten(dataSource);
-
-    return (
-        <Transfer
-            {...restProps}
-            targetKeys={targetKeys}
-            dataSource={transferDataSource}
-            className="tree-transfer"
-            render={(item) => item.title!}
-            showSelectAll={false}
-        >
-            {({ direction, onItemSelect, selectedKeys }) => {
-                if (direction === 'left') {
-                    const checkedKeys = [...selectedKeys, ...targetKeys];
-                    return (
-                        <div style={{ padding: token.paddingXS }}>
-                            <Tree
-                                blockNode
-                                checkable
-                                checkStrictly
-                                defaultExpandAll
-                                checkedKeys={checkedKeys}
-                                treeData={generateTree(dataSource, targetKeys)}
-                                onCheck={(_, { node: { key } }) => {
-                                    onItemSelect(key as string, !isChecked(checkedKeys, key));
-                                }}
-                                onSelect={(_, { node: { key } }) => {
-                                    onItemSelect(key as string, !isChecked(checkedKeys, key));
-                                }}
-                            />
-                        </div>
-                    );
-                }
-            }}
-        </Transfer>
-    );
-};
-
-const treeData: TreeDataNode[] = [
-    { key: '0-0', title: '0-0' },
-    {
-        key: '0-1',
-        title: '0-1',
-        children: [
-            { key: '0-1-0', title: '0-1-0' },
-            { key: '0-1-1', title: '0-1-1' },
-        ],
-    },
-    { key: '0-2', title: '0-2' },
-    { key: '0-3', title: '0-3' },
-    { key: '0-4', title: '0-4' },
-];
 
 export default () => {
-    const [targetKeys, setTargetKeys] = useState<TreeTransferProps['targetKeys']>([]);
-    const onChange: TreeTransferProps['onChange'] = (keys) => {
-        setTargetKeys(keys);
-    };
-    return <TreeTransfer dataSource={treeData} targetKeys={targetKeys} onChange={onChange} />;
-};
+    const requestAction = simpleRequestActions();
+    const api = CrmServiceAPI();
+    const [form] = useForm();
+    const { data, isFetching, refetch } = useQuery({
+        queryKey: ["customer-profile"],
+        queryFn: () => CrmServices.listRelationshipData().query()
+    })
 
+    return <Card>
+        <ProForm layout="horizontal" submitter={false}>
+            <Flex justify="space-between" gap={12} align="baseline" >
+                <div style={{ flex: 1 }}>
+                    <ProFormSelect
+                        name={"target"}
+                        label="Target"
+                        mode="multiple"
+                        fieldProps={{
+                            style: {
+                                width: "100%",
+                            },
+                        }}
+                        request={async () => {
+                            const data = await CrmServices.listLookupData(["SALE_MAIN_CHANNEL", "SALE_SUB_CHANNEL"]).query()
+                            return data?.map((item: any) => ({
+                                label: item.name,
+                                value: item.id,
+                            }))
+                        }}
+                    // options={[
+                    //     { label: "Target 1", value: "target1" },
+                    //     { label: "Target 2", value: "target2" },
+                    //     { label: "Target 3", value: "target3" },
+                    // ]}
+                    />
+                </div>
+                <ArrowRightOutlined />
+                <div style={{ flex: 1 }}>
+                    <ProFormSelect
+                        name={"destination"}
+                        label="Destination"
+                        fieldProps={{
+                            style: {
+                                width: "100%",
+                            },
+                        }}
+                        options={[
+                            { label: "Destination 1", value: "destination1" },
+                            { label: "Destination 2", value: "destination2" },
+                            { label: "Destination 3", value: "destination3" },
+                        ]}
+                    />
+                </div>
+                <Button>Transfer</Button>
+            </Flex>
+        </ProForm>
+    </Card>
+};

@@ -499,14 +499,14 @@ const Crm: React.FC = () => {
       // visible: access.canAccessVerifiedLocationMenu
       visible: access.canAccessCRMVerification
     },
-    {
-      id: 'setting',
-      name: 'Setting Configuration',
-      description: "Set up and Configuation",
-      link: `${CrmPaths.setting}/list`,
-      icon: customer_verified,
-      visible: access.canAccessCRMSetting
-    },
+    // {
+    //   id: 'setting',
+    //   name: 'Setting Configuration',
+    //   description: "Set up and Configuation",
+    //   link: `${CrmPaths.setting}/list`,
+    //   icon: customer_verified,
+    //   visible: access.canAccessCRMSetting
+    // },
 
   ];
 

@@ -1135,6 +1135,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_FMA_WF_NEW_STAFF_REQUESTER'].some((it) => it === item),
       ) || false,
+    canRequestFMANewStaffRequestExport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_FMA_WF_NEW_STAFF_REQUESTER_EXPORT'].some((it) => it === item),
+      ) || false,  
 
     canAccessITNewStaffMenuITem:
       currentUser?.authorities.some((item) =>
@@ -1144,7 +1148,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_ICT_WF_NEW_STAFF_REQUESTER'].some((it) => it === item),
       ) || false,
-
+    canRequestItNewStaffRequestExport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_ICT_WF_NEW_STAFF_REQUESTER_EXPORT'].some((it) => it === item),
+      ) || false, 
     // Reach-2024-02-13
     canAccessFleetMenu:
       currentUser?.authorities.some((item) =>

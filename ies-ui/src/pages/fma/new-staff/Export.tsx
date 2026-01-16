@@ -61,21 +61,21 @@ const Export: React.FC = () => {
   const handleExport = async (e:any) => {
     try {
       const dataForm =  await form.validateFields()
-      const reportName ='New Staff Support Request Report'
+      const reportName ='FM - New Staff Support Request Report'
       setLoading(true)
       await downloadGenericReport(requestActions)({
         fileName: `${reportName}-${moment().format()}.xls`,
         type: 'EXCEL',
         data: {
-          reportName: 'new-staff-report',
-          reportPath: getUrlReporting('fma'),
+          reportName: 'fma-new-staff-support-report',
+          reportPath: getUrlReporting('hrm'),
           data: [
             {key:'dateFrom', value: dataForm.requestedDate?.[0], type:'dateTime'},
             {key:'dateTo', value: dataForm.requestedDate?.[1], type:'dateTime'},
             ...(dataForm.status || ['All']).map(it => ({ key: 'status', value: it })),
             ...(dataForm.buIds || []).map(it => ({ key: 'buIds', value: it })),
-            ...(dataForm.departmentIds || []).map(it => ({ key: 'departmentId', value: it })),
-            {key:'startWithRole', value: 'ROLE_FMA_WF_NEW_STAFF_REQUESTER'}
+            ...(dataForm.departmentIds || []).map(it => ({ key: 'deptIds', value: it })),
+            {key:'startWithRole', value: 'ROLE_FMA_WF_NEW_STAFF'}
           ]
         }
       }).then(()=>{
@@ -89,7 +89,7 @@ const Export: React.FC = () => {
 
   return (
     <ModalForm<FormData>
-      title="Export New Staff Requests"
+      title="Export FMA - New Staff Support Request"
       trigger={
         <Button type="link" icon={<ExportOutlined />}>
           Export

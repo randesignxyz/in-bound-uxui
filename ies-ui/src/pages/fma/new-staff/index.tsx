@@ -56,7 +56,7 @@ export default () => {
             quickSearch: true,
           extra: (
             <Space>
-              {access.canRequestFMANewStaffRequest && <Export />}
+              {access.canRequestFMANewStaffRequestExport && <Export />}
             </Space>
           ),
           addNewAction: access.canRequestFMANewStaffRequest

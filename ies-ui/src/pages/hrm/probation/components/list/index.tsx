@@ -212,7 +212,7 @@ export default function ProbationListPage() {
             { option: { label: "Rejected", value: "REJECTED" } },
           ],
           onRefresh: refetch,
-          onFilter: (params) => {
+          onFilter: (params: any) => {
             const status = params?.advanceSearch?.status || params?.status;
             setCurrentStatus(status);
             setFilter((p) => ({

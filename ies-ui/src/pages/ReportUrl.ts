@@ -4,5 +4,5 @@ export const getUrlReporting=(url: string) => {
         case 'QA': return `/Reports/qa/${url}`
         case 'PRO': return `/Reports/${url}`
         default: throw Error(`${url} cannot be found`)
-    }
+    }    
 }

@@ -443,6 +443,15 @@ export default [
     access: 'canAccessHrJOB',
     component: './hrm/job',
   },
+
+  {
+    path: '/hrm/ipo/:view/*',
+    name: 'ipo',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessHRMIPO',
+    component: './hrm/ipo',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/

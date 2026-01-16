@@ -151,8 +151,8 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, openInTab, onBack 
           { label: 'Created Date', value: formatDateTime(state.data?.detail?.createdDate) },
           { label: 'Schedule Type', value: state.data?.detail?.scheduleType },
           { label: 'Status', value: state.data?.detail?.status },
-          { label: 'Completed Date', value: formatDateTime(state.data?.detail?.completedDate) },
-          { label: 'Completed By', value: state.data?.detail?.completedBy },
+          { label: state.data?.detail?.status == "PENDING" ? "" : state.data?.detail?.status == "CANCELED" ? "Canceled Date" : "Completed Date", value: formatDateTime(state.data?.detail?.completedDate) },
+          { label: state.data?.detail?.status == "PENDING" ? "" : state.data?.detail?.status == "CANCELED" ? "Canceled By" : "Completed By", value: state.data?.detail?.status == "PENDING" ? "" : state.data?.detail?.completedBy },
           { label: 'Remarks', value: state.data?.detail?.remarks },
         ]}
       />

@@ -80,7 +80,7 @@ export const SaleService = (serviceName?: SaleServiceName): ServiceType => {
 };
 
 const ReqParams = {
-   fetchSoSummary: (data?: number[]): ServiceApiType<{}> => ({
+  fetchSoSummary: (data?: number[]): ServiceApiType<{}> => ({
     type: 'FETCH_QUERY',
     endpoint: 'SALE',
     actionName: 'fetch-so-summary',
@@ -169,7 +169,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     salespersonCode?: string[];
   }>(actions),
 
-  fetchSoSummary: (data?: number[]) => find<SoSummary>(ReqParams.fetchSoSummary(data))(actions),
+  fetchSoSummary: (param: any) => find<SoSummary>(ReqParams.fetchSoSummary(param))(actions),
 
   listSoByVisitId: (visitId: number) =>
     findAll<SoItemLess>(ReqParams.listSoByVisitIdParam(visitId))(actions),

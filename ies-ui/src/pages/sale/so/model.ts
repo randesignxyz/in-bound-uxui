@@ -8,6 +8,7 @@ import {
   OfferParams,
   PackageOffer,
   So,
+  SoAdvanceSearchParams,
   SoDeliveryMethod,
 } from '@/services/sale/data';
 import { SaleServiceAPI } from '@/services/sale/services';
@@ -16,6 +17,7 @@ import { SortOrder } from 'antd/lib/table/interface';
 import { groupBy, map, sortBy, sumBy, uniqueId } from 'lodash';
 import { useReducer } from 'react';
 import { DeliveryEntry, DeliveryItemEntry, reducer, SoItemEntry, State } from './reducer';
+import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 
 export const Model = () => {
   const initState: State = {
@@ -128,23 +130,26 @@ export const Model = () => {
     }
   };
 
-  const loadListItem = async (
-    criteria?: { advanceSearch?: any; searchValue?: string, divisionId?: number[] },
-    pagination?: {
-      pageSize?: number;
-      current?: number;
-    },
-    sort?: Record<string, SortOrder>,
+  const loadListItem = async (param: TableViewSearchParams<SoAdvanceSearchParams>
+    // criteria?: { advanceSearch?: any; searchValue?: string, divisionId?: number[] },
+    // pagination?: {
+    //   pageSize?: number;
+    //   current?: number;
+    // },
+    // sort?: Record<string, SortOrder>,
   ) => {
-    loadSoSummary(criteria?.divisionId);
+    loadSoSummary({
+      saleArea: param.criteria?.advanceSearch?.saleArea,
+      orderedDate: param.criteria?.advanceSearch?.orderedDate
+    });
     return await saleServices.listSo(
-      { ...criteria, sort: sort },
-      { pageSize: pagination?.pageSize || 20, page: (pagination?.current || 1) - 1 },
+      { ...param.criteria, sort: param.criteria?.sort },
+      { pageSize: param.pagination?.pageSize || 20, page: (param.pagination?.current || 1) - 1 },
     );
   };
 
-  const loadSoSummary = (divisionId: number[] | undefined) => {
-    saleServices.fetchSoSummary(divisionId).then((data) => {
+  const loadSoSummary = (param: any) => {
+    saleServices.fetchSoSummary(param).then((data) => {
       dispatch({ type: 'setSoSummary', payload: data });
     });
   };

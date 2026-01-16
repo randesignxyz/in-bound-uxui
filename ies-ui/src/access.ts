@@ -1372,6 +1372,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessCRMGratis: canAccess("CRM_GRATIS"),
     canAccessCRMSetting: canAccess("CRM_SETTING"),
 
+
+    // ============= REACH PHEUN HRM Customer 15-01-2026 ============
+    canAccessHRMIPO: canAccess("HRM_IPO"),
+
     canAccessSALE: currentUser?.authorities?.some((it: string) => it.toUpperCase().startsWith("ROLE_SALE") || it == "ROLE_ADMIN"),
     canAccess,
     can,

@@ -89,14 +89,14 @@ export default () => {
             link: `${HrmPaths.job}/list`,
             icon: jobImage,
         },
-        // {
-        //     id: 'ipo',
-        //     name: 'IPO',
-        //     description: 'Individule Performance Objectives',
-        //     visible: access.canAccessHRMIPO,
-        //     link: `${HrmPaths.ipo}/list`,
-        //     icon: ipoImage,
-        // },
+        {
+            id: 'ipo',
+            name: 'IPO',
+            description: 'Individule Performance Objectives',
+            visible: access.canAccessHRMIPO,
+            link: `${HrmPaths.ipo}/list`,
+            icon: ipoImage,
+        },
     ]
 
     return (

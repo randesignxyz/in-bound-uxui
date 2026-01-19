@@ -11,7 +11,7 @@ const IPOForm: React.FC<Props> = ({ }) => {
 
     return (
         <>
-            <Card >
+            <Card size="small">
                 <Flex vertical gap={16}>
                     <IPOHeaderForm
                         basiceInfo={{

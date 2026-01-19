@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Typography, Tag, Flex, Button, Space } from 'antd';
+import { Card, Table, Typography, Tag, Flex, Button, Space, message } from 'antd';
 import type { ProColumns } from '@ant-design/pro-components';
 import { EditableProTable } from '@ant-design/pro-components';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Moment } from 'moment';
 
 const { Text } = Typography;
 
@@ -13,8 +14,8 @@ interface DataType {
     actionPlan: string;
     kpi: string;
     weight: string;
-    startDate: string;
-    dueDate: string;
+    startDate?: Moment;
+    dueDate?: Moment;
     midYearReview: string;
     selfEvaluation: number;
     yearEndReview: number;
@@ -25,55 +26,55 @@ const defaultData: DataType[] = [
     {
         key: '1',
         no: 1,
-        objectives: 'SFA Version I',
-        actionPlan: 'Deliver task or work on agreed deadlines with high-quality results\nDevelop parts of the back-end and Web front-end core features:\n1.Call Plan\n2.Sales Order\n3.Dashboard',
-        kpi: 'Go-Live: 30 Sep 2025',
-        weight: '40%',
-        startDate: 'Jan-25',
-        dueDate: 'Dec-25',
-        midYearReview: 'Completed',
+        objectives: '',
+        actionPlan: '',
+        kpi: '',
+        weight: '',
+        startDate: undefined,
+        dueDate: undefined,
+        midYearReview: '',
         selfEvaluation: 0,
         yearEndReview: 0,
-        justification: 'Go live late on Oct 2025',
+        justification: '',
     },
     {
         key: '2',
         no: 2,
-        objectives: 'SFA Version II',
-        actionPlan: 'Deliver task or work on agreed deadlines with high-quality results\nDevelop parts of back-end and Web front-end core features.\n1 Reporting\n2 Perfect Store',
-        kpi: 'Go-Live: 31 Oct 2025',
-        weight: '20%',
-        startDate: 'Jan-25',
-        dueDate: 'Dec-25',
-        midYearReview: 'On-Track',
+        objectives: '',
+        actionPlan: '',
+        kpi: '',
+        weight: '',
+        startDate: undefined,
+        dueDate: undefined,
+        midYearReview: '',
         selfEvaluation: 0,
         yearEndReview: 0,
-        justification: 'Go-live late on Nov 2025',
+        justification: '',
     },
     {
         key: '3',
         no: 3,
-        objectives: 'Car Booking Process Automation',
-        actionPlan: 'Deliver task or work on agreed deadlines with high-quality result\nReview and assess the existing system\nDevelop a new version of Car Booking System to improve efficiency',
-        kpi: 'Go-Live: 15 Dec 2025',
-        weight: '10%',
-        startDate: 'Jan-25',
-        dueDate: 'Dec-25',
-        midYearReview: 'At Risk',
+        objectives: '',
+        actionPlan: '',
+        kpi: '',
+        weight: '',
+        startDate: undefined,
+        dueDate: undefined,
+        midYearReview: '',
         selfEvaluation: 0,
         yearEndReview: 0,
-        justification: 'Business change to set priority on sale and he completed others project like Customer Prospect, Sale Visit by Customer Location, Share Customer',
+        justification: '',
     },
     {
         key: '4',
         no: 4,
-        objectives: 'System Support',
-        actionPlan: 'CRM, Fleet, Document Management System, Sales, AMT\nPerform back-end deployments',
-        kpi: 'Monthly Incident Resolution: 100%\nSLA resolved Incidents and service requests: 4hr/case\n100% of incident tickets raised in IES',
-        weight: '30%',
-        startDate: 'Jan-25',
-        dueDate: 'Dec-25',
-        midYearReview: 'Completed',
+        objectives: '',
+        actionPlan: '',
+        kpi: '',
+        weight: '',
+        startDate: undefined,
+        dueDate: undefined,
+        midYearReview: '',
         selfEvaluation: 0,
         yearEndReview: 0,
         justification: '',
@@ -90,8 +91,9 @@ const renderStatus = (status: string) => {
 };
 
 const SectionForm: React.FC = () => {
-    const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
+    const [editableKeys, setEditableRowKeys] = useState<React.Key[]>(() => defaultData.map((item) => item.key));
     const [dataSource, setDataSource] = useState<DataType[]>(defaultData);
+    const [errorRowKey, setErrorRowKey] = useState<string | null>(null);
 
     const columns: ProColumns<DataType>[] = [
         {
@@ -100,8 +102,7 @@ const SectionForm: React.FC = () => {
             key: 'no',
             width: 20,
             align: 'center',
-            onCell: () => ({ style: { backgroundColor: '#d9d9d9', fontWeight: 'bold' } }),
-            fixed: 'left',
+            onCell: () => ({ style: { backgroundColor: '#f5f4f4ff', fontWeight: 'bold' } }),
             editable: false,
         },
         {
@@ -131,24 +132,43 @@ const SectionForm: React.FC = () => {
             title: 'WEIGHT',
             dataIndex: 'weight',
             key: 'weight',
-            // width: 80,
+            width: 30,
             align: 'center',
+            valueType: "digit",
+            fieldProps: {
+                min: 0,
+                max: 100,
+                style: {
+                    textAlign: 'center',
+                },
+            },
+            // onCell: (record) => ({
+            //     style: {
+            //         border: record.key === errorRowKey ? '1px solid red' : undefined,
+            //     },
+            // }),
         },
         {
             title: 'START DATE',
             dataIndex: 'startDate',
             key: 'startDate',
-            // width: 100,
+            width: 150,
             align: 'center',
-            valueType: 'date',
+            valueType: 'dateMonth',
+            fieldProps: {
+                format: 'MMM-YYYY',
+            }
         },
         {
             title: 'DUE DATE',
             dataIndex: 'dueDate',
             key: 'dueDate',
-            // width: 100,
+            width: 150,
             align: 'center',
             valueType: 'date',
+            fieldProps: {
+                format: 'DD-MMM-YYYY',
+            }
         },
         {
             title: 'MID-YEAR REVIEW',
@@ -200,7 +220,7 @@ const SectionForm: React.FC = () => {
             }),
         },
         {
-            title: 'Option',
+            title: 'Action',
             valueType: 'option',
             width: 50,
             // fixed: 'right',
@@ -218,11 +238,27 @@ const SectionForm: React.FC = () => {
                         onClick={() => setDataSource(dataSource.filter((item) => item.key !== record.key))}
                     />
                 </Space>
-
-
             ],
         },
     ];
+
+    const handleValuesChange = (record: DataType, dataSource: DataType[]) => {
+        setDataSource(dataSource);
+
+        const totalWeight = dataSource.reduce((sum, item) => {
+            return sum + (parseFloat(item.weight || '0') || 0);
+        }, 0);
+
+        if (totalWeight > 100) {
+            setErrorRowKey(record.key);
+            // Only show message if not already in error state to avoid spam
+            if (!errorRowKey) {
+                message.error('Total weight cannot exceed 100%');
+            }
+        } else {
+            setErrorRowKey(null);
+        }
+    };
 
     return (
         <Flex vertical gap={8}>
@@ -243,7 +279,7 @@ const SectionForm: React.FC = () => {
                 scroll={{ x: 'max-content' }}
 
                 value={dataSource}
-                onChange={setDataSource}
+                onValuesChange={(values) => setDataSource([...values])}
                 recordCreatorProps={{
                     newRecordType: 'dataSource',
                     position: 'bottom',
@@ -253,6 +289,7 @@ const SectionForm: React.FC = () => {
                     type: 'multiple',
                     editableKeys,
                     onChange: setEditableRowKeys,
+                    onValuesChange: handleValuesChange,
                 }}
                 bordered
                 size="small"
@@ -268,12 +305,11 @@ const SectionForm: React.FC = () => {
                     });
 
                     // Weighted calc
-                    const weightedSelfEval = pageData.reduce((acc, curr) => acc + (Number(curr.selfEvaluation || 0) * parseFloat(curr.weight || '0') / 100), 0);
-                    const finalSelfEval = weightedSelfEval * 0.7;
+                    const weightedSelfEval = pageData.reduce((acc, curr) => acc + (Number(curr.selfEvaluation || 0) * (parseFloat(curr.weight || '0') / 100)), 0);
+                    const finalSelfEval = weightedSelfEval * 0.7; // =SUMPRODUCT(J28:J31,$F$28:$F$31)*70%
 
-                    const weightedYearEnd = pageData.reduce((acc, curr) => acc + (Number(curr.yearEndReview || 0) * parseFloat(curr.weight || '0') / 100), 0);
+                    const weightedYearEnd = pageData.reduce((acc, curr) => acc + (Number(curr.yearEndReview || 0) * (parseFloat(curr.weight || '0') / 100)), 0);
                     const finalYearEnd = weightedYearEnd * 0.7;
-
 
                     return (
                         <Table.Summary.Row style={{ backgroundColor: '#d9d9d9', fontWeight: 'bold' }}>

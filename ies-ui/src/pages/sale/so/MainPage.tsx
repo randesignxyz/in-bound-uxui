@@ -343,10 +343,7 @@ export default () => {
                         title: "Sub Section",
                         dataIndex: "subSection"
                     },
-                    // {
-                    //     title: 'Region',
-                    //     dataIndex: 'region',
-                    // },
+
                     {
                         title: 'Del. Method',
                         render: (_, r) => r.deliveryMethod,
@@ -358,6 +355,10 @@ export default () => {
                         dataIndex: "orderDate",
                         width: 150,
                         render: (_, data) => formatDateTime(data.orderedDate),
+                    },
+                    {
+                        title: 'Del. Date',
+                        render: (_, r) => moment(r.deliveryDate).format('YYYY-MM-DD'),
                     },
                     // {
                     //     title: 'First Delivery Date',

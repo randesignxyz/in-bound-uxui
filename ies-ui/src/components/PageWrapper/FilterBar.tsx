@@ -22,7 +22,7 @@ export default ({
 }: {
     onStatusRender?: React.ReactNode,
     onAddTab?: () => void;
-    statuses: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true } & { subOptions?: (SegmentedLabeledOption & { default?: true })[]})[] }[],
+    statuses: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true } & { subOptions?: (SegmentedLabeledOption & { default?: true })[] })[] }[],
     advanceSearchButton?: React.ReactElement;
     actionButtons?: (React.ReactNode | (ButtonProps & {
         key?: React.Key;
@@ -54,7 +54,7 @@ export default ({
         <Flex >
             <Flex>
                 <Flex >
-                  {onSearch && <Input.Search allowClear onSearch={onSearch} />}
+                    {onSearch && <Input.Search allowClear onSearch={onSearch} />}
 
                 </Flex>
                 {(onOpenAdvanceSearch || advanceSearchButton) && <Flex>
@@ -87,9 +87,9 @@ export default ({
                             setSubStatusValue(value)
                             onSubStatusChanged?.(value)
                             // subStatus2
-                            const subStatus2 = statuses.find(it=> it.subOptions)?.subOptions?.find(it => it.value == value)?.subOptions
-                            setSubStatuses2(subStatus2||[])
-                            console.log(value,subStatus2)
+                            const subStatus2 = statuses.find(it => it.subOptions)?.subOptions?.find(it => it.value == value)?.subOptions
+                            setSubStatuses2(subStatus2 || [])
+                            console.log(value, subStatus2)
                             setSubStatusValue2(subStatus2?.find(it => it.default)?.value)
                             onSubStatus2Changed?.(subStatus2?.find(it => it.default)?.value)
                         }}

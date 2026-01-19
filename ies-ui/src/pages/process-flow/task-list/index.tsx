@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card, Checkbox, Flex, Modal, Space, Spin, Switch, message } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Checkbox, Modal, Space, Switch } from 'antd';
 import { history } from 'umi';
-import { PageContainer } from '@ant-design/pro-components';
+import { ProTableProps } from '@ant-design/pro-components';
 import { ActionType } from '@ant-design/pro-table';
 
 import styles from './style.less';
@@ -16,6 +15,8 @@ import ProcessFlowModel from '@/models/ProcessFlowModel';
 import { SortOrder } from 'antd/lib/table/interface';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { set } from 'lodash';
+import PageWrapper from '@/components/PageWrapper';
+import Form from '../form';
 
 const TaskList = () => {
   const model = ProcessFlowModel();
@@ -30,7 +31,6 @@ const TaskList = () => {
     latest: true,
     myRequest: false
   });
-
   const [latest, setLatest] = useState(true);
   const supTitle = (total: number) => {
     return <sup
@@ -58,7 +58,6 @@ const TaskList = () => {
       ...v,
       myRequest: value
     }))
-    actionRef.current?.reloadAndRest?.();
   }
 
   const extraContent = (
@@ -68,11 +67,10 @@ const TaskList = () => {
         isGlobal
         selectedItem={state.taskStatusFilterList?.find(it => it.id === searchParams.status) || defaultTaskStatus}
         onSearch={data => {
-          setSearchParams(prev => ({ ...prev, ...data, latest }));
-          actionRef.current?.reloadAndRest?.();
+          setSearchParams(prev => ({ ...prev, ...data }));
         }}
       />
-      {(total>0) && <Checkbox name="myRequest" onChange={onMyRequestHandler}>My Request{supTitle(total)}</Checkbox>}
+      {(total > 0) && <Checkbox name="myRequest" onChange={onMyRequestHandler}>My Request{supTitle(total)}</Checkbox>}
     </Space>
   );
 
@@ -84,13 +82,13 @@ const TaskList = () => {
 
   const onRequestHandler = async (params: TableViewSearchParams<TaskListAdvanceSearchParams>) => {
     try {
-      const criteria =  {
+      const criteria = {
         isGlobal: searchParams.isGlobal,
         status: searchParams.status,
         myRequest: searchParams.myRequest,
         latest: searchParams.latest
       } as TaskListAdvanceSearchParams
-      await actions.fetchMyRequestCount(criteria).then(rs=> setTotal(rs.total))
+      await actions.fetchMyRequestCount(criteria).then(rs => setTotal(rs.total))
       return await actions.loadTaskList(params);
     } catch (error) {
       return Promise.reject();
@@ -98,9 +96,8 @@ const TaskList = () => {
   };
 
   useEffect(() => {
-    setSearchParams(prev => ({ ...prev, latest }));
-    actionRef.current?.reloadAndRest?.();
-  }, [latest]);
+    actionRef.current?.reload();
+  }, [searchParams, latest]);
 
   const actionHandlers = {
     onGogoDataView: handleGogoDataView,
@@ -131,40 +128,87 @@ const TaskList = () => {
     },
     onAssign: (item: UserTask) => { },
     onRequest: (pagination: {
-                  pageSize?: number;
-                  current?: number;
-                },
-                sort?: Record<string, SortOrder>,) => onRequestHandler({
-      criteria: { ...searchParams, advanceSearch: { ...searchParams, latest }, sort },
-      pagination,
-    }),
+      pageSize?: number;
+      current?: number;
+    },
+      sort?: Record<string, SortOrder>,) => onRequestHandler({
+        criteria: { ...searchParams, advanceSearch: { ...searchParams, latest }, sort },
+        pagination,
+      }),
     onShowAuthorizedTasksModal: (item: UserTask) => actions.showUserDest(item.taskId),
     onShowDiagram: (item: UserTask) => actions.loadDiagram(item.instanceInfo.processInstanceId),
     onDownload: (item: UserTask) => actions.downloadForm(item.instanceInfo.processInstanceId, `${item.instanceInfo.processName}.pdf`)
   };
 
   return (
-    <PageContainer title={false}>
-      <Card
-        style={{ backgroundColor: '#fafafa' }}
-        title={extraContent}
-        className={styles.listCard}
-        bordered={false}
-        extra={
-          <Space>
-            <Switch checked={latest} onChange={setLatest} checkedChildren="Latest" />
-            <Button type="link" icon={<ReloadOutlined />} onClick={() => actionRef.current?.reloadAndRest?.()} />
-          </Space>
+    <>
+      <PageWrapper<UserTask, TaskListAdvanceSearchParams, undefined>
+        tabRender={(entity) => [
+          {
+            action: 'view',
+            tabKey: entity?.taskId,
+            tabLabel: entity?.instanceInfo?.businessKey || entity?.taskName || 'Task Detail',
+            panel: (props) => (
+              <Form openInTab formKey={entity?.formKey || ''} id={entity?.taskId} {...props} />
+            ),
+          },
+        ]}
+        listView={
+          {
+            type: 'Table',
+            title: 'Task List',
+            disableSearch: true,
+            advanceSearchButton: (
+              <Space align="center">
+                {extraContent}
+              </Space>
+            ),
+            actionButtons: [
+              <Space align="center">
+              <Switch checked={latest} onChange={setLatest} checkedChildren="Latest" />
+              </Space>
+            ],
+            props: {
+              tableRender: (
+                props: ProTableProps<UserTask, TaskListAdvanceSearchParams>,
+              ) => {
+                return (
+                  <TaskItemListView
+                    {...props}
+                    data={state.taskList}
+                    actionRef={actionRef}
+                    actionHandlers={actionHandlers}
+                  />
+                );
+              },
+              onFilter: (values: any) => {
+                setSearchParams(prev => ({
+                  ...prev,
+                  status: values.status,
+                }))
+              },
+              request: async (params, sort) => {
+                const result = await onRequestHandler({
+                  pagination: { current: params.criteria.current, pageSize: params.criteria.pageSize },
+                  criteria: {
+                    ...searchParams,
+                    sort: sort as Record<string, SortOrder>,
+                    advanceSearch: { ...searchParams, latest },
+                  },
+                });
+                return {
+                  data: result.items,
+                  success: true,
+                  total: result.total,
+                };
+              },
+              columns: [],
+            },
+          } as any
         }
-      >
-        <TaskItemListView
-          data={state.taskList}
-          actionRef={actionRef}
-          actionHandlers={actionHandlers}
-        />
-      </Card>
+      />
       <ProcessFlowModalMngt onRefresh={actionRef.current?.reloadAndRest} workflowModel={model} />
-    </PageContainer>
+    </>
   );
 };
 

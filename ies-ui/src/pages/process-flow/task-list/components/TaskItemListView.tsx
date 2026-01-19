@@ -21,16 +21,17 @@ import {
 import ProList from '@ant-design/pro-list';
 import { ActionType } from '@ant-design/pro-table';
 import { useAccess } from '@umijs/max';
-import { BackTop, Button, Col, Descriptions, Dropdown, Flex, Menu, message, Modal, Row, Space, Tag, Tooltip } from 'antd';
+import { BackTop, Button, Col, Descriptions, Dropdown, Flex, Menu, message, Modal, Row, Space, SpinProps, Tag, Tooltip } from 'antd';
 import { SortOrder } from 'antd/lib/table/interface';
 import moment from 'moment';
-import React, { MutableRefObject, useState } from 'react';
+import React, { MutableRefObject, useState, useContext } from 'react';
 import { getQuikview } from '../../form-resources';
 import DefaultQuickView from './DefaultQuickView';
+import { PageWrapperContext } from '@/components/PageWrapper';
 
 interface Props {
   data?: Paging<UserTask>;
-  loading?: boolean;
+  loading?: boolean | SpinProps;
   actionRef?: MutableRefObject<ActionType | undefined>;
   actionHandlers?: {
     onGotoPage?: (page: number, pageSize?: number) => void;
@@ -74,6 +75,7 @@ const ListContent = ({ data }: { data: UserTask }) => (
 export default ({ data, actionRef, actionHandlers }: Props) => {
 
   const access = useAccess()
+  const { onAddTab, tabRender } = useContext(PageWrapperContext);
   const [assignModal, setAssignModal] = useState<UserTask>()
   const requestActions = simpleRequestActions()
   const ActionBtn: React.FC<{
@@ -157,7 +159,6 @@ export default ({ data, actionRef, actionHandlers }: Props) => {
       }
     })
   }
-
   return (<div>
     <ProList<UserTask>
       rowKey="id"
@@ -175,7 +176,14 @@ export default ({ data, actionRef, actionHandlers }: Props) => {
               <Button type='link' onClick={() => {
                 actionHandlers?.onGogoDataView?.(r, true)
               }} title='Open in new tab' icon={<ExportOutlined size={5} />} />
-              <a onClick={(e) => actionHandlers?.onGogoDataView?.(r)}>
+              <a onClick={(e) => {
+                const tabProp = tabRender?.(r).find(it => it.action == 'view')
+                if (tabProp && onAddTab) {
+                  onAddTab(r, tabProp)
+                } else {
+                  actionHandlers?.onGogoDataView?.(r)
+                }
+              }}>
                 {' '}
                 {r.instanceInfo.businessKey}{' '}
               </a></Flex>
@@ -208,5 +216,3 @@ export default ({ data, actionRef, actionHandlers }: Props) => {
   </div>
   );
 };
-
-

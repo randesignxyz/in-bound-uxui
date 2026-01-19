@@ -1408,6 +1408,8 @@ export interface SoAdvanceSearchParams {
   customerType?: string;
   hasAttachment?: boolean;
   saleArea?: number[];
+  divisionId?: number[];
+  orderedDate?: moment.Moment[];
 }
 
 export interface StockStoreAdvanceSearchParams {

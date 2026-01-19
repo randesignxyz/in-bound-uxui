@@ -65,6 +65,7 @@ const ExcelSaleAreaFilter: React.FC<ExcelSaleAreaFilterProps> = ({
         <ProFormCascader
             name={name}
             width={width}
+            placeholder={""}
             request={async () => {
                 const res = (await CrmServices.listSaleAreas().query(
                     requestActions

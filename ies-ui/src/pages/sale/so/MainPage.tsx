@@ -6,7 +6,7 @@ import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
 import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
-import { FetchPagingParams } from "@/components/DataCrud/TableView"
+import { FetchPagingParams, TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { ActionType, ProForm, ProFormCascader } from "@ant-design/pro-components"
 import { useAccess, useParams, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
@@ -18,6 +18,7 @@ import QuickView from './components/List/QickView'
 import AdvanceSearch from './components/List/AdvanceSearch'
 import { simpleRequestActions } from '@/services/model'
 import ExcelSaleAreaFilter from './components/ExcelFilterSelect'
+import moment from 'moment'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -29,22 +30,21 @@ export default () => {
     const [form] = Form.useForm();
     const access = useAccess();
     const param = useParams();
-    const defaultSetRef = useRef(false)
-    const [filter, setFilter] = useState<FetchPagingParams<SoAdvanceSearchParams>>({
+    const [filter, setFilter] = useState<TableViewSearchParams<SoAdvanceSearchParams>>({
         criteria: {
-            status: 'Pending',
-            customerType: 'Direct',
-            saleArea: [0],
+            advanceSearch: {
+                status: 'Pending',
+                customerType: 'Direct',
+                saleArea: [0],
+                divisionId: [0],
+                orderedDate: [moment().subtract(3, 'months'), moment()]
+            }
         }
-    })
+    });
 
-    const { data, isFetching, refetch } = useQuery(['fetch-sale-pagin', filter], () => actions.loadListItem({
-        advanceSearch: { ...filter.criteria },
-        searchValue: filter.keywords,
-        divisionId: filter.criteria?.saleArea?.length ? filter.criteria?.saleArea : [0]
-    }, filter.pagination, filter.sort), {
+    const { data, isFetching, refetch } = useQuery(['fetch-sale-pagin', filter], () => actions.loadListItem(filter), {
         refetchOnWindowFocus: false,
-        refetchInterval: 60000
+        refetchInterval: 3600000
     })
 
 
@@ -58,24 +58,12 @@ export default () => {
     const [saleArea, setSaleArea] = useState<any[]>([]);
 
     useEffect(() => {
-        const pendingCount = filter.criteria?.customerType == 'All' ? ((state.data?.soSummary?.pendingDirect ?? 0) + (state.data?.soSummary?.pendingIndirect ?? 0)) :
-            filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect :
+        const pendingCount = filter.criteria?.advanceSearch?.customerType == 'All' ? ((state.data?.soSummary?.pendingDirect ?? 0) + (state.data?.soSummary?.pendingIndirect ?? 0)) :
+            filter.criteria?.advanceSearch?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect :
                 state.data?.soSummary?.pendingIndirect
 
-        let totalPending = 0;
+        let totalPending = (state.data?.soSummary?.pendingDirect ?? 0) + (state.data?.soSummary?.pendingIndirect ?? 0);
 
-        switch (filter.criteria?.customerType) {
-            case 'All':
-                totalPending = state.data?.soSummary?.allPending ?? 0;
-                break;
-
-            case 'Direct':
-                totalPending = (state.data?.soSummary?.allPending ?? 0) - (state.data?.soSummary?.pendingIndirect ?? 0);
-                break;
-
-            default:
-                totalPending = (state.data?.soSummary?.allPending ?? 0) - (state.data?.soSummary?.pendingDirect ?? 0);
-        }
         statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed, totalPending)
     }, [state.data?.soSummary])
 
@@ -152,26 +140,58 @@ export default () => {
                         ...v,
                         criteria: {
                             ...v.criteria,
-                            customerType: value
+                            advanceSearch: {
+                                ...v.criteria?.advanceSearch,
+                                customerType: value
+                            }
                         }
                     }))
                     actionRef.current?.reload(true)
                 }}
                     onStatusChanged={(value) => {
                         setIsSelectAll(value == "AllPending")
-                        setFilter(v => ({
-                            ...v,
-                            criteria: {
-                                ...v.criteria,
-                                status: value == "AllPending" ? 'Pending' : value,
-                                saleArea: value == "AllPending" ? optionsRef.current.map(v => v.value) : v.criteria?.saleArea
-                            }
-                        }))
-                        actionRef.current?.reload(true)
+                        if (value == "AllPending") {
+                            setFilter(v => ({
+                                ...v,
+                                criteria: {
+                                    advanceSearch: {
+                                        ...v.criteria?.advanceSearch,
+                                        status: "Pending",
+                                        saleArea: [0],
+                                        divisionId: [0],
+                                        customerType: "All"
+                                    }
+                                }
+                            }))
+                        }
+                        else {
+                            setFilter(v => ({
+                                ...v,
+                                criteria: {
+                                    advanceSearch: {
+                                        ...v.criteria?.advanceSearch,
+                                        status: value == "AllPending" ? 'Pending' : value,
+                                        saleArea: value == "AllPending" ? optionsRef.current.map(v => v.value) : v.criteria?.advanceSearch?.saleArea,
+                                        divisionId: value == "AllPending" ? optionsRef.current.map(v => v.value) : v.criteria?.advanceSearch?.saleArea,
+                                    }
+                                }
+                            }))
+                        }
+                        // setFilter(v => ({
+                        //     ...v,
+                        //     criteria: {
+                        //         advanceSearch: {
+                        //             ...v.criteria?.advanceSearch,
+                        //             status: value == "AllPending" ? 'Pending' : value,
+                        //             saleArea: value == "AllPending" ? optionsRef.current.map(v => v.value) : v.criteria?.advanceSearch?.saleArea,
+                        //             divisionId: value == "AllPending" ? optionsRef.current.map(v => v.value) : v.criteria?.advanceSearch?.saleArea,
+                        //         }
+                        //     }
+                        // }))
+                        // actionRef.current?.reload(true)
                     }} />,
                 onRefresh: refetch,
                 onFilter: (params, page, sort) => {
-
                     setFilter(v => (
                         {
                             ...v, keywords: params?.searchValue
@@ -185,32 +205,44 @@ export default () => {
                     ))
                 },
 
-                advanceSearchButton: <Space align='center'>
+                advanceSearchButton: <Space align='baseline'>
                     <Button style={{ marginTop: -6 }} icon={<FileSearchOutlined />}
                         onClick={() => modals.showModal('advanceSearch')}
                     />
-
                     <ProForm
                         form={form}
                         submitter={false}
                     >
-
                         <ExcelSaleAreaFilter
                             form={form}
                             requestActions={requestActions}
                             isSelectAll={isSelectAll}
+                            width={90}
                             onInit={(values, options) => {
                                 setSaleArea(options);
                                 setFilter(v => ({
                                     ...v,
-                                    criteria: { ...v.criteria, saleArea: values },
+                                    criteria: {
+                                        ...v.criteria,
+                                        advanceSearch: {
+                                            ...v.criteria?.advanceSearch,
+                                            saleArea: values,
+                                            divisionId: values
+                                        }
+                                    },
                                 }));
                             }}
                             onChange={(values, options) => {
-                                setSaleArea(options);
                                 setFilter(v => ({
                                     ...v,
-                                    criteria: { ...v.criteria, saleArea: values },
+                                    criteria: {
+                                        ...v.criteria,
+                                        advanceSearch: {
+                                            ...v.criteria?.advanceSearch,
+                                            saleArea: values.length > 0 ? values : [0],
+                                            divisionId: values.length > 0 ? values : [0]
+                                        }
+                                    },
                                 }));
                             }}
                         />
@@ -227,12 +259,14 @@ export default () => {
                     onChange: (pagination, filters, sorter, extra) => {
                         const s = Array.isArray(sorter) ? sorter[0] : sorter;
                         setFilter(v => ({
+                            ...v,
                             criteria: {
                                 ...v.criteria,
+                                ...filters,
+                                sort: s?.field && s.order ? { [s.field as string]: s.order } : undefined
                             },
-                            pagination,
-                            sort: s?.field && s.order ? { [s.field as string]: s.order } : undefined
-                        }))
+                            pagination
+                        }));
                     },
                     actionButtonsColumnRender: item => [
                         {
@@ -276,7 +310,7 @@ export default () => {
                     }, {
                         title: 'SO #',
                         sorter: 'soNo',
-                        hideInTable: filter.criteria?.status === 'Pending',
+                        hideInTable: filter.criteria?.advanceSearch?.status === 'Pending',
                         width: 110,
                         dataIndex: 'soNo',
                         //render: colLink(actionHandlers?.onDetail, (d) => d.soNo || 'Not Assigned'),
@@ -302,9 +336,17 @@ export default () => {
                         dataIndex: 'province',
                     },
                     {
-                        title: 'Region',
-                        dataIndex: 'region',
+                        title: "Section",
+                        dataIndex: "section"
                     },
+                    {
+                        title: "Sub Section",
+                        dataIndex: "subSection"
+                    },
+                    // {
+                    //     title: 'Region',
+                    //     dataIndex: 'region',
+                    // },
                     {
                         title: 'Del. Method',
                         render: (_, r) => r.deliveryMethod,
@@ -362,30 +404,33 @@ export default () => {
             onOpenChange={(visible) => {
                 !visible && modals.hideModal('advanceSearch');
             }}
-            initData={filter.criteria}
+            initData={filter.criteria?.advanceSearch}
             salespersons={state.data?.initData?.salespersons}
             lookDataList={state.data?.initData?.lookDataList}
             onSearch={(data) => {
-                // console.log(data);
-                // console.log( data.saleArea.length);
-
-
                 setFilter(v => ({
                     ...v,
                     criteria: {
                         ...v.criteria,
-                        ...data,
+                        advanceSearch: {
+                            ...v.criteria?.advanceSearch,
+                            ...data,
+                        }
                         // myTask: (data.saleArea?.length > 0) ? false : data?.myTask
                     }
                 }))
-                actionRef.current?.reload?.(true);
+                // actionRef.current?.reload?.(true);
             }}
             onReset={() => {
                 setFilter(v => ({
                     ...v,
                     criteria: {
-                        status: v.criteria?.status,
-                        customerType: v.criteria?.customerType
+                        advanceSearch: {
+                            ...v.criteria?.advanceSearch,
+                            status: v.criteria?.advanceSearch?.status,
+                            customerType: v.criteria?.advanceSearch?.customerType,
+
+                        }
                     }
                 }))
                 actionRef.current?.reload?.(true);

@@ -7,6 +7,7 @@ import { useAccess } from '@umijs/max';
 import PerformanceReport from './appraisal-request/components/PerformanceReport';
 import jobImage from '../../assets/jobsdes.png';
 import Meeting from '../../assets/meeting.png'
+import ipoImage from '../../assets/ipo.png'
 export const HrmPaths = {
     employee: '/hrm/employee',
     staffRequisition: '/hrm/staff-requisistion',
@@ -16,7 +17,8 @@ export const HrmPaths = {
     appraisalRequest: '/hrm/appraisal-request',
     probationEvaluation: '/hrm/probation-evaluation',
     df: '/hrm/df',
-   job: '/hrm/job'
+    job: '/hrm/job',
+    ipo: '/hrm/ipo'
 }
 
 export default () => {
@@ -65,28 +67,36 @@ export default () => {
             menu: {
                 items: [{ label: <PerformanceReport trigger={<a >Export</a>} />, key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
             }
-        },{
+        }, {
             id: 'probation_evaluation',
             name: 'Probation Evaluation',
             description: 'Probation Evaluation Form',
             visible: access.canAccessProbationEvaluation,
             link: `${HrmPaths.probationEvaluation}/list`,
             icon: requisitionIcon,
-        },{
+        }, {
             id: 'df_360',
             name: '360 Degree Feedback',
             description: '360 Degree Feedback Form',
             visible: access.canAccessDF360,
             link: `${HrmPaths.df}/list`,
             icon: requisitionIcon,
-        },{
-        id: 'job',
-        name: 'Position',
-        description: 'Job Description',
-        visible: access.canAccessHrJOB,
-        link: `${HrmPaths.job}/list`,
-        icon: jobImage,
+        }, {
+            id: 'job',
+            name: 'Position',
+            description: 'Job Description',
+            visible: access.canAccessHrJOB,
+            link: `${HrmPaths.job}/list`,
+            icon: jobImage,
         },
+        // {
+        //     id: 'ipo',
+        //     name: 'IPO',
+        //     description: 'Individule Performance Objectives',
+        //     visible: access.canAccessHRMIPO,
+        //     link: `${HrmPaths.ipo}/list`,
+        //     icon: ipoImage,
+        // },
     ]
 
     return (

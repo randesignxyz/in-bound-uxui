@@ -96,6 +96,7 @@ export interface DNList {
 }
 
 interface mergeItems {
+  remaining_qty: number;
   allocateID?: string
   category?: string
   delItemName?: string

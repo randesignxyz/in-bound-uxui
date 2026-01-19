@@ -89,7 +89,7 @@ export default function ProbationListPage() {
     refetch();
   };
   const supTitle = (count: number) =>
-    total?.pending||0> 0 && (
+    count> 0 && (
       <sup
         style={{
           background: "#ff4d4f",
@@ -100,7 +100,7 @@ export default function ProbationListPage() {
           marginLeft: 6,
         }}
       >
-        { total?.pending}
+        { count}
       </sup>
     );
   const isAdvancedFiltered = () => {

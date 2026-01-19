@@ -251,7 +251,7 @@ return (
           props: {
             dataSource: data?.items||[],
             pagination: { total: data?.total},
-            loading: false,
+            loading: isLoading,
             scroll: { x: 'max-content' },
             bordered: true,
             // loading: isLoading,

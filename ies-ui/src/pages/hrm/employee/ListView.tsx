@@ -37,18 +37,17 @@ export default ({ onAdd, onEdit }: Props) => {
   const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
   const [filter, setFilter] =
     useState<TableViewSearchParams<EmployeeAdvanceSearchParams>>({
-      criteria: {
-        keyword: undefined,
+      criteria: {       
         advanceSearch: {
-          buId: [],
+          keyword: undefined,
+          bu: [],
           department: [],
-          integratedStatus: "ALL",
           status: "ALL",
         },
-        pagination: { current: 1, pageSize: 20 },
       },
+      pagination: { current: 1, pageSize: 20 },
     });
-  const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({});
+  // const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({});
   const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem } >();
   const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
   const [importData, setImportData] = useState<ImportDataResponse>()
@@ -65,8 +64,8 @@ export default ({ onAdd, onEdit }: Props) => {
   const isAdvancedFiltered = () => {
     const adv = filter.criteria?.advanceSearch;
     return (
-      (adv?.advanceSearch?.buId?.length ?? 0) > 0 ||
-      (adv?.advanceSearch?.department?.length ?? 0) > 0
+      (adv?.bu?.length ?? 0) > 0 ||
+      (adv?.department?.length ?? 0) > 0
     );
   };
   const advanceSearchIcon = useMemo(() => {
@@ -127,7 +126,7 @@ export default ({ onAdd, onEdit }: Props) => {
             { option: { label: "Inactive", value: "INACTIVE" } },
           ],
           onRefresh: refetch,
-          onFilter: (params) => {
+          onFilter: (params: any) => {
             setFilter((p) => ({
               ...p,
               criteria: {
@@ -255,7 +254,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 }
               }
             }))
-          setAdvanceSearchParams(params);
+          // setAdvanceSearchParams(params);
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {

@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import PageWrapper from "@/components/PageWrapper";
 import {
   ProbationEvaluationEmpList,
   ProbationEmpStatusTotal,
 } from "../../data.types";
-import { createService } from "../../services";
+import { createService, ProbationServiceAPI } from "../../services";
 import { simpleRequestActions } from "@/services/model";
-import { useAccess, history } from "umi";
+import { useAccess  } from "umi";
 import Status from "@/components/Status";
 import DataEntryFormView from '../../ProbationRequestModal';
-import { Button, Grid, Space, Select } from 'antd';
+import { Button, Grid, Space } from 'antd';
 import {
   ExportOutlined,
   EyeOutlined,
@@ -51,32 +51,32 @@ export default function ProbationListPage() {
   }
   const [currentStatus, setCurrentStatus] = useState<string>('ALL');
   const srv = createService({ request: requestActions });
+  const srvProbation = ProbationServiceAPI();
   const access = useAccess();
   const { modals } = Model();
   const quickViewHandler = (appEmp: ProbationEvaluationEmpList) => {
     modals.showModal('QuickViewAppraisalForm');
     setAppraisalEmp(appEmp)
   }
-  const pageRef = useRef<any>(null);
+  // const pageRef = useRef<any>(null);
   Grid.useBreakpoint();
-  const [filter, setFilter] = useState<TableViewSearchParams<ProbationAdvanceSearchParams>>({
-    pagination: { current: 1, pageSize: 20 },
+  const [filter, setFilter] = useState<TableViewSearchParams<ProbationAdvanceSearchParams>>({   
     criteria: {
-      status: 'ALL',
       advanceSearch: {
+        status: 'ALL',     
         buIds: [],
-        depIds: [],
-        integratedStatus: 'ALL',
-        status: 'ALL',
+        depIds: [],       
         pendingFilter: [],
-      },
+      }
     },
+    pagination: { current: 1, pageSize: 20 },
   });
   const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
   const [total, setTotal] = useState<ProbationEmpStatusTotal | null>(null);
   const { data, isLoading, refetch } = useQuery(
     ["probation-evaluation-page", filter],
-    () => srv.fetchPaging(filter),
+    // () => srv.fetchPaging(filter),
+    ()=> srvProbation.list(filter),
     { refetchOnWindowFocus: false }
   );
 
@@ -89,7 +89,7 @@ export default function ProbationListPage() {
     refetch();
   };
   const supTitle = (count: number) =>
-    count > 0 && (
+    total?.pending||0> 0 && (
       <sup
         style={{
           background: "#ff4d4f",
@@ -100,14 +100,27 @@ export default function ProbationListPage() {
           marginLeft: 6,
         }}
       >
-        {count}
+        { total?.pending}
       </sup>
     );
-  return (
+  const isAdvancedFiltered = () => {
+    const adv = filter.criteria?.advanceSearch;
+    return (
+      (adv?.buIds?.length ?? 0) > 0 ||
+      (adv?.depIds?.length ?? 0) > 0
+    );
+  };
+  const advanceSearchIcon = useMemo(() => {
+    return isAdvancedFiltered()
+      ? <FilterOutlined style={{ color: "red" }} />
+      : <SelectOutlined />;
+  }, [filter.criteria?.advanceSearch]);
+  
+return (
     <>
-      <PageWrapper<ProbationEvaluationEmpList, { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }, undefined>
-        ref={pageRef}
-        title="Probation Evaluation"
+      <PageWrapper<ProbationEvaluationEmpList, ProbationAdvanceSearchParams, {}>
+        // ref={pageRef}
+        // title="Probation Evaluation"
         tabRender={(item) => {
           const tabs: any[] = [];
           if (access.canCreateHrProbationEvaluationRequest) {
@@ -145,11 +158,12 @@ export default function ProbationListPage() {
           advanceSearchButton: (
             <Button
               onClick={() => setAdvanceSearchVisible(true)}
-              icon={
-                Object.values(advanceSearchVisible || {}).some((v) => v !== undefined && v !== null && v !== "")
-                  ? <FilterOutlined style={{ color: "red" }} />
-                  : <SelectOutlined />
-              }
+              // icon={
+              //   Object.values(advanceSearchVisible || {}).some((v) => v !== undefined && v !== null && v !== "")
+              //     ? <FilterOutlined style={{ color: "red" }} />
+              //     : <SelectOutlined />
+              // }
+              icon={advanceSearchIcon}
             />
           ),
           actionButtons: [
@@ -170,16 +184,17 @@ export default function ProbationListPage() {
               <LightFilter<LightFilterProp>
                 size="small"
                 onValuesChange={(_, values) => {
-                  setFilter((prev) => ({
+                  setFilter(prev => ({
                     ...prev,
                     criteria: {
                       ...prev.criteria,
+                      // status: currentStatus,
                       advanceSearch: {
                         ...prev.criteria?.advanceSearch,
                         pendingFilter: values.pendingFilter || [],
                       },
                     },
-                    pagination: { ...prev.pagination, current: 1 },
+                    // pagination: { ...prev.pagination, current: prev.pagination?.current },
                   }));
                   actionRef.current?.reload?.();
                 }}
@@ -212,45 +227,53 @@ export default function ProbationListPage() {
             { option: { label: "Rejected", value: "REJECTED" } },
           ],
           onRefresh: refetch,
-          onFilter: (params) => {
+          onFilter: (params: any, page, sort) => {
             const status = params?.advanceSearch?.status || params?.status;
             setCurrentStatus(status);
             setFilter((p) => ({
-              ...p,
+              // ...p,
               criteria: {
-                ...p.criteria,
-                keyword: params?.searchValue,
-                status: params?.advanceSearch?.status,
+                // ...p.criteria,
+                searchValue: params?.searchValue,
+                // status: params?.advanceSearch?.status,
                 advanceSearch: {
-                  ...p.criteria?.advanceSearch,
-                  status: params?.status,
-                  pendingFilter:
-                    params?.advanceSearch?.status === "PENDING"
-                      ? p.criteria?.advanceSearch?.advanceSearch?.pendingFilter
-                      : [],
+                  // ...p.criteria,
+                  status: status,
+                  buIds:  p.criteria?.advanceSearch?.buIds || [],
+                  depIds: p.criteria?.advanceSearch?.depIds || [],
+                  pendingFilter: status === "PENDING"? p.criteria?.advanceSearch?.pendingFilter: [],
                 },
+                sort: sort,
               },
+              pagination: page,
             }));
           },
           props: {
-            loading: isLoading,
-            dataSource: data?.items || [],
-            rowKey: "instanceId",
-            pagination: {
-              total: data?.total,
-              current: filter.pagination?.current,
-              pageSize: filter.pagination?.pageSize,
-              onChange: (current, pageSize) =>
-                setFilter((p) => ({
-                  ...p,
-                  pagination: { current, pageSize },
-                })),
-            },
-            scroll: { x: "max-content" },
+            dataSource: data?.items||[],
+            pagination: { total: data?.total},
+            loading: false,
+            scroll: { x: 'max-content' },
+            bordered: true,
+            // loading: isLoading,
+            // dataSource: data?.items || [],
+            // rowKey: "instanceId",
+            // pagination: { total: data?.total},
+            // pagination: {
+            //   total: data?.total,
+            //   current: filter.pagination?.current,
+            //   pageSize: filter.pagination?.pageSize,
+            //   onChange: (current, pageSize) =>
+            //     setFilter((p) => ({
+            //       criteria: { ...p.criteria },
+            //       pagination: { current, pageSize },
+            //       // sort: p.pagination?.sort,
+            //     })),
+            // },
+            // scroll: { x: "max-content" },
             columns: [
               {
                 title: '#',
-                flex: 1,
+                // flex: 1,
                 width: 40, // adjust as needed
                 render: (_: any, r: any, i: number) => (
                   <Space size={1} align="center">
@@ -281,32 +304,32 @@ export default function ProbationListPage() {
               {
                 title: 'Form No #',
                 sorter: 'formNo',
-                flex: 1,
+                // flex: 1,
                 width: 180,
                 actionProps:(item)=>({
                   type: "view",
                   label: item.formNo
                 }),
-                render: (_: any, r: any) => {
-                  return (<Space size={1}>
-                    <Button
-                      type="link"
-                      size="small"
-                      icon={<EyeOutlined />}
-                      onClick={() => quickViewHandler(r)}
-                    />
-                    <span  style={{ color: "#1677ff", cursor: "pointer" }}
-                    onClick={() =>{
-                      actionRef.current?.open?.({
-                        actionRef:"view",
-                        value: r.formNo || r.processInstaceId
-                      })
-                    }}
-                    >
-                      {r.formNo}
-                    </span>
-                  </Space>)
-                },
+                // render: (_: any, r: any) => {
+                //   return (<Space size={1}>
+                //     <Button
+                //       type="link"
+                //       size="small"
+                //       icon={<EyeOutlined />}
+                //       onClick={() => quickViewHandler(r)}
+                //     />
+                //     {/* <span  style={{ color: "#1677ff", cursor: "pointer" }}
+                //       onClick={() =>{
+                //         actionRef.current?.open?.({
+                //           actionRef:"view",
+                //           value: r.formNo || r.processInstaceId
+                //         })
+                //       }}
+                //     >
+                //       {r.formNo}
+                //     </span> */}
+                //   </Space>)
+                // },
               },
               {
                 title: 'Employee No',
@@ -337,7 +360,7 @@ export default function ProbationListPage() {
                 title: 'Status', width: '100px', render: (_: any, r: any) => <><Status text={r.status} /></>
               },{
                 title: 'Due Date', sorter: 'dueDate', dataIndex: 'dueDate',
-                with: 210,
+                // with: 210,
                 render(_: any, r: any) {
                   return r.dueDate && formatDate(r.dueDate,'DD-MMM-YYYY')
                 }
@@ -355,19 +378,24 @@ export default function ProbationListPage() {
             ...prev,
             criteria: {
               ...prev.criteria,
+              // status: currentStatus,
+              // keyword: prev.criteria?.keyword,
               advanceSearch: {
                 ...prev.criteria?.advanceSearch,
+                // pendingFilter: prev.criteria?.advanceSearch?.pendingFilter,
+                // status: currentStatus,
                 buIds: params.buIds || [],
                 depIds: params.depIds || [],
               },
             },
             pagination: { ...prev.pagination, current: 1 },
           }));
-          setAdvanceSearchVisible(false);
+          // actionRef.current?.reload?.();
+          // setAdvanceSearchVisible(false);
         }}
         onReset={() => {
           setFilter((prev) => ({
-            ...prev,
+            // ...prev,
             criteria: {
               ...prev.criteria,
               advanceSearch: {
@@ -378,7 +406,7 @@ export default function ProbationListPage() {
             },
             pagination: { ...prev.pagination, current: 1 },
           }));
-          setAdvanceSearchVisible(false);
+          // setAdvanceSearchVisible(false);
         }}
       />
       <ProbationEvaluationQuickView
@@ -386,7 +414,7 @@ export default function ProbationListPage() {
         probationEmp={appraisalEmp}
         open={modals.isVisible('QuickViewAppraisalForm')}
         onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} />
-      {modals.isVisible('CreateProbationForm') && <ProbationRequestModal
+      {modals.isVisible('CreateProbationForm') && <ProbationRequestModal type="CREATE"
         open={modals.isVisible('CreateProbationForm')}
         onOpenChange={(v: any) => !v && modals.hideModal('CreateProbationForm')}
         refreshTable={refeshTable}

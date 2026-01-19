@@ -287,12 +287,11 @@ export default () => {
                     ],
 
                     rowKey: 'id',
-
                     columns: [{
                         title: 'PO #',
                         sorter: 'poNo',
                         dataIndex: 'poNo',
-                        width: 140,
+                        width: 110,
                         key: 'poNo',
                         actionProps: (item) => ({
                             type: 'view',
@@ -337,18 +336,18 @@ export default () => {
                     },
                     {
                         title: "Section",
-                        dataIndex: "section"
+                        dataIndex: "section",
+                        width: 70,
                     },
                     {
                         title: "Sub Section",
-                        dataIndex: "subSection"
+                        dataIndex: "subSection",
+                        width: 80,
                     },
-                    // {
-                    //     title: 'Region',
-                    //     dataIndex: 'region',
-                    // },
+
                     {
                         title: 'Del. Method',
+                        width: 90,
                         render: (_, r) => r.deliveryMethod,
                     },
                     {
@@ -356,8 +355,19 @@ export default () => {
                         align: 'right',
                         sorter: 'orderDate',
                         dataIndex: "orderDate",
-                        width: 150,
-                        render: (_, data) => formatDateTime(data.orderedDate),
+                        width: 110,
+                        render: (_, data) => moment(data.orderedDate).format('YYYY-MM-DD'),
+
+                    },
+                    {
+                        title: "Order Time",
+                        width: 100,
+                        render: (_, data) => moment(data.orderedDate).format('HH:mm:ss'),
+                    },
+                    {
+                        title: 'Requested Del. Date',
+                        width: 90,
+                        render: (_, r) => moment(r.deliveryDate).format('YYYY-MM-DD'),
                     },
                     // {
                     //     title: 'First Delivery Date',

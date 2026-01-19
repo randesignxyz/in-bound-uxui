@@ -161,6 +161,18 @@ const AllocateAction = {
         actionName: 'get-list-count',
         payload: {},
     }),
+    listRoute: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-list-route',
+        payload: {},
+    }),
+    listZone: (route_ids?: string): ServiceApiType<{route_ids?: string}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-list-zone',
+        payload: {route_ids},
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -245,6 +257,14 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             ),
         list_count: () =>
             singleRequest<AreaList>(AllocateAction.listCount())(
+                requestAction
+            ),
+        list_route: () =>
+            singleRequest<AreaList>(AllocateAction.listRoute())(
+                requestAction
+            ),
+        list_zone: (route_ids?: string) =>
+            singleRequest<AreaList>(AllocateAction.listZone(route_ids))(
                 requestAction
             ),
     }

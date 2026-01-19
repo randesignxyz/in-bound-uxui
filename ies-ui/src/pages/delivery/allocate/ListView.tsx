@@ -98,7 +98,8 @@ export default () => {
   });
   const [activities, setActivities] = useState<SOAllocateActivities[]>([]);
   const [hisSearch, setHisSearch] = useState<{
-    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string, customer?: string, zone?: string
+    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string, customer?: string,
+    // zone?: string
   }>({
     status: 'posted',
     dnStatus: 'open',
@@ -127,6 +128,10 @@ export default () => {
   const [claimedLines, setClaimedLines] = useState<string[]>([]);
   const [claimIds, setClaimIds] = useState<number[]>([]);
   const [selectedArea, setSelectedArea] = useState<number[]>([]);
+  const [routeOptions, setRouteOptions] = useState<any[]>([]);
+  const [zoneOptions, setZoneOptions] = useState<any[]>([]);
+  const [routeId, setRouteId] = useState<any[]>([]);
+  const [zoneId, setZoneId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (state?.selectedRows) {
@@ -167,7 +172,24 @@ export default () => {
     }
   }, [state?.areaList]);
 
-  // Load provinces once
+  useEffect(() => {
+    AllocateServiceAPI(requestActions)
+      .list_route()
+      .then((res) => setRouteOptions(normalizeLocationList(res).map((obj) => ({ value: obj.district_id, label: obj.name, id: obj.id }))));
+  }, []);
+
+
+  useEffect(() => {
+    if (!routeId) {
+      setZoneOptions([]);
+      setRouteId(null);
+      return;
+    }
+    AllocateServiceAPI(requestActions)
+      .list_zone(routeId)
+      .then((res) => setZoneOptions(normalizeLocationList(res).map((obj) => ({ value: obj.location_id, label: obj.name }))));
+  }, [routeId]);
+
   useEffect(() => {
     // onSync()
     AllocateServiceAPI(requestActions)
@@ -516,7 +538,6 @@ export default () => {
       console.error(error);
     }
   };
-
   const activityMenu = {
     items: activities.map((activity, index) => ({
       key: index,
@@ -635,7 +656,7 @@ export default () => {
 
       setDnSearch(v => ({
         ...v,
-        zone: state.areaList,
+        // zone: state.areaList,
       }));
     }
   }, [state?.areaList]);
@@ -646,7 +667,7 @@ export default () => {
       if (!Array.isArray(res)) return;
 
       const options = res.map((a: any) => ({
-        value: Number(a.zone_id),
+        value: Number(a.zone_ids),
         label: a.zone_name.replace(/^S&D\s*/i, '').trim(),
         isDefault: a.isdefault === '1' || a.is_default === '1',
       }));
@@ -674,7 +695,7 @@ export default () => {
 
         setDnSearch(v => ({
           ...v,
-          zone: defaultAreaIds,
+          // zone: defaultAreaIds,
         }));
       }
 
@@ -733,9 +754,7 @@ export default () => {
         const skuValues: Record<string, number> = {};
 
         skuList.forEach((sku) => {
-          if (sku.item_category === 2 && sku.id == 9) {
-            skuValues[`${sku.sku_code}_pack`] = 0;
-          } else if (sku.item_category === 2) {
+          if (sku.item_category === 2) {
             skuValues[`${sku.sku_code}_pack`] = 0;
             skuValues[`${sku.sku_code}_bowl`] = 0;
           } else {
@@ -759,7 +778,7 @@ export default () => {
               ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}`
               : sku.sku_code;
 
-          skuValues[key] += item.qty;
+          skuValues[key] += item.remaining_qty;
         });
 
         return {
@@ -783,7 +802,6 @@ export default () => {
     }
   };
 
-  console.log('dataListDn', dataListDn)
   const onHistoryRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
@@ -870,7 +888,7 @@ export default () => {
   };
 
   const skuColumns: ProColumns<DNList>[] = skuList.map((sku) => {
-    if (sku.item_category === 1 || sku.id == 9) {
+    if (sku.item_category === 1) {
 
       return {
         title: sku.sku_name,
@@ -888,7 +906,7 @@ export default () => {
           },
         }),
       };
-    } else {
+    } else if (sku.item_category === 2) {
       return {
         title: sku.sku_name,
         key: sku.sku_code,
@@ -910,6 +928,20 @@ export default () => {
             onCell: () => ({ style: { backgroundColor: 'rgba(239, 109, 35, 0.05)', textAlign: 'center' } }),
           },
         ],
+      };
+    } else {
+      return {
+        title: sku.sku_name,
+        dataIndex: sku.sku_code,
+        key: sku.sku_code,
+        width: 120, // fix width
+        render: (_, record) => (record as any)[sku.sku_code] || '-',
+        onCell: () => ({
+          style: {
+            backgroundColor: 'rgba(87, 87, 87, 0.05)',
+            textAlign: 'center',
+          },
+        }),
       };
     }
   });
@@ -963,7 +995,7 @@ export default () => {
       title: 'SO No',
       dataIndex: 'so_no',
       key: 'so_no',
-      width: '8%',
+      width: 300,
       render: (_, value) => (
         <>
           <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
@@ -992,7 +1024,7 @@ export default () => {
     {
       title: 'DO No',
       dataIndex: 'id',
-      width: 220,
+      width: 200,
       render: (_, value) => (
         <>
           <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
@@ -1030,18 +1062,16 @@ export default () => {
     {
       title: 'Shipping Address',
       dataIndex: 'shippingAddress',
-      // sorter: true,
-      // sorter: {
-      //   compare: (a, b) => (a.shippingAddress ?? '').localeCompare(b.shippingAddress ?? ''),
-      //   multiple: 1,
-      // },
-      width: 200,
+      width: '10%',
       render: (_, value) => (
         <a
+          style={{
+            whiteSpace: 'nowrap',
+          }}
           onClick={() => {
             if (value.latitude && value.longitude) {
               const url = `https://www.google.com/maps?q=${value.latitude},${value.longitude}`;
-              window.open(url, '_blank'); // open in new tab
+              window.open(url, '_blank');
             } else {
               message.info(`No location found for: ${value.shippingAddress}`);
             }
@@ -1051,23 +1081,24 @@ export default () => {
         </a>
       ),
     },
-    // { title: 'Customer', dataIndex: 'customer_name', width: '7%' },
+    // { title: 'Route', dataIndex: 'route_name', width: 120 },
+    // { title: 'Zone', dataIndex: 'zone_name', width: '7%' },
     ...(advanceSearchParams.filter !== 'HIS'
       ? [
-        {
-          title: 'Area',
-          dataIndex: 'division',
-          width: 150,
-          render: (value: string) =>
-            value?.replace(/^S&D\s*/i, ''),
-        },
-        {
-          title: 'Zone',
-          dataIndex: 'zone_name',
-          width: 150,
-          render: (value: string) =>
-            value?.replace(/^S&D\s*/i, ''),
-        },
+        // {
+        //   title: 'Area',
+        //   dataIndex: 'division',
+        //   width: 150,
+        //   render: (value: string) =>
+        //     value?.replace(/^S&D\s*/i, ''),
+        // },
+        // {
+        //   title: 'Zone',
+        //   dataIndex: 'zone_name',
+        //   width: 150,
+        //   render: (value: string) =>
+        //     value?.replace(/^S&D\s*/i, ''),
+        // },
         {
           title: 'District', dataIndex: 'district', width: 150,
           // sorter: {
@@ -1082,17 +1113,17 @@ export default () => {
           //   multiple: 3,
           // },
         },
-        { title: 'Channel', dataIndex: 'channel', width: 150 },
+        // { title: 'Channel', dataIndex: 'channel', width: 150 },
         {
-          title: 'Volume', width: 180,
+          title: 'Volume', width: 120,
           render: (_: any, r: { mergeItems: any[]; }) => {
             if (!r.mergeItems) return 0;
 
             const total = r.mergeItems.reduce((sum, item) => {
               const volume = Number(item.volume) || 0;
-              const qty = Number(item.qty) || 0;
+              const remaining_qty = Number(item.remaining_qty) || 0;
 
-              return sum + volume * qty;
+              return sum + volume * remaining_qty;
             }, 0);
 
             return `${total.toFixed(2)} m³`
@@ -1111,24 +1142,21 @@ export default () => {
       key: 'sku',
       children: skuColumns,
     },
-    // {
-    //   title: 'SAL Remark',
-    //   dataIndex: 'remarks',
-    //   width: 150,
-    //   render: (_, text) => (
-    //     <div
-    //       style={{
-    //         whiteSpace: 'nowrap',
-    //         overflow: 'hidden',
-    //         textOverflow: 'ellipsis',
-    //         maxWidth: 150,
-    //       }}
-    //       title={text.remarks} // shows full text on hover
-    //     >
-    //       {text.remarks ? text.remarks : '-'}
-    //     </div>
-    //   ),
-    // },
+    {
+      title: 'SAL Remark',
+      dataIndex: 'remarks',
+      width: 500, // keep reasonable width
+      render: (_, record) => (
+        <div
+          style={{
+            whiteSpace: 'normal',     // ✅ allow wrap
+            wordBreak: 'break-word',  // ✅ break long words
+          }}
+        >
+          {record.remarks || '-'}
+        </div>
+      ),
+    },
     ...(advanceSearchParams.filter !== 'DN'
       ? [
         { title: 'Claimed By', dataIndex: 'claimed_by', width: 150 },
@@ -1272,7 +1300,7 @@ export default () => {
                                     <span style={{ fontSize: 12 }}> {dayjs.utc(item.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
 
                                   </span>
-                                  {item.status != 'complete' && (access.currentUser?.login == item.claimed_by && access.canAccesAddRemarkAllocate) ?
+                                  {item.status != 'complete' && (access.currentUser?.login == item.claimed_by && access.canAccesAllocateAdmin) ?
                                     <Button type="default" danger
                                       onClick={() => (handleUnClaim([Number(item.id)], item))}
                                     >
@@ -1451,6 +1479,15 @@ export default () => {
                               width: 70,
                               render: (_, r) => {
                                 return r.qty || '0'
+                              }
+                            },
+                            {
+                              title: 'SAP Qty',
+                              dataIndex: 'sap_qty',
+                              width: 70,
+                              render: (v) => {
+                                if (v === null || v === undefined) return '0'
+                                return Number(v).toString()
                               }
                             },
                             {
@@ -1737,6 +1774,9 @@ export default () => {
                           },
                         }}
                       />
+                      <Button type="text" size='large' onClick={() => onSync()}>
+                        <SyncOutlined />
+                      </Button>
                       <Button
                         type="text"
                         onClick={() => actionRef.current?.reloadAndRest?.()}
@@ -1744,9 +1784,7 @@ export default () => {
                       >
                         <ReloadOutlined />
                       </Button>
-                      <Button type="text" size='large' onClick={() => onSync()} style={{ marginLeft: -20 }}>
-                        <SyncOutlined />
-                      </Button>
+
                     </div>
                   </ProForm>
 
@@ -1829,27 +1867,78 @@ export default () => {
                           width={150}
                           showSearch
                         />
-                        <OfficerZoneFilter
-                          form={form}
-                          name='zone'
-                          requestActions={requestActions}
-                          isSelectAll={isSelectAll}
-                          onInit={(values: any, options) => {
-                            setOfficerArea(options);
-                            setDnSearch(v => ({
-                              ...v,
-                              zone: values,
-                            }));
-                          }}
-                          onChange={(values: any, options) => {
-                            setOfficerArea(options);
-                            setDnSearch(v => ({
-                              ...v,
-                              zone: values,
-                            }));
+                        <ProFormSelect
+                          placeholder="Route"
+                          name="route"
+                          mode="multiple"
+                          options={routeOptions}
+                          width={200}
+                          allowClear
+                          showSearch
+                          onChange={async (vals: string[] = []) => {
+                            const districtIds = vals
+                              .flatMap(v => v.split(','))
+                              .map(Number)
+                              .filter(Number.isFinite);
+                            const selectedDistricts = vals
+                              .flatMap(v => v.split(','))
+                              .map(v => v.trim())
+                              .filter(Boolean);
+
+                            const routeIds = routeOptions
+                              .filter(opt => vals.includes(opt.value))
+                              .map(opt => opt.id);
+
+                            setRouteId(routeIds);
+
+                            setDnSearch(v => ({ ...v, district_id: districtIds }));
                             actionRef.current?.reloadAndRest?.();
                           }}
                         />
+
+                        <ProFormSelect
+                          placeholder="Zone"
+                          // name="zone"
+                          value={zoneId}
+                          onChange={(val: string) => {
+                            const communeIds = val
+                              .flatMap(v => v.split(','))
+                              .map(Number)
+                              .filter(Number.isFinite);
+                            //  const zoneIds = zoneOptions
+                            //   .filter(opt => val.includes(opt.value))
+                            //   .map(opt => opt.id);
+                            setDnSearch((v) => ({ ...v, commune_id: communeIds }))
+                            // // setZoneId(zoneIds)
+                            // console.log(val)
+                            // setOfficerArea(val)
+                            console.log('zoneIds', zoneOptions)
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                          options={zoneOptions}
+                          width={200}
+                          allowClear
+                          showSearch
+                          mode="multiple"
+                        />
+
+                        {/* <OfficerZoneFilter
+                          form={form}
+                          name="zone"
+                          data={routeId}
+                          requestActions={requestActions}
+                          isSelectAll={isSelectAll}
+                          onInit={(values, options) => {
+                            setOfficerArea(options);
+                            setDnSearch(v => ({ ...v, zone: values }));
+                          }}
+                          onChange={(values, options) => {
+                            setOfficerArea(options);
+                            setDnSearch(v => ({ ...v, zone: values }));
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                        /> */}
+
                         <ProFormDateRangePicker
                           name="sap_delivery_range_dn"
                           placeholder={['From Date', 'To Date']}
@@ -1961,17 +2050,17 @@ export default () => {
                           style={{ fontSize: 22 }}
                         >
                         </Button>
-                        <Button type="text" size='large' onClick={() => setSortModalOpen(true)} style={{ marginLeft: -20 }}>
+                        <Button type="text" size='large' onClick={() => setSortModalOpen(true)} >
                           <ColumnHeightOutlined />
                         </Button>
-                        <Button type="text" size='large' onClick={() => onSync()} style={{ marginLeft: -20 }}>
+                        <Button type="text" size='large' onClick={() => onSync()} >
                           <SyncOutlined />
                         </Button>
                         <Button
                           type="text"
                           onClick={() => actionRef.current?.reloadAndRest?.()}
                           size='large'
-                          style={{ marginLeft: -20 }}
+
                         >
                           <ReloadOutlined />
                         </Button>
@@ -2179,7 +2268,9 @@ export default () => {
                             { value: 'force-close', label: 'Close' },
                           ]}
                         />
-
+                        <Button type="text" size='large' onClick={() => onSync()} >
+                          <SyncOutlined />
+                        </Button>
                         <Button
                           type="text"
                           onClick={() => actionRef.current?.reloadAndRest?.()}
@@ -2187,9 +2278,7 @@ export default () => {
                         >
                           <ReloadOutlined />
                         </Button>
-                        <Button type="text" size='large' onClick={() => onSync()} style={{ marginLeft: -20 }}>
-                          <SyncOutlined />
-                        </Button>
+
                       </ProForm>
 
                     ],

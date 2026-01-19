@@ -58,7 +58,7 @@ export const FloatingCard = ({
           {
             sku_id: string;
             sku_name: string;
-            qty: number;
+            remaining_qty: number;
             category: number;
             sequence: string;
             totalVolume: number;
@@ -80,17 +80,17 @@ export const FloatingCard = ({
             grouped[key] = {
               sku_id: key,
               sku_name: name,
-              qty: 0,
+              remaining_qty: 0,
               category: Number(item.category ?? 0),
               sequence: item.sequence ?? "",
               totalVolume: 0,
             };
           }
 
-          const qty = Number(item.qty ?? 0);
+          const remaining_qty = Number(item.remaining_qty ?? 0);
           const volume = Number(item.volume ?? 0);
-          grouped[key].qty += qty;
-          grouped[key].totalVolume += qty * volume;
+          grouped[key].remaining_qty += remaining_qty;
+          grouped[key].totalVolume += remaining_qty * volume;
         });
 
         // Sort
@@ -101,11 +101,11 @@ export const FloatingCard = ({
 
         // Totals
         const totalQty = allItems?.reduce(
-          (sum, item) => sum + Number(item.qty ?? 0),
+          (sum, item) => sum + Number(item.remaining_qty ?? 0),
           0
         );
         const totalVolume = allItems?.reduce(
-          (sum, item) => sum + Number(item.qty ?? 0) * Number(item.volume ?? 0),
+          (sum, item) => sum + Number(item.remaining_qty ?? 0) * Number(item.volume ?? 0),
           0
         );
 
@@ -122,7 +122,7 @@ export const FloatingCard = ({
                 }}
               >
                 <span style={{ flex: 1 }}>{g.sku_name}</span>
-                <span style={{ width: 60, textAlign: "right",marginRight:35 }}>{g.qty}</span>
+                <span style={{ width: 60, textAlign: "right",marginRight:35 }}>{g.remaining_qty}</span>
                 <span style={{ width: 80, textAlign: "right" }}>
                   {g.totalVolume.toFixed(2)} m³
                 </span>
@@ -167,14 +167,14 @@ export const FloatingCard = ({
           <span style={{ width: 60, textAlign: "right",marginRight:35 }}>
             {selectedRows
               ?.flatMap((row) => row.mergeItems)
-              .reduce((sum, item) => sum + Number(item.qty ?? 0), 0)}
+              .reduce((sum, item) => sum + Number(item.remaining_qty ?? 0), 0)}
           </span>
           <span style={{ width: 80, textAlign: "right" }}>
             {selectedRows
               ?.flatMap((row) => row.mergeItems)
               .reduce(
                 (sum, item) =>
-                  sum + Number(item.qty ?? 0) * Number(item.volume ?? 0),
+                  sum + Number(item.remaining_qty ?? 0) * Number(item.volume ?? 0),
                 0
               )
               .toFixed(2)}{" "}

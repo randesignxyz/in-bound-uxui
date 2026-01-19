@@ -1,12 +1,11 @@
-import { CrmServices } from '@/pages/crm/services';
 import { ProFormCascader } from '@ant-design/pro-components';
 import { useEffect, useRef } from 'react';
 import { AllocateServiceAPI } from './service';
 
-const ALL_VALUE = 0;
+const ALL_VALUE = '__ALL__';
 
 export interface SaleAreaOption {
-    value: number;
+    value: string;       // 🔑 STRING
     label: string;
     isdefault: boolean;
 }
@@ -17,11 +16,9 @@ interface ExcelSaleAreaFilterProps {
     form: any;
     requestActions: any;
 
-    /** callbacks */
-    onChange?: (values: number[], options: SaleAreaOption[]) => void;
-    onInit?: (values: number[], options: SaleAreaOption[]) => void;
+    onChange?: (values: string[], options: SaleAreaOption[]) => void;
+    onInit?: (values: string[], options: SaleAreaOption[]) => void;
 
-    /** ✅ new reusable control */
     isSelectAll?: boolean;
     onSelectAllChange?: (v: boolean) => void;
 }
@@ -38,7 +35,6 @@ const OfficerZoneFilter: React.FC<ExcelSaleAreaFilterProps> = ({
 }) => {
     const optionsRef = useRef<SaleAreaOption[]>([]);
     const initializedRef = useRef(false);
-
     const services = AllocateServiceAPI(requestActions);
 
     /* ================================
@@ -63,6 +59,22 @@ const OfficerZoneFilter: React.FC<ExcelSaleAreaFilterProps> = ({
         }
     }, [isSelectAll]);
 
+    /* ================================
+     * Sync when parent sets value
+     * ================================ */
+    useEffect(() => {
+        if (!initializedRef.current) return;
+
+        const values: string[] =
+            (form.getFieldValue(name) || []).map((v: string[]) => v[0]);
+
+        const options = optionsRef.current.filter(o =>
+            values.includes(o.value),
+        );
+
+        onChange?.(values, options);
+    }, [form.getFieldValue(name)]);
+
     return (
         <ProFormCascader
             name={name}
@@ -72,29 +84,30 @@ const OfficerZoneFilter: React.FC<ExcelSaleAreaFilterProps> = ({
                 if (!Array.isArray(res)) return [];
 
                 const options: SaleAreaOption[] = res.map((a: any) => ({
-                    value: Number(a.zone_id),
+                    value: a.zone_ids,             // 🔑 STRING
                     label: a.zone_name,
-                    isdefault: a.isdefault === "1" || a.is_default === "1",
+                    isdefault: a.isdefault === '1' || a.is_default === '1',
                 }));
 
-                /** ✅ STORE OPTIONS */
                 optionsRef.current = options;
 
-                /** default (Excel style) */
+                /** Default zones */
                 const defaultValues = options
-                    .filter(o => o.isdefault === true)
+                    .filter(o => o.isdefault)
                     .map(o => o.value);
+
                 if (defaultValues.length) {
                     form.setFieldsValue({
                         [name]: defaultValues.map(v => [v]),
                     });
                     onInit?.(
                         defaultValues,
-                        options.filter(o => o.isdefault === true),
+                        options.filter(o => o.isdefault),
                     );
                 }
 
                 initializedRef.current = true;
+
                 return [
                     { value: ALL_VALUE, label: 'Select All' },
                     ...options,
@@ -104,17 +117,19 @@ const OfficerZoneFilter: React.FC<ExcelSaleAreaFilterProps> = ({
                 multiple: true,
                 maxTagCount: 'responsive',
 
-                onChange: (paths: number[][] = []) => {
+                onChange: (paths: string[][] = []) => {
                     const values = paths.map(p => p[0]);
                     const options = optionsRef.current;
                     const realValues = options.map(o => o.value);
 
                     const hasAll = values.includes(ALL_VALUE);
                     const selectedValues = values.filter(v => v !== ALL_VALUE);
-                    /** 1️⃣ Select All clicked */
+
+                    /** Select All */
                     if (hasAll) {
                         const isAllSelected =
                             selectedValues.length === realValues.length;
+
                         if (!isAllSelected) {
                             form.setFieldsValue({
                                 [name]: realValues.map(v => [v]),
@@ -129,21 +144,20 @@ const OfficerZoneFilter: React.FC<ExcelSaleAreaFilterProps> = ({
                         return;
                     }
 
-                    /** 2️⃣ Manual clear */
+                    /** Clear */
                     if (paths.length === 0) {
                         onChange?.([], []);
                         onSelectAllChange?.(false);
                         return;
                     }
 
-                    /** 3️⃣ Normal select */
+                    /** Normal select */
                     const selectedOptions = options.filter(o =>
                         selectedValues.includes(o.value),
                     );
 
                     onChange?.(selectedValues, selectedOptions);
 
-                    /** sync Select All checkbox */
                     onSelectAllChange?.(
                         selectedValues.length === realValues.length,
                     );
@@ -154,4 +168,3 @@ const OfficerZoneFilter: React.FC<ExcelSaleAreaFilterProps> = ({
 };
 
 export default OfficerZoneFilter;
-

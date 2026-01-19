@@ -25,9 +25,13 @@ type DataFormType = {
 };
 export default ({
                   refreshTable,
+                  type,
+                  onCloseTab,
                   ...rest
                 }: ModalFormProps<ProbationEvaluationData> & {
-  refreshTable?: () => void;
+  refreshTable?: () => void;  
+  type: 'CREATE' | 'EDIT';
+  onCloseTab?: () => void;
 }) => {
   const [form] = useForm<ProbationEvaluationData>();
   const [formSubmittor] = useForm<DataFormType>();

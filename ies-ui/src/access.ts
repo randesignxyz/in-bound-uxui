@@ -1139,6 +1139,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_FMA_WF_NEW_STAFF_REQUESTER'].some((it) => it === item),
       ) || false,
+    canRequestFMANewStaffRequestExport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_FMA_WF_NEW_STAFF_REQUEST_EXPORT'].some((it) => it === item),
+      ) || false,  
 
     canAccessITNewStaffMenuITem:
       currentUser?.authorities.some((item) =>
@@ -1148,7 +1152,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_ICT_WF_NEW_STAFF_REQUESTER'].some((it) => it === item),
       ) || false,
-
+    canRequestItNewStaffRequestExport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_ICT_WF_NEW_STAFF_REQUEST_EXPORT'].some((it) => it === item),
+      ) || false, 
     // Reach-2024-02-13
     canAccessFleetMenu:
       currentUser?.authorities.some((item) =>
@@ -1374,6 +1381,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessCRMRegisterCustomer: canAccess("CRM_REGISTER_CUSTOMER"),
     canAccessCRMGratisConfig: canAccess("CRM_GRATIS_CONFIG"),
     canAccessCRMGratis: canAccess("CRM_GRATIS"),
+    canAccessCRMSetting: canAccess("CRM_SETTING"),
+
+
+    // ============= REACH PHEUN HRM Customer 15-01-2026 ============
+    canAccessHRMIPO: canAccess("HRM_IPO"),
 
     canAccessSALE: currentUser?.authorities?.some((it: string) => it.toUpperCase().startsWith("ROLE_SALE") || it == "ROLE_ADMIN"),
     canAccess,

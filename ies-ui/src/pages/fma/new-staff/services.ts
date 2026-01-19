@@ -11,14 +11,26 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
     SearchParams,
     SavePayLoad
 > & {
-    findByInstId: (instId: string) => Promise<NewStaffItemDetail>
+    findByInstId: (instId: string) => Promise<NewStaffItemDetail>;
+  exportToExcel: (params: {
+    fromDate?: string;
+    toDate?: string;
+    company?: string;
+    department?: string;
+    status?: string;
+    requestedBy?: string;
+  }) => Promise<Blob>;
 } => {
     return {
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
             fetchDataPagingService<NewStaffListItem, FetchPagingParams<SearchParams>>({
                 actionName: 'fetch-paging-fma-new-staff-request',
                 endpoint: 'HR',
-                payload: params
+                payload: params,
+              pagination:{
+                  page: params.pagination?.current,
+                  pageSize: params.pagination?.pageSize
+              },
             }).query(request)
         ,
 
@@ -48,6 +60,20 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
             actionName: "fetch-item-fma-new-staff-request",
             endpoint: 'HR',
             payload: {id: instId}
-        }).query(request)
+        }).query(request),
+      exportToExcel: async (params: {
+        fromDate?: string;
+        toDate?: string;
+        company?: string;
+        department?: string;
+        status?: string;
+        requestedBy?: string;
+      }) => {
+        return fetchDataItemService<Blob, typeof params>({
+          actionName: 'export-fma-new-staff-request',
+          endpoint: 'HR',
+          payload: params,
+        }).query(request);
+      },
     }
 }

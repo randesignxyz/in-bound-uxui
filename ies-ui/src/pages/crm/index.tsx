@@ -44,6 +44,7 @@ export const CrmPaths = {
   shippingAddress: '/crm/shipping-address',
   shareCustomer: '/crm/shared',
   verifiedCustomer: '/crm/verified-customer',
+  setting: '/crm/setting',
 };
 
 const Crm: React.FC = () => {
@@ -270,7 +271,7 @@ const Crm: React.FC = () => {
       link: `${CrmPaths.customer}/list`,
       icon: CustomerIcon,
       // visible: access.canAccessCustomerMenu,
-        visible:access.canAccess("CRM_CUSTOMER"),
+      visible: access.canAccess("CRM_CUSTOMER"),
       menu: {
         items: [{
           type: 'group',
@@ -295,7 +296,7 @@ const Crm: React.FC = () => {
       link: `${CrmPaths.visitPlan}/list`,
       icon: planIcon,
       // visible: access.canAccessVisitPlanMenu,
-      visible:access.canAccess("CRM_VISIT_PLAN"),
+      visible: access.canAccess("CRM_VISIT_PLAN"),
     },
     {
       id: 'visitSchedule',
@@ -498,6 +499,14 @@ const Crm: React.FC = () => {
       // visible: access.canAccessVerifiedLocationMenu
       visible: access.canAccessCRMVerification
     },
+    // {
+    //   id: 'setting',
+    //   name: 'Setting Configuration',
+    //   description: "Set up and Configuation",
+    //   link: `${CrmPaths.setting}/list`,
+    //   icon: customer_verified,
+    //   visible: access.canAccessCRMSetting
+    // },
 
   ];
 

@@ -23,7 +23,7 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
                 size="small"
                 offset={[-20, 0]}
                 count={statusCount?.allPending}
-                overflowCount={10000}
+                overflowCount={100000}
             >
                 <Radio.Button style={{ borderRadius: 0 }} value="AllPending">All Pending</Radio.Button>
             </Badge>
@@ -48,7 +48,7 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
             defaultValue={'Direct'}
             onChange={(e) => onCustomerTypeChanged(e.target.value)}
         >
-            <Radio.Button value="All">All</Radio.Button>
+            <Radio.Button value="All" >All</Radio.Button>
             <Radio.Button value="Direct">Direct</Radio.Button>
             <Radio.Button value="Indirect">In Direct</Radio.Button>
         </Radio.Group>

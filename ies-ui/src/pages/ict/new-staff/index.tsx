@@ -1,5 +1,5 @@
 import BaseCrud from "@/components/base-crud"
-import { history } from "@umijs/max";
+import { history, useAccess } from "@umijs/max";
 import { ITNewStaffFormNames, NewStaffItemDetail, NewStaffListItem, SavePayLoad, SearchParams } from "./data.types"
 import { createService } from "./services"
 import { simpleRequestActions } from "@/services/model"
@@ -7,10 +7,11 @@ import { ExportOutlined, PlusOutlined } from "@ant-design/icons";
 import RequestForm from "./ItNewStaffRequestForm";
 import { formatDateTime, toReadable } from "@/pages/utils";
 import Status from "@/components/Status";
-import { Button, Flex } from "antd";
+import { Button, Flex, Space } from "antd";
+import Export from "./Export";
 
 export default () => {
-
+    const access = useAccess()
     const requestActions = simpleRequestActions();
     const srv = createService(requestActions)
 
@@ -50,14 +51,19 @@ export default () => {
                 { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} />, sorter: 'status' },
             ],
             quickSearch: true,
-            addNewAction: {
+            extra: (
+                <Space>
+                {access.canRequestItNewStaffRequestExport && <Export />}
+                </Space>
+            ),
+            addNewAction: access.canRequestITNewStaffRequest?{
                 label: 'New Request',
                 icon: <PlusOutlined />,
                 key: 'new-request',
                 onRenderComp(props) {
                     return <RequestForm  {...props} />
                 },
-            },
+            }:undefined,
 
             statusProps: {
                 defaultValue: "ALL",

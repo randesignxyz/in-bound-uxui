@@ -21,7 +21,11 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
             fetchDataPagingService<NewStaffListItem, FetchPagingParams<SearchParams>>({
                 actionName: 'fetch-paging-it-new-staff-request',
                 endpoint: 'ICT',
-                payload: params
+                payload: params,
+              pagination:{
+                  page: params.pagination?.current,
+                  pageSize: params.pagination?.pageSize
+              }
             }).query(request)
         ,
 

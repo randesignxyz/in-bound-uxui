@@ -4,7 +4,7 @@ import { simpleRequestActions } from "@/services/model"
 import { PageContainer, ProColumns, ProTable } from "@ant-design/pro-components"
 import { useState } from "react"
 import { renderDiffOnly } from "./dynamic_render"
-import { Button, Card, Col, Descriptions, Flex, Input, Radio, Row, Space } from "antd"
+import { Button, Card, Col, Descriptions, Flex, Input, message, Radio, Row, Space } from "antd"
 import moment from "moment"
 import InvoiceCorrectForm from "../component/InvoiceCorrectForm"
 import POAdjustForm from "../component/POAdjustForm"
@@ -239,8 +239,9 @@ export default () => {
                     actionState.open &&
                     actionState.action !== "INVOICE"
                 }
-                onFinish={async () => {
+                onClose={async () => {
                     refetch?.()
+                    setActionState({ open: false })
                 }}
                 actionType={actionState.action}
                 modalProps={{
@@ -255,6 +256,10 @@ export default () => {
                 open={
                     actionState.open && actionState.action === "INVOICE"
                 }
+                onClose={async () => {
+                    refetch?.()
+                    setActionState({ open: false })
+                }}
                 actionType={actionState.action}
                 onFinish={async () => {
                     refetch?.()

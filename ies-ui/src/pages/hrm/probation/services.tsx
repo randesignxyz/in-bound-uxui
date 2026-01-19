@@ -1,17 +1,18 @@
 import { SimpleRequestActions } from "@/services/model";
 import { RequestItem,  SearchParams,  ProbationEvaluationEmpList,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPayload, ProbationFormType, ProbationEvaluationRef, ProbationEmpStatusTotal, ProbationEvaluationHrRevievPayload, ProbationAssessmentList, ProbationEvaluateEmpMapping } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
-import { FetchPagingParams } from "@/components/DataCrud/TableView";
-import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
+import { FetchPagingParams, TableViewSearchParams } from "@/components/DataCrud/TableView";
+import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService, RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 import { TaskActionDataParam } from "@/services/process-workflow/params";
 import { Activity } from "@/services/process-workflow/data";
-import { EmployeeDataRs, ProbationEvaluationData } from "../data";
+import { EmployeeDataRs, ProbationAdvanceSearchParams, ProbationEvaluationData } from "../data";
+import { Paging } from "@/services/API";
 
 
 export const createService = ({ request }: { request: SimpleRequestActions; }): CrudBaseServices<
 ProbationEvaluationEmpList,
 ProbationEvaluationEmpList,
-    SearchParams,
+    ProbationAdvanceSearchParams,
     AppraisalEmPayload
 > & {
     // actionHR: (data: TaskActionDataParam<{id: number; items: RequestItem[]}>) => Promise<void>,
@@ -246,5 +247,32 @@ ProbationEvaluationEmpList,
             payload: {id:preparationUserId}
         }).query(request),
 
+    }
+}
+export const ProbationParams = {
+    list: (
+            params: TableViewSearchParams<ProbationAdvanceSearchParams>,
+        ): ServiceApiType<{ searchValue?: string }> => ({
+            type: 'PAGING_QUERY',
+            endpoint: 'HR',
+            actionName: 'probation-evaluation-page',
+            payload: {...params.criteria},
+            pagination: {
+                pageSize: params.pagination?.pageSize,
+                page: params.pagination?.current,
+            },
+            //  actionName: 'probation-evaluation-page',
+            //     endpoint: 'HR',
+            //     payload: params,
+            //      pagination: {
+            //         page: params.pagination?.current,
+            //         pageSize: params.pagination?.pageSize
+            //     }
+        }),
+}
+export const ProbationServiceAPI = (requestActions?: RequestActions) => {
+
+    return{
+        list: (params: TableViewSearchParams<ProbationAdvanceSearchParams>) => singleRequest<ProbationEvaluationEmpList>(ProbationParams.list(params))(requestActions) as Promise<Paging<ProbationEvaluationEmpList>>,
     }
 }

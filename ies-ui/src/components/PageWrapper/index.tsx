@@ -64,9 +64,16 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
     });
 };
 
+
+export const PageWrapperContext = React.createContext<{
+    onAddTab?: (item: any, props?: TabRenderProps, key?: React.Key) => void;
+    tabRender?: (item?: any) => TabRenderProps[];
+}>({})
+
 export default <ListDataType extends Record<string, any> & { id: string | number, code?: string },
-  FilterType extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string; subStatus2?: string },
-  ValueType>({ tabRender, listView }: Props<ListDataType, FilterType, ValueType>) => {
+    FilterType extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string; subStatus2?: string },
+    ValueType>({ tabRender, listView }: Props<ListDataType, FilterType, ValueType>) => {
+
 
     const [forceReload, setForceReload] = useState(0)
     const actionRef = useRef<ActionType>()
@@ -191,107 +198,116 @@ export default <ListDataType extends Record<string, any> & { id: string | number
         }
         actionRef.current?.reload(resetPageIndex);
     }
-  useEffect(() => {
-    if (listView.disableSearch) {
-      setFilterData(v => {
-        if (!v) return v;
-        const { searchValue, ...rest } = v;
-        return rest as FilterType;
-      });
-    }
-  }, [listView.disableSearch]);
+    useEffect(() => {
+        if (listView.disableSearch) {
+            setFilterData(v => {
+                if (!v) return v;
+                const { searchValue, ...rest } = v;
+                return rest as FilterType;
+            });
+        }
+    }, [listView.disableSearch]);
 
 
-  useEffect(() => {
-        setTabList([{
-            tab: listView.title || "List",
-            key: 'list',
-            tabKey: 'list',
-            closable: false,
-            icon: <UnorderedListOutlined />,
-            children: <FilterBar
-                onStatusRender={listView.onStatusRender}
-                statuses={listView.statuses || []}
-                actionButtons={listView.actionButtons}
-                actions={listView.actions}
-                advanceSearchButton={listView.advanceSearchButton}
-                onRefresh={listView.onRefresh}
-                onAddTab={() => {
-                    const tabProps = tabRender?.().find(it => it.action == 'add')
-                    tabProps && newTab(tabProps)
-                }}
-                onSearch={
-                  listView.disableSearch
-                    ? undefined
-                    : (keywords) => {
-                      setFilterData(v => ({ ...v, searchValue: keywords }) as any);
-                      reloadList(true);
+    useEffect(() => {
+        setTabList(prev => {
+            const listTab = {
+                tab: listView.title || "List",
+                key: 'list',
+                tabKey: 'list',
+                closable: false,
+                icon: <UnorderedListOutlined />,
+                children: <FilterBar
+                    onStatusRender={listView.onStatusRender}
+                    statuses={listView.statuses || []}
+                    actionButtons={listView.actionButtons}
+                    actions={listView.actions}
+                    advanceSearchButton={listView.advanceSearchButton}
+                    onRefresh={listView.onRefresh}
+                    onAddTab={() => {
+                        const tabProps = tabRender?.().find(it => it.action == 'add')
+                        tabProps && newTab(tabProps)
+                    }}
+                    onSearch={
+                        listView.disableSearch
+                            ? undefined
+                            : (keywords) => {
+                                setFilterData(v => ({ ...v, searchValue: keywords }) as any);
+                                reloadList(true);
+                            }
                     }
-                }
 
-                onStatusChanged={status => {
-                    setFilterData(v => ({ ...v, status: status }) as any)
-                    reloadList(true)
-                }}
-                onSubStatusChanged={value => {
-                    setFilterData(v => ({ ...v, subStatus: value }) as any)
-                    reloadList(true)
-                }}
-                onSubStatus2Changed={value => {
-                    setFilterData(v => ({ ...v, subStatus2: value }) as any)
-                    reloadList(true)
-                }}
-                onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />
-        }])
-    }, [])
-    return <PageContainer title={false}
-        breadcrumbRender={false}
-        tabProps={{
-            type: 'editable-card',
-            defaultActiveKey: 'list',
-            activeKey: activeKey.key,
-            renderTabBar: (tabBarProps, DefaultTabBar) => (
-                <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
-                    <SortableContext items={tabList.map((i) => i.key as string)} strategy={horizontalListSortingStrategy}>
-                        <DefaultTabBar {...tabBarProps}>
-                            {(node) => (
-                                <DraggableTabNode {...node.props} key={node.key}>
-                                    {node}
-                                </DraggableTabNode>
-                            )}
-                        </DefaultTabBar>
-                    </SortableContext>
-                </DndContext>
-            ),
-            hideAdd:  !tabRender?.().find(it => it.action == 'add'),
-            onChange(activeKey) {
-                setActiveKey({ key: activeKey })
-            },
-            onEdit: (e, action) => {
-                if (action == 'remove') {
-                    removeTab(e.toString())
-                } else {
-                    const tabProps = tabRender?.().find(it => it.action == 'add')
-                    tabProps && newTab(tabProps)
-                }
-            },
-        }} tabList={tabList}>
+                    onStatusChanged={status => {
+                        setFilterData(v => ({ ...v, status: status }) as any)
+                        reloadList(true)
+                    }}
+                    onSubStatusChanged={value => {
+                        setFilterData(v => ({ ...v, subStatus: value }) as any)
+                        reloadList(true)
+                    }}
+                    onSubStatus2Changed={value => {
+                        setFilterData(v => ({ ...v, subStatus2: value }) as any)
+                        reloadList(true)
+                    }}
+                    onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />
+            }
 
-        {activeKey.key == 'list' && listView.type == 'Table' && <>
-            {listView.onExtraFilterRender?.(filterData)}
-            <TableView tabRender={tabRender} listView={{
-                ...listView,
-                props: {
-                    ...listView.props,
-                    actionRef: listView.props.actionRef || actionRef,
-                    request: async (params, sort) => {
-                        setTableInfo({ ...params, current: params.current, pageSize: params.pageSize, sort })
-                        setForceReload(v => v + 1)
-                        return []
+            if (prev.some(it => it.key === 'list')) {
+                return prev.map(it => it.key === 'list' ? listTab : it)
+            }
+            return [listTab, ...prev]
+        })
+    }, [listView, tabRender])
+    return <PageWrapperContext.Provider value={{ onAddTab: addTab, tabRender }}>
+        <PageContainer title={false}
+            breadcrumbRender={false}
+            tabProps={{
+                type: 'editable-card',
+                defaultActiveKey: 'list',
+                activeKey: activeKey.key,
+                renderTabBar: (tabBarProps, DefaultTabBar) => (
+                    <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
+                        <SortableContext items={tabList.map((i) => i.key as string)} strategy={horizontalListSortingStrategy}>
+                            <DefaultTabBar {...tabBarProps}>
+                                {(node) => (
+                                    <DraggableTabNode {...node.props} key={node.key}>
+                                        {node}
+                                    </DraggableTabNode>
+                                )}
+                            </DefaultTabBar>
+                        </SortableContext>
+                    </DndContext>
+                ),
+                hideAdd: !tabRender?.().find(it => it.action == 'add'),
+                onChange(activeKey) {
+                    setActiveKey({ key: activeKey })
+                },
+                onEdit: (e, action) => {
+                    if (action == 'remove') {
+                        removeTab(e.toString())
+                    } else {
+                        const tabProps = tabRender?.().find(it => it.action == 'add')
+                        tabProps && newTab(tabProps)
                     }
-                }
-            }} onAddTab={addTab} /> </>}
+                },
+            }} tabList={tabList}>
 
-        <FloatButton.BackTop />
-    </PageContainer>
+            {activeKey.key == 'list' && listView.type == 'Table' && <>
+                {listView.onExtraFilterRender?.(filterData)}
+                <TableView tabRender={tabRender} listView={{
+                    ...listView,
+                    props: {
+                        ...listView.props,
+                        actionRef: listView.props.actionRef || actionRef,
+                        request: async (params, sort) => {
+                            setTableInfo({ ...params, current: params.current, pageSize: params.pageSize, sort })
+                            setForceReload(v => v + 1)
+                            return []
+                        }
+                    }
+                }} onAddTab={addTab} /> </>}
+
+            <FloatButton.BackTop />
+        </PageContainer>
+    </PageWrapperContext.Provider>
 }

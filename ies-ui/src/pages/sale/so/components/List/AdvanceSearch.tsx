@@ -1,3 +1,4 @@
+import moment from 'moment';
 import { CrmServiceAPI } from '@/services/crm/services';
 import { LookupData, LookupDataItem } from '@/services/data';
 import { simpleRequestActions } from '@/services/model';
@@ -28,7 +29,7 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
   ...props
 }) => {
   const [form] = useForm<SoAdvanceSearchParams>();
-  const  requestActions = simpleRequestActions();
+  const requestActions = simpleRequestActions();
   useEffect(() => {
     if (!props.open) return;
     form.setFieldsValue({ ...initData });
@@ -77,7 +78,11 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
               return data?.map(p=>({ value:p.id, label:p.name }));
           }}
         /> */}
-        <ProFormDateRangePicker label="Ordered Date Start - Ordered End" name="orderedDate" />
+        <ProFormDateRangePicker
+          label="Ordered Date Start - Ordered End"
+          name="orderedDate"
+          initialValue={[moment().subtract(3, 'months'), moment()]}
+        />
         <ProFormDateRangePicker label="Posted Start - Posted End" name="postedDate" />
         <ProFormCheckbox name="hasAttachment">Has Attachment</ProFormCheckbox>
         <ProFormDependency key={'hasAttachment'} name={['hasAttachment']}>

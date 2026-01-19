@@ -23,16 +23,22 @@ export interface EmployeeListItem {
   userId?: string;
 }
 
+// export type EmployeeAdvanceSearchParams = {
+//   status: 'ALL' | 'ACTIVE' | 'INACTIVE';
+//   integratedStatus?: string;
+//   keyword?: string;
+//   advanceSearch?: {
+//     buIds?: number[];
+//     depIds?: number[];
+//     integratedStatus?: string;
+//     status?: string;
+//   };
+// };
 export type EmployeeAdvanceSearchParams = {
   status: 'ALL' | 'ACTIVE' | 'INACTIVE';
-  integratedStatus?: string;
   keyword?: string;
-  advanceSearch?: {
-    buIds?: number[];
-    depIds?: number[];
-    integratedStatus?: string;
-    status?: string;
-  };
+  bu?: number[];
+  department?: number[];
 };
 
 
@@ -64,22 +70,30 @@ export type StaffRequisitionAdvanceSearchParams = {
   };
 };
 
+// export type ProbationAdvanceSearchParams = {
+//   status?: "ALL" | "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
+//   integratedStatus?: string;
+//   keyword?: string;
+//   advanceSearch?: {
+//     buIds?: number[];
+//     depIds?: number[];
+//     integratedStatus?: string;
+//     status?: string;
+//     pendingFilter?: (
+//       | "REQUESTED"
+//       | "SETTING"
+//       | "IN_PROGRESS"
+//       | "REVIEWING"
+//       )[];
+//   };
+// };
+
 export type ProbationAdvanceSearchParams = {
-  status?: "ALL" | "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
-  integratedStatus?: string;
+  status?: "ALL" | "PENDING" | "COMPLETED" | "REJECTED"; 
   keyword?: string;
-  advanceSearch?: {
-    buIds?: number[];
-    depIds?: number[];
-    integratedStatus?: string;
-    status?: string;
-    pendingFilter?: (
-      | "REQUESTED"
-      | "SETTING"
-      | "IN_PROGRESS"
-      | "REVIEWING"
-      )[];
-  };
+  pendingFilter?: sgring[];
+  buIds?: number[];
+  depIds?: number[];
 };
 
 export type ProbationEvaluationData = {

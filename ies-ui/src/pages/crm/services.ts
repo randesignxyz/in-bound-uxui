@@ -17,4 +17,9 @@ export const CrmServices = {
         endpoint: 'CRM',
         payload: {}
     }),
+    listRelationshipData: () => fetchDataListService<Location, { type?: string }>({
+        actionName: 'relationship-data',
+        endpoint: 'CRM',
+        payload: {}
+    })
 }

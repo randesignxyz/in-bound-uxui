@@ -67,6 +67,7 @@ export default () => {
         statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed, totalPending)
     }, [state.data?.soSummary])
 
+
     const optionsRef = useRef<{ value: number; label: string }[]>([]);
     const [isSelectAll, setIsSelectAll] = useState(false);
 
@@ -120,20 +121,21 @@ export default () => {
                         </Flex>
                     </Card>
                 </>,
-                actionButtons: [{
-                    icon: <SyncOutlined />,
-                    type: 'link',
-                    disabled: !access.canCreateEditSo,
-                    onClick: async () => {
-                        await actions.syncFromSFA()
-                        actionRef.current?.reload(true)
-                    }
-                }, {
-                    icon: <PlusCircleOutlined />,
-                    type: 'link',
-                    addNewTab: true,
-                    disabled: !access.canCreateEditSo,
-                }],
+                actionButtons: [
+                    {
+                        icon: <SyncOutlined />,
+                        type: 'link',
+                        disabled: !access.canCreateEditSo,
+                        onClick: async () => {
+                            await actions.syncFromSFA()
+                            actionRef.current?.reload(true)
+                        }
+                    }, {
+                        icon: <PlusCircleOutlined />,
+                        type: 'link',
+                        addNewTab: true,
+                        disabled: !access.canCreateEditSo,
+                    }],
                 onOpenAdvanceSearch: () => modals.showModal('advanceSearch'),
                 onStatusRender: <StatusBar ref={statusBarRef} onCustomerTypeChanged={(value) => {
                     setFilter(v => ({
@@ -217,7 +219,7 @@ export default () => {
                             form={form}
                             requestActions={requestActions}
                             isSelectAll={isSelectAll}
-                            width={90}
+                            width={100}
                             onInit={(values, options) => {
                                 setSaleArea(options);
                                 setFilter(v => ({
@@ -287,113 +289,122 @@ export default () => {
                     ],
 
                     rowKey: 'id',
-                    columns: [{
-                        title: 'PO #',
-                        sorter: 'poNo',
-                        dataIndex: 'poNo',
-                        width: 110,
-                        key: 'poNo',
-                        actionProps: (item) => ({
-                            type: 'view',
-                            label: item.poNo || '',
-                            actionButtons: [
-                                {
-                                    type: 'link',
-                                    size: 'small',
-                                    position: 'last',
-                                    hidden: !item.hasAttachment,
-                                    icon: <PaperClipOutlined style={{ color: `${item.uploaded ? '#A0A0A0' : 'red'}` }} />
-                                }
-                            ]
-                        })
-                    }, {
-                        title: 'SO #',
-                        sorter: 'soNo',
-                        hideInTable: filter.criteria?.advanceSearch?.status === 'Pending',
-                        width: 110,
-                        dataIndex: 'soNo',
-                        //render: colLink(actionHandlers?.onDetail, (d) => d.soNo || 'Not Assigned'),
-                    }, {
-                        title: 'Customer',
-                        sorter: 'customerCode',
-                        dataIndex: 'customerCode',
-                        key: 'customerCode',
-                        actionProps: item => ({ type: 'action1', label: item.customerCode, actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => { window.open(`/external/crm/customer/detail/${item?.customerId}`, '_blank')?.focus() } }] }),
-
-                    }, {
-                        title: 'Ship To',
-                        render: (_, data) => data.shippingAddress,
-                    },
-                    {
-                        title: 'Salesperson',
-                        render: (_, data) => data.salespersonName,
-                        sorter: 'salespersonName',
-                        dataIndex: 'salespersonName',
-                    },
-                    {
-                        title: 'Province',
-                        dataIndex: 'province',
-                    },
-                    {
-                        title: "Section",
-                        dataIndex: "section",
-                        width: 70,
-                    },
-                    {
-                        title: "Sub Section",
-                        dataIndex: "subSection",
-                        width: 80,
-                    },
-
-                    {
-                        title: 'Del. Method',
-                        width: 90,
-                        render: (_, r) => r.deliveryMethod,
-                    },
-                    {
-                        title: 'Order Date',
-                        align: 'right',
-                        sorter: 'orderDate',
-                        dataIndex: "orderDate",
-                        width: 110,
-                        render: (_, data) => moment(data.orderedDate).format('YYYY-MM-DD'),
-
-                    },
-                    {
-                        title: "Order Time",
-                        width: 100,
-                        render: (_, data) => moment(data.orderedDate).format('HH:mm:ss'),
-                    },
-                    {
-                        title: 'Requested Del. Date',
-                        width: 90,
-                        render: (_, r) => moment(r.deliveryDate).format('YYYY-MM-DD'),
-                    },
-                    // {
-                    //     title: 'First Delivery Date',
-                    //     align: 'right',
-                    //     sorter: 'deliveryDate',
-
-                    //     width: 150,
-                    //     render: (_, data) => formatDate(data.deliveryDate),
-                    // },
-                    {
-                        title: 'Amount',
-                        align: 'right',
-                        valueType: {
-                            type: 'money',
-                            locale: 'en-US',
+                    columns: [
+                        {
+                            title: "",
+                            render: (r, s, index) => (
+                                data?.page * data?.pageSize + index) + 1
                         },
-                        dataIndex: 'amount',
-                    },
-                    {
-                        title: 'Status',
-                        render: (_, r) => r.status && <Status text={r.status} />,
-                    },
-                    {
-                        title: 'Source',
-                        dataIndex: 'source',
-                    },]
+                        {
+                            title: 'PO #',
+                            sorter: 'poNo',
+                            dataIndex: 'poNo',
+                            width: 110,
+                            key: 'poNo',
+                            actionProps: (item) => ({
+                                type: 'view',
+                                label: item.poNo || '',
+                                actionButtons: [
+                                    {
+                                        type: 'link',
+                                        size: 'small',
+                                        position: 'last',
+                                        hidden: !item.hasAttachment,
+                                        icon: <PaperClipOutlined style={{ color: `${item.uploaded ? '#A0A0A0' : 'red'}` }} />
+                                    }
+                                ]
+                            })
+                        }, {
+                            title: 'SO #',
+                            sorter: 'soNo',
+                            hideInTable: filter.criteria?.advanceSearch?.status === 'Pending',
+                            width: 110,
+                            dataIndex: 'soNo',
+                            //render: colLink(actionHandlers?.onDetail, (d) => d.soNo || 'Not Assigned'),
+                        }, {
+                            title: 'Customer',
+                            sorter: 'customerCode',
+                            dataIndex: 'customerCode',
+                            key: 'customerCode',
+                            width: 100,
+                            actionProps: item => ({ type: 'action1', label: item.customerCode, actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => { window.open(`/external/crm/customer/detail/${item?.customerId}`, '_blank')?.focus() } }] }),
+
+                        }, {
+                            title: 'Ship To',
+                            render: (_, data) => data.shippingAddress,
+                        },
+                        {
+                            title: 'Salesperson',
+                            render: (_, data) => data.salespersonName,
+                            sorter: 'salespersonName',
+                            dataIndex: 'salespersonName',
+                        },
+                        {
+                            title: 'Province',
+                            dataIndex: 'province',
+                            width: 70
+                        },
+                        {
+                            title: "Sec.",
+                            dataIndex: "section",
+                            width: 50,
+                            tooltip: "Section"
+                        },
+                        {
+                            title: "Sub-Sec.",
+                            dataIndex: "subSection",
+                            width: 80,
+                        },
+
+                        {
+                            title: 'Del. Method',
+                            width: 100,
+                            render: (_, r) => r.deliveryMethod,
+                        },
+                        {
+                            title: 'Order Date',
+                            align: 'right',
+                            sorter: 'orderDate',
+                            dataIndex: "orderDate",
+                            width: 110,
+                            render: (_, data) => moment(data.orderedDate).format('YYYY-MM-DD'),
+
+                        },
+                        {
+                            title: "Order Time",
+                            width: 100,
+                            render: (_, data) => moment(data.orderedDate).format('HH:mm:ss'),
+                        },
+                        {
+                            title: 'Req. Del. Date',
+                            width: 90,
+                            render: (_, r) => moment(r.deliveryDate).format('YYYY-MM-DD'),
+                        },
+                        // {
+                        //     title: 'First Delivery Date',
+                        //     align: 'right',
+                        //     sorter: 'deliveryDate',
+
+                        //     width: 150,
+                        //     render: (_, data) => formatDate(data.deliveryDate),
+                        // },
+                        {
+                            title: 'Amount',
+                            align: 'right',
+                            valueType: {
+                                type: 'money',
+                                locale: 'en-US',
+                            },
+                            dataIndex: 'amount',
+                        },
+                        {
+                            title: 'Status',
+                            render: (_, r) => r.status && <Status text={r.status} />,
+                        },
+                        {
+                            title: 'Source',
+                            dataIndex: 'source',
+                        },]
                 }
             }} />
 

@@ -100,7 +100,7 @@ export default function ProbationListPage() {
           marginLeft: 6,
         }}
       >
-        { count}
+        { total?.pending}
       </sup>
     );
   const isAdvancedFiltered = () => {

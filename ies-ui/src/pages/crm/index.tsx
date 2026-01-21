@@ -296,7 +296,7 @@ const Crm: React.FC = () => {
       link: `${CrmPaths.visitPlan}/list`,
       icon: planIcon,
       // visible: access.canAccessVisitPlanMenu,
-      visible: access.canAccess("CRM_VISIT_PLAN"),
+      visible: access.canAccessCRMVisitPlan,
     },
     {
       id: 'visitSchedule',
@@ -304,7 +304,7 @@ const Crm: React.FC = () => {
       description: 'Sechule to visit customer',
       link: `${CrmPaths.visitSchedule}/list`,
       // visible: access.canAccessVisitScheduleMenu,
-      visible: access.canAccessCRMVisitPlan,
+      visible: access.canAccessCRMVisitSchedule,
       // isMenu: true,
       // overlay: visitScheduleMenu,
       menu: {

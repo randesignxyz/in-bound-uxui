@@ -30,47 +30,52 @@ const IPOHeaderForm: React.FC<Props> = ({ basiceInfo }) => {
     return (
         <Flex vertical gap={16}>
             {/* Section 1: Employee Information */}
-            <ProDescriptions
-                column={{ xxl: 4, xl: 4, lg: 4, md: 2, sm: 1, xs: 1 }}
-                bordered
-                size="small"
-                title="Employee Information"
-                dataSource={basiceInfo}
-                columns={[
-                    {
-                        title: "Employee ID",
-                        dataIndex: "employeeId"
-                    },
-                    {
-                        title: "Employee Name",
-                        dataIndex: "employeeName"
-                    },
-                    {
-                        title: "Position",
-                        dataIndex: "position"
-                    },
-                    {
-                        title: "Company",
-                        dataIndex: "company"
-                    },
-                    {
-                        title: "Function",
-                        dataIndex: "function"
-                    },
-                    {
-                        title: "Sub-Function",
-                        dataIndex: "subFunction"
-                    },
-                    {
-                        title: "FM Name",
-                        dataIndex: "fmName"
-                    },
-                    {
-                        title: "Sub-FM Name",
-                        dataIndex: "subFmName"
-                    }
-                ]}
-            />
+            <Card size="small" title={"Employee Information"}>
+                <ProDescriptions
+                    column={{ xxl: 4, xl: 4, lg: 4, md: 2, sm: 1, xs: 1 }}
+                    bordered={false}
+                    size="small"
+                    dataSource={basiceInfo}
+                    labelStyle={{
+                        width: '120px'
+                    }}
+                    columns={[
+                        {
+                            title: "Employee ID",
+                            dataIndex: "employeeId"
+                        },
+                        {
+                            title: "Employee Name",
+                            dataIndex: "employeeName"
+                        },
+                        {
+                            title: "Position",
+                            dataIndex: "position"
+                        },
+                        {
+                            title: "Company",
+                            dataIndex: "company"
+                        },
+                        {
+                            title: "Function",
+                            dataIndex: "function"
+                        },
+                        {
+                            title: "Sub-Function",
+                            dataIndex: "subFunction"
+                        },
+                        {
+                            title: "FM Name",
+                            dataIndex: "fmName"
+                        },
+                        {
+                            title: "Sub-FM Name",
+                            dataIndex: "subFmName"
+                        }
+                    ]}
+                />
+            </Card>
+
 
             <Card
                 type="inner"

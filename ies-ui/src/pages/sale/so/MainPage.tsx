@@ -270,28 +270,29 @@ export default () => {
                             pagination
                         }));
                     },
-                    actionButtonsColumnRender: item => [
-                        {
-                            type: "link",
-                            size: 'small',
-                            icon: < ExportOutlined />,
-                            onClick: () => window.open(`/external/sale/so/detail/${item.id}`, '_blank')?.focus()
-                        },
-                        {
-                            type: 'link',
-                            size: 'small',
-                            icon: <EyeOutlined />,
-                            onClick: async () => {
-                                await actions.fetchSo(item.id);
-                                modals.showModal('quickView');
-                            }
-                        }
-                    ],
+                    // actionButtonsColumnRender: item => [
+                    //     {
+                    //         type: "link",
+                    //         size: 'small',
+                    //         icon: < ExportOutlined />,
+                    //         onClick: () => window.open(`/external/sale/so/detail/${item.id}`, '_blank')?.focus()
+                    //     },
+                    //     {
+                    //         type: 'link',
+                    //         size: 'small',
+                    //         icon: <EyeOutlined />,
+                    //         onClick: async () => {
+                    //             await actions.fetchSo(item.id);
+                    //             modals.showModal('quickView');
+                    //         }
+                    //     }
+                    // ],
 
                     rowKey: 'id',
                     columns: [
                         {
-                            title: "",
+                            title: "No",
+                            width: 40,
                             render: (r, s, index) => (
                                 data?.page * data?.pageSize + index) + 1
                         },
@@ -299,12 +300,27 @@ export default () => {
                             title: 'PO #',
                             sorter: 'poNo',
                             dataIndex: 'poNo',
-                            width: 110,
                             key: 'poNo',
+                            width: 170,
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.poNo || '',
                                 actionButtons: [
+                                    {
+                                        type: 'link',
+                                        size: 'small',
+                                        icon: <ExportOutlined />,
+                                        onClick: () => window.open(`/external/sale/so/detail/${item.id}`, '_blank')?.focus()
+                                    },
+                                    {
+                                        type: 'link',
+                                        size: 'small',
+                                        icon: <EyeOutlined />,
+                                        onClick: async () => {
+                                            await actions.fetchSo(item.id);
+                                            modals.showModal('quickView');
+                                        }
+                                    },
                                     {
                                         type: 'link',
                                         size: 'small',
@@ -358,7 +374,7 @@ export default () => {
 
                         {
                             title: 'Del. Method',
-                            width: 100,
+                            width: 60,
                             render: (_, r) => r.deliveryMethod,
                         },
                         {

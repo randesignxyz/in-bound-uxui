@@ -5,7 +5,8 @@ import { EditableProTable } from '@ant-design/pro-components';
 
 const { Text } = Typography;
 
-interface DataType {
+
+export interface DataType {
     key: string;
     achievements: string;
     strengths: string;
@@ -45,9 +46,23 @@ const defaultData: DataType[] = [
     },
 ];
 
-const Section3Form: React.FC = () => {
+interface Props {
+    data?: DataType[];
+    readOnly?: boolean;
+}
+
+const Section3Form: React.FC<Props> = ({ data, readOnly = false }) => {
     const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
     const [dataSource, setDataSource] = useState<DataType[]>(defaultData);
+
+    React.useEffect(() => {
+        if (data) {
+            setDataSource(data);
+            if (readOnly) {
+                setEditableRowKeys([]);
+            }
+        }
+    }, [data, readOnly]);
 
     const columns: ProColumns<DataType>[] = [
         {
@@ -102,7 +117,7 @@ const Section3Form: React.FC = () => {
                 columns={columns}
                 rowKey="key"
                 value={dataSource}
-                onChange={setDataSource}
+                onChange={(values) => setDataSource([...values])}
                 recordCreatorProps={{
                     newRecordType: 'dataSource',
                     position: 'bottom',

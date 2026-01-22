@@ -14,7 +14,7 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
-import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, DashOutlined, ExportOutlined, FileSearchOutlined, HistoryOutlined, MoreOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, DashOutlined, ExportOutlined, FileExcelOutlined, FileSearchOutlined, HistoryOutlined, MoreOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
 import AdvanceSearch from './advanceSearchDrawer';
 import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
@@ -26,6 +26,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import SortModal, { SortRule } from '@/pages/delivery/allocate/SortModal';
 import { render } from '@testing-library/react';
 import OfficerZoneFilter from '@/pages/delivery/allocate/FilterSelect';
+import ExportExcel from '@/pages/delivery/allocate/ExportExcel';
+import { downloadGenericReport } from '@/services/apiGateway';
 
 dayjs.extend(customParseFormat)
 interface DNListState {
@@ -133,6 +135,10 @@ export default () => {
   const [zoneOptions, setZoneOptions] = useState<any[]>([]);
   const [routeId, setRouteId] = useState<any[]>([]);
   const [zoneId, setZoneId] = useState<string | undefined>(undefined);
+  const [exportModel, setExportModal] = useState<{ visible: boolean }>({
+    visible: false,
+  });
+  const [excelLoading, setExcelLoading] = useState(false)
 
   useEffect(() => {
     if (state?.selectedRows) {
@@ -452,7 +458,7 @@ export default () => {
           del_item,
           'open'
         );
-
+        await services.list_count()
         actionRef.current?.reloadAndRest?.();
         message.success('Updated successfully');
       },
@@ -1105,6 +1111,9 @@ export default () => {
         //   render: (value: string) =>
         //     value?.replace(/^S&D\s*/i, ''),
         // },
+        {
+          title: 'Delivery Type', dataIndex: 'delviery_type', width: 150,
+        },
         {
           title: 'District', dataIndex: 'district', width: 150,
           // sorter: {
@@ -1790,7 +1799,7 @@ export default () => {
                       >
                         <ReloadOutlined />
                       </Button>
-                      
+
                     </div>
                   </ProForm>
 
@@ -1869,6 +1878,8 @@ export default () => {
                             { value: 'today', label: 'Today' },
                             { value: 'unplan', label: 'DOP Pending' },
                             { value: 'TBA', label: 'TBA' },
+                            { value: 'walk-in', label: 'Self Pickup' },
+                            { value: 'hold', label: 'On Hold' },
                           ]}
                           width={150}
                           showSearch
@@ -2049,29 +2060,31 @@ export default () => {
                             </Button>
                           </div>
                         )}
-                        <Button type="text" size={'large'}
+                        <Tooltip title="Map"><Button type="text" size={'large'}
                           onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows, areaList: selectedArea } })}
                           icon={<TbMap2 />}
                           style={{ fontSize: 22 }}
                         >
-                        </Button>
-                        <Button type="text" size='large' onClick={() => setSortModalOpen(true)}>
+                        </Button></Tooltip>
+                        <Tooltip title="Sort"><Button type="text" size='large' onClick={() => setSortModalOpen(true)} >
                           <ColumnHeightOutlined />
-                        </Button>
-                        <Button type="text" size='large' onClick={() => onSync()}>
+                        </Button></Tooltip>
+                        <Tooltip title="Sync From SAP"><Button type="text" size='large' onClick={() => onSync()} >
                           <SyncOutlined />
-                        </Button>
-                        <Button
-                          type="text"
-                          size="large"
-                          onClick={async () => {
-                            actionRef.current?.reloadAndRest?.()
-                            const res = await services.list_count()
-                            setCountList(res);
-                          }}
+                        </Button></Tooltip>
+                        <Tooltip title="Dowload Excel File"><Button type="text" size='large' icon={<FileExcelOutlined />}
+                          onClick={() => setExportModal({ visible: true })}
                         >
-                          <ReloadOutlined />
                         </Button>
+                        </Tooltip>
+                        <Tooltip title="Refresh">
+                          <Button
+                            type="text"
+                            onClick={() => actionRef.current?.reloadAndRest?.()}
+                            size='large'
+                          >
+                            <ReloadOutlined />
+                          </Button></Tooltip>
 
                         <div style={{ width: '100%', alignItems: 'flex-start', }}>   {/* 🔑 FORCE NEW ROW */}
                           <Card
@@ -2186,6 +2199,8 @@ export default () => {
                               { value: 'today', label: 'Today' },
                               { value: 'unplan', label: 'DOP Pending' },
                               { value: 'TBA', label: 'TBA' },
+                              { value: 'walk-in', label: 'Self Pickup' },
+                              { value: 'hold', label: 'On Hold' },
                             ]}
                             width={150}
                             showSearch
@@ -2525,7 +2540,68 @@ export default () => {
           />
         )}
       </Modal >
+      <ExportExcel
+        title="Export Excel"
+        open={exportModel.visible}
+        loading={excelLoading}
+        onCancel={() => setExportModal({ visible: false })}
+        onSave={async (customer, ordered_date, request_delivery_date) => {
+          const result = [
+            {
+              key: 'customer',
+              value: customer ?? null,
+              type: 'string',
+            },
 
+            {
+              key: 'request_delivery_startdate',
+              value: request_delivery_date?.[0]
+                ? (request_delivery_date[0])
+                : null,
+              type: 'dateTime',
+            },
+            {
+              key: 'request_delivery_enddate',
+              value: request_delivery_date?.[1]
+                ? (request_delivery_date[1])
+                : null,
+              type: 'dateTime',
+            },
+
+            {
+              key: 'ordered_startdate',
+              value: ordered_date?.[0]
+                ? (ordered_date[0])
+                : null,
+              type: 'dateTime',
+            },
+            {
+              key: 'ordered_enddate',
+              value: ordered_date?.[1]
+                ? (ordered_date[1])
+                : null,
+              type: 'dateTime',
+            },
+          ]
+          try {
+            setExcelLoading(true)
+            await downloadGenericReport(requestActions)({
+              fileName: `dop-${moment().format()}.xls`,
+              type: 'EXCEL',
+              data: {
+                reportName: 'DOPDetail',
+                reportPath: '/Reports/Delivery',
+                data: result,
+              },
+            }).then(() => { })
+          } catch (error) {
+            message.error('Failed to download.');
+          } finally {
+            setExcelLoading(false)
+          }
+          setExportModal({ visible: false });
+        }}
+      />
     </>
   );
 };

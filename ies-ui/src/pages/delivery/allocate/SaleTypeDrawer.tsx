@@ -20,7 +20,7 @@ export default ({ dataList, ...rest }: Props) => {
     const requestActions = simpleRequestActions();
     const services = AllocateServiceAPI(requestActions)
     const [saleType, setSaleType] = useState<SaleTypeList[]>([]);
-    
+    console.log('dataList',dataList)
     useEffect(() => {
         const fetchSaleType = async () => {
             const result = await services.list_sale_type();

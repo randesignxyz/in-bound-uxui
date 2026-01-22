@@ -138,18 +138,28 @@ const Section2Form: React.FC<Props> = ({ data, readOnly = false, masterDate }) =
             dataIndex: 'actionPlan',
             key: 'actionPlan',
             width: 300,
-            valueType: 'textarea',
+            valueType: 'select',
             render: (_, record) => <div style={{ whiteSpace: 'pre-wrap' }}>{record.actionPlan}</div>,
-            editable: false,
+            request: async () => {
+                return masterDate.filter(item => item.typeCode === "ACTION_PLAN").map(item => ({
+                    label: item.nameEn,
+                    value: item.code
+                }));
+            }
         },
         {
             title: 'KPI',
             dataIndex: 'kpi',
             key: 'kpi',
             // width: 200,
-            valueType: 'textarea',
+            valueType: 'select',
             render: (_, record) => <div style={{ whiteSpace: 'pre-wrap' }}>{record.kpi}</div>,
-            editable: false,
+            request: async () => {
+                return masterDate.filter(item => item.typeCode === "KPI").map(item => ({
+                    label: item.nameEn,
+                    value: item.code
+                }));
+            }
         },
         {
             title: 'WEIGHT',

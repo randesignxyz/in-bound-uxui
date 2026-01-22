@@ -15,7 +15,7 @@ interface Props {
 const IPOForm: React.FC<Props> = ({ }) => {
     const [masterData, setMasterData] = useState<MasterDataItem[]>([]);
     const getMasterData = async () => {
-        const res = await MasterDataService.getItemsByCode(["OBJECTIVES", "RATING_SCALE"]);
+        const res = await MasterDataService.getItemsByCode(["OBJECTIVES", "RATING_SCALE", "KPI"]);
         setMasterData(res);
     }
 

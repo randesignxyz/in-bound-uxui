@@ -14,7 +14,7 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
-import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, DashOutlined, ExportOutlined, FileSearchOutlined, HistoryOutlined, MoreOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, DashOutlined, ExportOutlined, FileSearchOutlined, HistoryOutlined, MoreOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined, FileExcelOutlined } from '@ant-design/icons';
 import AdvanceSearch from './advanceSearchDrawer';
 import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
@@ -26,6 +26,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import SortModal, { SortRule } from '@/pages/delivery/allocate/SortModal';
 import { render } from '@testing-library/react';
 import OfficerZoneFilter from '@/pages/delivery/allocate/FilterSelect'
+import ExportExcel from './ExportExcel';
+import { downloadGenericReport } from "@/services/apiGateway";
+import { getUrlReporting } from "@/pages/ReportUrl";
 
 dayjs.extend(customParseFormat)
 interface DNListState {
@@ -132,7 +135,10 @@ export default () => {
   const [zoneOptions, setZoneOptions] = useState<any[]>([]);
   const [routeId, setRouteId] = useState<any[]>([]);
   const [zoneId, setZoneId] = useState<string | undefined>(undefined);
-
+  const [exportModel, setExportModal] = useState<{ visible: boolean }>({
+    visible: false,
+  });
+  const [excelLoading, setExcelLoading] = useState(false)
   useEffect(() => {
     if (state?.selectedRows) {
       setSelectedRowKeys(prev => {
@@ -464,7 +470,7 @@ export default () => {
     setClaimOpen(true);
   };
 
-  const handleUnClaim = async (ids: number[], selectedListDn: any[]) => {
+  const handleUnClaim = async (selectedListDn: any[]) => {
     Modal.confirm({
       title: 'Unpick',
       content: 'Are you sure?',
@@ -472,6 +478,9 @@ export default () => {
         const dnList = Array.isArray(selectedListDn)
           ? selectedListDn
           : [selectedListDn];
+
+        const ids = dnList.map(dn => Number(dn.id));
+
         const rawLines = dnList.flatMap(dn =>
           (dn.deliveryItems ?? []).map((it: any) => ({
             soDocEntry: String(dn.so_doc_entry ?? dn.soId),
@@ -493,10 +502,16 @@ export default () => {
             ? a.lineNum - b.lineNum
             : a.soDocEntry.localeCompare(b.soDocEntry)
         );
+        const claimedLines = [
+          ...new Set(dnList.map(v => v.claimed_line).filter(Boolean))
+        ];
+
+        const actionText = `Unpick (${claimedLines.join(',')})`
+
         await services.ClaimDn(
           ids,
           access.currentUser?.login ?? '',
-          `Unpick (${dnList.map(v => v.claimed_line)})`,
+          actionText,
           'Unpick DN',
           null,
           del_item
@@ -1228,13 +1243,34 @@ export default () => {
           <Card style={{
             marginBottom: 16,
           }}>
-            <Descriptions column={5}>
-              <Descriptions.Item label="Pick Number" style={{ fontWeight: 'bolder' }}>
-                <a>
-                  <Typography.Link strong copyable >{record.claimed_line || '-'}</Typography.Link>
-                </a>
-              </Descriptions.Item>
-            </Descriptions>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Descriptions column={4}>
+                <Descriptions.Item label="Pick Number" style={{ fontWeight: 'bolder' }}>
+                  <a>
+                    <Typography.Link strong copyable >{record.claimed_line || '-'}</Typography.Link>
+                  </a>
+                </Descriptions.Item>
+
+              </Descriptions>
+              {record.data?.some(item => item.status !== 'complete') && (access.currentUser?.login == record.claimed_by || access.canAccesAllocateAdmin) ?
+                <Button type="default" danger
+                  onClick={() => {
+                    console.log(record.data),
+                      (handleUnClaim(record.data))
+                  }
+
+                  }
+                >
+                  Unpick All
+                </Button>
+                : <></>}
+            </div>
             <Divider />
             {record?.data?.map((item: any, index: number) => (
               <>
@@ -1300,9 +1336,11 @@ export default () => {
                                     <span style={{ fontSize: 12 }}> {dayjs.utc(item.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
 
                                   </span>
-                                  {item.status != 'complete' && (access.currentUser?.login == item.claimed_by && access.canAccesAllocateAdmin) ?
+                                  {item.status != 'complete' && (access.currentUser?.login == item.claimed_by || access.canAccesAllocateAdmin) ?
                                     <Button type="default" danger
-                                      onClick={() => (handleUnClaim([Number(item.id)], item))}
+                                      onClick={() =>
+                                        (handleUnClaim(item))
+                                      }
                                     >
                                       Unpick
                                     </Button>
@@ -1485,9 +1523,9 @@ export default () => {
                               title: 'SAP Qty',
                               dataIndex: 'sap_qty',
                               width: 70,
-                              render: (v) => {
-                                if (v === null || v === undefined) return '0'
-                                return Number(v).toString()
+                              render: (_, r) => {
+                                const qty = r.sap_qty ?? r.order_qty
+                                return qty != null ? Math.trunc(Number(qty)) : ''
                               }
                             },
                             {
@@ -1537,6 +1575,24 @@ export default () => {
                                 return (
                                   <div style={{ color }}>
                                     {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                  </div>
+                                );
+                              },
+                            },
+                            {
+                              title: 'Remaining',
+                              width: 90,
+                              render: (_, r) => {
+                                const deliveryDate = dayjs.utc(item.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
+                                const dnList = Array.isArray(r.dn) ? r.dn : [r];
+
+                                const plannedQty = Number(r.qty) || 0;
+                                const totalRemaining = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
+                                const remaining = Number(r.sap_qty) - totalRemaining || 0
+                                let color = 'black'
+                                return (
+                                  <div style={{ color }}>
+                                    {remaining.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                   </div>
                                 );
                               },
@@ -2044,26 +2100,31 @@ export default () => {
                             </Button>
                           </div>
                         )}
-                        <Button type="text" size={'large'}
+                        <Tooltip title="Map"><Button type="text" size={'large'}
                           onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows, areaList: selectedArea } })}
                           icon={<TbMap2 />}
                           style={{ fontSize: 22 }}
                         >
-                        </Button>
-                        <Button type="text" size='large' onClick={() => setSortModalOpen(true)} >
+                        </Button></Tooltip>
+                        <Tooltip title="Sort"><Button type="text" size='large' onClick={() => setSortModalOpen(true)} >
                           <ColumnHeightOutlined />
-                        </Button>
-                        <Button type="text" size='large' onClick={() => onSync()} >
+                        </Button></Tooltip>
+                        <Tooltip title="Sync From SAP"><Button type="text" size='large' onClick={() => onSync()} >
                           <SyncOutlined />
-                        </Button>
-                        <Button
-                          type="text"
-                          onClick={() => actionRef.current?.reloadAndRest?.()}
-                          size='large'
-
+                        </Button></Tooltip>
+                        <Tooltip title="Dowload Excel File"><Button type="text" size='large' icon={<FileExcelOutlined />}
+                          onClick={() => setExportModal({ visible: true })}
                         >
-                          <ReloadOutlined />
                         </Button>
+                        </Tooltip>
+                        <Tooltip title="Refresh">
+                          <Button
+                            type="text"
+                            onClick={() => actionRef.current?.reloadAndRest?.()}
+                            size='large'
+                          >
+                            <ReloadOutlined />
+                          </Button></Tooltip>
                         {officerArea?.length > 0 && (
                           <div style={{ width: '100%', alignItems: 'flex-start', }}>   {/* 🔑 FORCE NEW ROW */}
                             <Card
@@ -2489,7 +2550,68 @@ export default () => {
           />
         )}
       </Modal >
+      <ExportExcel
+        title="Export Excel"
+        open={exportModel.visible}
+        loading={excelLoading}
+        onCancel={() => setExportModal({ visible: false })}
+        onSave={async (customer, ordered_date, request_delivery_date) => {
+          const result = [
+            {
+              key: 'customer',
+              value: customer ?? null,
+              type: 'string',
+            },
 
+            {
+              key: 'request_delivery_startdate',
+              value: request_delivery_date?.[0]
+                ? (request_delivery_date[0])
+                : null,
+              type: 'dateTime',
+            },
+            {
+              key: 'request_delivery_enddate',
+              value: request_delivery_date?.[1]
+                ? (request_delivery_date[1])
+                : null,
+              type: 'dateTime',
+            },
+
+            {
+              key: 'ordered_startdate',
+              value: ordered_date?.[0]
+                ? (ordered_date[0])
+                : null,
+              type: 'dateTime',
+            },
+            {
+              key: 'ordered_enddate',
+              value: ordered_date?.[1]
+                ? (ordered_date[1])
+                : null,
+              type: 'dateTime',
+            },
+          ]
+          try {
+            setExcelLoading(true)
+            await downloadGenericReport(requestActions)({
+              fileName: `dop-${moment().format()}.xls`,
+              type: 'EXCEL',
+              data: {
+                reportName: 'DOPDetail',
+                reportPath: '/Reports/Delivery',
+                data: result,
+              },
+            }).then(() => { })
+          } catch (error) {
+            message.error('Failed to download.');
+          } finally {
+            setExcelLoading(false)
+          }
+          setExportModal({ visible: false });
+        }}
+      />
     </>
   );
 };

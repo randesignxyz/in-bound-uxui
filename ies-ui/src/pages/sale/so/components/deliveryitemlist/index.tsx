@@ -54,6 +54,7 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
                 <Space size={0}>
                   {(!r?.status?.toLocaleLowerCase() ||
                     !r?.so_status?.toLocaleLowerCase() ||
+                    r?.so_status.toLocaleLowerCase() == 'posted' ||
                     r?.so_status.toLocaleLowerCase() != 'posted' ||
                     r?.status.toLocaleLowerCase() == 'pending'
                     // ||(r?.so_status.toLocaleLowerCase() === 'posted' && moment(r.deliveryDate).format('YYYY-MM-DD') === '2099-12-31')

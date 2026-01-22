@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Card, Table, Typography, Tag, Flex } from 'antd';
 import type { ProColumns } from '@ant-design/pro-components';
 import { EditableProTable } from '@ant-design/pro-components';
+import { MasterDataItem } from '../master-data/data';
 
 const { Text } = Typography;
 
-interface DataType {
+
+export interface DataType {
     key: string;
     no: number;
     objectives: string;
@@ -21,62 +23,62 @@ interface DataType {
 }
 
 const defaultData: DataType[] = [
-    {
-        key: '1',
-        no: 1,
-        objectives: 'RESULT-ORIENTATION\nTo improve your ability to focus on achieving key results, meeting deadlines, and delivering high-quality outcomes.',
-        actionPlan: 'Deliver task or work on agreed deadlines\nCommit and deliver high-quality results',
-        kpi: '% of Tasks delivered on deadlines: 100%\n% of High Quality Task: 100%',
-        weight: '30%',
-        startDate: 'Jan-25',
-        dueDate: 'Dec-25',
-        midYearReview: 'Completed',
-        selfEvaluation: 0,
-        yearEndReview: 0,
-        justification: '',
-    },
-    {
-        key: '2',
-        no: 2,
-        objectives: 'LEADING TEAM\nTo drive team productivity and deliverables aligned with function and company\'s goals.',
-        actionPlan: 'Conduct effective monthly meeting with team members\nProvide 1:1 Performance Feedback with each employee quarterly\nProvide 1:1 Coaching session with each employee quarterly\nDevelop and mentor at least 1 high-potential member in team',
-        kpi: '100% Sprint Meeting Completion\n# of Quarterly 1:1 Feedback Session\n# of Quarterly 1:1 Coaching Session\n# of Successor: 01',
-        weight: '20%',
-        startDate: 'Jan-25',
-        dueDate: 'Dec-25',
-        midYearReview: 'On-Track',
-        selfEvaluation: 0,
-        yearEndReview: 0,
-        justification: '',
-    },
-    {
-        key: '3',
-        no: 3,
-        objectives: 'COMMUNICATION (HORENSO)\nTo enhance communication skills by ensuring regular updates and alignment with stakeholders and team members.',
-        actionPlan: 'Actively update, inform and report work progress to line managers and team daily\nTake initiatives to improve work process by consulting with line managers and stakeholders',
-        kpi: '# of Initiatives/Improvements: 02\n# of Daily update: 01',
-        weight: '20%',
-        startDate: 'Jan-25',
-        dueDate: 'Dec-25',
-        midYearReview: 'Completed',
-        selfEvaluation: 0,
-        yearEndReview: 0,
-        justification: '',
-    },
-    {
-        key: '4',
-        no: 4,
-        objectives: 'PROBLEM SOLVING\nTo improve your ability to solve problems efficiently, considering both immediate needs and long-term solutions.',
-        actionPlan: 'Ability to identify root causes of problem effectively\nAbility to come up with effective solutions\nProactively work on agreed solutions until it produce results and impact',
-        kpi: '# of Problems Identified: 03\n# of Solutions Executed: 05',
-        weight: '30%',
-        startDate: 'Jan-25',
-        dueDate: 'Dec-25',
-        midYearReview: 'On-Track',
-        selfEvaluation: 0,
-        yearEndReview: 0,
-        justification: '',
-    },
+    // {
+    //     key: '1',
+    //     no: 1,
+    //     objectives: 'RESULT-ORIENTATION\nTo improve your ability to focus on achieving key results, meeting deadlines, and delivering high-quality outcomes.',
+    //     actionPlan: 'Deliver task or work on agreed deadlines\nCommit and deliver high-quality results',
+    //     kpi: '% of Tasks delivered on deadlines: 100%\n% of High Quality Task: 100%',
+    //     weight: '30%',
+    //     startDate: 'Jan-25',
+    //     dueDate: 'Dec-25',
+    //     midYearReview: 'Completed',
+    //     selfEvaluation: 0,
+    //     yearEndReview: 0,
+    //     justification: '',
+    // },
+    // {
+    //     key: '2',
+    //     no: 2,
+    //     objectives: 'LEADING TEAM\nTo drive team productivity and deliverables aligned with function and company\'s goals.',
+    //     actionPlan: 'Conduct effective monthly meeting with team members\nProvide 1:1 Performance Feedback with each employee quarterly\nProvide 1:1 Coaching session with each employee quarterly\nDevelop and mentor at least 1 high-potential member in team',
+    //     kpi: '100% Sprint Meeting Completion\n# of Quarterly 1:1 Feedback Session\n# of Quarterly 1:1 Coaching Session\n# of Successor: 01',
+    //     weight: '20%',
+    //     startDate: 'Jan-25',
+    //     dueDate: 'Dec-25',
+    //     midYearReview: 'On-Track',
+    //     selfEvaluation: 0,
+    //     yearEndReview: 0,
+    //     justification: '',
+    // },
+    // {
+    //     key: '3',
+    //     no: 3,
+    //     objectives: 'COMMUNICATION (HORENSO)\nTo enhance communication skills by ensuring regular updates and alignment with stakeholders and team members.',
+    //     actionPlan: 'Actively update, inform and report work progress to line managers and team daily\nTake initiatives to improve work process by consulting with line managers and stakeholders',
+    //     kpi: '# of Initiatives/Improvements: 02\n# of Daily update: 01',
+    //     weight: '20%',
+    //     startDate: 'Jan-25',
+    //     dueDate: 'Dec-25',
+    //     midYearReview: 'Completed',
+    //     selfEvaluation: 0,
+    //     yearEndReview: 0,
+    //     justification: '',
+    // },
+    // {
+    //     key: '4',
+    //     no: 4,
+    //     objectives: 'PROBLEM SOLVING\nTo improve your ability to solve problems efficiently, considering both immediate needs and long-term solutions.',
+    //     actionPlan: 'Ability to identify root causes of problem effectively\nAbility to come up with effective solutions\nProactively work on agreed solutions until it produce results and impact',
+    //     kpi: '# of Problems Identified: 03\n# of Solutions Executed: 05',
+    //     weight: '30%',
+    //     startDate: 'Jan-25',
+    //     dueDate: 'Dec-25',
+    //     midYearReview: 'On-Track',
+    //     selfEvaluation: 0,
+    //     yearEndReview: 0,
+    //     justification: '',
+    // },
 ];
 
 const renderStatus = (status: string) => {
@@ -88,9 +90,24 @@ const renderStatus = (status: string) => {
     return <span style={{ color: color === 'orange' ? '#fa8c16' : color, fontWeight: 500 }}>{status}</span>;
 };
 
-const Section2Form: React.FC = () => {
+interface Props {
+    data?: DataType[];
+    readOnly?: boolean;
+    masterDate: MasterDataItem[]
+}
+
+const Section2Form: React.FC<Props> = ({ data, readOnly = false, masterDate }) => {
     const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
     const [dataSource, setDataSource] = useState<DataType[]>(defaultData);
+
+    React.useEffect(() => {
+        if (data) {
+            setDataSource(data);
+            if (readOnly) {
+                setEditableRowKeys([]);
+            }
+        }
+    }, [data, readOnly]);
 
     const columns: ProColumns<DataType>[] = [
         {
@@ -107,10 +124,14 @@ const Section2Form: React.FC = () => {
             title: 'OBJECTIVES',
             dataIndex: 'objectives',
             key: 'objectives',
-            width: 250,
-            valueType: 'textarea',
-            render: (_, record) => <div style={{ whiteSpace: 'pre-wrap' }}>{record.objectives}</div>,
-            editable: false,
+            width: 300,
+            valueType: 'select',
+            request: async () => {
+                return masterDate.filter(item => item.typeCode === "OBJECTIVES").map(item => ({
+                    label: item.nameEn,
+                    value: item.code
+                }));
+            }
         },
         {
             title: 'ACTION PLAN',
@@ -125,7 +146,7 @@ const Section2Form: React.FC = () => {
             title: 'KPI',
             dataIndex: 'kpi',
             key: 'kpi',
-            width: 200,
+            // width: 200,
             valueType: 'textarea',
             render: (_, record) => <div style={{ whiteSpace: 'pre-wrap' }}>{record.kpi}</div>,
             editable: false,
@@ -134,7 +155,7 @@ const Section2Form: React.FC = () => {
             title: 'WEIGHT',
             dataIndex: 'weight',
             key: 'weight',
-            width: 80,
+            // width: 80,
             align: 'center',
             editable: false,
         },
@@ -142,7 +163,7 @@ const Section2Form: React.FC = () => {
             title: 'START DATE',
             dataIndex: 'startDate',
             key: 'startDate',
-            width: 100,
+            // width: 100,
             align: 'center',
             valueType: 'date',
             editable: false,
@@ -151,7 +172,7 @@ const Section2Form: React.FC = () => {
             title: 'DUE DATE',
             dataIndex: 'dueDate',
             key: 'dueDate',
-            width: 100,
+            // width: 100,
             align: 'center',
             valueType: 'date',
             editable: false,
@@ -160,7 +181,7 @@ const Section2Form: React.FC = () => {
             title: 'MID-YEAR REVIEW',
             dataIndex: 'midYearReview',
             key: 'midYearReview',
-            width: 120,
+            // width: 120,
             align: 'center',
             valueType: 'select',
             valueEnum: {
@@ -177,7 +198,7 @@ const Section2Form: React.FC = () => {
             title: 'SELF-EVALUATION',
             dataIndex: 'selfEvaluation',
             key: 'selfEvaluation',
-            width: 120,
+            // width: 120,
             align: 'center',
             valueType: 'digit',
             onHeaderCell: () => ({
@@ -209,6 +230,7 @@ const Section2Form: React.FC = () => {
             title: 'Option',
             valueType: 'option',
             width: 100,
+            hidden: readOnly,
             fixed: 'right',
             render: (text, record, _, action) => [
                 <a
@@ -249,17 +271,18 @@ const Section2Form: React.FC = () => {
                 rowKey="key"
                 scroll={{ x: 'max-content' }}
                 value={dataSource}
-                onChange={setDataSource}
-                recordCreatorProps={{
+                onChange={(values) => setDataSource([...values])}
+                recordCreatorProps={readOnly ? false : {
                     newRecordType: 'dataSource',
                     position: 'bottom',
                     record: () => ({ key: Date.now().toString(), no: dataSource.length + 1 } as DataType),
                 }}
-                editable={{
+                editable={!readOnly ? {
                     type: 'multiple',
                     editableKeys,
                     onChange: setEditableRowKeys,
-                }}
+                } : undefined}
+
                 bordered
                 size="small"
             />

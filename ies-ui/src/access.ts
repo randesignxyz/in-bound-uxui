@@ -539,7 +539,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccesAllocateDelView:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ALLOCATION', 'ROLE_DELIVERY_ALLOCATION_REMARK','ROLE_ALLOCATION_ADMIN'].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ALLOCATION', 'ROLE_DELIVERY_ALLOCATION_REMARK', 'ROLE_ALLOCATION_ADMIN'].some((it) => it === item),
       ) || false,
     canAccesAllocateSaleView:
       currentUser?.authorities.some((item) =>
@@ -555,11 +555,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccesAddRemarkAllocate:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_ALLOCATION_REMARK', 'ROLE_DELIVERY_DEL_ALLOCATION','ROLE_ALLOCATION_ADMIN'].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_ALLOCATION_REMARK', 'ROLE_DELIVERY_DEL_ALLOCATION', 'ROLE_ALLOCATION_ADMIN'].some((it) => it === item),
       ) || false,
     canAccesAllocateAdmin:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN','ROLE_ALLOCATION_ADMIN'].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_ALLOCATION_ADMIN'].some((it) => it === item),
       ) || false,
 
     /**** Prod */
@@ -1142,7 +1142,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canRequestFMANewStaffRequestExport:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_FMA_WF_NEW_STAFF_REQUEST_EXPORT'].some((it) => it === item),
-      ) || false,  
+      ) || false,
 
     canAccessITNewStaffMenuITem:
       currentUser?.authorities.some((item) =>
@@ -1155,7 +1155,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canRequestItNewStaffRequestExport:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_ICT_WF_NEW_STAFF_REQUEST_EXPORT'].some((it) => it === item),
-      ) || false, 
+      ) || false,
     // Reach-2024-02-13
     canAccessFleetMenu:
       currentUser?.authorities.some((item) =>
@@ -1386,6 +1386,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     // ============= REACH PHEUN HRM Customer 15-01-2026 ============
     canAccessHRMIPO: canAccess("HRM_IPO"),
+    canAccessHRMasterData: canAccess("HRM_MASTER_DATA"),
 
     canAccessSALE: currentUser?.authorities?.some((it: string) => it.toUpperCase().startsWith("ROLE_SALE") || it == "ROLE_ADMIN"),
     canAccess,

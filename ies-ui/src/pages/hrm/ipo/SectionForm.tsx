@@ -7,7 +7,8 @@ import { Moment } from 'moment';
 
 const { Text } = Typography;
 
-interface DataType {
+
+export interface DataType {
     key: string;
     no: number;
     objectives: string;
@@ -90,10 +91,27 @@ const renderStatus = (status: string) => {
     return <span style={{ color: color === 'orange' ? '#fa8c16' : color, fontWeight: 500 }}>{status}</span>;
 };
 
-const SectionForm: React.FC = () => {
+interface Props {
+    data?: DataType[];
+    readOnly?: boolean;
+}
+
+const SectionForm: React.FC<Props> = ({ data, readOnly = false }) => {
     const [editableKeys, setEditableRowKeys] = useState<React.Key[]>(() => defaultData.map((item) => item.key));
     const [dataSource, setDataSource] = useState<DataType[]>(defaultData);
     const [errorRowKey, setErrorRowKey] = useState<string | null>(null);
+
+    React.useEffect(() => {
+        if (data) {
+            setDataSource(data);
+            // If readOnly, clear editable keys so it's not in edit mode
+            if (readOnly) {
+                setEditableRowKeys([]);
+            } else {
+                setEditableRowKeys(data.map(item => item.key));
+            }
+        }
+    }, [data, readOnly]);
 
     const columns: ProColumns<DataType>[] = [
         {
@@ -167,7 +185,7 @@ const SectionForm: React.FC = () => {
             align: 'center',
             valueType: 'date',
             fieldProps: {
-                format: 'DD-MMM-YYYY',
+                format: 'MMM-YYYY',
             }
         },
         {

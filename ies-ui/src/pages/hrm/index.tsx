@@ -6,8 +6,8 @@ import { PageContainer } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import PerformanceReport from './appraisal-request/components/PerformanceReport';
 import jobImage from '../../assets/jobsdes.png';
-import Meeting from '../../assets/meeting.png'
 import ipoImage from '../../assets/ipo.png'
+import { Divider } from 'antd/lib';
 export const HrmPaths = {
     employee: '/hrm/employee',
     staffRequisition: '/hrm/staff-requisistion',
@@ -18,7 +18,8 @@ export const HrmPaths = {
     probationEvaluation: '/hrm/probation-evaluation',
     df: '/hrm/df',
     job: '/hrm/job',
-    ipo: '/hrm/ipo'
+    ipo: '/hrm/ipo',
+    masterData: '/hrm/master-data'
 }
 
 export default () => {
@@ -89,19 +90,38 @@ export default () => {
             link: `${HrmPaths.job}/list`,
             icon: jobImage,
         },
-        // {
-        //     id: 'ipo',
-        //     name: 'IPO',
-        //     description: 'Individule Performance Objectives',
-        //     visible: access.canAccessHRMIPO,
-        //     link: `${HrmPaths.ipo}/list`,
-        //     icon: ipoImage,
-        // },
     ]
 
     return (
         <PageContainer title={false}>
             <ListMenuComp items={items} />
+            {
+                access.canAccessHrJOB && (
+                    <>
+                        <Divider orientation="left" >ISO</Divider>
+                        <ListMenuComp
+                            items={[
+                                {
+                                    id: 'ipo',
+                                    name: 'IPO',
+                                    description: 'Individule Performance Objectives',
+                                    visible: access.canAccessHRMIPO,
+                                    link: `${HrmPaths.ipo}/list`,
+                                    icon: ipoImage,
+                                },
+                                {
+                                    id: 'ipo',
+                                    name: 'Master Set Up',
+                                    description: 'Master Set Up',
+                                    visible: access.canAccessHRMasterData,
+                                    link: `${HrmPaths.masterData}/list`,
+                                    icon: ipoImage,
+                                },
+                            ]}
+                        />
+                    </>
+                )
+            }
         </PageContainer>
     )
 }

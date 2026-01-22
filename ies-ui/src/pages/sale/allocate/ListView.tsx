@@ -1112,6 +1112,9 @@ export default () => {
         //     value?.replace(/^S&D\s*/i, ''),
         // },
         {
+          title: 'Delivery Type', dataIndex: 'delviery_type', width: 150,
+        },
+        {
           title: 'District', dataIndex: 'district', width: 150,
           // sorter: {
           //   compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
@@ -1875,6 +1878,8 @@ export default () => {
                             { value: 'today', label: 'Today' },
                             { value: 'unplan', label: 'DOP Pending' },
                             { value: 'TBA', label: 'TBA' },
+                            { value: 'walk-in', label: 'Self Pickup' },
+                            { value: 'hold', label: 'On Hold' },
                           ]}
                           width={150}
                           showSearch
@@ -2194,6 +2199,8 @@ export default () => {
                               { value: 'today', label: 'Today' },
                               { value: 'unplan', label: 'DOP Pending' },
                               { value: 'TBA', label: 'TBA' },
+                              { value: 'walk-in', label: 'Self Pickup' },
+                              { value: 'hold', label: 'On Hold' },
                             ]}
                             width={150}
                             showSearch

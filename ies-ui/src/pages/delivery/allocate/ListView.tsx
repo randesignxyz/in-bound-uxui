@@ -1066,7 +1066,7 @@ export default () => {
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY hh:mm'),// forces UTC, no timezone shift
+        dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY hh:mm'),// forces UTC, no timezone shift
       // sorter: {
       //   compare: (a, b) =>
       //     (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
@@ -1115,11 +1115,10 @@ export default () => {
         //     value?.replace(/^S&D\s*/i, ''),
         // },
         {
+          title: 'Delivery Type', dataIndex: 'delviery_type', width: 150,
+        },
+        {
           title: 'District', dataIndex: 'district', width: 150,
-          // sorter: {
-          //   compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
-          //   multiple: 2,
-          // },
         },
         {
           title: 'Commune', dataIndex: 'commune', width: 150,
@@ -1919,6 +1918,8 @@ export default () => {
                             { value: 'today', label: 'Today' },
                             { value: 'unplan', label: 'DOP Pending' },
                             { value: 'TBA', label: 'TBA' },
+                            { value: 'walk-in', label: 'Self Pickup' },
+                            { value: 'hold', label: 'On Hold' },
                           ]}
                           width={150}
                           showSearch
@@ -2211,6 +2212,8 @@ export default () => {
                               { value: 'today', label: 'Today' },
                               { value: 'unplan', label: 'DOP Pending' },
                               { value: 'TBA', label: 'TBA' },
+                               { value: 'walk-in', label: 'Self Pickup' },
+                               { value: 'hold', label: 'On Hold' },
                             ]}
                             width={150}
                             showSearch

@@ -77,11 +77,17 @@ const AllocateAction = {
         actionName: 'sync-allocate',
         payload: {}
     }),
-    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string, claimed_line?: string | null, del_item?: SapLine[],status?:string): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string, claimed_line?: string | null, del_item?: SapLine[],status?:string }> => ({
+    syncAllocateBySO: (so_entry: number[]): ServiceApiType<{so_entry: number[]}> => ({
+        type: 'EXEC',
+        endpoint: 'DELIVERY',
+        actionName: 'sync-allocate-so',
+        payload: {so_entry}
+    }),
+    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string, claimed_line?: string | null, del_item?: SapLine[], status?: string): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string, claimed_line?: string | null, del_item?: SapLine[], status?: string }> => ({
         type: 'EXEC',
         endpoint: 'DELIVERY',
         actionName: 'claim-dn',
-        payload: { sales_planid, claimed_by, action, activities_name, claimed_line, del_item,status }
+        payload: { sales_planid, claimed_by, action, activities_name, claimed_line, del_item, status }
     }),
     getActivities: (dnID: number): ServiceApiType<{ dnID: number }> => ({
         type: 'LIST_QUERY',
@@ -167,11 +173,11 @@ const AllocateAction = {
         actionName: 'get-list-route',
         payload: {},
     }),
-    listZone: (route_ids?: string): ServiceApiType<{route_ids?: string}> => ({
+    listZone: (route_ids?: string): ServiceApiType<{ route_ids?: string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-list-zone',
-        payload: {route_ids},
+        payload: { route_ids },
     }),
 }
 
@@ -199,9 +205,11 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             >,
         syncAllocate: () =>
             singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocate())(requestAction),
+        syncAllocateBySO: (so_entry: number[]) =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocateBySO(so_entry))(requestAction),
 
-        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string, claimed_line?: string | null, del_item?: SapLine[],status?:string) =>
-            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name, claimed_line, del_item,status))(requestAction),
+        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string, claimed_line?: string | null, del_item?: SapLine[], status?: string) =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name, claimed_line, del_item, status))(requestAction),
 
         getActivities: (dnID: number) =>
             singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(

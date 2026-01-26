@@ -651,6 +651,19 @@ export default () => {
     }
   };
 
+  const onSyncBySO = async (so_entry: []) => {
+    try {
+      isLoading(true)
+      await services.syncAllocateBySO(so_entry);
+      actionRef.current?.reloadAndRest?.();
+    } catch (error: any) {
+      message.error(error.message);
+      return Promise.reject(error);
+    } finally {
+      isLoading(false)
+    }
+  };
+
   const normalizeUOM = (uom: string | undefined): 'pack' | 'bowl' | null => {
     if (!uom) return null;
     const lower = uom.toLowerCase();
@@ -1278,6 +1291,17 @@ export default () => {
                   Unpick All
                 </Button>
                 : <></>}
+              <Button style={{ marginLeft: 10 }} type="default"
+                onClick={() => {
+                  console.log(record.data.map(v => v.so_doc_entry)),
+                    (onSyncBySO(record.data.map(v => v.so_doc_entry)))
+                }
+
+                }
+                icon={<SyncOutlined />}
+              >
+                Sync
+              </Button>
             </div>
             <Divider />
             {record?.data?.map((item: any, index: number) => (
@@ -1355,13 +1379,15 @@ export default () => {
                                     : <></>}
 
                                 </div>
-                              ) : access.canAccesAddRemarkAllocate ? (
-                                <Button type="primary"
-                                  onClick={() => handleClaim(item.id)}
-                                >
-                                  Pick
-                                </Button>
-                              ) : <></>}
+                              )
+                                //  : access.canAccesAddRemarkAllocate ? (
+                                //   <Button type="primary"
+                                //     onClick={() => handleClaim(item.id)}
+                                //   >
+                                //     Pick
+                                //   </Button>
+                                // ) 
+                                : <></>}
 
                               <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
                                 <Button onClick={() => getActivities(item.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
@@ -1838,9 +1864,11 @@ export default () => {
                           },
                         }}
                       />
-                      <Button type="text" size='large' onClick={() => onSync()}>
-                        <SyncOutlined />
-                      </Button>
+                      {access.canAccesSyncSAP &&
+                        <Button type="text" size='large' onClick={() => onSync()}>
+                          <SyncOutlined />
+                        </Button>
+                      }
                       <Button
                         type="text"
                         onClick={() => actionRef.current?.reloadAndRest?.()}
@@ -1872,7 +1900,7 @@ export default () => {
                     {/* <Radio.Button value="OV">Over View</Radio.Button>
                     <Radio.Button value="SO">Sales Order</Radio.Button> */}
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                    <Radio.Button value="HIS">History</Radio.Button>
+                    {/* <Radio.Button value="HIS">History</Radio.Button> */}
                     <Radio.Button value="MT">My Task</Radio.Button>
                     {/* <Radio.Button value="FG">FG</Radio.Button> */}
                   </Radio.Group>
@@ -2178,7 +2206,7 @@ export default () => {
                     {/* <Radio.Button value="OV">Over View</Radio.Button>
                         <Radio.Button value="SO">Sales Order</Radio.Button> */}
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                    <Radio.Button value="HIS">History</Radio.Button>
+                    {/* <Radio.Button value="HIS">History</Radio.Button> */}
                     <Radio.Button value="MT">My Task</Radio.Button>
                   </Radio.Group>
                 </Space>
@@ -2380,7 +2408,7 @@ export default () => {
                       {/* <Radio.Button value="OV">Over View</Radio.Button>
                           <Radio.Button value="SO">Sales Order</Radio.Button> */}
                       <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                      <Radio.Button value="HIS">History</Radio.Button>
+                      {/* <Radio.Button value="HIS">History</Radio.Button> */}
                       <Radio.Button value="MT">My Task</Radio.Button>
                     </Radio.Group>
                   </Space>

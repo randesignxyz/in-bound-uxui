@@ -26,42 +26,6 @@
     ],
     "items": [
         {
-            "id": 1768967622539.54,
-            "mdTypeId": 1768967348517,
-            "code": "COMMUNICATION (HORENSO)",
-            "nameEn": "\"COMMUNICATION (HORENSO) To enhance communication skills by ensuring regular updates and alignment with stakeholders and team members, following the HoRenSo method (Report, Consult, Inform).\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "ការទំនាក់ទំនង (HORENSO) ដើម្បីបង្កើនជំនាញទំនាក់ទំនងដោយធានាការធ្វើបច្ចុប្បន្នភាពជាប្រចាំ និងការសម្របសម្រួលជាមួយអ្នកពាក់ព័ន្ធ និងសមាជិកក្រុម ដោយអនុវត្តតាមវិធីសាស្ត្រ HoRenSo (រាយការណ៍ ពិគ្រោះយោបល់ និងជូនដំណឹង)។"
-        },
-        {
-            "id": 1768967379807.8691,
-            "mdTypeId": 1768967348517,
-            "code": "RESULT-ORIENTATION",
-            "nameEn": "\"RESULT-ORIENTATION To improve your ability to focus on achieving key results, meeting deadlines, and delivering high-quality outcomes.\"",
-            "status": "ACTIVE",
-            "index": 2,
-            "nameKm": "ការតម្រង់ទិសលទ្ធផល ដើម្បីបង្កើនសមត្ថភាពរបស់អ្នកក្នុងការផ្តោតលើការសម្រេចបានលទ្ធផលសំខាន់ៗ ការបំពេញតាមកាលកំណត់ និងការផ្តល់នូវលទ្ធផលដែលមានគុណភាពខ្ពស់។"
-        },
-        {
-            "id": 1768967418554.6218,
-            "mdTypeId": 1768967348517,
-            "code": "PROBLEM SOLVING",
-            "nameEn": "\"PROBLEM SOLVING To improve your ability to solve problems efficiently, considering both immediate needs and long-term solutions.\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "ការដោះស្រាយបញ្ហា ដើម្បីបង្កើនសមត្ថភាពរបស់អ្នកក្នុងការដោះស្រាយបញ្ហាប្រកបដោយប្រសិទ្ធភាព ដោយពិចារណាទាំងតម្រូវការបន្ទាន់ និងដំណោះស្រាយរយៈពេលវែង។"
-        },
-        {
-            "id": 1768967350018.7734,
-            "mdTypeId": 1768967348517,
-            "code": "LEADING TEAM",
-            "nameEn": "\"LEADING TEAM To drive team productivity and deliverables aligned with function and company's goals.\"",
-            "status": "ACTIVE",
-            "index": 3,
-            "nameKm": "ដឹកនាំក្រុម ដើម្បីជំរុញផលិតភាពក្រុម និងលទ្ធផលការងារស្របតាមមុខងារ និងគោលដៅរបស់ក្រុមហ៊ុន។"
-        },
-        {
             "id": 1768967724163.3955,
             "mdTypeId": 1,
             "code": "UNSATISFACTORY",
@@ -106,6 +70,49 @@
             "nameKm": "ល្អប្រសើរ",
             "abbreviationEn": "OUT",
             "abbreviationKm": "ល្អ"
+        },
+        {
+            "id": 1769415423616.765,
+            "mdTypeId": 1768967348517,
+            "code": "",
+            "nameEn": "",
+            "status": "ACTIVE"
+        },
+        {
+            "id": 1768967622539.54,
+            "mdTypeId": 1768967348517,
+            "code": "COMMUNICATION (HORENSO)",
+            "nameEn": "\"COMMUNICATION (HORENSO) To enhance communication skills by ensuring regular updates and alignment with stakeholders and team members, following the HoRenSo method (Report, Consult, Inform).\"",
+            "status": "ACTIVE",
+            "index": 0,
+            "nameKm": "ការទំនាក់ទំនង (HORENSO) ដើម្បីបង្កើនជំនាញទំនាក់ទំនងដោយធានាការធ្វើបច្ចុប្បន្នភាពជាប្រចាំ និងការសម្របសម្រួលជាមួយអ្នកពាក់ព័ន្ធ និងសមាជិកក្រុម ដោយអនុវត្តតាមវិធីសាស្ត្រ HoRenSo (រាយការណ៍ ពិគ្រោះយោបល់ និងជូនដំណឹង)។"
+        },
+        {
+            "id": 1768967379807.8691,
+            "mdTypeId": 1768967348517,
+            "code": "RESULT-ORIENTATION",
+            "nameEn": "\"RESULT-ORIENTATION To improve your ability to focus on achieving key results, meeting deadlines, and delivering high-quality outcomes.\"",
+            "status": "ACTIVE",
+            "index": 1,
+            "nameKm": "ការតម្រង់ទិសលទ្ធផល ដើម្បីបង្កើនសមត្ថភាពរបស់អ្នកក្នុងការផ្តោតលើការសម្រេចបានលទ្ធផលសំខាន់ៗ ការបំពេញតាមកាលកំណត់ និងការផ្តល់នូវលទ្ធផលដែលមានគុណភាពខ្ពស់។"
+        },
+        {
+            "id": 1768967418554.6218,
+            "mdTypeId": 1768967348517,
+            "code": "PROBLEM SOLVING",
+            "nameEn": "\"PROBLEM SOLVING To improve your ability to solve problems efficiently, considering both immediate needs and long-term solutions.\"",
+            "status": "ACTIVE",
+            "index": 0,
+            "nameKm": "ការដោះស្រាយបញ្ហា ដើម្បីបង្កើនសមត្ថភាពរបស់អ្នកក្នុងការដោះស្រាយបញ្ហាប្រកបដោយប្រសិទ្ធភាព ដោយពិចារណាទាំងតម្រូវការបន្ទាន់ និងដំណោះស្រាយរយៈពេលវែង។"
+        },
+        {
+            "id": 1768967350018.7734,
+            "mdTypeId": 1768967348517,
+            "code": "LEADING TEAM",
+            "nameEn": "\"LEADING TEAM To drive team productivity and deliverables aligned with function and company's goals.\"",
+            "status": "ACTIVE",
+            "index": 3,
+            "nameKm": "ដឹកនាំក្រុម ដើម្បីជំរុញផលិតភាពក្រុម និងលទ្ធផលការងារស្របតាមមុខងារ និងគោលដៅរបស់ក្រុមហ៊ុន។"
         }
     ]
 }

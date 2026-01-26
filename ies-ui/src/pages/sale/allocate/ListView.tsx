@@ -2069,9 +2069,11 @@ export default () => {
                         <Tooltip title="Sort"><Button type="text" size='large' onClick={() => setSortModalOpen(true)} >
                           <ColumnHeightOutlined />
                         </Button></Tooltip>
-                        <Tooltip title="Sync From SAP"><Button type="text" size='large' onClick={() => onSync()} >
-                          <SyncOutlined />
-                        </Button></Tooltip>
+                        {access.canAccesSyncSAP &&
+                          <Tooltip title="Sync From SAP"><Button type="text" size='large' onClick={() => onSync()} >
+                            <SyncOutlined />
+                          </Button></Tooltip>
+                        }
                         <Tooltip title="Dowload Excel File"><Button type="text" size='large' icon={<FileExcelOutlined />}
                           onClick={() => setExportModal({ visible: true })}
                         >
@@ -2319,9 +2321,11 @@ export default () => {
                             { value: 'force-close', label: 'Close' },
                           ]}
                         />
-                        <Button type="text" size='large' onClick={() => onSync()}>
-                          <SyncOutlined />
-                        </Button>
+                        {access.canAccesSyncSAP &&
+                          <Button type="text" size='large' onClick={() => onSync()}>
+                            <SyncOutlined />
+                          </Button>
+                        }
                         <Button
                           type="text"
                           onClick={() => actionRef.current?.reloadAndRest?.()}

@@ -830,90 +830,90 @@ export default () => {
     }
   };
 
-  const onHistoryRequestDNDeatilHandler = async (
-    params: TableViewSearchParams<AllocateSOAdvanceParams>
-  ): Promise<Paging<DNList>> => {
-    try {
-      const sortBy: string[] = [];
-      const sortOrders: string[] = [];
+  // const onHistoryRequestDNDeatilHandler = async (
+  //   params: TableViewSearchParams<AllocateSOAdvanceParams>
+  // ): Promise<Paging<DNList>> => {
+  //   try {
+  //     const sortBy: string[] = [];
+  //     const sortOrders: string[] = [];
 
-      if (params?.criteria?.sort) {
-        Object.entries(params.criteria.sort).forEach(([key, value]) => {
-          sortBy.push(key);
-          sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
-        });
-      }
+  //     if (params?.criteria?.sort) {
+  //       Object.entries(params.criteria.sort).forEach(([key, value]) => {
+  //         sortBy.push(key);
+  //         sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
+  //       });
+  //     }
 
-      const res = await services.list_dn_detail({
-        criteria: {
-          ...hisSearch,
-          ...params.criteria,
-          sap_delivery_date:
-            hisSearch.sap_from_date && hisSearch.sap_to_date
-              ? null
-              : hisSearch.sap_delivery_date,
-          filterPass: 'Claimed',
-        },
-        pagination: {
-          current: params.pagination?.current ?? 1,
-          pageSize: params.pagination?.pageSize ?? 10,
-        },
-        sort: params.sort,
-      });
+  //     const res = await services.list_dn_detail({
+  //       criteria: {
+  //         ...hisSearch,
+  //         ...params.criteria,
+  //         sap_delivery_date:
+  //           hisSearch.sap_from_date && hisSearch.sap_to_date
+  //             ? null
+  //             : hisSearch.sap_delivery_date,
+  //         filterPass: 'Claimed',
+  //       },
+  //       pagination: {
+  //         current: params.pagination?.current ?? 1,
+  //         pageSize: params.pagination?.pageSize ?? 10,
+  //       },
+  //       sort: params.sort,
+  //     });
 
 
-      if (!res || !Array.isArray(res.items)) {
-        throw new Error('Unexpected response format');
-      }
+  //     if (!res || !Array.isArray(res.items)) {
+  //       throw new Error('Unexpected response format');
+  //     }
 
-      const transformedItems = res.items.map((delivery) => {
-        const skuValues: Record<string, number> = {};
+  //     const transformedItems = res.items.map((delivery) => {
+  //       const skuValues: Record<string, number> = {};
 
-        skuList.forEach((sku) => {
-          if (sku.item_category === 2) {
-            skuValues[`${sku.sku_code}_pack`] = 0;
-            skuValues[`${sku.sku_code}_bowl`] = 0;
-          } else {
-            skuValues[sku.sku_code] = 0;
-          }
-        });
+  //       skuList.forEach((sku) => {
+  //         if (sku.item_category === 2) {
+  //           skuValues[`${sku.sku_code}_pack`] = 0;
+  //           skuValues[`${sku.sku_code}_bowl`] = 0;
+  //         } else {
+  //           skuValues[sku.sku_code] = 0;
+  //         }
+  //       });
 
-        const itemsToUse =
-          delivery.mergeItems?.length > 0
-            ? delivery.mergeItems
-            : delivery.deliveryItems;
+  //       const itemsToUse =
+  //         delivery.mergeItems?.length > 0
+  //           ? delivery.mergeItems
+  //           : delivery.deliveryItems;
 
-        itemsToUse.forEach((item) => {
-          const sku = skuList.find(
-            (s) => s.id.toString() === item.sku_id
-          );
-          if (!sku) return;
+  //       itemsToUse.forEach((item) => {
+  //         const sku = skuList.find(
+  //           (s) => s.id.toString() === item.sku_id
+  //         );
+  //         if (!sku) return;
 
-          const key =
-            sku.item_category === 2
-              ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}`
-              : sku.sku_code;
+  //         const key =
+  //           sku.item_category === 2
+  //             ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}`
+  //             : sku.sku_code;
 
-          skuValues[key] += item?.qty;
-        });
+  //         skuValues[key] += item?.qty;
+  //       });
 
-        return {
-          ...delivery,
-          key: delivery.id,
-          ...skuValues,
-        };
-      });
+  //       return {
+  //         ...delivery,
+  //         key: delivery.id,
+  //         ...skuValues,
+  //       };
+  //     });
 
-      return {
-        items: transformedItems,
-        total: res.total,
-        pageSize: res.pageSize,
-      };
-    } catch (error: any) {
-      message.error(error.message);
-      return Promise.reject(error);
-    }
-  };
+  //     return {
+  //       items: transformedItems,
+  //       total: res.total,
+  //       pageSize: res.pageSize,
+  //     };
+  //   } catch (error: any) {
+  //     message.error(error.message);
+  //     return Promise.reject(error);
+  //   }
+  // };
 
   const skuColumns: ProColumns<DNList>[] = skuList.map((sku) => {
     if (sku.item_category === 1) {
@@ -2224,208 +2224,208 @@ export default () => {
                   }),
               }}
             />
-            : advanceSearchParams.filter == 'HIS' ?
-              <TableView<DNList, { searchValue?: string }>
-                displayOnly
-                tableProps={{
-                  actionRef: actionRef,
-                  options: {
-                    reload: false,
-                    setting: false,
-                    density: false,
-                    fullScreen: false,
-                  },
-                  toolbar: {
-                    actions: [
-                      <ProForm submitter={false} layout="inline">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <ProFormSelect
-                            name="sap_delivery_date"
-                            initialValue="as_of_now"
-                            onChange={(val: string) => {
-                              setHisSearch((v) => ({ ...v, sap_delivery_date: val }))
-                              actionRef.current?.reloadAndRest?.();
-                            }}
-                            options={[
-                              { value: 'all', label: 'ALL' },
-                              { value: 'as_of_now', label: 'As Date' },
-                              { value: 'today', label: 'Today' },
-                              { value: 'unplan', label: 'DOP Pending' },
-                              { value: 'TBA', label: 'TBA' },
-                              { value: 'walk-in', label: 'Self Pickup' },
-                              { value: 'hold', label: 'On Hold' },
-                            ]}
-                            width={150}
-                            showSearch
-                          />
-                          <ProFormDateRangePicker
-                            name="sap_delivery_range_his"
-                            placeholder={['From Date', 'To Date']}
-                            disabled={!asDate}
-                            width={300}
-                            fieldProps={{
-                              onChange(val) {
-                                const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
-                                const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
+            // : advanceSearchParams.filter == 'HIS' ?
+            //   <TableView<DNList, { searchValue?: string }>
+            //     displayOnly
+            //     tableProps={{
+            //       actionRef: actionRef,
+            //       options: {
+            //         reload: false,
+            //         setting: false,
+            //         density: false,
+            //         fullScreen: false,
+            //       },
+            //       toolbar: {
+            //         actions: [
+            //           <ProForm submitter={false} layout="inline">
+            //             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            //               <ProFormSelect
+            //                 name="sap_delivery_date"
+            //                 initialValue="as_of_now"
+            //                 onChange={(val: string) => {
+            //                   setHisSearch((v) => ({ ...v, sap_delivery_date: val }))
+            //                   actionRef.current?.reloadAndRest?.();
+            //                 }}
+            //                 options={[
+            //                   { value: 'all', label: 'ALL' },
+            //                   { value: 'as_of_now', label: 'As Date' },
+            //                   { value: 'today', label: 'Today' },
+            //                   { value: 'unplan', label: 'DOP Pending' },
+            //                   { value: 'TBA', label: 'TBA' },
+            //                   { value: 'walk-in', label: 'Self Pickup' },
+            //                   { value: 'hold', label: 'On Hold' },
+            //                 ]}
+            //                 width={150}
+            //                 showSearch
+            //               />
+            //               <ProFormDateRangePicker
+            //                 name="sap_delivery_range_his"
+            //                 placeholder={['From Date', 'To Date']}
+            //                 disabled={!asDate}
+            //                 width={300}
+            //                 fieldProps={{
+            //                   onChange(val) {
+            //                     const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
+            //                     const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
 
-                                setHisSearch((v) => ({
-                                  ...v,
-                                  sap_from_date: fromDate,
-                                  sap_to_date: toDate,
-                                }));
+            //                     setHisSearch((v) => ({
+            //                       ...v,
+            //                       sap_from_date: fromDate,
+            //                       sap_to_date: toDate,
+            //                     }));
 
-                                actionRef.current?.reloadAndRest?.();
-                              }
-                            }}
-                          />
-                          <ProFormSelect
-                            placeholder="Province"
-                            name="province_id_his"
-                            value={provinceId}
-                            onChange={(val: string) => {
-                              setProvinceId(val)
-                              setHisSearch((v) => ({ ...v, province_id: val }))
-                              actionRef.current?.reloadAndRest?.();
-                            }}
-                            options={provinceOptions}
-                            width={200}
-                            allowClear
-                            showSearch
-                            mode="multiple"
-                          />
+            //                     actionRef.current?.reloadAndRest?.();
+            //                   }
+            //                 }}
+            //               />
+            //               <ProFormSelect
+            //                 placeholder="Province"
+            //                 name="province_id_his"
+            //                 value={provinceId}
+            //                 onChange={(val: string) => {
+            //                   setProvinceId(val)
+            //                   setHisSearch((v) => ({ ...v, province_id: val }))
+            //                   actionRef.current?.reloadAndRest?.();
+            //                 }}
+            //                 options={provinceOptions}
+            //                 width={200}
+            //                 allowClear
+            //                 showSearch
+            //                 mode="multiple"
+            //               />
 
-                          <ProFormSelect
-                            placeholder="District"
-                            name="district_id_his"
-                            value={districtId}
-                            onChange={(val: string) => {
-                              setDistrictId(val)
-                              setHisSearch((v) => ({ ...v, district_id: val }))
-                              actionRef.current?.reloadAndRest?.();
-                            }}
-                            options={districtOptions}
-                            width={200}
-                            allowClear
-                            showSearch
-                            mode="multiple"
-                          />
+            //               <ProFormSelect
+            //                 placeholder="District"
+            //                 name="district_id_his"
+            //                 value={districtId}
+            //                 onChange={(val: string) => {
+            //                   setDistrictId(val)
+            //                   setHisSearch((v) => ({ ...v, district_id: val }))
+            //                   actionRef.current?.reloadAndRest?.();
+            //                 }}
+            //                 options={districtOptions}
+            //                 width={200}
+            //                 allowClear
+            //                 showSearch
+            //                 mode="multiple"
+            //               />
 
-                          <ProFormSelect
-                            placeholder="Commune"
-                            name="commune_id_his"
-                            options={communeOptions}
-                            onChange={(val: string) => {
-                              setHisSearch((v) => ({ ...v, commune_id: val }))
-                              actionRef.current?.reloadAndRest?.();
-                            }}
-                            width={200}
-                            allowClear
-                            showSearch
-                            mode="multiple"
-                          />
-                          <ProFormSelect
-                            placeholder="Customer"
-                            name="customer_his"
-                            showSearch
-                            debounceTime={200}
-                            mode="multiple"
-                            allowClear
-                            width={300}
-                            request={async ({ keyWords }) => {
-                              const res = await services.pageCustomer({
-                                criteria: {
-                                  searchValue: keyWords,
-                                },
-                                pagination: {
-                                  current: 1,
-                                  pageSize: 20,
-                                },
-                              })
+            //               <ProFormSelect
+            //                 placeholder="Commune"
+            //                 name="commune_id_his"
+            //                 options={communeOptions}
+            //                 onChange={(val: string) => {
+            //                   setHisSearch((v) => ({ ...v, commune_id: val }))
+            //                   actionRef.current?.reloadAndRest?.();
+            //                 }}
+            //                 width={200}
+            //                 allowClear
+            //                 showSearch
+            //                 mode="multiple"
+            //               />
+            //               <ProFormSelect
+            //                 placeholder="Customer"
+            //                 name="customer_his"
+            //                 showSearch
+            //                 debounceTime={200}
+            //                 mode="multiple"
+            //                 allowClear
+            //                 width={300}
+            //                 request={async ({ keyWords }) => {
+            //                   const res = await services.pageCustomer({
+            //                     criteria: {
+            //                       searchValue: keyWords,
+            //                     },
+            //                     pagination: {
+            //                       current: 1,
+            //                       pageSize: 20,
+            //                     },
+            //                   })
 
-                              return res.items.map((c: any) => ({
-                                value: c.code,
-                                label: `${c.code} - ${c.name}`,
-                              }));
-                            }}
-                            onChange={(val: string) => {
-                              setHisSearch(v => ({ ...v, customer: val }));
-                              actionRef.current?.reloadAndRest?.();
-                            }}
-                          />
-                        </div>
-                        {/* Button */}
-                        <ProFormSelect
-                          width={150}
-                          name="hisstatus"
-                          allowClear
-                          showSearch
-                          initialValue="open"
-                          onChange={(val: string) => {
-                            setHisSearch((v) => ({ ...v, dnStatus: val }))
-                            actionRef.current?.reloadAndRest?.();
-                          }}
-                          options={[
-                            { value: '', label: 'ALL' },
-                            { value: 'open', label: 'Open' },
-                            { value: 'in-progress', label: 'In Progress' },
-                            { value: 'complete', label: 'Completed' },
-                            { value: 'force-close', label: 'Close' },
-                          ]}
-                        />
-                        {access.canAccesSyncSAP &&
-                          <Button type="text" size='large' onClick={() => onSync()} >
-                            <SyncOutlined />
-                          </Button>
-                        }
-                        <Button
-                          type="text"
-                          onClick={() => actionRef.current?.reloadAndRest?.()}
-                          size='large'
-                        >
-                          <ReloadOutlined />
-                        </Button>
+            //                   return res.items.map((c: any) => ({
+            //                     value: c.code,
+            //                     label: `${c.code} - ${c.name}`,
+            //                   }));
+            //                 }}
+            //                 onChange={(val: string) => {
+            //                   setHisSearch(v => ({ ...v, customer: val }));
+            //                   actionRef.current?.reloadAndRest?.();
+            //                 }}
+            //               />
+            //             </div>
+            //             {/* Button */}
+            //             <ProFormSelect
+            //               width={150}
+            //               name="hisstatus"
+            //               allowClear
+            //               showSearch
+            //               initialValue="open"
+            //               onChange={(val: string) => {
+            //                 setHisSearch((v) => ({ ...v, dnStatus: val }))
+            //                 actionRef.current?.reloadAndRest?.();
+            //               }}
+            //               options={[
+            //                 { value: '', label: 'ALL' },
+            //                 { value: 'open', label: 'Open' },
+            //                 { value: 'in-progress', label: 'In Progress' },
+            //                 { value: 'complete', label: 'Completed' },
+            //                 { value: 'force-close', label: 'Close' },
+            //               ]}
+            //             />
+            //             {access.canAccesSyncSAP &&
+            //               <Button type="text" size='large' onClick={() => onSync()} >
+            //                 <SyncOutlined />
+            //               </Button>
+            //             }
+            //             <Button
+            //               type="text"
+            //               onClick={() => actionRef.current?.reloadAndRest?.()}
+            //               size='large'
+            //             >
+            //               <ReloadOutlined />
+            //             </Button>
 
-                      </ProForm>
+            //           </ProForm>
 
-                    ],
-                  },
-                }}
-                extraFilter={
-                  <Space size="large" style={{ flexDirection: 'row' }}>
-                    {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
-                          <FileSearchOutlined />
-                        </Button> */}
-                    <Radio.Group
-                      value={advanceSearchParams.filter}
-                      onChange={(e) => {
-                        setAdvanceSearchParams((v) => ({
-                          ...v,
-                          filter: e.target.value,
-                        }));
-                        actionRef.current?.reloadAndRest?.();
-                      }}
-                    >
-                      {/* <Radio.Button value="OV">Over View</Radio.Button>
-                          <Radio.Button value="SO">Sales Order</Radio.Button> */}
-                      <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                      {/* <Radio.Button value="HIS">History</Radio.Button> */}
-                      <Radio.Button value="MT">My Task</Radio.Button>
-                    </Radio.Group>
-                  </Space>
-                }
-                columns={dnColumns}
-                actionHandlers={{
-                  onRequest: (criteria, pagination, sort) =>
-                    onHistoryRequestDNDeatilHandler({
-                      criteria: {
-                        ...criteria,
-                        ...hisSearch,
-                        sort
-                      },
-                      pagination,
-                    }),
-                }}
-              />
+            //         ],
+            //       },
+            //     }}
+            //     extraFilter={
+            //       <Space size="large" style={{ flexDirection: 'row' }}>
+            //         {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
+            //               <FileSearchOutlined />
+            //             </Button> */}
+            //         <Radio.Group
+            //           value={advanceSearchParams.filter}
+            //           onChange={(e) => {
+            //             setAdvanceSearchParams((v) => ({
+            //               ...v,
+            //               filter: e.target.value,
+            //             }));
+            //             actionRef.current?.reloadAndRest?.();
+            //           }}
+            //         >
+            //           {/* <Radio.Button value="OV">Over View</Radio.Button>
+            //               <Radio.Button value="SO">Sales Order</Radio.Button> */}
+            //           <Radio.Button value="DN">Delivery Plan</Radio.Button>
+            //           {/* <Radio.Button value="HIS">History</Radio.Button> */}
+            //           <Radio.Button value="MT">My Task</Radio.Button>
+            //         </Radio.Group>
+            //       </Space>
+            //     }
+            //     columns={dnColumns}
+            //     actionHandlers={{
+            //       onRequest: (criteria, pagination, sort) =>
+            //         onHistoryRequestDNDeatilHandler({
+            //           criteria: {
+            //             ...criteria,
+            //             ...hisSearch,
+            //             sort
+            //           },
+            //           pagination,
+            //         }),
+            //     }}
+            //   />
               : []}
 
 

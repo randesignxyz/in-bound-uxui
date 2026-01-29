@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams, ListDnDetailParams, SaleTypeList, AreaList, SapLine } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams, ListDnDetailParams, SaleTypeList, AreaList, SapLine, myTaskSearch } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -101,6 +101,18 @@ const AllocateAction = {
         actionName: 'get-dn-by-user',
         payload: { status, startDate, endDate },
     }),
+    // listDnbyUser: (
+    //     params: TableViewSearchParams<myTaskSearch>,
+    // ): ServiceApiType<{ searchValue?: string }> => ({
+    //     type: 'PAGING_QUERY',
+    //     endpoint: 'DELIVERY',
+    //     actionName: 'get-dn-by-user',
+    //     payload: { ...params.criteria },
+    //     pagination: {
+    //         pageSize: params.pagination?.pageSize,
+    //         page: params.pagination?.current,
+    //     },
+    // }),
     fetchDnQuickView: (startDate?: string, endDate?: string): ServiceApiType<{ startDate?: string, endDate?: string }> => ({
         type: 'FETCH_QUERY',
         endpoint: 'DELIVERY',
@@ -173,7 +185,7 @@ const AllocateAction = {
         actionName: 'get-list-route',
         payload: {},
     }),
-    listZone: (route_ids?: string): ServiceApiType<{ route_ids?: string }> => ({
+    listZone: (route_ids?: any[]): ServiceApiType<{ route_ids?:any[] }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-list-zone',
@@ -219,6 +231,10 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<DNList>(AllocateAction.listDnbyUser(status, startDate, endDate))(
                 requestAction
             ),
+        // list_dn_by_user: (params: TableViewSearchParams<myTaskSearch>) =>
+        //     singleRequest<DNList>(AllocateAction.listDnbyUser(params))(requestAction) as Promise<
+        //         Paging<DNList>
+        //     >,
         fetch_dn_quick_view: (startDate?: string, endDate?: string) =>
             singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate, endDate))(
                 requestAction
@@ -271,7 +287,7 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<AreaList>(AllocateAction.listRoute())(
                 requestAction
             ),
-        list_zone: (route_ids?: string) =>
+        list_zone: (route_ids?: any[]) =>
             singleRequest<AreaList>(AllocateAction.listZone(route_ids))(
                 requestAction
             ),

@@ -2224,208 +2224,208 @@ export default () => {
                   }),
               }}
             />
-            // : advanceSearchParams.filter == 'HIS' ?
-            //   <TableView<DNList, { searchValue?: string }>
-            //     displayOnly
-            //     tableProps={{
-            //       actionRef: actionRef,
-            //       options: {
-            //         reload: false,
-            //         setting: false,
-            //         density: false,
-            //         fullScreen: false,
-            //       },
-            //       toolbar: {
-            //         actions: [
-            //           <ProForm submitter={false} layout="inline">
-            //             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            //               <ProFormSelect
-            //                 name="sap_delivery_date"
-            //                 initialValue="as_of_now"
-            //                 onChange={(val: string) => {
-            //                   setHisSearch((v) => ({ ...v, sap_delivery_date: val }))
-            //                   actionRef.current?.reloadAndRest?.();
-            //                 }}
-            //                 options={[
-            //                   { value: 'all', label: 'ALL' },
-            //                   { value: 'as_of_now', label: 'As Date' },
-            //                   { value: 'today', label: 'Today' },
-            //                   { value: 'unplan', label: 'DOP Pending' },
-            //                   { value: 'TBA', label: 'TBA' },
-            //                   { value: 'walk-in', label: 'Self Pickup' },
-            //                   { value: 'hold', label: 'On Hold' },
-            //                 ]}
-            //                 width={150}
-            //                 showSearch
-            //               />
-            //               <ProFormDateRangePicker
-            //                 name="sap_delivery_range_his"
-            //                 placeholder={['From Date', 'To Date']}
-            //                 disabled={!asDate}
-            //                 width={300}
-            //                 fieldProps={{
-            //                   onChange(val) {
-            //                     const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
-            //                     const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
+            : advanceSearchParams.filter == 'HIS' ?
+              <TableView<DNList, { searchValue?: string }>
+                displayOnly
+                tableProps={{
+                  actionRef: actionRef,
+                  options: {
+                    reload: false,
+                    setting: false,
+                    density: false,
+                    fullScreen: false,
+                  },
+                  toolbar: {
+                    actions: [
+                      <ProForm submitter={false} layout="inline">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <ProFormSelect
+                            name="sap_delivery_date"
+                            initialValue="as_of_now"
+                            onChange={(val: string) => {
+                              setHisSearch((v) => ({ ...v, sap_delivery_date: val }))
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                            options={[
+                              { value: 'all', label: 'ALL' },
+                              { value: 'as_of_now', label: 'As Date' },
+                              { value: 'today', label: 'Today' },
+                              { value: 'unplan', label: 'DOP Pending' },
+                              { value: 'TBA', label: 'TBA' },
+                              { value: 'walk-in', label: 'Self Pickup' },
+                              { value: 'hold', label: 'On Hold' },
+                            ]}
+                            width={150}
+                            showSearch
+                          />
+                          <ProFormDateRangePicker
+                            name="sap_delivery_range_his"
+                            placeholder={['From Date', 'To Date']}
+                            disabled={!asDate}
+                            width={300}
+                            fieldProps={{
+                              onChange(val) {
+                                const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
+                                const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
 
-            //                     setHisSearch((v) => ({
-            //                       ...v,
-            //                       sap_from_date: fromDate,
-            //                       sap_to_date: toDate,
-            //                     }));
+                                setHisSearch((v) => ({
+                                  ...v,
+                                  sap_from_date: fromDate,
+                                  sap_to_date: toDate,
+                                }));
 
-            //                     actionRef.current?.reloadAndRest?.();
-            //                   }
-            //                 }}
-            //               />
-            //               <ProFormSelect
-            //                 placeholder="Province"
-            //                 name="province_id_his"
-            //                 value={provinceId}
-            //                 onChange={(val: string) => {
-            //                   setProvinceId(val)
-            //                   setHisSearch((v) => ({ ...v, province_id: val }))
-            //                   actionRef.current?.reloadAndRest?.();
-            //                 }}
-            //                 options={provinceOptions}
-            //                 width={200}
-            //                 allowClear
-            //                 showSearch
-            //                 mode="multiple"
-            //               />
+                                actionRef.current?.reloadAndRest?.();
+                              }
+                            }}
+                          />
+                          <ProFormSelect
+                            placeholder="Province"
+                            name="province_id_his"
+                            value={provinceId}
+                            onChange={(val: string) => {
+                              setProvinceId(val)
+                              setHisSearch((v) => ({ ...v, province_id: val }))
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                            options={provinceOptions}
+                            width={200}
+                            allowClear
+                            showSearch
+                            mode="multiple"
+                          />
 
-            //               <ProFormSelect
-            //                 placeholder="District"
-            //                 name="district_id_his"
-            //                 value={districtId}
-            //                 onChange={(val: string) => {
-            //                   setDistrictId(val)
-            //                   setHisSearch((v) => ({ ...v, district_id: val }))
-            //                   actionRef.current?.reloadAndRest?.();
-            //                 }}
-            //                 options={districtOptions}
-            //                 width={200}
-            //                 allowClear
-            //                 showSearch
-            //                 mode="multiple"
-            //               />
+                          <ProFormSelect
+                            placeholder="District"
+                            name="district_id_his"
+                            value={districtId}
+                            onChange={(val: string) => {
+                              setDistrictId(val)
+                              setHisSearch((v) => ({ ...v, district_id: val }))
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                            options={districtOptions}
+                            width={200}
+                            allowClear
+                            showSearch
+                            mode="multiple"
+                          />
 
-            //               <ProFormSelect
-            //                 placeholder="Commune"
-            //                 name="commune_id_his"
-            //                 options={communeOptions}
-            //                 onChange={(val: string) => {
-            //                   setHisSearch((v) => ({ ...v, commune_id: val }))
-            //                   actionRef.current?.reloadAndRest?.();
-            //                 }}
-            //                 width={200}
-            //                 allowClear
-            //                 showSearch
-            //                 mode="multiple"
-            //               />
-            //               <ProFormSelect
-            //                 placeholder="Customer"
-            //                 name="customer_his"
-            //                 showSearch
-            //                 debounceTime={200}
-            //                 mode="multiple"
-            //                 allowClear
-            //                 width={300}
-            //                 request={async ({ keyWords }) => {
-            //                   const res = await services.pageCustomer({
-            //                     criteria: {
-            //                       searchValue: keyWords,
-            //                     },
-            //                     pagination: {
-            //                       current: 1,
-            //                       pageSize: 20,
-            //                     },
-            //                   })
+                          <ProFormSelect
+                            placeholder="Commune"
+                            name="commune_id_his"
+                            options={communeOptions}
+                            onChange={(val: string) => {
+                              setHisSearch((v) => ({ ...v, commune_id: val }))
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                            width={200}
+                            allowClear
+                            showSearch
+                            mode="multiple"
+                          />
+                          <ProFormSelect
+                            placeholder="Customer"
+                            name="customer_his"
+                            showSearch
+                            debounceTime={200}
+                            mode="multiple"
+                            allowClear
+                            width={300}
+                            request={async ({ keyWords }) => {
+                              const res = await services.pageCustomer({
+                                criteria: {
+                                  searchValue: keyWords,
+                                },
+                                pagination: {
+                                  current: 1,
+                                  pageSize: 20,
+                                },
+                              })
 
-            //                   return res.items.map((c: any) => ({
-            //                     value: c.code,
-            //                     label: `${c.code} - ${c.name}`,
-            //                   }));
-            //                 }}
-            //                 onChange={(val: string) => {
-            //                   setHisSearch(v => ({ ...v, customer: val }));
-            //                   actionRef.current?.reloadAndRest?.();
-            //                 }}
-            //               />
-            //             </div>
-            //             {/* Button */}
-            //             <ProFormSelect
-            //               width={150}
-            //               name="hisstatus"
-            //               allowClear
-            //               showSearch
-            //               initialValue="open"
-            //               onChange={(val: string) => {
-            //                 setHisSearch((v) => ({ ...v, dnStatus: val }))
-            //                 actionRef.current?.reloadAndRest?.();
-            //               }}
-            //               options={[
-            //                 { value: '', label: 'ALL' },
-            //                 { value: 'open', label: 'Open' },
-            //                 { value: 'in-progress', label: 'In Progress' },
-            //                 { value: 'complete', label: 'Completed' },
-            //                 { value: 'force-close', label: 'Close' },
-            //               ]}
-            //             />
-            //             {access.canAccesSyncSAP &&
-            //               <Button type="text" size='large' onClick={() => onSync()} >
-            //                 <SyncOutlined />
-            //               </Button>
-            //             }
-            //             <Button
-            //               type="text"
-            //               onClick={() => actionRef.current?.reloadAndRest?.()}
-            //               size='large'
-            //             >
-            //               <ReloadOutlined />
-            //             </Button>
+                              return res.items.map((c: any) => ({
+                                value: c.code,
+                                label: `${c.code} - ${c.name}`,
+                              }));
+                            }}
+                            onChange={(val: string) => {
+                              setHisSearch(v => ({ ...v, customer: val }));
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                          />
+                        </div>
+                        {/* Button */}
+                        <ProFormSelect
+                          width={150}
+                          name="hisstatus"
+                          allowClear
+                          showSearch
+                          initialValue="open"
+                          onChange={(val: string) => {
+                            setHisSearch((v) => ({ ...v, dnStatus: val }))
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                          options={[
+                            { value: '', label: 'ALL' },
+                            { value: 'open', label: 'Open' },
+                            { value: 'in-progress', label: 'In Progress' },
+                            { value: 'complete', label: 'Completed' },
+                            { value: 'force-close', label: 'Close' },
+                          ]}
+                        />
+                        {access.canAccesSyncSAP &&
+                          <Button type="text" size='large' onClick={() => onSync()} >
+                            <SyncOutlined />
+                          </Button>
+                        }
+                        <Button
+                          type="text"
+                          onClick={() => actionRef.current?.reloadAndRest?.()}
+                          size='large'
+                        >
+                          <ReloadOutlined />
+                        </Button>
 
-            //           </ProForm>
+                      </ProForm>
 
-            //         ],
-            //       },
-            //     }}
-            //     extraFilter={
-            //       <Space size="large" style={{ flexDirection: 'row' }}>
-            //         {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
-            //               <FileSearchOutlined />
-            //             </Button> */}
-            //         <Radio.Group
-            //           value={advanceSearchParams.filter}
-            //           onChange={(e) => {
-            //             setAdvanceSearchParams((v) => ({
-            //               ...v,
-            //               filter: e.target.value,
-            //             }));
-            //             actionRef.current?.reloadAndRest?.();
-            //           }}
-            //         >
-            //           {/* <Radio.Button value="OV">Over View</Radio.Button>
-            //               <Radio.Button value="SO">Sales Order</Radio.Button> */}
-            //           <Radio.Button value="DN">Delivery Plan</Radio.Button>
-            //           {/* <Radio.Button value="HIS">History</Radio.Button> */}
-            //           <Radio.Button value="MT">My Task</Radio.Button>
-            //         </Radio.Group>
-            //       </Space>
-            //     }
-            //     columns={dnColumns}
-            //     actionHandlers={{
-            //       onRequest: (criteria, pagination, sort) =>
-            //         onHistoryRequestDNDeatilHandler({
-            //           criteria: {
-            //             ...criteria,
-            //             ...hisSearch,
-            //             sort
-            //           },
-            //           pagination,
-            //         }),
-            //     }}
-            //   />
+                    ],
+                  },
+                }}
+                extraFilter={
+                  <Space size="large" style={{ flexDirection: 'row' }}>
+                    {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
+                          <FileSearchOutlined />
+                        </Button> */}
+                    <Radio.Group
+                      value={advanceSearchParams.filter}
+                      onChange={(e) => {
+                        setAdvanceSearchParams((v) => ({
+                          ...v,
+                          filter: e.target.value,
+                        }));
+                        actionRef.current?.reloadAndRest?.();
+                      }}
+                    >
+                      {/* <Radio.Button value="OV">Over View</Radio.Button>
+                          <Radio.Button value="SO">Sales Order</Radio.Button> */}
+                      <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                      {/* <Radio.Button value="HIS">History</Radio.Button> */}
+                      <Radio.Button value="MT">My Task</Radio.Button>
+                    </Radio.Group>
+                  </Space>
+                }
+                columns={dnColumns}
+                actionHandlers={{
+                  onRequest: (criteria, pagination, sort) =>
+                    onHistoryRequestDNDeatilHandler({
+                      criteria: {
+                        ...criteria,
+                        ...hisSearch,
+                        sort
+                      },
+                      pagination,
+                    }),
+                }}
+              />
               : []}
 
 
@@ -2600,7 +2600,14 @@ export default () => {
         open={exportModel.visible}
         loading={excelLoading}
         onCancel={() => setExportModal({ visible: false })}
-        onSave={async (customer, ordered_date, request_delivery_date) => {
+        onSave={async (request_delivery_date, route, zone, province, district, commune, customer) => {
+          console.log('request_delivery_date', request_delivery_date)
+          console.log('route', route)
+          console.log('zone', zone)
+          console.log('province', province)
+          console.log('district', district)
+          console.log('commune', commune)
+          console.log('customer', customer)
           const result = [
             {
               key: 'customer',
@@ -2622,29 +2629,64 @@ export default () => {
                 : null,
               type: 'dateTime',
             },
+            // {
+            //   key: 'district_id',
+            //   value: route ?? null,
+            //   type: 'string',
+            // },
+            // {
+            //   key: 'commune_id',
+            //   value: zone ?? null,
+            //   type: 'string',
+            // },
+            {
+              key: 'province_id',
+              value: province?.length ? province.join(',') : '',
+              type: 'string',
+            }, {
+              key: 'district_id',
+              value:
+                district?.length
+                  ? district.join(',')
+                  : route?.length
+                    ? route.join(',')
+                    : '',
+              type: 'string',
+            },
+            {
+              key: 'commune_id',
+              value:
+                commune?.length
+                  ? commune.join(',')
+                  : zone?.length
+                    ? zone.join(',')
+                    : '',
+              type: 'string',
+            }
+            // {
+            //   key: 'ordered_startdate',
+            //   value: ordered_date?.[0]
+            //     ? (ordered_date[0])
+            //     : null,
+            //   type: 'dateTime',
+            // },
+            // {
+            //   key: 'ordered_enddate',
+            //   value: ordered_date?.[1]
+            //     ? (ordered_date[1])
+            //     : null,
+            //   type: 'dateTime',
+            // },
 
-            {
-              key: 'ordered_startdate',
-              value: ordered_date?.[0]
-                ? (ordered_date[0])
-                : null,
-              type: 'dateTime',
-            },
-            {
-              key: 'ordered_enddate',
-              value: ordered_date?.[1]
-                ? (ordered_date[1])
-                : null,
-              type: 'dateTime',
-            },
           ]
+          console.log(result)
           try {
             setExcelLoading(true)
             await downloadGenericReport(requestActions)({
               fileName: `dop-${moment().format()}.xls`,
               type: 'EXCEL',
               data: {
-                reportName: 'DOPDetail',
+                reportName: 'DOP_Delivery_Detail',
                 reportPath: '/Reports/Delivery',
                 data: result,
               },

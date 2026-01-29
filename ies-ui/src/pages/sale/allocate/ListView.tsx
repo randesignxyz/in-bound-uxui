@@ -26,8 +26,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import SortModal, { SortRule } from '@/pages/delivery/allocate/SortModal';
 import { render } from '@testing-library/react';
 import OfficerZoneFilter from '@/pages/delivery/allocate/FilterSelect';
-import ExportExcel from '@/pages/delivery/allocate/ExportExcel';
+// import ExportExcel from '@/pages/delivery/allocate/ExportExcel';
 import { downloadGenericReport } from '@/services/apiGateway';
+import ExportExcel from './ExportExcel';
 
 dayjs.extend(customParseFormat)
 interface DNListState {

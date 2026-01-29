@@ -195,82 +195,74 @@ const POAdjustForm: React.FC<Props> = ({ actionType, onClose, ...props }) => {
                         <Flex vertical>
                             <ProFormSwitch name={"toPending"} label="Rollback Status to Pending" />
                             <ProFormDatePicker name={"date"} label={"Date Change"} />
-                            <ProFormDependency dependencies={["changeDistributor"]} name={["changeDistributor"]}>
-                                {({ changeDistributor }) => {
-                                    return changeDistributor && (
-                                        <Flex justify="space-between" gap={12}>
-                                            <Card style={{ width: "50%" }} title="Current Distributor" size="small" >
-                                                <Space direction="vertical">
-                                                    <ProFormSelect readonly noStyle name={"currentDistributor"} />
-                                                    <ProFormSelect readonly noStyle name={"currentAddress"} />
-                                                    <ProFormSelect readonly noStyle name={"currentAddressDetail"} />
-                                                </Space>
-                                            </Card>
-                                            <ArrowRightOutlined />
-                                            <Card style={{ width: "50%" }} title="New Distributor" size="small">
-                                                <Space direction="vertical">
-                                                    <Form.Item
-                                                        help={<span />}
-                                                        name="distributorId"
-                                                        label="Source Of Supply"
-                                                        rules={[{ required: true }]}
-                                                        labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
-                                                    >
-                                                        <RemoteSelectBox<CustomerLookup, { searchValue: any }>
-                                                            width={'285px'}
-                                                            transforms={{
-                                                                onCriteria: (value) => {
-                                                                    return { searchValue: value };
-                                                                },
-                                                                onOptionData: (item) => {
-                                                                    return {
-                                                                        value: [item.id, item.code, item.name].join(','),
-                                                                        label: [item.code, item.name].filter((it) => it !== null).join(' - '),
-                                                                    };
-                                                                },
-                                                            }}
-                                                            service={CrmService('search-basic-customer')}
-                                                        />
-                                                    </Form.Item>
-                                                    <ProFormSelect
-                                                        name={'addressId'}
-                                                        label="Address"
-                                                        labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
-                                                        allowClear={false}
-                                                        key={'address'}
-                                                        showSearch
-                                                        rules={[{ required: true }]}
-                                                        options={addressList?.map((item) => {
-                                                            return {
-                                                                value: item.customerAddressId,
-                                                                label: item.address,
-                                                            };
-                                                        })}
-                                                    />
+                            
+                            <Flex justify="space-between" gap={12}>
+                                <Card style={{ width: "50%" }} title="Current Distributor" size="small" >
+                                    <Space direction="vertical">
+                                        <ProFormSelect readonly noStyle name={"currentDistributor"} />
+                                        <ProFormSelect readonly noStyle name={"currentAddress"} />
+                                        <ProFormSelect readonly noStyle name={"currentAddressDetail"} />
+                                    </Space>
+                                </Card>
+                                <ArrowRightOutlined />
+                                <Card style={{ width: "50%" }} title="New Distributor" size="small">
+                                    <Space direction="vertical">
+                                        <Form.Item
+                                            help={<span />}
+                                            name="distributorId"
+                                            label="Source Of Supply"
+                                            rules={[{ required: true }]}
+                                            labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
+                                        >
+                                            <RemoteSelectBox<CustomerLookup, { searchValue: any }>
+                                                width={'285px'}
+                                                transforms={{
+                                                    onCriteria: (value) => {
+                                                        return { searchValue: value };
+                                                    },
+                                                    onOptionData: (item) => {
+                                                        return {
+                                                            value: [item.id, item.code, item.name].join(','),
+                                                            label: [item.code, item.name].filter((it) => it !== null).join(' - '),
+                                                        };
+                                                    },
+                                                }}
+                                                service={CrmService('search-basic-customer')}
+                                            />
+                                        </Form.Item>
+                                        <ProFormSelect
+                                            name={'addressId'}
+                                            label="Address"
+                                            labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
+                                            allowClear={false}
+                                            key={'address'}
+                                            showSearch
+                                            rules={[{ required: true }]}
+                                            options={addressList?.map((item) => {
+                                                return {
+                                                    value: item.customerAddressId,
+                                                    label: item.address,
+                                                };
+                                            })}
+                                        />
 
-                                                    <ProFormText
-                                                        readonly
-                                                        hidden
-                                                        name="addressCode"
-                                                    />
-                                                    <ProFormText hidden name={"latitude"} />
-                                                    <ProFormText hidden name={"longitude"} />
-                                                    <ProFormTextArea
-                                                        readonly
-                                                        //help={<AimOutlined />}
-                                                        label={<AimOutlined />}
-                                                        disabled={true}
-                                                        name="address"
-                                                    />
-                                                </Space>
-                                            </Card>
-
-                                        </Flex>
-                                    )
-                                }}
-
-                            </ProFormDependency>
-
+                                        <ProFormText
+                                            readonly
+                                            hidden
+                                            name="addressCode"
+                                        />
+                                        <ProFormText hidden name={"latitude"} />
+                                        <ProFormText hidden name={"longitude"} />
+                                        <ProFormTextArea
+                                            readonly
+                                            //help={<AimOutlined />}
+                                            label={<AimOutlined />}
+                                            disabled={true}
+                                            name="address"
+                                        />
+                                    </Space>
+                                </Card>
+                            </Flex>                                
                         </Flex>
                     )) ||
                     actionType === "PO_CHANGE_ITEM" && (

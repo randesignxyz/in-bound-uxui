@@ -3,19 +3,15 @@ import { FieldInfo } from '@/services/shared/data';
 
 export interface EmpISOData {
   id: number;
-  employeeId: string;
-  fullName: string;
-  companyName: string;
-  departmentName: string;
-  subFunction: string;
+  empNo: string;
+  empName: string;
+  bu: string;
+  dept: string;
+  subdept: string;
   location: string;
   position: string;
   jobLevel: string;
-  startDate: moment.Moment;
-  endDate: moment.Moment;
-  appraiser1Id: string;
   appraiser1: string;
-  appraiser2Id: string;
   appraiser2: string;
   createdBy: string;
   createdAt: moment.Moment;

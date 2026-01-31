@@ -72,9 +72,15 @@ export default () => {
             ]}
             listView={{
                 type: "Table",
+              // actionButtons: {
+              //
+              // },
                 props: {
                     dataSource: ipoData,
                     columns: [
+                      {
+                        title: "#"
+                      },
                         {
                             title: "Ipo Code",
                             dataIndex: "ipoCode",
@@ -93,10 +99,22 @@ export default () => {
                             title: "Employee Name",
                             dataIndex: "employeeName"
                         },
+                      {
+                        title: "COMPANY",
+                        dataIndex: "Company"
+                      },
+                      {
+                        title: "SUB_FUNCTION",
+                        dataIndex: "sub-function"
+                      },
                         {
                             title: "Position",
                             dataIndex: "position"
                         },
+                      {
+                        title: "Jov Level",
+                        dataIndex: "position"
+                      },
                         {
                             title: "Date",
                             dataIndex: "date"

@@ -19,7 +19,8 @@ export const HrmPaths = {
     df: '/hrm/df',
     job: '/hrm/job',
     ipo: '/hrm/ipo',
-    masterData: '/hrm/master-data'
+    masterData: '/hrm/master-data',
+    uploadsData: '/hrm/ipo-upload',
 }
 
 export default () => {
@@ -117,6 +118,14 @@ export default () => {
                                     link: `${HrmPaths.masterData}/list`,
                                     icon: ipoImage,
                                 },
+                              {
+                                id: 'ipo',
+                                name: 'Uploads Data',
+                                description: 'Employee Set Up',
+                                visible: access.canAccessHRMasterData,
+                                link: `${HrmPaths.uploadsData}/list`,
+                                icon: ipoImage,
+                              },
                             ]}
                         />
                     </>

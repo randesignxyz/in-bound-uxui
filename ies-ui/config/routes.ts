@@ -460,6 +460,14 @@ export default [
     access: 'canAccessHRMasterData',
     component: './hrm/master-data',
   },
+  {
+    path: '/hrm/ipo-upload/:view/*',
+    name: 'master-data',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessHRMasterData',
+    component: './hrm/ipo-upload',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/

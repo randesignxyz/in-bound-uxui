@@ -5,18 +5,14 @@ export interface EmpISOData {
   id: number;
   empNo: string;
   empName: string;
-  bu: string;
-  dept: string;
-  subdept: string;
+  buName: string;
   location: string;
-  position: string;
+  deptName: string;
+  subDeptName: string;
+  jobTitle: string;
   jobLevel: string;
   appraiser1: string;
   appraiser2: string;
-  createdBy: string;
-  createdAt: moment.Moment;
-  modifiedBy: string;
-  modifiedDate: moment.Moment;
   status: string;
 }
 
@@ -28,4 +24,9 @@ export type ImportDataItems = {
   id: number
   fieldInfoList: FieldInfo[];
   action?: string;
+}
+
+export type IOSEmployeeSearchParams = {
+  searchValue: string;
+
 }

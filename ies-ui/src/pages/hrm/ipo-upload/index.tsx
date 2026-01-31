@@ -3,9 +3,9 @@ import PageWrapper from '@/components/PageWrapper';
 import {
   EmpISOData,
   EmpISOSearchParams,
-  ImportDataItems,
+  ImportDataItems, IOSEmployeeSearchParams,
 } from '@/pages/hrm/ipo-upload/service/data';
-import { ImportOutlined, PlusOutlined} from '@ant-design/icons';
+import { ImportOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@umijs/max';
 import { EmpISOServiceAPI } from '@/pages/hrm/ipo-upload/service/EmpISOService';
 import { Button, message, Modal } from 'antd';
@@ -16,18 +16,24 @@ import { ActionType } from '@ant-design/pro-components';
 import { EmployeeListItem } from '@/pages/hrm/data';
 import { EmployeeServices } from '@/pages/hrm/services';
 import { simpleRequestActions } from '@/services/model';
+import { TableViewSearchParams } from '@/components/DataCrud/TableView';
+import { ExportOutlined } from '@ant-design/icons';
 
 const Index = () => {
   const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
   const services = EmpISOServiceAPI();
   const [loading, setLoading] = useState(false);
   const actionRef = useRef<ActionType>();
-  const { data = [], isLoading } = useQuery(
-    ['fetch_ios_emp_master_list'],
-    () => services.ListAll(),
+  const [filter, setFilter] = useState<TableViewSearchParams<IOSEmployeeSearchParams>>({
+    criteria: { advanceSearch: { searchValue: 'ALL' } }
+  })
+  const { data, isLoading, refetch } = useQuery(
+    ["fetch_ios_emp_master_page", filter],
+    () => services.ListAll(filter),
+    { refetchOnWindowFocus: false }
   );
   const requestActions = simpleRequestActions();
-  const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem } >();
+  const [modalVisible, setModalVisible] = useState<{ type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem }>();
   const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
   const saveEmployeeIPOHandler = async (data: EmployeeListItem) => {
     Modal.confirm({
@@ -53,61 +59,64 @@ const Index = () => {
             tabIcon: <PlusOutlined />,
             tabLabel: "Add New",
           },
-
         ]}
-      // actions:[
-      // {
-      //   key:"sas",
-      //   title:"Import",
-      //   label:"Import",
-      //   icon: <ImportOutlined />,
-      //   onClick: () => hideModal(),
-      // }
-      // ],
         listView={{
           type: "Table",
           title: "ISO List",
+          statuses: [
+            { option: { label: "ALL", value: "All" } },
+            { option: { label: "Draft", value: "Draft", } },
+            { option: { label: "Submitted", value: "Submitted" } },
+            { option: { label: "Revert", value: "Revert" } }
+          ],
+          advanceSearchButton: (
+            <Button
+              // onClick={() => setAdvanceSearchVisible(true)}
+              icon={<ExportOutlined />}
+            />
+          ),
+          actionButtons: [
+            <ImportFileButton<ImportDataItem>
+              importedKey="IMPORT_EMPLOYEE_IPO"
+              onDataResponse={data => {
+                setImportData(data)
+              }}
+              key={"IMPORT_EMP_IOS_LIST"}
+              onHandleChange={(status) => {
+                if (status === 'done') {
+                  message.info('Data uploaded.');
+                }
+              }}
+            />
+          ],
           props: {
-            toolbar:{
-              actions: [
-                <ImportFileButton<ImportDataItem>
-                  importedKey="IMPORT_EMPLOYEE_IPO"
-                  onDataResponse={data => {
-                    setImportData(data)
-                  }}
-                  key={"IMPORT_EMP_IOS_LIST"}
-                  onHandleChange={(status) => {
-                    if (status === 'done') {
-                      message.info('Data uploaded.');
-                    }
-                  }}
-                />
-              ]
+            dataSource: data?.items || [],
+            toolbar: {
             },
-            dataSource: data,
             loading: isLoading,
             rowKey: "employeeId",
             columns: [
               { title: "#", render: (_, __, index) => index + 1 },
               { title: "Employee Id", dataIndex: "empNo" },
               { title: "Employee Name", dataIndex: "empName" },
-              { title: "Company", dataIndex: "bu" },
+              { title: "Company", dataIndex: "buName" },
               { title: "Location", dataIndex: "location" },
-              { title: "Function", dataIndex: "dept" },
-              { title: "Sub Function", dataIndex: "subdept" },
-              { title: "Position", dataIndex: "position" },
+              { title: "Function", dataIndex: "deptName" },
+              { title: "Sub Function", dataIndex: "subDeptName" },
+              { title: "Position", dataIndex: "jobTitle" },
               { title: "Job Level", dataIndex: "jobLevel" },
               { title: "Appraiser 1", dataIndex: "appraiser1" },
               { title: "Appraiser 2", dataIndex: "appraiser2" },
               { title: "Status", dataIndex: "status" },
+              { title: "Action", dataIndex: "action" },
             ],
           },
         }}
       />
       {/*<UploadData title="Imported List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />*/}
-      <UploadData title="Imported Review List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
+      <UploadData title="Imported Review List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={() => { actionRef.current?.reloadAndRest?.() }} />
     </>
-    );
+  );
 };
 
 export default Index;

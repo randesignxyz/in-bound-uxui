@@ -74,7 +74,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                 no: 0,                  
                 checked: e.target.checked,
             });
-            setScore(config.record?.key,0,0,e.target.checked?1:0)
+            setScore(config.record?.key,e.target.checked?1:0,0,0)
           }}
           />):(<Radio checked={(config.record?.fully==1)}/>)
         }
@@ -120,7 +120,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   partial: 0,
                   checked: e.target.checked,
               });
-              setScore(config.record?.key,e.target.checked?1:0,0,0)
+              setScore(config.record?.key,0,0,e.target.checked?1:0)
             }}
           />):(<Radio checked={(config.record?.no==1)}/>)
         },

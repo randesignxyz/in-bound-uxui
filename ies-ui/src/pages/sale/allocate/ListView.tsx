@@ -1880,7 +1880,7 @@ export default () => {
                           options={[
                             { value: 'all', label: 'ALL' },
                             { value: 'as_of_now', label: 'As Date' },
-                            { value: 'today', label: 'Today' },
+                            // { value: 'today', label: 'Today' },
                             { value: 'unplan', label: 'DOP Pending' },
                             { value: 'TBA', label: 'TBA' },
                             { value: 'walk-in', label: 'Self Pickup' },
@@ -2203,7 +2203,7 @@ export default () => {
                             options={[
                               { value: 'all', label: 'ALL' },
                               { value: 'as_of_now', label: 'As Date' },
-                              { value: 'today', label: 'Today' },
+                              // { value: 'today', label: 'Today' },
                               { value: 'unplan', label: 'DOP Pending' },
                               { value: 'TBA', label: 'TBA' },
                               { value: 'walk-in', label: 'Self Pickup' },

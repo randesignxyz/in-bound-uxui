@@ -1953,7 +1953,7 @@ export default () => {
                           options={[
                             { value: 'all', label: 'ALL' },
                             { value: 'as_of_now', label: 'As Date' },
-                            { value: 'today', label: 'Today' },
+                            // { value: 'today', label: 'Today' },
                             { value: 'unplan', label: 'DOP Pending' },
                             { value: 'TBA', label: 'TBA' },
                             { value: 'walk-in', label: 'Self Pickup' },
@@ -1986,7 +1986,7 @@ export default () => {
 
                             setRouteId(routeIds);
 
-                            setDnSearch(v => ({ ...v, district_id: districtIds }));
+                            setDnSearch(v => ({ ...v, district_id: districtIds, route: routeIds }));
                             actionRef.current?.reloadAndRest?.();
                           }}
                         />
@@ -2003,7 +2003,7 @@ export default () => {
                             //  const zoneIds = zoneOptions
                             //   .filter(opt => val.includes(opt.value))
                             //   .map(opt => opt.id);
-                            setDnSearch((v) => ({ ...v, commune_id: communeIds }))
+                            setDnSearch((v) => ({ ...v, commune_id: communeIds, zone: val }))
                             // // setZoneId(zoneIds)
                             // console.log(val)
                             // setOfficerArea(val)
@@ -2249,7 +2249,7 @@ export default () => {
                             options={[
                               { value: 'all', label: 'ALL' },
                               { value: 'as_of_now', label: 'As Date' },
-                              { value: 'today', label: 'Today' },
+                              // { value: 'today', label: 'Today' },
                               { value: 'unplan', label: 'DOP Pending' },
                               { value: 'TBA', label: 'TBA' },
                               { value: 'walk-in', label: 'Self Pickup' },
@@ -2599,22 +2599,20 @@ export default () => {
         title="Export Excel"
         open={exportModel.visible}
         loading={excelLoading}
+        initValues={dnSearch}
         onCancel={() => setExportModal({ visible: false })}
         onSave={async (request_delivery_date, route, zone, province, district, commune, customer) => {
-          console.log('request_delivery_date', request_delivery_date)
-          console.log('route', route)
-          console.log('zone', zone)
-          console.log('province', province)
-          console.log('district', district)
-          console.log('commune', commune)
-          console.log('customer', customer)
           const result = [
             {
               key: 'customer',
               value: customer ?? null,
               type: 'string',
             },
-
+            // {
+            //   key: 'type',
+            //   value: type ?? 'as_of_now',
+            //   type: 'string',
+            // },
             {
               key: 'request_delivery_startdate',
               value: request_delivery_date?.[0]
@@ -2629,16 +2627,6 @@ export default () => {
                 : null,
               type: 'dateTime',
             },
-            // {
-            //   key: 'district_id',
-            //   value: route ?? null,
-            //   type: 'string',
-            // },
-            // {
-            //   key: 'commune_id',
-            //   value: zone ?? null,
-            //   type: 'string',
-            // },
             {
               key: 'province_id',
               value: province?.length ? province.join(',') : '',
@@ -2663,20 +2651,6 @@ export default () => {
                     : '',
               type: 'string',
             }
-            // {
-            //   key: 'ordered_startdate',
-            //   value: ordered_date?.[0]
-            //     ? (ordered_date[0])
-            //     : null,
-            //   type: 'dateTime',
-            // },
-            // {
-            //   key: 'ordered_enddate',
-            //   value: ordered_date?.[1]
-            //     ? (ordered_date[1])
-            //     : null,
-            //   type: 'dateTime',
-            // },
 
           ]
           console.log(result)

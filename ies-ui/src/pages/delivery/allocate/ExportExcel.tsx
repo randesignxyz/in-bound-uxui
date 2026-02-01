@@ -15,11 +15,11 @@ interface Props extends FormModalProps {
   // transfer_id:string,
   loading: boolean
   initValues?: any
-  onSave: (request_delivery_date: string, route: string, zone: string, province?: string, district?: string, commune?: string, customer?: string) => void;
+  onSave: (request_delivery_date: string, route: string, zone: string, province?: string, district?: string, commune?: string, customer?: string, type?: string,) => void;
 }
 
 export default ({ loading, onSave, ...props }: Props) => {
-  const [form] = useForm<{ customer: string; ordered_date: any; request_delivery_date: string }>();
+  const [form] = useForm<{ customer: string; ordered_date: any; request_delivery_date: string,type:string }>();
   const requestActions = simpleRequestActions();
   const services = AllocateServiceAPI(requestActions);
   const [customer, setCustomer] = useState('')
@@ -48,7 +48,7 @@ export default ({ loading, onSave, ...props }: Props) => {
     if (props.open && props.initValues) {
 
       form.setFieldsValue({
-        sap_delivery_date: props.initValues.sap_delivery_date ?? 'as_of_now',
+        type: props.initValues.sap_delivery_date ?? 'as_of_now',
 
         request_delivery_date:
           props.initValues.sap_from_date && props.initValues.sap_to_date
@@ -66,7 +66,7 @@ export default ({ loading, onSave, ...props }: Props) => {
       setRoute(props.initValues.route?.join(',') ?? '');
       setZone(props.initValues.zone ?? []);
       setCustomer(props.initValues.customer?.join(',') ?? '');
-
+      seType(props.initValues.sap_delivery_date ?? 'as_of_now');
       setProvince(props.initValues.province_id);
       setDistrict(props.initValues.district_id);
       setCommune(props.initValues.commune_id);
@@ -121,7 +121,7 @@ export default ({ loading, onSave, ...props }: Props) => {
       onResetForm={() => form.resetFields()}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-        onSave(dataForm.request_delivery_date, route, zone, province, district, commune, customer);
+        onSave(dataForm.request_delivery_date, route, zone, province, district, commune, customer, dataForm.type);
       }}
     >
       <Card>
@@ -129,7 +129,7 @@ export default ({ loading, onSave, ...props }: Props) => {
           <Row gutter={6}>
             <Col span={12}>
               <ProFormSelect
-                name="sap_delivery_date"
+                name="type"
                 label="Type"
                 initialValue="as_of_now"
 

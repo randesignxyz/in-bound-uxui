@@ -2601,18 +2601,18 @@ export default () => {
         loading={excelLoading}
         initValues={dnSearch}
         onCancel={() => setExportModal({ visible: false })}
-        onSave={async (request_delivery_date, route, zone, province, district, commune, customer) => {
+        onSave={async (request_delivery_date, route, zone, province, district, commune, customer,type) => {
           const result = [
             {
               key: 'customer',
               value: customer ?? null,
               type: 'string',
             },
-            // {
-            //   key: 'type',
-            //   value: type ?? 'as_of_now',
-            //   type: 'string',
-            // },
+            {
+              key: 'type',
+              value: type ?? 'as_of_now',
+              type: 'string',
+            },
             {
               key: 'request_delivery_startdate',
               value: request_delivery_date?.[0]

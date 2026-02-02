@@ -445,12 +445,12 @@ export default [
   },
 
   {
-    path: '/hrm/ipo/:view/*',
-    name: 'ipo',
+    path: '/hrm/ios/:view/*',
+    name: 'ios',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     access: 'canAccessHRMIPO',
-    component: './hrm/ipo',
+    component: './hrm/ios',
   },
   {
     path: '/hrm/master-data/:view/*',
@@ -459,6 +459,14 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessHRMasterData',
     component: './hrm/master-data',
+  },
+  {
+    path: '/hrm/ios-upload/:view/*',
+    name: 'master-data',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessHRMasterData',
+    component: './hrm/ios-upload',
   },
   /**********HRM>>**************/
 

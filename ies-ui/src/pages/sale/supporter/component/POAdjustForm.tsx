@@ -195,6 +195,7 @@ const POAdjustForm: React.FC<Props> = ({ actionType, onClose, ...props }) => {
                         <Flex vertical>
                             <ProFormSwitch name={"toPending"} label="Rollback Status to Pending" />
                             <ProFormDatePicker name={"date"} label={"Date Change"} />
+                            <ProFormSwitch name={"changeDistributor"} label="Change Distributor" />
                             <ProFormDependency dependencies={["changeDistributor"]} name={["changeDistributor"]}>
                                 {({ changeDistributor }) => {
                                     return changeDistributor && (

@@ -84,6 +84,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                 const entry: IosRequestPayload = {
                     ...dataForm,
                     iosMasterListId: detail?.id,
+                    id: iosData?.id,
                     action: type,
                     payload: {
                         section1: section1.map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
@@ -91,8 +92,10 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                         section3: section3
                     }
                 }
-                if ((actions?.length ?? 0) <= 0) {
-                    const res = await IOSService.save(entry)(requestAction);
+                if ((actions?.length ?? 0) == 0) {
+                    const res = await IOSService.save({
+                        ...entry,
+                    })(requestAction);
                     if (res.id == 0 || res.id == undefined) {
                         message.error(res.message)
                         return;
@@ -200,7 +203,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                         onValuesChange={(values) => {
                             setSection1(values)
                         }}
-                        weighTage={section1Weightage || 0}
+                        weighTage={iosData?.weightageSection1 ?? 0}
                         editableFormRef={section1Ref}
 
                     />
@@ -210,7 +213,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                         actionPlan={actionPlan}
                         editableFormRef={section2Ref}
                         kpi={kpi}
-                        weighTage={section2Weightage || 0}
+                        weighTage={iosData?.weightageSection2 ?? 0}
                         onValueChange={(values) => {
                             setSection2(values)
                         }} />

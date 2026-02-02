@@ -263,6 +263,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             width: 40,
             align: 'center',
             valueType: 'select',
+            editable: false,
             valueEnum: {
                 'Completed': { text: 'Completed', status: 'Success' },
                 'On-Track': { text: 'On-Track', status: 'Processing' },
@@ -304,6 +305,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'yearEndReview',
             key: 'yearEndReview',
             width: 20,
+            disable: true,
             align: 'center',
             valueType: 'digit',
             onHeaderCell: () => ({
@@ -373,7 +375,6 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 editableFormRef={editableFormRef}
                 onValuesChange={(values) => {
                     const wieght = values.reduce((total, item) => total + (item.weight || 0), 0);
-                    console.log(values);
 
                     if (wieght > 100) {
                         message.error('Weightage should not be more than 100');
@@ -390,11 +391,13 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                     type: 'multiple',
                     editableKeys: dataSource?.map(item => item.key),
                     actionRender: (row, config, defaultDom) => {
+                        const isDelete = row.id == 0;
                         return [<Space size={0}>
                             <Button
                                 type="link"
                                 danger
                                 icon={<DeleteOutlined />}
+                                disabled={isDelete}
                                 onClick={() => config?.onDelete?.(row.key, row)}
                             />
                         </Space>]

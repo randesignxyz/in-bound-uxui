@@ -37,11 +37,11 @@ export default () => {
                     tabLabel: "Edit IOS",
                     action: "edit",
                     actionLabel: "Edit IOS",
-                    panel: ({ }) => <IOSForm actions={item?.iosWorkFlow?.actions} />
+                    panel: ({ }) => <IOSForm id={item?.id} />
                 },
                 {
-                    tabKey: "detail",
-                    tabLabel: "Detail IOS",
+                    tabKey: item?.id?.toString(),
+                    tabLabel: `${item?.empNo} - ${item?.empName}`,
                     action: "view",
                     actionLabel: "Detail IOS",
                     panel: ({ }) => <IOSDetail id={parseInt(item.id?.toString() || "0")} />

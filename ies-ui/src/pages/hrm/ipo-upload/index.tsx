@@ -75,6 +75,15 @@ const Index = () => {
               icon={<ExportOutlined />}
             />
           ),
+          onRefresh: refetch,
+          onFilter: (params, page,sort) =>{
+            setFilter((params) => ({
+              criteria: {
+                ...params.criteria,
+                ...filter.criteria
+              }
+            }))
+          },
           actionButtons: [
             <ImportFileButton<ImportDataItem>
               importedKey="IMPORT_EMPLOYEE_IPO"

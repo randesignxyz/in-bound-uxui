@@ -5,19 +5,32 @@ import {
   EmpISOSearchParams,
   IOSEmployeeSearchParams,
 } from '@/pages/hrm/ios-upload/service/data';
-import { PlusOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
 import { useQuery } from '@umijs/max';
 import { EmpISOServiceAPI } from '@/pages/hrm/ios-upload/service/EmpISOService';
-import { Button, message, Modal } from 'antd';
+import { Button, Flex, message, Modal, Space } from 'antd';
 import ImportFileButton from '@/components/ImportFileButton';
 import { DataResponse, ImportDataItem } from '@/services/shared/data';
 import UploadData from '@/pages/hrm/ios-upload/upload-data';
-import { ActionType } from '@ant-design/pro-components';
+import { ActionType, ProFormSelect } from '@ant-design/pro-components';
 import { EmployeeListItem } from '@/pages/hrm/data';
 import { EmployeeServices } from '@/pages/hrm/services';
 import { simpleRequestActions } from '@/services/model';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ExportOutlined } from '@ant-design/icons';
+import {
+  KeySchema,
+  RawCreateParams,
+  record,
+  ZodRecord,
+  ZodString,
+  ZodTypeAny,
+} from '@umijs/utils/compiled/zod';
 
 const Index = () => {
   const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
@@ -32,46 +45,45 @@ const Index = () => {
     () => services.ListAll(filter),
     { refetchOnWindowFocus: false }
   );
-  const requestActions = simpleRequestActions();
-  const [modalVisible, setModalVisible] = useState<{ type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem }>();
-  const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
-  const saveEmployeeIPOHandler = async (data: EmployeeListItem) => {
+  const handleDelete = async (record: {
+    <Value extends ZodTypeAny>(valueType: Value, params?: RawCreateParams): ZodRecord<ZodString, Value>;
+    <Keys extends KeySchema, Value extends ZodTypeAny>(keySchema: Keys, valueType: Value, params?: RawCreateParams): ZodRecord<Keys, Value>
+  }) => {
     Modal.confirm({
-      title: 'Save employee profiles',
-      content: 'Are you sure?',
+      title: "Delete Confirmation",
+      icon: <ExclamationCircleOutlined />,
+      content: "Are you sure you want to delete this job?",
+      okText: "Yes, Delete",
+      okType: "danger",
+      cancelText: "Cancel",
       onOk: async () => {
         try {
-          await EmployeeServices.EmployeeUpdate(data)(requestActions);
-          if (modalVisible?.type === 'EDIT') hideModal();
-          actionRef.current?.reloadAndRest?.();
-        } catch (error: any) {
-          message.error(error.message || 'Failed to save employee profiles.');
+          const res = await services.DeleteEmployeeIOS(record.id);
+          Modal.info({ title: "Delete Status", content: res.empName + "Deleted successfully." });
+          refetch();
+        } catch (err) {
+          Modal.error({ title: "Delete failed", content: String(err) });
         }
       },
     });
-  }
-
-  console.log(filter);
-
-
+  };
   return (
     <>
       <PageWrapper<EmpISOData, EmpISOSearchParams, undefined>
         tabRender={() => [
-          {
-            action: "add",
-            tabIcon: <PlusOutlined />,
-            tabLabel: "Add New",
-          },
+          // {
+          //   action: "add",
+          //   tabIcon: <PlusOutlined />,
+          //   tabLabel: "Add New",
+          // },
         ]}
         listView={{
           type: "Table",
-          title: "ISO List",
+          title: "IOS List",
           statuses: [
-            { option: { label: "ALL", value: "All" } },
-            { option: { label: "Draft", value: "Draft", } },
+            { option: { label: "ALL", value: "ALL" } },
+            { option: { label: "Active", value: "Draft", } },
             { option: { label: "Submitted", value: "Submitted" } },
-            { option: { label: "Revert", value: "Revert" } }
           ],
           advanceSearchButton: (
             <Button
@@ -80,7 +92,7 @@ const Index = () => {
             />
           ),
           onRefresh: refetch,
-          onFilter: (params, page,sort) =>{
+          onFilter: (params, page, sort) => {
             setFilter((params) => ({
               criteria: {
                 ...params.criteria,
@@ -102,12 +114,13 @@ const Index = () => {
               }}
             />
           ],
+
           onFilter(params, page, sort) {
             setFilter({
               criteria: params,
               pagination: {
-                pageSize: page.pageSize,
-                page: page.current,
+                pageSize: page?.pageSize,
+                page: page?.current,
               }
             })
           },
@@ -121,8 +134,41 @@ const Index = () => {
               total: data?.total,
             },
             columns: [
-              { title: "#", render: (_, __, index) => index + 1 },
-              { title: "Employee Id", dataIndex: "empNo" },
+              {
+                title: '#',
+                width: 40,
+                dataIndex: 'employeeCode',
+                sorter: 'employeeCode',
+                render(_, entity, index) {
+                  return <Flex gap={3} align="center">
+                    <span>{index + 1}</span>
+                    <Button
+                      size="small"
+                      type="link"
+                      title="Open in new tab"
+                      icon={<ExportOutlined />}
+                      onClick={() => {
+                        window
+                          .open(
+                            `/profile/2/${entity.id}`,
+                          )
+                          ?.focus();
+                      }}
+                    />
+                  </Flex>
+                },
+              },
+              {
+                title: 'Employee ID',
+                dataIndex: 'empNo',
+                render: (_, entity) => (
+                  <Flex gap={5} align="center">
+                    <span style={{ color: "#1677ff", cursor: "pointer" }}>
+                      {entity.empNo}
+                    </span>
+                  </Flex>
+                ),
+              },
               { title: "Employee Name", dataIndex: "empName" },
               { title: "Company", dataIndex: "buName" },
               { title: "Location", dataIndex: "location" },
@@ -130,10 +176,19 @@ const Index = () => {
               { title: "Sub Function", dataIndex: "subDeptName" },
               { title: "Position", dataIndex: "jobTitle" },
               { title: "Job Level", dataIndex: "jobLevel" },
-              { title: "Appraiser 1", dataIndex: "appraiser1" },
-              { title: "Appraiser 2", dataIndex: "appraiser2" },
+              { title: "LM1 Name", dataIndex: "appraiser1" },
+              { title: "LM2/FM Name", dataIndex: "appraiser2" },
               { title: "Status", dataIndex: "status" },
-              { title: "Action", dataIndex: "action" },
+              {
+                width: 50, title: "Action",
+                render: (dom, r) => {
+                  return (
+                      <Space>
+                        <Button icon={<DeleteOutlined />} danger size="small" type="link" onClick={() => handleDelete(record)} />
+                      </Space>
+                  );
+                },
+              }
             ],
           },
         }}

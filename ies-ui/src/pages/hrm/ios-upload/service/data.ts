@@ -16,17 +16,7 @@ export interface EmpISOData {
   status: string;
 }
 
-export type EmpISOSearchParams = {
-  searchValue?: string;
-}
-
-export type ImportDataItems = {
-  id: number
-  fieldInfoList: FieldInfo[];
-  action?: string;
-}
-
 export type IOSEmployeeSearchParams = {
   searchValue: string;
-
+  appraisalPeriodId?: number;
 }

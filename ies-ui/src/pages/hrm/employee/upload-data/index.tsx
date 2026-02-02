@@ -40,7 +40,7 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
         title: title,
         fixed: fixed,
         render: (_, r) => {
-            const field = r.fieldInfoList.find(it => it.fieldDisplay == title)
+            const field = r.fieldInfoList.find(it => it.fieldDisplay === title)
             if (field?.isFailed) {
                 return <Tooltip color="red" title={field.message}><Text type="danger" >{field?.fieldValue || 'N/A'}</Text></Tooltip>
             }
@@ -67,7 +67,6 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
                 content: "Are you sure?",
                 onOk: async () => {
                     try {
-                        ``
                         if (datasources) {
                             const rs = await commitImportedData<ImportDataItem>("ESS_IMPORT_TRAINING_LIST", datasources.id)(requestActions)
                             setCommited(true)
@@ -100,7 +99,7 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
         </Space>
         {data&&<ProTable<ImportDataItem>
             columns={[
-                ...displayFields.map(it => renderCol(it, it == "Agreement No" || it == "Agreement Type")),
+                ...displayFields.map(it => renderCol(it, it === "Agreement No" || it === "Agreement Type")),
                 {
                     title: 'Status',
                     render: (_, r) => {

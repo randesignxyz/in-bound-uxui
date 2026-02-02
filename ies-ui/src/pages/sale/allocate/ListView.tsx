@@ -26,8 +26,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import SortModal, { SortRule } from '@/pages/delivery/allocate/SortModal';
 import { render } from '@testing-library/react';
 import OfficerZoneFilter from '@/pages/delivery/allocate/FilterSelect';
-import ExportExcel from '@/pages/delivery/allocate/ExportExcel';
+// import ExportExcel from '@/pages/delivery/allocate/ExportExcel';
 import { downloadGenericReport } from '@/services/apiGateway';
+import ExportExcel from './ExportExcel';
 
 dayjs.extend(customParseFormat)
 interface DNListState {
@@ -1324,13 +1325,15 @@ export default () => {
                                     : <></>}
 
                                 </div>
-                              ) : access.canAccesAddRemarkAllocate ? (
-                                <Button type="primary"
-                                  onClick={() => handleClaim(item.id)}
-                                >
-                                  Pick
-                                </Button>
-                              ) : <></>}
+                              )
+                                // : access.canAccesAddRemarkAllocate ? (
+                                //   <Button type="primary"
+                                //     onClick={() => handleClaim(item.id)}
+                                //   >
+                                //     Pick
+                                //   </Button>
+                                // ) 
+                                : <></>}
 
                               <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
                                 <Button onClick={() => getActivities(item.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
@@ -1789,9 +1792,11 @@ export default () => {
                           },
                         }}
                       />
-                      <Button type="text" size='large' onClick={() => onSync()}>
-                        <SyncOutlined />
-                      </Button>
+                      {access.canAccesSyncSAP &&
+                        <Button type="text" size='large' onClick={() => onSync()}>
+                          <SyncOutlined />
+                        </Button>
+                      }
                       <Button
                         type="text"
                         onClick={() => actionRef.current?.reloadAndRest?.()}
@@ -1823,7 +1828,7 @@ export default () => {
                     {/* <Radio.Button value="OV">Over View</Radio.Button>
                     <Radio.Button value="SO">Sales Order</Radio.Button> */}
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                    <Radio.Button value="HIS">History</Radio.Button>
+                    {/* <Radio.Button value="HIS">History</Radio.Button> */}
                     <Radio.Button value="MT">My Task</Radio.Button>
                     {/* <Radio.Button value="FG">FG</Radio.Button> */}
                   </Radio.Group>
@@ -1875,7 +1880,7 @@ export default () => {
                           options={[
                             { value: 'all', label: 'ALL' },
                             { value: 'as_of_now', label: 'As Date' },
-                            { value: 'today', label: 'Today' },
+                            // { value: 'today', label: 'Today' },
                             { value: 'unplan', label: 'DOP Pending' },
                             { value: 'TBA', label: 'TBA' },
                             { value: 'walk-in', label: 'Self Pickup' },
@@ -2069,9 +2074,11 @@ export default () => {
                         <Tooltip title="Sort"><Button type="text" size='large' onClick={() => setSortModalOpen(true)} >
                           <ColumnHeightOutlined />
                         </Button></Tooltip>
-                        <Tooltip title="Sync From SAP"><Button type="text" size='large' onClick={() => onSync()} >
-                          <SyncOutlined />
-                        </Button></Tooltip>
+                        {access.canAccesSyncSAP &&
+                          <Tooltip title="Sync From SAP"><Button type="text" size='large' onClick={() => onSync()} >
+                            <SyncOutlined />
+                          </Button></Tooltip>
+                        }
                         <Tooltip title="Dowload Excel File"><Button type="text" size='large' icon={<FileExcelOutlined />}
                           onClick={() => setExportModal({ visible: true })}
                         >
@@ -2153,7 +2160,7 @@ export default () => {
                     {/* <Radio.Button value="OV">Over View</Radio.Button>
                         <Radio.Button value="SO">Sales Order</Radio.Button> */}
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                    <Radio.Button value="HIS">History</Radio.Button>
+                    {/* <Radio.Button value="HIS">History</Radio.Button> */}
                     <Radio.Button value="MT">My Task</Radio.Button>
                   </Radio.Group>
                 </Space>
@@ -2196,7 +2203,7 @@ export default () => {
                             options={[
                               { value: 'all', label: 'ALL' },
                               { value: 'as_of_now', label: 'As Date' },
-                              { value: 'today', label: 'Today' },
+                              // { value: 'today', label: 'Today' },
                               { value: 'unplan', label: 'DOP Pending' },
                               { value: 'TBA', label: 'TBA' },
                               { value: 'walk-in', label: 'Self Pickup' },
@@ -2319,9 +2326,11 @@ export default () => {
                             { value: 'force-close', label: 'Close' },
                           ]}
                         />
-                        <Button type="text" size='large' onClick={() => onSync()}>
-                          <SyncOutlined />
-                        </Button>
+                        {access.canAccesSyncSAP &&
+                          <Button type="text" size='large' onClick={() => onSync()}>
+                            <SyncOutlined />
+                          </Button>
+                        }
                         <Button
                           type="text"
                           onClick={() => actionRef.current?.reloadAndRest?.()}
@@ -2353,7 +2362,7 @@ export default () => {
                       {/* <Radio.Button value="OV">Over View</Radio.Button>
                           <Radio.Button value="SO">Sales Order</Radio.Button> */}
                       <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                      <Radio.Button value="HIS">History</Radio.Button>
+                      {/* <Radio.Button value="HIS">History</Radio.Button> */}
                       <Radio.Button value="MT">My Task</Radio.Button>
                     </Radio.Group>
                   </Space>

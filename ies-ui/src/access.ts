@@ -561,6 +561,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_ALLOCATION_ADMIN'].some((it) => it === item),
       ) || false,
+    canAccesSyncSAP:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_SYNC_DOP_SAP'].some((it) => it === item),
+      ) || false,
 
     /**** Prod */
     canAccessProdMenu:

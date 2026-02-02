@@ -51,8 +51,6 @@ const Index = () => {
     });
   }
 
-
-
   return (
     <>
       <PageWrapper<EmpISOData, EmpISOSearchParams, undefined>

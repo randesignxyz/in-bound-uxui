@@ -1,12 +1,10 @@
 import PageWrapper from "@/components/PageWrapper";
 import IOSForm from "./IOSForm";
-import IOSDetail from "./detail";
 import { useQuery } from "@umijs/max";
 import { IOSService } from "./service";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { useState } from "react";
 import { simpleRequestActions } from "@/services/model";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 
 export default () => {
@@ -16,8 +14,6 @@ export default () => {
         queryKey: ['ipo-list', filter],
         queryFn: () => IOSService.page(filter).query(requestAction),
         refetchOnWindowFocus: false,
-        // refetchOnMount: false,
-        // refetchOnReconnect: false,
         retry: false,
         staleTime: 0,
         cacheTime: 0,
@@ -25,13 +21,6 @@ export default () => {
     return (
         <PageWrapper
             tabRender={(item) => [
-                // {
-                //     tabKey: "add",
-                //     tabLabel: "Add IOS",
-                //     action: "add",
-                //     actionLabel: "Add IOS",
-                //     panel: ({ }) => <IOSForm actions={item?.iosWorkFlow?.actions} />
-                // },
                 {
                     tabKey: item?.id?.toString(),
                     tabLabel: `${item?.empNo} - ${item?.empName}`,
@@ -44,14 +33,13 @@ export default () => {
                     tabLabel: `${item?.empNo} - ${item?.empName}`,
                     action: "view",
                     actionLabel: "Detail IOS",
-                    panel: ({ }) => <IOSDetail id={parseInt(item.id?.toString() || "0")} />
+                    panel: ({ }) => <IOSForm id={item?.id} />
                 }
             ]}
             // onNewRender={false}
             listView={{
                 type: "Table",
                 title: "IOS Performance Review",
-                loading: isLoading,
                 onRefresh: refetch,
                 onFilter(params, page, sort) {
                     setFilter({
@@ -64,6 +52,7 @@ export default () => {
                 },
                 props: {
                     dataSource: data?.items,
+                    loading: isLoading,
                     pagination: {
                         total: data?.total
                     },
@@ -88,9 +77,14 @@ export default () => {
                             dataIndex: "jobTitle"
                         },
                         {
+                            title: "Sub Function",
+                            dataIndex: "subDeptName"
+                        },
+                        {
                             title: "Function",
                             dataIndex: "deptName"
                         },
+
                         {
                             title: "Date",
                             dataIndex: "createdDate",
@@ -99,16 +93,6 @@ export default () => {
                         {
                             title: "Status",
                             dataIndex: "status"
-                        },
-                        {
-                            title: "Action",
-                            dataIndex: "action",
-                            actionProps: (item) => ({
-                                label: <EditOutlined />,
-                                action: "edit",
-                                type: "edit",
-                            }),
-
                         }
                     ]
                 }

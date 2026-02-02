@@ -51,7 +51,8 @@ export interface IosEmpRequest {
 
 
 export interface IosRequestPayload {
-    iosMasterListId: number;
+    iosMasterListId?: number;
+    iosEmpRequestId?: number;
     action: string;
     comment?: string | null;
     payload: IosData;
@@ -173,6 +174,7 @@ export interface IosEmpRequest {
 export interface IosWorkFlow {
     approverId: number;
     currentLevel: number;
+    actions: IosAction[];
 }
 
 export interface Activity {

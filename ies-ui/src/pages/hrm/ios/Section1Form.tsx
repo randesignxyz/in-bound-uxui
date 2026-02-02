@@ -23,10 +23,11 @@ interface Props {
     readOnly?: boolean;
     weighTage: number | 0;
     onValuesChange?: (values: IosSection1Params[]) => void;
-    editableFormRef?: React.Ref<EditableFormInstance<IosSection1Params>>
+    editableFormRef?: React.Ref<EditableFormInstance<IosSection1Params>> | any
 }
 
 const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesChange, editableFormRef, weighTage }) => {
+
 
     const totalWeight = useMemo(() => {
         return numeral(
@@ -49,9 +50,9 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             },
         },
         {
-            title: 'OBJECTIVES',
-            dataIndex: 'objectives',
-            key: 'objectives',
+            title: 'OBJECTIVE',
+            dataIndex: 'obj',
+            key: 'obj',
             width: 300,
             valueType: 'textarea',
             fieldProps: {
@@ -117,7 +118,6 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             width: 20,
             align: 'center',
             valueType: "digit",
-            // onCell: () => ({ style: { border: '1px solid #ff4d4f', borderRadius: '5px' } }),
             formItemProps: {
                 rules: [
                     { type: 'number', min: 0.1, max: 100, message: 'Please enter 0.1% - 100%' }
@@ -128,7 +128,7 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                 rows: 6,
                 suffix: "%",
                 controls: false,
-                placeholder: "1",
+                placeholder: "",
                 style: {
                     textAlign: 'right',
                     width: 65
@@ -175,8 +175,8 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
         },
         {
             title: 'MID-YEAR REVIEW',
-            dataIndex: 'midYearReview',
-            key: 'midYearReview',
+            dataIndex: 'mid',
+            key: 'mid',
             width: 80,
             align: 'center',
             valueType: 'select',
@@ -197,17 +197,22 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             width: 20,
 
             align: 'center',
-            valueType: 'digit',
-            initialValue: moment().startOf('year'),
+            valueType: 'select',
+            valueEnum: {
+                '1': { text: '1', status: 'Success' },
+                '2': { text: '2', status: 'Processing' },
+                '3': { text: '3', status: 'Error' },
+                '4': { text: '4', status: 'Error' },
+                '5': { text: '5', status: 'Error' },
+            },
             onHeaderCell: () => ({
                 style: { backgroundColor: '#ddebf7', fontSize: 12 }
             }),
-            // formItemProps: {
-            //     rules: [{ type: 'number', min: 1, max: 5, message: 'Please enter 1-5' },],
-            // },
+
             fieldProps: {
                 precision: 0,
                 step: 1,
+                allowClear: false,
                 controls: false,
                 placeholder: "0",
                 style: {
@@ -283,24 +288,18 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                     rowKey="key"
                     className='thin-scrollbar-cust'
                     value={dataSource}
-                    // onDataSourceChange={onValuesChange}
                     onValuesChange={async (values) => {
-                        const wieght = values?.reduce((total, item) => total + (item.weight || 0), 0);
+                        const wieght = values?.reduce((total, item) => total + (item.weight ?? 0), 0);
                         if (wieght > 100) {
                             message.error('Weightage should not be more than 100');
-                            return;
+                            return dataSource
                         }
                         onValuesChange?.(values)
                     }}
-                    // recordCreatorProps={{
-                    //     newRecordType: 'dataSource',
-                    //     position: 'bottom',
-                    //     record: () => ({ key: Date.now().toString() } as IosSection1Params),
-                    // }}
                     recordCreatorProps={false}
                     editable={{
                         type: 'multiple',
-                        editableKeys: dataSource?.map((item) => item.key),
+                        editableKeys: readOnly ? [] : dataSource?.map((item) => item.key),
                         actionRender: (row, config, defaultDom) => {
                             return [<Space size={0}>
                                 <Button
@@ -345,7 +344,7 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                                     <ProFormDigit
                                         name={"finalYearEnd"}
                                         hidden
-                                        initialValue={finalYearEnd}
+                                        initialValue={finalYearEnd ?? 0}
                                     />
                                 </Table.Summary.Cell>
                                 <Table.Summary.Cell index={3} colSpan={2} align="right" />

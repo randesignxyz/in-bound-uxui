@@ -1,11 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { Card, Table, Typography, Flex, Input } from 'antd';
-import type { ProColumns, ProFormInstance } from '@ant-design/pro-components';
+import React, { } from 'react';
+import { Card, Flex } from 'antd';
+import type { ProColumns } from '@ant-design/pro-components';
 import { EditableProTable } from '@ant-design/pro-components';
 import { IosSection3Params } from './data';
-
-const { Text } = Typography;
-
 
 interface Props {
     dataSource?: IosSection3Params[];
@@ -16,13 +13,11 @@ interface Props {
 
 const Section3Form: React.FC<Props> = ({ dataSource, readOnly = false, onValueChange, finalScore }) => {
 
-    // const formRef = useRef<ProFormInstance<any>>();
-
     const columns: ProColumns<IosSection3Params>[] = [
         {
             title: 'ACHIEVEMENTS',
             dataIndex: 'achieve',
-            key: 'achievements',
+            key: 'achieve',
             valueType: 'textarea',
             fieldProps: {
                 rows: 8,
@@ -33,7 +28,7 @@ const Section3Form: React.FC<Props> = ({ dataSource, readOnly = false, onValueCh
         },
         {
             title: 'STRENGTHS',
-            dataIndex: 'strengths',
+            dataIndex: 'strength',
             key: 'strength',
             valueType: 'textarea',
             fieldProps: {
@@ -46,7 +41,7 @@ const Section3Form: React.FC<Props> = ({ dataSource, readOnly = false, onValueCh
         {
             title: 'DEVELOPMENT AREA',
             dataIndex: 'develop',
-            key: 'developmentArea',
+            key: 'develop',
             valueType: 'textarea',
             onHeaderCell: () => ({
                 style: { backgroundColor: '#bfbfbf', fontWeight: 'bold' } // Gray header
@@ -82,7 +77,7 @@ const Section3Form: React.FC<Props> = ({ dataSource, readOnly = false, onValueCh
                     recordCreatorProps={false}
                     editable={{
                         type: 'multiple',
-                        editableKeys: dataSource?.map(item => item.key),
+                        editableKeys: readOnly ? [] : dataSource?.map(item => item.key),
                     }}
                     bordered
                     size="small"

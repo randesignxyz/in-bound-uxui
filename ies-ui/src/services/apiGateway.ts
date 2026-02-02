@@ -773,3 +773,44 @@ export const execDataService0 =
         throw error;
       }
     };
+
+
+
+export const queryDataPagingService = <OU = any, IN = any>(data: ServicePagingParams<IN>) => {
+  try {
+    const srvUrl = getServiceUrl(data.endpoint);
+    const rs = request<Paging<OU>>(
+      `${srvUrl}/name/${data.actionName}/list-paging/page/${(data.pagination?.page || data.pagination?.current || 1) - 1
+      }/size/${data.pagination?.pageSize || 20}`,
+      {
+        method: 'POST',
+        data: data.payload || {},
+      },
+    );
+    return rs;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const queryDataListService = <OU = any, IN = any>(data: ServiceListParams<IN>) => ({
+  query: async () => {
+    try {
+      const srvUrl = getServiceUrl(data.endpoint);
+      const rs = await request<OU[]>(`${srvUrl}/name/${data.actionName}/list`, {
+        method: 'POST',
+        data: data.payload,
+      });
+      return rs;
+    } catch (error) {
+      throw error;
+    }
+  },
+  queryParams: {
+    type: 'LIST_QUERY',
+    endpoint: data.endpoint,
+    actionName: data.actionName,
+    responseKey: data.responseKey,
+    payload: data.payload,
+  } as ServiceApiType<OU>,
+});

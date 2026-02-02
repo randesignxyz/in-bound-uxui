@@ -9,6 +9,7 @@ export const IEmpISOService = {
     endpoint: 'HR',
     actionName: 'fetch_ios_emp_master_page',
     payload: { ...params.criteria },
+    pagination: params.pagination,
   }),
 };
 interface ListParams {
@@ -26,6 +27,7 @@ export const EmpISOServiceAPI = (requestActions?: RequestActions) => ({
         criteria: {
           searchValue: params.criteria?.searchValue,
         },
+        pagination: params.pagination,
       })
     )(requestActions) as Promise<Paging<EmpISOData>>,
 });

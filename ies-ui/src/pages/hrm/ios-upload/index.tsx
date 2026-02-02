@@ -3,15 +3,15 @@ import PageWrapper from '@/components/PageWrapper';
 import {
   EmpISOData,
   EmpISOSearchParams,
-  ImportDataItems, IOSEmployeeSearchParams,
-} from '@/pages/hrm/ipo-upload/service/data';
-import { ImportOutlined, PlusOutlined } from '@ant-design/icons';
+  IOSEmployeeSearchParams,
+} from '@/pages/hrm/ios-upload/service/data';
+import { PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@umijs/max';
-import { EmpISOServiceAPI } from '@/pages/hrm/ipo-upload/service/EmpISOService';
+import { EmpISOServiceAPI } from '@/pages/hrm/ios-upload/service/EmpISOService';
 import { Button, message, Modal } from 'antd';
 import ImportFileButton from '@/components/ImportFileButton';
-import { DataResponse, ImportDataItem, ImportDataResponse } from '@/services/shared/data';
-import UploadData from '@/pages/hrm/ipo-upload/upload-data';
+import { DataResponse, ImportDataItem } from '@/services/shared/data';
+import UploadData from '@/pages/hrm/ios-upload/upload-data';
 import { ActionType } from '@ant-design/pro-components';
 import { EmployeeListItem } from '@/pages/hrm/data';
 import { EmployeeServices } from '@/pages/hrm/services';
@@ -50,6 +50,10 @@ const Index = () => {
       },
     });
   }
+
+  console.log(filter);
+
+
   return (
     <>
       <PageWrapper<EmpISOData, EmpISOSearchParams, undefined>
@@ -98,12 +102,24 @@ const Index = () => {
               }}
             />
           ],
+          onFilter(params, page, sort) {
+            setFilter({
+              criteria: params,
+              pagination: {
+                pageSize: page.pageSize,
+                page: page.current,
+              }
+            })
+          },
           props: {
             dataSource: data?.items || [],
             toolbar: {
             },
             loading: isLoading,
             rowKey: "employeeId",
+            pagination: {
+              total: data?.total,
+            },
             columns: [
               { title: "#", render: (_, __, index) => index + 1 },
               { title: "Employee Id", dataIndex: "empNo" },

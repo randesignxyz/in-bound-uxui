@@ -51,7 +51,6 @@ const Index = () => {
     });
   }
 
-  console.log(filter);
 
 
   return (

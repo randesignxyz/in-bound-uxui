@@ -48,7 +48,7 @@ const IPODetail: React.FC<Props> = ({ id }) => {
         <Space direction="vertical" size="middle" style={{ width: '100%', }}>
             <Spin spinning={isFetching}>
                 {/* Workflow Steps */}
-                <Card size="small">
+                {/* <Card size="small">
                     <Steps
                         current={
                             data?.activities?.some((o: { action: string; }) => o.action?.trim().toUpperCase() === "DRAFTED") ? 0 :
@@ -87,7 +87,7 @@ const IPODetail: React.FC<Props> = ({ id }) => {
                             }
                         ]}
                     />
-                </Card>
+                </Card> */}
 
                 {/* Main Content Areas */}
                 <Flex gap={16} align="start" wrap="wrap">

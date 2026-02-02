@@ -17,7 +17,7 @@ import Section1Form from "./Section1Form"
 
 
 interface Props {
-    actions: { name: string, id: number }[];
+    actions?: { name: string, id: number }[];
     id?: number;
 }
 
@@ -32,7 +32,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
 
 
 
-    const [section1, setSection1] = useState<IosSection1Params[]>(Array.from({ length: 4 }).map((_, i) => ({
+    const [section1, setSection1] = useState<IosSection1Params[]>(Array.from({ length: 8 }).map((_, i) => ({
         key: (i + 1).toString(),
         id: i + 1,
         iosEmpRequestId: null,
@@ -58,6 +58,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
         develop: '',
     })));
 
+
     const { data: lookup, isFetching, refetch } = useQuery({
         queryKey: ["master-data"],
         queryFn: () => DataSetupService.listDataSetup({ criteria: { advanceSearch: { code: ["OBJECTIVES", "ACTION-PLAN", "KPI"] } } }).query(requestAction),
@@ -66,8 +67,8 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
 
     const { data: iosData, isFetching: iosFetching, refetch: iosRefetch } = useQuery({
         queryKey: ["ios-data", id],
-        queryFn: () => IOSService.detail({ id: id }),
-        refetchOnWindowFocus: false
+        queryFn: () => IOSService.detail({ id: id }).query(requestAction),
+        refetchOnWindowFocus: false,
     });
 
     const onSave = async (type: string | "Draft" | "Submit") => {
@@ -90,7 +91,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                         section3: section3
                     }
                 }
-                if (actions.length <= 0) {
+                if ((actions?.length ?? 0) <= 0) {
                     const res = await IOSService.save(entry)(requestAction);
                     if (res.id == 0 || res.id == undefined) {
                         message.error(res.message)
@@ -119,10 +120,17 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
         ;
 
 
+    // useEffect(() => {
+
+    //     detail && setSection2(detail?.initData?.section2.map((i, index) => ({ ...i, key: (index + 1).toString(), startedDate: moment().startOf('year'), dueDate: moment().endOf('year') })))
+    // }, [detail]);
+
     useEffect(() => {
-        iosData && setDetail(iosData);
-        detail && setSection2(detail?.initData?.section2.map((i, index) => ({ ...i, key: (index + 1).toString(), startedDate: moment().startOf('year'), dueDate: moment().endOf('year') })))
-    }, [detail]);
+        iosData && setDetail({ ...iosData.iosEmpRequest });
+        // iosData && setSection1(iosData.section1.map((o, index) => ({ ...o, key: (index + 1).toString() })));
+        iosData && setSection2(iosData.section2.map((o, index) => ({ ...o, dueDate: moment(o.dueDate).endOf('year'), startedDate: moment(o.startedDate).startOf('year'), key: (index + 1).toString() })));
+        // iosData && setSection3(;
+    }, [iosData])
 
 
 
@@ -160,7 +168,8 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                     <ProFormSelect
                         name={"employee"}
                         label={""}
-                        hidden={detail?.jobLevel?.toUpperCase() == "STAFF"}
+                        // hidden={detail?.jobLevel?.toUpperCase() == "STAFF"}
+                        hidden={true}
                         onChange={(e) => {
                             const obj = employee.find(o => o.id == e)
                             setDetail(obj);
@@ -187,7 +196,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                         jobLevel={detail?.jobLevelId}
                     />
                     <Section1Form
-                        dataSource={section1}
+                        dataSource={section1 ?? []}
                         onValuesChange={(values) => {
                             setSection1(values)
                         }}
@@ -196,7 +205,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
 
                     />
                     <Section2Form
-                        dataSource={section2}
+                        dataSource={section2 ?? []}
                         objective={objective}
                         actionPlan={actionPlan}
                         editableFormRef={section2Ref}

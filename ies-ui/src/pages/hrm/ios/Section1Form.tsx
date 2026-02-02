@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, Table, Flex, Button, Space, message } from 'antd';
 import type { EditableFormInstance, ProColumns } from '@ant-design/pro-components';
 import { EditableProTable, ProFormDigit } from '@ant-design/pro-components';
@@ -27,6 +27,14 @@ interface Props {
 }
 
 const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesChange, editableFormRef, weighTage }) => {
+
+    console.log(dataSource);
+
+    const totalWeight = useMemo(() => {
+        return numeral(
+            (dataSource ?? []).reduce((acc, item) => acc + (item?.weight ?? 0), 0)
+        ).format("0.00");
+    }, [dataSource]);
 
     const columns: ProColumns<IosSection1Params>[] = [
         {
@@ -105,7 +113,7 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             }
         },
         {
-            title: `WEIGHT (${numeral(dataSource?.reduce((acc, item) => acc + (item?.weight ?? 0), 0))?.format('0.00')}%)`,
+            title: `WEIGHT (${totalWeight}%)`,
             dataIndex: 'weight',
             key: 'weight',
             width: 20,
@@ -288,18 +296,19 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                     value={dataSource}
                     // onDataSourceChange={onValuesChange}
                     onValuesChange={async (values) => {
-                        const wieght = values.reduce((total, item) => total + (item.weight || 0), 0);
+                        const wieght = values?.reduce((total, item) => total + (item.weight || 0), 0);
                         if (wieght > 100) {
                             message.error('Weightage should not be more than 100');
                             return;
                         }
                         onValuesChange?.(values)
                     }}
-                    recordCreatorProps={{
-                        newRecordType: 'dataSource',
-                        position: 'bottom',
-                        record: () => ({ key: Date.now().toString() } as IosSection1Params),
-                    }}
+                    // recordCreatorProps={{
+                    //     newRecordType: 'dataSource',
+                    //     position: 'bottom',
+                    //     record: () => ({ key: Date.now().toString() } as IosSection1Params),
+                    // }}
+                    recordCreatorProps={false}
                     editable={{
                         type: 'multiple',
                         editableKeys: dataSource?.map((item) => item.key),
@@ -328,10 +337,10 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                         });
 
                         // Weighted calc
-                        const weightedSelfEval = pageData.reduce((acc, curr) => acc + (Number(curr.selfEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
+                        const weightedSelfEval = pageData?.reduce((acc, curr) => acc + (Number(curr.selfEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
                         const finalSelfEval = weightedSelfEval * (weighTage || 0); // =SUMPRODUCT(J28:J31,$F$28:$F$31)*70%
 
-                        const weightedYearEnd = pageData.reduce((acc, curr) => acc + (Number(curr.mEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
+                        const weightedYearEnd = pageData?.reduce((acc, curr) => acc + (Number(curr.mEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
                         const finalYearEnd = weightedYearEnd * (weighTage || 0);
 
                         return (

@@ -1,4 +1,4 @@
-import { Button, Flex, message, Modal, Space } from "antd"
+import { Button, Flex, message, Modal, Space, Spin } from "antd"
 import IPOHeaderForm from "./IOSHeaderForm"
 import Section2Form from "./Section2Form"
 import Section3Form from "./Section3Form"
@@ -84,7 +84,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                 const entry: IosRequestPayload = {
                     ...dataForm,
                     iosMasterListId: detail?.id,
-                    id: iosData?.id,
+                    id: id,
                     action: type,
                     payload: {
                         section1: section1.map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
@@ -118,9 +118,9 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
     const objective = lookup?.find(i => i.code === "OBJECTIVES")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
     const kpi = lookup?.find(i => i.code === "KPI")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
 
-    const section1Weightage = detail?.initData?.weighTage?.find(i => i.section == "1" && i.jobLevelId == detail?.jobLevelId)?.weight;
-    const section2Weightage = detail?.initData?.weighTage?.find(i => i.section == "2" && i.jobLevelId == detail?.jobLevelId)?.weight
-        ;
+    // const section1Weightage = detail?.initData?.weighTage?.find(i => i.section == "1" && i.jobLevelId == detail?.jobLevelId)?.weight;
+    // const section2Weightage = detail?.initData?.weighTage?.find(i => i.section == "2" && i.jobLevelId == detail?.jobLevelId)?.weight
+    //     ;
 
 
     // useEffect(() => {
@@ -131,7 +131,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
     useEffect(() => {
         iosData && setDetail({ ...iosData.iosEmpRequest });
         // iosData && setSection1(iosData.section1.map((o, index) => ({ ...o, key: (index + 1).toString() })));
-        iosData && setSection2(iosData.section2.map((o, index) => ({ ...o, dueDate: moment(o.dueDate ?? undefined).endOf('year'), startedDate: moment(o.startedDate ?? undefined).startOf('year'), key: (index + 1).toString() })));
+        iosData && setSection2(iosData.section2.map((o, index) => ({ ...o, dueDate: moment(o.dueDate ?? undefined).endOf('year'), startedDate: moment(o.startedDate ?? undefined).startOf('year'), key: (index + 1).toString(), weight: o.weight == 0 ?? undefined })));
         // iosData && setSection3(;
     }, [iosData])
 
@@ -139,94 +139,96 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
 
     return (
         <>
-            <ProForm
-                form={form}
-                submitter={{
-                    render: () => {
-                        return (
-                            <FooterToolbar portalDom={false}>
-                                <Button type="default" danger>Cancel</Button>
-                                {
-                                    actions?.map(action => {
-                                        return (
-                                            <Button key={action.code} type="primary"
-                                                onClick={() => onSave(action.name)}
-                                            >{action.name}</Button>
-                                        )
-                                    }) ?? <Space><Button type="dashed"
-                                        onClick={() => onSave("DRAFTED")}
-                                    > Save as Draft</Button>
-                                        <Button type="primary"
-                                            onClick={() => onSave("SUBMITTED")}
-                                        >Submit</Button></Space>
+            <Spin spinning={iosFetching}>
+                <ProForm
+                    form={form}
+                    submitter={{
+                        render: () => {
+                            return (
+                                <FooterToolbar portalDom={false}>
+                                    <Button type="default" danger>Cancel</Button>
+                                    {
+                                        actions?.map(action => {
+                                            return (
+                                                <Button key={action.code} type="primary"
+                                                    onClick={() => onSave(action.name)}
+                                                >{action.name}</Button>
+                                            )
+                                        }) ?? <Space><Button type="dashed"
+                                            onClick={() => onSave("DRAFTED")}
+                                        > Save as Draft</Button>
+                                            <Button type="primary"
+                                                onClick={() => onSave("SUBMITTED")}
+                                            >Submit</Button></Space>
+                                    }
+
+                                </FooterToolbar>
+                            )
+                        }
+                    }}
+                >
+                    {/* <Card size="small" > */}
+                    <Flex vertical gap={16}>
+                        <ProFormSelect
+                            name={"employee"}
+                            label={""}
+                            // hidden={detail?.jobLevel?.toUpperCase() == "STAFF"}
+                            hidden={true}
+                            onChange={(e) => {
+                                const obj = employee.find(o => o.id == e)
+                                setDetail(obj);
+                            }}
+                            showSearch
+                            request={async ({ keyword }) => {
+                                const data = await EmployeeIOSAPI.page({
+                                    criteria: { searchValue: keyword }
+                                }).query(requestAction)
+
+                                if (data) {
+                                    setEmployee(data)
+                                    if (data.length === 1) {
+                                        const item = data[0];
+                                        form.setFieldValue("employee", item.id)
+                                        setDetail(item)
+                                    }
                                 }
+                                return data?.map((p) => ({ value: p.id, label: p.empName }))
+                            }}
+                        />
+                        <IPOHeaderForm
+                            basiceInfo={detail}
+                            jobLevel={detail?.jobLevelId}
+                        />
+                        <Section1Form
+                            dataSource={section1 ?? []}
+                            onValuesChange={(values) => {
+                                setSection1(values)
+                            }}
+                            weighTage={iosData?.weightageSection1 ?? 0}
+                            editableFormRef={section1Ref}
 
-                            </FooterToolbar>
-                        )
-                    }
-                }}
-            >
-                {/* <Card size="small" > */}
-                <Flex vertical gap={16}>
-                    <ProFormSelect
-                        name={"employee"}
-                        label={""}
-                        // hidden={detail?.jobLevel?.toUpperCase() == "STAFF"}
-                        hidden={true}
-                        onChange={(e) => {
-                            const obj = employee.find(o => o.id == e)
-                            setDetail(obj);
-                        }}
-                        showSearch
-                        request={async ({ keyword }) => {
-                            const data = await EmployeeIOSAPI.page({
-                                criteria: { searchValue: keyword }
-                            }).query(requestAction)
-
-                            if (data) {
-                                setEmployee(data)
-                                if (data.length === 1) {
-                                    const item = data[0];
-                                    form.setFieldValue("employee", item.id)
-                                    setDetail(item)
-                                }
-                            }
-                            return data?.map((p) => ({ value: p.id, label: p.empName }))
-                        }}
-                    />
-                    <IPOHeaderForm
-                        basiceInfo={detail}
-                        jobLevel={detail?.jobLevelId}
-                    />
-                    <Section1Form
-                        dataSource={section1 ?? []}
-                        onValuesChange={(values) => {
-                            setSection1(values)
-                        }}
-                        weighTage={iosData?.weightageSection1 ?? 0}
-                        editableFormRef={section1Ref}
-
-                    />
-                    <Section2Form
-                        dataSource={section2 ?? []}
-                        objective={objective}
-                        actionPlan={actionPlan}
-                        editableFormRef={section2Ref}
-                        kpi={kpi}
-                        weighTage={iosData?.weightageSection2 ?? 0}
-                        onValueChange={(values) => {
-                            setSection2(values)
-                        }} />
-                    <Section3Form
-                        dataSource={section3}
-                        onValueChange={(values) => {
-                            setSection3(values)
-                        }}
-                    // finalScore={section1.reduce((acc, item) => acc + (item.se || 0), 0) + section2.reduce((acc, item) => acc + (item.weight || 0), 0)}
-                    />
-                </Flex>
-            </ProForm>
-            {/* </Card> */}
+                        />
+                        <Section2Form
+                            dataSource={section2 ?? []}
+                            objective={objective}
+                            actionPlan={actionPlan}
+                            editableFormRef={section2Ref}
+                            kpi={kpi}
+                            weighTage={iosData?.weightageSection2 ?? 0}
+                            onValueChange={(values) => {
+                                setSection2(values)
+                            }} />
+                        <Section3Form
+                            dataSource={section3}
+                            onValueChange={(values) => {
+                                setSection3(values)
+                            }}
+                        // finalScore={section1.reduce((acc, item) => acc + (item.se || 0), 0) + section2.reduce((acc, item) => acc + (item.weight || 0), 0)}
+                        />
+                    </Flex>
+                </ProForm>
+                {/* </Card> */}
+            </Spin>
         </>
     )
 }

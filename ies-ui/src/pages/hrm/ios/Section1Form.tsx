@@ -125,12 +125,10 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
 
             },
             fieldProps: {
-                // step: 0.1,
-                // precision: 1,
                 rows: 6,
                 suffix: "%",
                 controls: false,
-                placeholder: "0.1",
+                placeholder: "1",
                 style: {
                     textAlign: 'right',
                     width: 65
@@ -197,15 +195,16 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             dataIndex: 'selfEvaluation',
             key: 'selfEvaluation',
             width: 20,
+
             align: 'center',
             valueType: 'digit',
             initialValue: moment().startOf('year'),
             onHeaderCell: () => ({
                 style: { backgroundColor: '#ddebf7', fontSize: 12 }
             }),
-            formItemProps: {
-                rules: [{ type: 'number', min: 1, max: 5, message: 'Please enter 1-5' },],
-            },
+            // formItemProps: {
+            //     rules: [{ type: 'number', min: 1, max: 5, message: 'Please enter 1-5' },],
+            // },
             fieldProps: {
                 precision: 0,
                 step: 1,
@@ -229,14 +228,6 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                 style: { backgroundColor: '#ddebf7', fontSize: 12 }
             }),
             formItemProps: {
-                // rules: [
-                //     {
-                //         // pattern: /^\f+$/,
-                //         min: 0.1,
-                //         max: 100,
-                //         message: 'Please enter a valid number',
-                //     },
-                // ],
             },
             fieldProps: {
                 min: 0,

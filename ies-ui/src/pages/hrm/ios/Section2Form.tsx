@@ -201,17 +201,16 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             align: 'center',
             valueType: "digit",
             formItemProps: {
-                rules: [
-                    { required: true, message: 'Please enter weight' },
-                    { type: 'number', min: 0.1, max: 100, message: 'Please enter 0.1% - 100%' }
-                ],
+                // rules: [
+                //     // { required: true, message: 'Please enter weight' },
+                //     { type: 'number', min: 1, max: 100, message: 'Please enter 1% - 100%' }
+                // ],
 
             },
             fieldProps: {
-                rows: 6,
                 suffix: "%",
                 controls: false,
-                placeholder: "0.1",
+                placeholder: "1",
                 style: {
                     textAlign: 'right',
                     width: 65
@@ -270,12 +269,12 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             valueType: 'digit',
             formItemProps: {
                 rules: [
-                    { required: true, message: 'Please enter self evaluation' },
+                    // { required: true, message: 'Please enter self evaluation' },
                     { type: 'number', min: 1, max: 5, message: 'Please enter 1-5' },],
             },
             fieldProps: {
-                precision: 0,
-                step: 1,
+                // precision: 0,
+                // step: 1,
                 controls: false,
                 placeholder: "0",
                 style: {
@@ -298,11 +297,11 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             onHeaderCell: () => ({
                 style: { backgroundColor: '#ddebf7' },
             }),
-            formItemProps: {
-                rules: [
-                    { type: 'number', min: 1, max: 5, message: 'Please enter 1-5' }
-                ]
-            },
+            // formItemProps: {
+            //     rules: [
+            //         { type: 'number', min: 1, max: 5, message: 'Please enter 1-5' }
+            //     ]
+            // },
             fieldProps: {
                 min: 1,
                 max: 5,            // logical limit
@@ -346,7 +345,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             <div style={{ backgroundColor: '#bf9000', padding: '8px 16px', color: 'white' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '16px' }}>
                     <span>SECTION II: "HOW" PART (APPROACH/BEHAVIORS)</span>
-                    <span>(Weightage: {numeral(weighTage * 100)?.format('0.00')}%)</span>
+                    <span>(Weightage: {numeral(weighTage * 100)?.format('0')}%)</span>
                 </div>
             </div>
             <div style={{ fontSize: '12px', fontStyle: 'italic', marginTop: '4px' }}>
@@ -361,8 +360,6 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 className={"thin-scrollbar-cust"}
                 editableFormRef={editableFormRef}
                 onValuesChange={(values) => {
-                    console.log(values);
-
                     const wieght = values.reduce((total, item) => total + (item.weight || 0), 0);
 
                     if (wieght > 100) {
@@ -416,7 +413,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                     return (
                         <Table.Summary.Row style={{ backgroundColor: '#d9d9d9', fontWeight: 'bold' }}>
                             <Table.Summary.Cell index={0} colSpan={3} align="right" >
-                                Section II: Average Score x {numeral(weighTage * 100)?.format('0.00')}%
+                                Section II: Average Score x {numeral(weighTage * 100)?.format('0')}%
                             </Table.Summary.Cell>
                             <Table.Summary.Cell index={1} colSpan={6} align="right">
                                 {finalSelfEval.toFixed(2)}

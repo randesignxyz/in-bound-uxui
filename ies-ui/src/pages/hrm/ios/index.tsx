@@ -25,16 +25,16 @@ export default () => {
     return (
         <PageWrapper
             tabRender={(item) => [
+                // {
+                //     tabKey: "add",
+                //     tabLabel: "Add IOS",
+                //     action: "add",
+                //     actionLabel: "Add IOS",
+                //     panel: ({ }) => <IOSForm actions={item?.iosWorkFlow?.actions} />
+                // },
                 {
-                    tabKey: "add",
-                    tabLabel: "Add IOS",
-                    action: "add",
-                    actionLabel: "Add IOS",
-                    panel: ({ }) => <IOSForm actions={item?.iosWorkFlow?.actions} />
-                },
-                {
-                    tabKey: "edit",
-                    tabLabel: "Edit IOS",
+                    tabKey: item?.id?.toString(),
+                    tabLabel: `${item?.empNo} - ${item?.empName}`,
                     action: "edit",
                     actionLabel: "Edit IOS",
                     panel: ({ }) => <IOSForm id={item?.id} />
@@ -47,7 +47,7 @@ export default () => {
                     panel: ({ }) => <IOSDetail id={parseInt(item.id?.toString() || "0")} />
                 }
             ]}
-
+            // onNewRender={false}
             listView={{
                 type: "Table",
                 title: "IOS Performance Review",
@@ -86,6 +86,10 @@ export default () => {
                         {
                             title: "Position",
                             dataIndex: "jobTitle"
+                        },
+                        {
+                            title: "Function",
+                            dataIndex: "deptName"
                         },
                         {
                             title: "Date",

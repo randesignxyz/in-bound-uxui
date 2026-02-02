@@ -56,6 +56,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             onCell: () => ({ style: { backgroundColor: '#d9d9d9', fontWeight: 'bold' } }),
             editable: false,
             render(dom, entity, index, action, schema) {
+
                 return <div style={{ position: "sticky", left: 0 }}>{index + 1}</div>;
             },
         },
@@ -68,6 +69,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
+            editable: (_, record) => record.id !== 0,
             renderFormItem: (item, { record, ...rest }, form) => {
 
                 return (
@@ -94,6 +96,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                     >
                         <Input.TextArea
                             {...rest}
+
                             placeholder="Enter objective"
                             autoSize={{ minRows: 3 }}
                         />
@@ -106,6 +109,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'actionPlan',
             key: 'actionPlan',
             width: 300,
+            editable: (_, record) => record.id !== 0,
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter action plan' }]
@@ -149,6 +153,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             title: 'KPI',
             dataIndex: 'kpi',
             key: 'kpi',
+            editable: (_, record) => record.id !== 0,
             width: 300,
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
@@ -356,6 +361,8 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 className={"thin-scrollbar-cust"}
                 editableFormRef={editableFormRef}
                 onValuesChange={(values) => {
+                    console.log(values);
+
                     const wieght = values.reduce((total, item) => total + (item.weight || 0), 0);
 
                     if (wieght > 100) {
@@ -371,7 +378,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 }}
                 editable={!readOnly ? {
                     type: 'multiple',
-                    editableKeys: dataSource?.map(item => item.key),
+                    editableKeys: dataSource?.map(l => l.key),
                     actionRender: (row, config, defaultDom) => {
                         const isDelete = row.id == 0;
                         return [<Space size={0}>

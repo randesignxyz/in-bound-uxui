@@ -28,8 +28,6 @@ interface Props {
 
 const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesChange, editableFormRef, weighTage }) => {
 
-    console.log(dataSource);
-
     const totalWeight = useMemo(() => {
         return numeral(
             (dataSource ?? []).reduce((acc, item) => acc + (item?.weight ?? 0), 0)

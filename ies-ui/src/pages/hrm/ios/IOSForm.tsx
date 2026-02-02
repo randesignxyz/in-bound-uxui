@@ -34,7 +34,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
 
     const [section1, setSection1] = useState<IosSection1Params[]>(Array.from({ length: 8 }).map((_, i) => ({
         key: (i + 1).toString(),
-        id: i + 1,
+        id: 0,
         iosEmpRequestId: null,
         obj: '',
         actionPlan: '',
@@ -128,7 +128,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
     useEffect(() => {
         iosData && setDetail({ ...iosData.iosEmpRequest });
         // iosData && setSection1(iosData.section1.map((o, index) => ({ ...o, key: (index + 1).toString() })));
-        iosData && setSection2(iosData.section2.map((o, index) => ({ ...o, dueDate: moment(o.dueDate).endOf('year'), startedDate: moment(o.startedDate).startOf('year'), key: (index + 1).toString() })));
+        iosData && setSection2(iosData.section2.map((o, index) => ({ ...o, dueDate: moment(o.dueDate ?? undefined).endOf('year'), startedDate: moment(o.startedDate ?? undefined).startOf('year'), key: (index + 1).toString() })));
         // iosData && setSection3(;
     }, [iosData])
 

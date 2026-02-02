@@ -269,7 +269,7 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                 <div style={{ backgroundColor: '#bf9000', padding: '8px 16px', color: 'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '16px' }}>
                         <span>SECTION I: "WHAT" PART (RESULTS)</span>
-                        <span>(Weightage: {numeral(weighTage * 100)?.format('0.00')}%)</span>
+                        <span>(Weightage: {numeral(weighTage * 100)?.format('0')}%)</span>
                     </div>
                 </div>
                 <div style={{ fontSize: '12px', fontStyle: 'italic', marginTop: '4px' }}>
@@ -334,20 +334,21 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
 
                         return (
                             <Table.Summary.Row style={{ backgroundColor: '#d9d9d9', fontWeight: 'bold' }}>
-                                <Table.Summary.Cell index={0} colSpan={3} align="right" >
-                                    Section I: Average Score x {numeral(weighTage * 100)?.format('0.00')}%
+                                <Table.Summary.Cell index={0} colSpan={2} align="right" >
+                                    Section I: Average Score x {numeral(weighTage * 100)?.format('0')}%
                                 </Table.Summary.Cell>
                                 <Table.Summary.Cell index={1} colSpan={6} align="right">
-                                    {finalSelfEval.toFixed(2)}
+                                    {finalSelfEval?.toFixed(2)}
                                 </Table.Summary.Cell>
                                 <Table.Summary.Cell index={2} colSpan={1} align="right">
-                                    {finalYearEnd.toFixed(2)}
+                                    {finalYearEnd?.toFixed(2)}
                                     <ProFormDigit
                                         name={"finalYearEnd"}
                                         hidden
                                         initialValue={finalYearEnd}
                                     />
                                 </Table.Summary.Cell>
+                                <Table.Summary.Cell index={3} colSpan={2} align="right" />
                             </Table.Summary.Row>
                         );
                     }}

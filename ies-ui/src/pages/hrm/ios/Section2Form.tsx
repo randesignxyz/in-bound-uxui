@@ -294,6 +294,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             disable: true,
             align: 'center',
             valueType: 'digit',
+            editable: false,
             onHeaderCell: () => ({
                 style: { backgroundColor: '#ddebf7' },
             }),

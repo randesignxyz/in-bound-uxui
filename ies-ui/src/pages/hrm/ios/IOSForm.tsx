@@ -17,11 +17,10 @@ import Section1Form from "./Section1Form"
 
 
 interface Props {
-    actions?: { name: string, id: number }[];
     id?: number;
 }
 
-const IPOForm: React.FC<Props> = ({ actions, id }) => {
+const IPOForm: React.FC<Props> = ({ id }) => {
     const [form] = useForm<IosRequestPayload>();
     const [employee, setEmployee] = useState<EmployeeMasterIOS[]>([]);
     const [detail, setDetail] = useState<EmployeeMasterIOS>();
@@ -76,15 +75,17 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
         await section1Ref.current?.validateFields();
         await section2Ref.current?.validateFields();
         await section3Ref.current?.validateFields();
+        console.log(section2);
 
         Modal.confirm({
             title: "Confirmation",
             content: `Are you sure you want to ${type} this record?`,
             onOk: async () => {
+
                 const entry: IosRequestPayload = {
                     ...dataForm,
                     iosMasterListId: detail?.id,
-                    id: id,
+                    iosEmpRequestId: id,
                     action: type,
                     payload: {
                         section1: section1.map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
@@ -92,24 +93,24 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                         section3: section3
                     }
                 }
-                if ((actions?.length ?? 0) == 0) {
-                    const res = await IOSService.save({
-                        ...entry,
-                    })(requestAction);
-                    if (res.id == 0 || res.id == undefined) {
-                        message.error(res.message)
-                        return;
-                    }
-                    message.success(`${type} successfully`)
+                // if ((actions?.length ?? 0) == 0) {
+                //     const res = await IOSService.save({
+                //         ...entry,
+                //     })(requestAction);
+                //     if (res.id == 0 || res.id == undefined) {
+                //         message.error(res.message)
+                //         return;
+                //     }
+                //     message.success(`${type} successfully`)
+                // }
+                // else {
+                const res = await IOSService.update(entry)(requestAction);
+                if (res.id == 0 || res.id == undefined) {
+                    message.error(res.message)
+                    return;
                 }
-                else {
-                    const res = await IOSService.update(entry)(requestAction);
-                    if (res.id == 0 || res.id == undefined) {
-                        message.error(res.message)
-                        return;
-                    }
-                    message.success(`${type} successfully`)
-                }
+                message.success(`${type} successfully`)
+                // }
             }
         })
     }
@@ -120,7 +121,9 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
 
     // const section1Weightage = detail?.initData?.weighTage?.find(i => i.section == "1" && i.jobLevelId == detail?.jobLevelId)?.weight;
     // const section2Weightage = detail?.initData?.weighTage?.find(i => i.section == "2" && i.jobLevelId == detail?.jobLevelId)?.weight
-    //     ;
+
+    const weightageSection1 = section1?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
+    const weightageSection2 = section2?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
 
 
     // useEffect(() => {
@@ -131,7 +134,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
     useEffect(() => {
         iosData && setDetail({ ...iosData.iosEmpRequest });
         // iosData && setSection1(iosData.section1.map((o, index) => ({ ...o, key: (index + 1).toString() })));
-        iosData && setSection2(iosData.section2.map((o, index) => ({ ...o, dueDate: moment(o.dueDate ?? undefined).endOf('year'), startedDate: moment(o.startedDate ?? undefined).startOf('year'), key: (index + 1).toString(), weight: o.weight == 0 ?? undefined })));
+        iosData && setSection2(iosData.section2.map((o, index) => ({ ...o, dueDate: moment(o.dueDate ?? undefined).endOf('year'), startedDate: moment(o.startedDate ?? undefined).startOf('year'), key: (index + 1).toString(), weight: (o.weight == 0) ? undefined : o.weight })));
         // iosData && setSection3(;
     }, [iosData])
 
@@ -148,10 +151,10 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                                 <FooterToolbar portalDom={false}>
                                     <Button type="default" danger>Cancel</Button>
                                     {
-                                        actions?.map(action => {
+                                        iosData?.iosWorkFlow?.actions?.map(action => {
                                             return (
                                                 <Button key={action.code} type="primary"
-                                                    onClick={() => onSave(action.name)}
+                                                    onClick={() => onSave(action.code)}
                                                 >{action.name}</Button>
                                             )
                                         }) ?? <Space><Button type="dashed"
@@ -223,7 +226,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                             onValueChange={(values) => {
                                 setSection3(values)
                             }}
-                        // finalScore={section1.reduce((acc, item) => acc + (item.se || 0), 0) + section2.reduce((acc, item) => acc + (item.weight || 0), 0)}
+                            finalScore={((weightageSection1 ?? 0) + (weightageSection2 ?? 0))}
                         />
                     </Flex>
                 </ProForm>

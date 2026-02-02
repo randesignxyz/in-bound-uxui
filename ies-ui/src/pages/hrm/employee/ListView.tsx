@@ -37,7 +37,7 @@ export default ({ onAdd, onEdit }: Props) => {
   const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
   const [filter, setFilter] =
     useState<TableViewSearchParams<EmployeeAdvanceSearchParams>>({
-      criteria: {       
+      criteria: {
         advanceSearch: {
           keyword: undefined,
           bu: [],
@@ -89,7 +89,6 @@ export default ({ onAdd, onEdit }: Props) => {
       },
     });
   }
-
   return (
     <>
       <PageWrapper<

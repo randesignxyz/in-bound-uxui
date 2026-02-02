@@ -20,7 +20,7 @@ export const HrmPaths = {
     job: '/hrm/job',
     ios: '/hrm/ios',
     masterData: '/hrm/master-data',
-    employeeIos: '/hrm/ios/employee'
+    iosUpload: '/hrm/ios-upload',
 }
 
 export default () => {
@@ -115,7 +115,7 @@ export default () => {
             name: 'Employee',
             description: 'Employee',
             // visible: access.canAccessHREmployee,
-            link: `${HrmPaths.employeeIos}/list`,
+            link: `${HrmPaths.iosUpload}/list`,
             icon: ipoImage,
         },
     ]

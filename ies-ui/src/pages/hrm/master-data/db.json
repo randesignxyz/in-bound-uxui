@@ -40,6 +40,20 @@
     ],
     "items": [
         {
+            "id": 1769134360858.5847,
+            "mdTypeId": 1768967348517,
+            "code": "",
+            "nameEn": "",
+            "status": "ACTIVE"
+        },
+        {
+            "id": 1769134337326.8577,
+            "mdTypeId": 1768967348517,
+            "code": "",
+            "nameEn": "",
+            "status": "ACTIVE"
+        },
+        {
             "id": 1768967622539.54,
             "mdTypeId": 1768967348517,
             "code": "COMMUNICATION (HORENSO)",

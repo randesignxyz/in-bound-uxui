@@ -461,12 +461,12 @@ export default [
     component: './hrm/master-data',
   },
   {
-    path: '/hrm/ios/employee/:view/*',
-    name: 'employee',
+    path: '/hrm/ios-upload/:view/*',
+    name: 'master-data',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessHRMIPO',
-    component: './hrm/ios/employee',
+    access: 'canAccessHRMasterData',
+    component: './hrm/ios-upload',
   },
   /**********HRM>>**************/
 

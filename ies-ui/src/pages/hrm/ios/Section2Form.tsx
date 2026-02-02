@@ -75,7 +75,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={objective?.map(item => ({
-                            value: item.code,
+                            value: `${item.nameEn} ${item.descriptionEn}`,
                             label: (
                                 <div style={{
                                     whiteSpace: 'pre-wrap',
@@ -88,15 +88,6 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                 </div>
                             )
                         }))}
-                        // onSelect={(value, option) => {
-                        //     console.log(option);
-                        //     form.setFieldValue(item.dataIndex, option?.label?.props?.children);
-                        //     rest.onChange?.(option?.label?.props?.children)
-                        //     // dataSource.filter(item => item.key === record.key).map(o => ({ ...o, objectives: option?.label?.props?.children }))
-                        //     onValueChange(dataSource);
-                        //     // // 👇 force label text into TextArea
-
-                        // }}
                         filterOption={(inputValue, option) =>
                             String(option?.value).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                         }
@@ -125,8 +116,8 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={actionPlan?.map(item => ({
-                            value: item.code,
-                            // value: item.nameEn,
+                            // value: item.code,
+                            value: item.nameEn,
                             label: (
                                 <div style={{
                                     whiteSpace: 'pre-wrap',
@@ -140,13 +131,6 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                 </div>
                             )
                         }))}
-                        onSelect={(_, option) => {
-                            // 👇 force label text into TextArea
-                            form.setFieldValue(item.dataIndex, option.value);
-                        }}
-                    // filterOption={(inputValue, option) =>
-                    //     String(option?.value).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                    // }
                     >
                         <Input.TextArea
                             {...rest}
@@ -189,9 +173,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                 </div>
                             )
                         }))}
-                        filterOption={(inputValue, option) =>
-                            String(option?.value).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                        }
+
                     >
                         <Input.TextArea
                             placeholder="Enter KPI"

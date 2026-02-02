@@ -303,11 +303,12 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                         }
                         onValuesChange?.(values)
                     }}
-                    recordCreatorProps={{
-                        newRecordType: 'dataSource',
-                        position: 'bottom',
-                        record: () => ({ key: Date.now().toString() } as IosSection1Params),
-                    }}
+                    // recordCreatorProps={{
+                    //     newRecordType: 'dataSource',
+                    //     position: 'bottom',
+                    //     record: () => ({ key: Date.now().toString() } as IosSection1Params),
+                    // }}
+                    recordCreatorProps={false}
                     editable={{
                         type: 'multiple',
                         editableKeys: dataSource?.map((item) => item.key),

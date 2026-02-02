@@ -199,6 +199,8 @@ export interface Section1 {
     kpi: string;
     actionPlan: string;
     weight: number;
+    startedDate?: Moment; // ISO 8601 (Instant)
+    dueDate?: Moment;     // ISO 8601 (Instant)
 }
 export interface Section2 {
     id: number;
@@ -206,6 +208,8 @@ export interface Section2 {
     objId: number;
     objTitle: string;
     weight?: number;
+    startedDate?: Moment; // ISO 8601 (Instant)
+    dueDate?: Moment;     // ISO 8601 (Instant)
 }
 export interface Section3 {
     id?: number;

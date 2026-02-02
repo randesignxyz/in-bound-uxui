@@ -32,7 +32,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
 
 
 
-    const [section1, setSection1] = useState<IosSection1Params[]>(Array.from({ length: 4 }).map((_, i) => ({
+    const [section1, setSection1] = useState<IosSection1Params[]>(Array.from({ length: 8 }).map((_, i) => ({
         key: (i + 1).toString(),
         id: i + 1,
         iosEmpRequestId: null,
@@ -91,7 +91,7 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
                         section3: section3
                     }
                 }
-                if (actions.length <= 0) {
+                if ((actions?.length ?? 0) <= 0) {
                     const res = await IOSService.save(entry)(requestAction);
                     if (res.id == 0 || res.id == undefined) {
                         message.error(res.message)
@@ -128,8 +128,8 @@ const IPOForm: React.FC<Props> = ({ actions, id }) => {
     useEffect(() => {
         iosData && setDetail({ ...iosData.iosEmpRequest });
         // iosData && setSection1(iosData.section1.map((o, index) => ({ ...o, key: (index + 1).toString() })));
-        iosData && setSection2(iosData.section2.map((o, index) => ({ ...o, key: (index + 1).toString() })));
-        iosData && setSection3(iosData.section3.map((o, index) => ({ ...o, key: (index + 1).toString() })));
+        iosData && setSection2(iosData.section2.map((o, index) => ({ ...o, dueDate: moment(o.dueDate).endOf('year'), startedDate: moment(o.startedDate).startOf('year'), key: (index + 1).toString() })));
+        // iosData && setSection3(;
     }, [iosData])
 
 

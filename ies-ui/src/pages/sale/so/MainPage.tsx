@@ -37,7 +37,7 @@ export default () => {
                 customerType: 'Direct',
                 saleArea: [0],
                 divisionId: [0],
-                orderedDate: [moment().subtract(3, 'months'), moment()]
+                orderedDate: [moment().subtract(1, 'months'), moment()]
             }
         }
     });
@@ -47,7 +47,7 @@ export default () => {
         refetchInterval: 3600000
     })
 
-
+console.log('data?.items',data?.items)
 
     const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number, totalPending?: number) => void }>()
 
@@ -445,6 +445,7 @@ export default () => {
             salespersons={state.data?.initData?.salespersons}
             lookDataList={state.data?.initData?.lookDataList}
             onSearch={(data) => {
+                console.log('data',data)
                 setFilter(v => ({
                     ...v,
                     criteria: {
@@ -456,7 +457,7 @@ export default () => {
                         // myTask: (data.saleArea?.length > 0) ? false : data?.myTask
                     }
                 }))
-                // actionRef.current?.reload?.(true);
+                actionRef.current?.reload?.(true);
             }}
             onReset={() => {
                 setFilter(v => ({

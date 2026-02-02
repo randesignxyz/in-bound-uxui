@@ -287,11 +287,37 @@ const SaleOrderReport: React.FC<FormModalProps> = ({ ...props }) => {
               allowClear
               options={optionStatus}
             />
+            {/* <ProFormDateRangePicker
+              rules={[{ required: true }]}
+              label="Ordered Date Start-End"
+              name="orderedDate"
+            /> */}
             <ProFormDateRangePicker
               rules={[{ required: true }]}
               label="Ordered Date Start-End"
               name="orderedDate"
+              fieldProps={{
+                onCalendarChange: (dates) => {
+                  if (!dates || dates.length !== 2) return;
+                  const [start, end] = dates;
+                  if (start && end) {
+                    const diff = end.diff(start, 'month', true);
+                    if (diff > 1) {
+                      message.warning('Date range cannot exceed 1 month');
+                    }
+                  }
+                },
+                disabledDate: (current, { from }) => {
+                  if (!from) return false;
+
+                  const min = from.clone().subtract(1, 'month');
+                  const max = from.clone().add(1, 'month');
+
+                  return current.isBefore(min) || current.isAfter(max);
+                }
+              }}
             />
+
             <ProFormSelect
               mode="multiple"
               label="Salesperson"

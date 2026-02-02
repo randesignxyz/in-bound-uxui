@@ -18,8 +18,9 @@ export const HrmPaths = {
     probationEvaluation: '/hrm/probation-evaluation',
     df: '/hrm/df',
     job: '/hrm/job',
-    ipo: '/hrm/ipo',
-    masterData: '/hrm/master-data'
+    ios: '/hrm/ios',
+    masterData: '/hrm/master-data',
+    employeeIos: '/hrm/ios/employee'
 }
 
 export default () => {
@@ -92,33 +93,41 @@ export default () => {
         },
     ]
 
+    const iosItem: ListMenuItem[] = [
+        {
+            id: 'ios',
+            name: 'Performance Objectives',
+            description: 'Create, review, and endorse objectives',
+            visible: access.canAccessHRMIPO,
+            link: `${HrmPaths.ios}/list`,
+            icon: ipoImage,
+        },
+        {
+            id: 'ios',
+            name: 'Master Set Up',
+            description: 'Manage system master data',
+            visible: access.canAccessHRMasterData,
+            link: `${HrmPaths.masterData}/list`,
+            icon: ipoImage,
+        },
+        {
+            id: 'ios',
+            name: 'Employee',
+            description: 'Employee',
+            // visible: access.canAccessHREmployee,
+            link: `${HrmPaths.employeeIos}/list`,
+            icon: ipoImage,
+        },
+    ]
+
     return (
         <PageContainer title={false}>
             <ListMenuComp items={items} />
             {
                 access.canAccessHrJOB && (
                     <>
-                        <Divider orientation="left" >ISO</Divider>
-                        <ListMenuComp
-                            items={[
-                                {
-                                    id: 'ipo',
-                                    name: 'IPO',
-                                    description: 'Individule Performance Objectives',
-                                    visible: access.canAccessHRMIPO,
-                                    link: `${HrmPaths.ipo}/list`,
-                                    icon: ipoImage,
-                                },
-                                {
-                                    id: 'ipo',
-                                    name: 'Master Set Up',
-                                    description: 'Master Set Up',
-                                    visible: access.canAccessHRMasterData,
-                                    link: `${HrmPaths.masterData}/list`,
-                                    icon: ipoImage,
-                                },
-                            ]}
-                        />
+                        <Divider plain orientation="left" >Individual Objectives Setting</Divider>
+                        <ListMenuComp items={iosItem} />
                     </>
                 )
             }

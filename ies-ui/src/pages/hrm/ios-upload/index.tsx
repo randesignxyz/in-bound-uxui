@@ -74,11 +74,11 @@ const Index = () => {
         listView={{
           type: "Table",
           title: "IOS List",
-          statuses: [
-            { option: { label: "ALL", value: "ALL" } },
-            { option: { label: "Active", value: "ACTIVE", } },
-            { option: { label: "Inactive", value: "INACTIVE" } },
-          ],
+          // statuses: [
+          //   { option: { label: "ALL", value: "ALL" } },
+          //   { option: { label: "Active", value: "ACTIVE", } },
+          //   { option: { label: "Inactive", value: "INACTIVE" } },
+          // ],
           advanceSearchButton: (
             <Button
               onClick={() => setAdvanceSearchVisible(true)}
@@ -96,8 +96,7 @@ const Index = () => {
                   placeholder="Year"
                   title="Year"
                   options={[
-                    { label: "2024", value: 1 },
-                    { label: "2025", value: 2 },
+                    { label: "2026", value: 2 },
                   ]}
                   fieldProps={{
                     // value: filter.criteria?.appraisalPeriodId,

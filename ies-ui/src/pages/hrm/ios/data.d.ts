@@ -83,6 +83,7 @@ interface IosSection1Params {
 }
 
 export interface IosSection2Params {
+    initial: any;
     midYearReview: string;
     key: string;
     id: number;
@@ -219,4 +220,36 @@ export interface Section3 {
     id?: number;
     iosEmpRequestId?: number;
     [key: string]: any;
+}
+
+
+
+
+
+
+
+interface FormSetting {
+    section1: IosSection1Params;
+    section2: IosSection2Params;
+    section3: IosSection3Params;
+}
+interface FormSection1 {
+    midYear: boolean;
+    weightage: boolean;
+    selfRating: boolean;
+    yearEndRating: boolean;
+    justification: boolean;
+
+}
+interface FormSection2 {
+    midYear: boolean;
+    weightage: boolean;
+    selfRating: boolean;
+    yearEndRating: boolean;
+    justification: boolean;
+
+}
+interface FormSection3 {
+    showComment: boolean;
+
 }

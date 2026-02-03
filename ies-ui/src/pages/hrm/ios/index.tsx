@@ -1,6 +1,6 @@
 import PageWrapper from "@/components/PageWrapper";
 import IOSForm from "./IOSForm";
-import { useQuery } from "@umijs/max";
+import { history, useQuery } from "@umijs/max";
 import { IOSService } from "./service";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { useState } from "react";
@@ -44,6 +44,8 @@ export default () => {
                 listView={{
                     type: "Table",
                     title: "IOS Performance Review",
+                    onStatusRender: false,
+                    statuses: [],
                     onRefresh: refetch,
                     onFilter(params, page, sort) {
                         setFilter({
@@ -54,11 +56,11 @@ export default () => {
 
                         })
                     },
-                    statuses: [
-                        { option: { label: "Submmited", value: "Submitted" } },
-                        { option: { label: "Approved", value: "Approved" } },
-                        { option: { label: "Rejected", value: "Rejected" } }
-                    ],
+                    // statuses: [
+                    //     { option: { label: "Submmited", value: "Submitted" } },
+                    //     { option: { label: "Approved", value: "Approved" } },
+                    //     { option: { label: "Rejected", value: "Rejected" } }
+                    // ],
                     advanceSearchButton: <Button icon={<FileSearchOutlined style={{ color: filter.criteria?.advanceSearch ? "red" : "" }} />}
                         onClick={() => setAdvanceSearchState({ visible: { open: true } })}
                     />,
@@ -70,7 +72,22 @@ export default () => {
                         },
 
                         columns: [
-
+                            // {
+                            //     title: "Action",
+                            //     dataIndex: "action",
+                            //     actionProps: (item) => ({
+                            //         label: "View",
+                            //         action: "view",
+                            //         type: "view",
+                            //         onClick: () => {
+                            //             window
+                            //                 .open(
+                            //                     `/external/hrm/ios/detail/${item?.id}`,
+                            //                 )
+                            //                 ?.focus();
+                            //         }
+                            //     })
+                            // },
                             {
                                 title: "Employee ID",
                                 dataIndex: "empNo",
@@ -90,26 +107,26 @@ export default () => {
                                 dataIndex: "jobTitle"
                             },
                             {
-                                title: "Sub Function",
-                                dataIndex: "subDeptName"
+                                title: "Company",
+                                dataIndex: "buName"
                             },
+
                             {
                                 title: "Function",
                                 dataIndex: "deptName"
                             },
                             {
-                                title: "Company",
-                                dataIndex: "buName"
+                                title: "Sub Function",
+                                dataIndex: "subDeptName"
                             },
 
-                            // {
-                            //     title: "Date",
-                            //     dataIndex: "createdDate",
-                            //     valueType: "date"
-                            // },
                             {
                                 title: "Status",
                                 dataIndex: "status"
+                            },
+                            {
+                                title: "Action Required By",
+                                dataIndex: "currentActionBy"
                             }
                         ]
                     }

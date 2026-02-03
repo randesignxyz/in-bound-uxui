@@ -453,6 +453,15 @@ export default [
     component: './hrm/ios',
   },
   {
+    path: 'external/hrm/ios/detail/:id',
+    name: 'ios',
+    icon: 'UnorderedListOutlined',
+    layout: false,
+    hideInMenu: 'true',
+    access: 'canAccessHRMIOS',
+    component: './hrm/ios',
+  },
+  {
     path: '/hrm/master-data/:view/*',
     name: 'master-data',
     icon: 'UnorderedListOutlined',

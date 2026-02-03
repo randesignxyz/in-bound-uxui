@@ -13,6 +13,7 @@ import { IosRequestPayload, IosSection1Params, IosSection2Params, IosSection3Par
 import { IOSService } from "./service"
 import moment from "moment"
 import Section1Form from "./Section1Form"
+import StepActionActivity from "./employee/StepActionActivity"
 
 
 interface Props {
@@ -152,7 +153,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                                             iosData?.iosWorkFlow?.actions?.map(action => {
                                                 return (
                                                     <Space>
-                                                        <Button key={action.code} type="primary"
+                                                        <Button key={action.code} type={action.code === "DRAFTED" ? "dashed" : "primary"}
                                                             onClick={() => onSave(action.code)}
                                                         >{action.name}</Button>
                                                     </Space>
@@ -166,6 +167,26 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                     }}
                 >
                     <Flex vertical gap={16}>
+                        <StepActionActivity
+                            employeeName={iosData?.iosEmpRequest?.empName ?? ""}
+                            stepItems={{
+                                current: iosData?.iosWorkFlow?.currentLevel ?? 0,
+                                items: [
+                                    iosData?.iosEmpRequest?.empName ?? undefined,
+                                    iosData?.iosEmpRequest?.appraiser1 ?? undefined,
+                                    iosData?.iosEmpRequest?.appraiser2 ?? undefined,
+                                    "Completed"
+                                ].filter(o => o)
+                                // items: iosData?.iosEmpApprovalSteps.map(step => {
+                                //     return {
+                                //         title: step.name,
+                                //         description: step.description,
+                                //         icon: step.icon,
+                                //         status: step.status
+                                //     }
+                                // })
+                            }}
+                        />
                         <IPOHeaderForm
                             basiceInfo={detail}
                             jobLevel={detail?.jobLevelId}
@@ -178,6 +199,13 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                             readOnly={!readOnly}
                             weighTage={iosData?.weightageSection1 ?? 0}
                             editableFormRef={section1Ref}
+                            formSetting={{
+                                midYear: true,
+                                selfRating: true,
+                                yearEndRating: true,
+                                justification: true,
+                                weightage: true,
+                            }}
                         />
                         <Section2Form
                             dataSource={section2State ?? []}
@@ -189,11 +217,22 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                             weighTage={iosData?.weightageSection2 ?? 0}
                             onValueChange={(values) => {
                                 setSection2State(values)
-                            }} />
+                            }}
+                            formSetting={{
+                                midYear: true,
+                                selfRating: true,
+                                yearEndRating: true,
+                                justification: true,
+                                weightage: true,
+                            }}
+                        />
                         <Section3Form
                             dataSource={section3State}
                             onValueChange={(values) => {
                                 setSection3State(values)
+                            }}
+                            formSetting={{
+                                showComment: true
                             }}
                             readOnly={!readOnly}
                             finalScore={((weightageSection1 ?? 0) + (weightageSection2 ?? 0))}

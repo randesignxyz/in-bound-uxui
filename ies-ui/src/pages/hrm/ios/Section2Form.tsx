@@ -3,9 +3,10 @@ import { Flex, AutoComplete, Input, Table, Button, Space, message } from 'antd';
 import type { EditableFormInstance, ProColumns } from '@ant-design/pro-components';
 import { EditableProTable } from '@ant-design/pro-components';
 import { DataSetupItemEntry } from '../master-data/data';
-import { IosSection2Params } from './data';
+import { FormSection2, IosSection2Params } from './data';
 import { DeleteOutlined } from '@ant-design/icons';
 import numeral from 'numeral';
+import moment from 'moment';
 
 
 
@@ -42,10 +43,11 @@ interface Props {
     actionPlan?: DataSetupItemEntry[];
     onValueChange?: (data: any) => void;
     weighTage: number;
-    editableFormRef?: React.Ref<EditableFormInstance<IosSection2Params>> | any
+    editableFormRef?: React.Ref<EditableFormInstance<IosSection2Params>> | any;
+    formSetting: FormSection2
 }
 
-const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective, kpi, actionPlan, onValueChange, weighTage, editableFormRef }) => {
+const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective, kpi, actionPlan, onValueChange, weighTage, editableFormRef, formSetting }) => {
     const columns: ProColumns<IosSection2Params>[] = [
         {
             title: 'No.',
@@ -61,7 +63,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             },
         },
         {
-            title: 'OBJECTIVES',
+            title: 'OBJECTIVE',
             dataIndex: 'obj',
             key: 'obj',
             width: 300,
@@ -69,7 +71,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
-            editable: (_, record) => record.id !== 0,
+            editable: (_, record) => record.initial,
             renderFormItem: (item, { record, ...rest }, form) => {
 
                 return (
@@ -109,7 +111,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'actionPlan',
             key: 'actionPlan',
             width: 300,
-            editable: (_, record) => record.id !== 0,
+            editable: (_, record) => record.initial,
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter action plan' }]
@@ -149,7 +151,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             title: 'KPI',
             dataIndex: 'kpi',
             key: 'kpi',
-            editable: (_, record) => record.id !== 0,
+            editable: (_, record) => record.initial,
             width: 300,
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
@@ -190,7 +192,8 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             render: (_, record) => <div style={{ whiteSpace: 'pre-wrap' }}>{record?.kpi}</div>,
         },
         {
-            title: `WEIGHT (${numeral(dataSource?.reduce((acc, item) => acc + (item?.weight ?? 0), 0))?.format('0.00')}%)`,
+            // title: `WEIGHT (${numeral(dataSource?.reduce((acc, item) => acc + (item?.weight ?? 0), 0))?.format('0.00')}%)`,
+            title: `WEIGHT`,
             dataIndex: 'weight',
             key: 'weight',
             width: 20,
@@ -201,7 +204,6 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             fieldProps: {
                 suffix: "%",
                 controls: false,
-                placeholder: "",
                 style: {
                     textAlign: 'right',
                     width: 65
@@ -241,6 +243,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             align: 'center',
             valueType: 'select',
             editable: false,
+            hidden: formSetting?.midYear,
             valueEnum: {
                 'Completed': { text: 'Completed', status: 'Success' },
                 'On-Track': { text: 'On-Track', status: 'Processing' },
@@ -258,6 +261,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             width: 20,
             align: 'center',
             valueType: 'select',
+            hidden: formSetting?.selfRating,
             valueEnum: {
                 '1': { text: '1', status: 'Success' },
                 '2': { text: '2', status: 'Processing' },
@@ -283,6 +287,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             key: 'yearEndReview',
             width: 20,
             align: 'center',
+            hidden: formSetting?.yearEndRating,
             valueType: 'select',
             valueEnum: {
                 '1': { text: '1', status: 'Success' },
@@ -321,6 +326,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'justification',
             key: 'justification',
             width: 300,
+            hidden: formSetting?.justification,
             valueType: 'textarea',
             onHeaderCell: () => ({
                 style: { backgroundColor: '#ddebf7' }
@@ -333,6 +339,8 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
         },
     ];
 
+
+    const totalWeight = dataSource?.reduce((acc, item) => acc + (item?.weight ?? 0), 0)
 
     return (
         <Flex vertical gap={8}>
@@ -365,19 +373,28 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 recordCreatorProps={readOnly ? false : {
                     newRecordType: 'dataSource',
                     position: 'bottom',
-                    record: () => ({ key: Date.now().toString(), no: (dataSource?.length || 0) + 1 } as unknown as IosSection2Params),
+                    record: () => ({
+                        key: Date.now().toString(),
+                        no: (dataSource?.length || 0) + 1,
+                        initial: true,
+                        startedDate: moment()?.startOf('year')?.toDate(),
+                        dueDate: moment()?.endOf('year')?.toDate(),
+                    } as unknown as IosSection2Params),
+                    creatorButtonText: ' Add'
                 }}
                 editable={!readOnly ? {
                     type: 'multiple',
                     editableKeys: readOnly ? [] : dataSource?.map(l => l.key),
                     actionRender: (row, config, defaultDom) => {
+                        console.log(row);
+
                         const isDelete = row.id == 0;
                         return [<Space size={0}>
                             <Button
                                 type="link"
                                 danger
                                 icon={<DeleteOutlined />}
-                                disabled={isDelete}
+                                disabled={!row.initial}
                                 onClick={() => config?.onDelete?.(row.key, row)}
                             />
                         </Space>]
@@ -387,37 +404,45 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 bordered
                 size="small"
                 summary={(pageData) => {
-                    let totalSelfEval = 0;
-                    let totalYearEnd = 0;
-                    let count = 0;
+                    // let totalSelfEval = 0;
+                    // let totalYearEnd = 0;
+                    // let count = 0;
+                    // let totalWeight = 0;
 
-                    pageData.forEach(({ selfEvaluation, mEvaluation }) => {
-                        totalSelfEval += Number(selfEvaluation || 0);
-                        totalYearEnd += Number(mEvaluation || 0);
-                        count++;
-                    });
+                    // pageData.forEach(({ weight, selfEvaluation, mEvaluation }) => {
+                    //     totalSelfEval += Number(selfEvaluation || 0);
+                    //     totalYearEnd += Number(mEvaluation || 0);
+                    //     count++;
+                    //     totalWeight += Number(weight || 0);
+                    // });
 
-                    // Weighted calc
-                    const weightedSelfEval = pageData?.reduce((acc, curr) => acc + (Number(curr.selfEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
-                    const finalSelfEval = weightedSelfEval * (weighTage || 0); // =SUMPRODUCT(J28:J31,$F$28:$F$31)*70%
+                    // // Weighted calc
+                    // const weightedSelfEval = pageData?.reduce((acc, curr) => acc + (Number(curr.selfEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
+                    // const finalSelfEval = weightedSelfEval * (weighTage || 0); // =SUMPRODUCT(J28:J31,$F$28:$F$31)*70%
 
-                    const weightedYearEnd = pageData?.reduce((acc, curr) => acc + (Number(curr.mEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
-                    const finalYearEnd = weightedYearEnd * (weighTage || 0);
+                    // const weightedYearEnd = pageData?.reduce((acc, curr) => acc + (Number(curr.mEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
+                    // const finalYearEnd = weightedYearEnd * (weighTage || 0);
+                    // // const percentage = pageData?.reduce((acc, item) => acc + (item?.weight ?? 0), 0)
+
 
                     return (
                         <Table.Summary.Row style={{ backgroundColor: '#d9d9d9', fontWeight: 'bold' }}>
-                            <Table.Summary.Cell index={0} colSpan={3} align="right" >
-                                Section II: Average Score x {numeral(weighTage * 100)?.format('0')}%
+                            <Table.Summary.Cell index={0} colSpan={2} align="right" >
+                                Total Weight
+                                {/* Section II: Average Score x {numeral(weighTage * 100)?.format('0')}% */}
                             </Table.Summary.Cell>
-                            <Table.Summary.Cell index={1} colSpan={6} align="right">
-                                {finalSelfEval.toFixed(2)}
+                            <Table.Summary.Cell index={1} colSpan={3} align="right">
+                                {numeral(totalWeight ?? 0)?.format('0 ') + ' %'}
                             </Table.Summary.Cell>
-                            <Table.Summary.Cell index={2} colSpan={1} align="right">
-                                {/* <ProFormDigit
+                            <Table.Summary.Cell index={2} colSpan={3} align="right">
+                                {/* {finalYearEnd.toFixed(2)} */}
+                            </Table.Summary.Cell>
+                            {/* <Table.Summary.Cell index={3} colSpan={1} align="right"> */}
+                            {/* <ProFormDigit
                                     name={"finalYearEnd"}
                                 /> */}
-                                {finalYearEnd.toFixed(2)}
-                            </Table.Summary.Cell>
+                            {/* {finalYearEnd.toFixed(2)} */}
+                            {/* </Table.Summary.Cell> */}
                         </Table.Summary.Row>
                     );
                 }}

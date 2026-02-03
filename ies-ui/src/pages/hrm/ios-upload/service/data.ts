@@ -1,5 +1,4 @@
-import { Moment } from 'moment';
-import { FieldInfo } from '@/services/shared/data';
+
 
 export interface EmpISOData {
   id: number;
@@ -11,22 +10,26 @@ export interface EmpISOData {
   subDeptName: string;
   jobTitle: string;
   jobLevel: string;
+  startedDate: string;
+  probationEndDate: string;
+  appraiser1No: string;
   appraiser1: string;
+  appraiser2No: string;
   appraiser2: string;
-  status: string;
-}
-
-export type EmpISOSearchParams = {
-  searchValue?: string;
-}
-
-export type ImportDataItems = {
-  id: number
-  fieldInfoList: FieldInfo[];
-  action?: string;
+  appraiser3No: string;
+  appraiser3: string;
+  appraiser4No: string;
+  appraiser4: string;
+  appraiser5No: string;
+  appraiser5: string;
+  remark: string;
+  active: string;
 }
 
 export type IOSEmployeeSearchParams = {
-  searchValue: string;
-
+  searchValue?: string;
+  status?: string;
+  bu? : number[];
+  dept ?: number[];
 }
+

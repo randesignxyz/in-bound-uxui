@@ -14,7 +14,6 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
   const [dataValidation, setDataValidation] = useState(0)
   const [importedData, setImportedData] = useState<DataResponse<ImportDataItem>>()
   const [data, setData] = useState<ImportDataItem[]>();
-  // const [failedOnly, setFailedOnly] = useState(false)
   const [commited, setCommited] = useState(false)
   const [submited, setSubmited] = useState(false)
   const requestActions = simpleRequestActions()
@@ -62,18 +61,22 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
 
   const displayFields = [
     "Employee ID",
-    "Full Name (EN)",
+    "Full Name(EN)",
     "Company",
     "Location",
     "Function",
     "Sub-Function",
     "Position",
     "Job Level",
-    "Appraiser1",
-    "Appraiser2",
+    "StartedDate",
+    "Probation EndDate",
+    "LM1 No",
+    "LM1 Name",
+    "LM2 No",
+    "LM2/FM Name",
   ]
-  return <Modal width={1500} {...rest}
-                okText="Submit"
+  return <Modal width={1700} {...rest}
+                okText="Commit"
                 cancelText = {'Close'}
                 maskClosable= {false}
                 onOk={() => {
@@ -90,7 +93,6 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
                     content: "Are you sure?",
                     onOk: async () => {
                       try {
-                        ``
                         if (datasources) {
                           const rs = await commitImportedData<ImportDataItem>("IMPORT_EMPLOYEE_IPO", datasources.id)(requestActions)
                           setCommited(true)
@@ -123,13 +125,12 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
     </Space>
     {data&&<ProTable<ImportDataItem>
       columns={[
-        ...displayFields.map(it => renderCol(it, it == "Form No" || it == "Employee ID")),
+        ...displayFields.map(it => renderCol(it, it === "Form No" || it === "Employee ID")),
         {
           title: 'Status',
           render: (_, r) => {
             const failed = r.fieldInfoList.some(it => it.isFailed)
             return <Text type={failed ? "danger" : 'success'} >{ commited?"Commited":failed ? "Error" : r.action}</Text>
-
           }
         },
         { title: 'Message', render: (_, r) => r.fieldInfoList.filter(it => it.isFailed).map(it => `${it.fieldDisplay}: ${it.message}`).join(", ") },

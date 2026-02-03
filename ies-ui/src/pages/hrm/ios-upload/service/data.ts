@@ -27,9 +27,9 @@ export interface EmpISOData {
 }
 
 export type IOSEmployeeSearchParams = {
+  status: 'ALL' | 'ACTIVE' | 'INACTIVE';
   searchValue?: string;
-  status?: string;
-  bu? : number[];
-  dept ?: number[];
+  buIds?: number[];
+  depIds?: number[];
 }
 

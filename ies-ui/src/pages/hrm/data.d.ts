@@ -89,7 +89,7 @@ export type StaffRequisitionAdvanceSearchParams = {
 // };
 
 export type ProbationAdvanceSearchParams = {
-  status?: "ALL" | "PENDING" | "COMPLETED" | "REJECTED"; 
+  status?: "ALL" | "PENDING" | "COMPLETED" | "REJECTED";
   keyword?: string;
   pendingFilter?: sgring[];
   buIds?: number[];

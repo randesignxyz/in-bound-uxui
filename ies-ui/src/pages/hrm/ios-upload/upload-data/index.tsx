@@ -1,10 +1,8 @@
-import { toReadable } from "@/pages/utils";
-import { commitImportedData, execDataService } from "@/services/apiGateway";
+import { commitImportedData } from "@/services/apiGateway";
 import { simpleRequestActions } from "@/services/model";
-import { DataResponse, ImportDataItem, ImportDataResponse } from "@/services/shared/data"
+import { DataResponse, ImportDataItem } from "@/services/shared/data"
 import { ProColumns, ProTable } from "@ant-design/pro-components"
 import { Alert, Checkbox, Modal, ModalProps, Space, Tooltip, Typography, message } from "antd"
-import { uniqueId } from "lodash";
 import { useEffect, useState } from "react";
 const { Text } = Typography;
 

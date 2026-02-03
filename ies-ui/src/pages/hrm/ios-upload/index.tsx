@@ -12,11 +12,11 @@ import {
 } from '@ant-design/icons';
 import { useQuery } from '@umijs/max';
 import { EmpISOServiceAPI } from '@/pages/hrm/ios-upload/service/EmpISOService';
-import { Button, Flex, message, Modal, Select, Space, Typography } from 'antd';
+import { Button, Flex, message, Modal, Space } from 'antd';
 import ImportFileButton from '@/components/ImportFileButton';
 import { DataResponse, ImportDataItem } from '@/services/shared/data';
 import UploadData from '@/pages/hrm/ios-upload/upload-data';
-import { ActionType, ProFormSelect } from '@ant-design/pro-components';
+import { ActionType } from '@ant-design/pro-components';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ExportOutlined } from '@ant-design/icons';
 import AdvanceSearchDrawer from '@/pages/hrm/ios-upload/AdvanceSearchEmpIOS';
@@ -24,7 +24,6 @@ import AdvanceSearchDrawer from '@/pages/hrm/ios-upload/AdvanceSearchEmpIOS';
 const Index = () => {
   const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
   const services = EmpISOServiceAPI();
-  const [loading, setLoading] = useState(false);
   const actionRef = useRef<ActionType>();
   const [filter, setFilter] = useState<TableViewSearchParams<IOSEmployeeSearchParams>>({
     criteria: {
@@ -66,7 +65,7 @@ const Index = () => {
       onOk: async () => {
         try {
           const res = await services.DeleteEmployeeIOS(record.id);
-          message.info({ title:"",  content: res + "Employee IOS is deleted!" });
+          message.info({ content: res + "Employee IOS is deleted!" });
           refetch();
         } catch (err) {
           Modal.error({ title: "Delete failed", content: String(err) });
@@ -217,16 +216,16 @@ const Index = () => {
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          // setFilter((prev) => ({
-          //   ...prev,
-          //   criteria: {
-          //     ...prev.criteria,
-          //     buIds: [],
-          //     depIds: []
-          //   },
-          // }));
-          actionRef.current?.reloadAndRest?.();
-          // setAdvanceSearchVisible(false);
+          setFilter((prev) => ({
+            criteria: {
+              ...prev.criteria,
+              advanceSearch: {
+                buIds: [],
+                depIds: [],
+              },
+            },
+            pagination: { ...prev.pagination, current: 1 },
+          }));
         }}
       />
     </>

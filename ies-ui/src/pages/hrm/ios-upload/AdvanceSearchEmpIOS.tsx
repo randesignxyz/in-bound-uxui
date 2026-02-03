@@ -3,13 +3,14 @@ import { Drawer, DrawerProps } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import { simpleRequestActions } from "@/services/model";
 import { MultiRequest } from "@/services/apiGateway";
-import { BU, Department, EmployeeAdvanceSearchParams } from "../../hrm/data";
+import { BU, Department } from "../../hrm/data";
 import { useEffect, useState } from "react";
 import { EmployeeServices } from "../../hrm/services";
+import { IOSEmployeeSearchParams } from '@/pages/hrm/ios-upload/service/data';
 
 interface Props extends DrawerProps {
-  dataItem?: EmployeeAdvanceSearchParams;
-  onSearch: (params: EmployeeAdvanceSearchParams) => void;
+  dataItem?: IOSEmployeeSearchParams;
+  onSearch: (params: IOSEmployeeSearchParams) => void;
   onReset: () => void;
 }
 
@@ -20,7 +21,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
                                                   ...props
                                                 }) => {
   const requestActions = simpleRequestActions();
-  const [form] = useForm<EmployeeAdvanceSearchParams>();
+  const [form] = useForm<IOSEmployeeSearchParams>();
 
   const [data, setData] = useState<{
     buList: BU[];
@@ -76,7 +77,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
       >
         <ProFormSelect
           label="Company"
-          name="bu"
+          name="buIds"
           mode="multiple"
           allowClear
           placeholder="Select companies"
@@ -88,7 +89,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
 
         <ProFormSelect
           label="Function"
-          name="department"
+          name="depIds"
           mode="multiple"
           allowClear
           showSearch

@@ -19,7 +19,7 @@ import UploadData from '@/pages/hrm/ios-upload/upload-data';
 import { ActionType, ProFormSelect } from '@ant-design/pro-components';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ExportOutlined } from '@ant-design/icons';
-import AdvanceSearchDrawer from '@/pages/hrm/employee/AdvanceEmployeeSearch';
+import AdvanceSearchDrawer from '@/pages/hrm/ios-upload/AdvanceSearchEmpIOS';
 
 const Index = () => {
   const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
@@ -27,7 +27,15 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const actionRef = useRef<ActionType>();
   const [filter, setFilter] = useState<TableViewSearchParams<IOSEmployeeSearchParams>>({
-    criteria: { advanceSearch: { searchValue: 'ALL' } }
+    criteria: {
+      advanceSearch: {
+        searchValue: undefined,
+        buIds: [],
+        depIds: [],
+        status: "ALL",
+      },
+    },
+    pagination: { current: 1, pageSize: 20 },
   })
   const { data, isLoading, refetch } = useQuery(
     ["fetch_ios_emp_master_page", filter],
@@ -38,8 +46,8 @@ const Index = () => {
   const isAdvancedFiltered = () => {
     const adv = filter.criteria?.advanceSearch;
     return (
-      (adv?.bu?.length ?? 0) > 0 ||
-      (adv?.dept?.length ?? 0) > 0
+      (adv?.buIds?.length ?? 0) > 0 ||
+      (adv?.depIds?.length ?? 0) > 0
     );
   };
   const advanceSearchIcon = useMemo(() => {
@@ -58,7 +66,7 @@ const Index = () => {
       onOk: async () => {
         try {
           const res = await services.DeleteEmployeeIOS(record.id);
-          Modal.info({ title: "Delete Status", content: res.message });
+          message.info({ title:"",  content: res + "Employee IOS is deleted!" });
           refetch();
         } catch (err) {
           Modal.error({ title: "Delete failed", content: String(err) });
@@ -74,11 +82,6 @@ const Index = () => {
         listView={{
           type: "Table",
           title: "IOS List",
-          // statuses: [
-          //   { option: { label: "ALL", value: "ALL" } },
-          //   { option: { label: "Active", value: "ACTIVE", } },
-          //   { option: { label: "Inactive", value: "INACTIVE" } },
-          // ],
           advanceSearchButton: (
             <Button
               onClick={() => setAdvanceSearchVisible(true)}
@@ -87,61 +90,33 @@ const Index = () => {
           ),
           actionButtons: [
             <Space key="import-with-filter" align="center">
-              <Space size={6} align="center">
-                <Typography.Text type="secondary">
-                  Year:
-                </Typography.Text>
-                <Select
-                  width={200}
-                  placeholder="Year"
-                  title="Year"
-                  options={[
-                    { label: "2026", value: 2 },
-                  ]}
-                  fieldProps={{
-                    // value: filter.criteria?.appraisalPeriodId,
-                    onChange: (value) => {
-                      setFilter((prev) => ({
-                        ...prev,
-                        criteria: {
-                          ...prev.criteria,
-                          appraisalPeriodId: value,
-                        },
-                      }));
-                    },
-                  }}
-                />
-              </Space>
-           <ImportFileButton<ImportDataItem>
-             importedKey="IMPORT_EMPLOYEE_IPO"
-             onDataResponse={data => {
-               setImportData(data)
-             }}
-             key={"IMPORT_EMP_IOS_LIST"}
-             onHandleChange={(status) => {
-               if (status === 'done') {
-                 message.info('Data uploaded.');
-               }
-             }}
-           />
-         </Space>
-
+              <ImportFileButton<ImportDataItem>
+                importedKey="IMPORT_EMPLOYEE_IPO"
+                onDataResponse={data => {
+                  setImportData(data)
+                }}
+                key={"IMPORT_EMP_IOS_LIST"}
+                onHandleChange={(status) => {
+                  if (status === 'done') {
+                    message.info('Data uploaded.');
+                  }
+                }}
+              />
+            </Space>
           ],
           onRefresh: refetch,
-          onFilter: (params, page, sort) => {
+          onFilter: (params: any) => {
             setFilter((p) => ({
+              ...p,
               criteria: {
                 ...p.criteria,
-                ...filter.criteria,
                 searchValue: params?.searchValue,
                 advanceSearch: {
                   ...p.criteria?.advanceSearch,
-                  status: params?.status
+                  status: params?.status || p.criteria?.advanceSearch?.status,
                 },
-                sort: sort || p.criteria?.sort || {},
               },
-              pagination: page || p.pagination,
-            }))
+            }));
           },
           props: {
             dataSource: data?.items || [],
@@ -239,11 +214,19 @@ const Index = () => {
                 }
               }
             }))
-          // setAdvanceSearchParams(params);
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
+          // setFilter((prev) => ({
+          //   ...prev,
+          //   criteria: {
+          //     ...prev.criteria,
+          //     buIds: [],
+          //     depIds: []
+          //   },
+          // }));
           actionRef.current?.reloadAndRest?.();
+          // setAdvanceSearchVisible(false);
         }}
       />
     </>

@@ -68,13 +68,15 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
     "Sub-Function",
     "Position",
     "Job Level",
+    "StartedDate",
+    "Probation EndDate",
     "LM1 No",
     "LM1 Name",
     "LM2 No",
     "LM2/FM Name",
   ]
-  return <Modal width={1500} {...rest}
-                okText="Submit"
+  return <Modal width={1700} {...rest}
+                okText="Commit"
                 cancelText = {'Close'}
                 maskClosable= {false}
                 onOk={() => {

@@ -40,7 +40,7 @@ export const EmpISOServiceAPI = (requestActions?: RequestActions) => ({
       })
     )(requestActions) as Promise<Paging<EmpISOData>>,
 
-  DeleteEmployeeIOS: (id: number | string)=> singleRequest(IEmpISOService.DeleteEmpIOS(id))(requestActions) as Promise<EmpISOData>,
+  DeleteEmployeeIOS: (id: number | string)=> singleRequest(IEmpISOService.DeleteEmpIOS(id))(requestActions)
 
 });
 

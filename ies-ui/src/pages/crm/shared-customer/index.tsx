@@ -35,7 +35,7 @@ export default () => {
         <>
             <PageWrapper
                 tabRender={(item) => [
-                    access.can("CRM_SHARE","CREATE") ?
+                    access.can("CRM_SHARE", "CREATE") ?
                         {
                             tabLabel: "New",
                             action: "add",
@@ -48,7 +48,7 @@ export default () => {
                                 onView={() => { }}
                                 type="new"
                             />
-                        }:{tabKey:"",tabLabel:""},
+                        } : { tabKey: "", tabLabel: "" },
                     {
                         tabLabel: (item?.id != 0) ? item?.entityCode : moment(item?.createdDate).format("YYYY-M-D"),
                         action: "view",
@@ -118,7 +118,7 @@ export default () => {
                                     valueType: "date",
                                     actionProps: ({ entries }) => {
                                         return ({
-                                            label: [entries?.[0]?.salesperson?.code, entries?.[0]?.salesperson?.name].filter(o => o).join(" "),
+                                            label: [entries?.[0]?.salesperson?.code, entries?.[0]?.salesperson?.name].filter(o => o).join(" ") ?? "N/A",
                                             type: "view",
                                         })
                                     }
@@ -166,7 +166,7 @@ export default () => {
                                 },
                                 {
                                     title: "Action",
-                                    hidden: !access.can("CRM_SHARE","DELETE"),
+                                    hidden: !access.can("CRM_SHARE", "DELETE"),
                                     render: (_, r) => {
                                         return <Button
                                             icon={<DeleteOutlined />}

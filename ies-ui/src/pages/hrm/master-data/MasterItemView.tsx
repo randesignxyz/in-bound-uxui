@@ -73,8 +73,8 @@ export default function MasterItemView({
             // },
             render: (dom, entity) => (
                 <Space direction='vertical'>
-                    <Text>{entity.nameEn}</Text>
-                    <Text type="secondary">{entity.nameKm}</Text>
+                    <Text style={{ whiteSpace: 'pre-line' }}>{entity.nameEn}</Text>
+                    <Text type="secondary" style={{ whiteSpace: 'pre-line' }}>{entity.nameKm}</Text>
                 </Space>
             )
         },
@@ -100,8 +100,8 @@ export default function MasterItemView({
             dataIndex: 'descriptionEn',
             render: (dom, entity) => (
                 <Space direction='vertical'>
-                    <Text>{entity.descriptionEn}</Text>
-                    <Text type="secondary">{entity.descriptionKm}</Text>
+                    <Text style={{ whiteSpace: 'pre-line' }}>{entity.descriptionEn}</Text>
+                    <Text type="secondary" style={{ whiteSpace: 'pre-line' }}> {entity.descriptionKm}</Text>
                 </Space>
             )
         },

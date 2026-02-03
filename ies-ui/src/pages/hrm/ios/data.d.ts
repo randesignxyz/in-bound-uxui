@@ -212,6 +212,8 @@ export interface Section2 {
     weight?: number;
     startedDate?: Moment; // ISO 8601 (Instant)
     dueDate?: Moment;     // ISO 8601 (Instant)
+    actionPlan: string;
+    kpi: string;
 }
 export interface Section3 {
     id?: number;

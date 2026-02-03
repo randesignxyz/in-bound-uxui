@@ -79,6 +79,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                     return;
                 }
                 message.success(`${type} successfully`)
+                onCancel?.()
             }
         })
     }
@@ -90,8 +91,10 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
     const weightageSection1 = section1State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
     const weightageSection2 = section2State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
 
+    const readOnly = iosData?.iosWorkFlow?.actions?.some(action => ["DRAFTED", "SUBMITTED", "ENDORSED"].includes(action.code))
+
     const sections1 = (section1: any[]) => {
-        const filledSection1: IosSection2Params[] = Array.from({ length: 5 }, (_, index) => {
+        const filledSection1: IosSection2Params[] = Array.from({ length: readOnly ? 5 : section1?.length }, (_, index) => {
             const item = section1?.[index];
             return {
                 key: (index + 1).toString(),
@@ -132,7 +135,6 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
         iosData && sections3(iosData.section3);
     }, [iosData]);
 
-    const readOnly = iosData?.iosWorkFlow?.actions?.some(action => ["DRAFTED", "SUBMITTED", "ENDORSED"].includes(action.code))
 
     return (
         <>

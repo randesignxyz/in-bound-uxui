@@ -77,7 +77,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={objective?.map(item => ({
-                            value: `${item.nameEn} ${item.descriptionEn}`,
+                            value: `${item.nameEn}'\n'${item.descriptionEn}`,
                             label: (
                                 <div style={{
                                     whiteSpace: 'pre-wrap',
@@ -86,7 +86,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                     paddingBottom: 5,
                                     marginBottom: 5
                                 }}>
-                                    {`${item.nameEn} ${item.descriptionEn}`}
+                                    {`${item.nameEn}'\n'${item.descriptionEn}`}
                                 </div>
                             )
                         }))}
@@ -120,7 +120,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={actionPlan?.map(item => ({
-                            value: item.nameEn,
+                            value: item.descriptionEn,
                             label: (
                                 <div style={{
                                     whiteSpace: 'pre-wrap',
@@ -130,7 +130,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                     paddingBottom: 5,
                                     marginBottom: 5
                                 }}>
-                                    {item.nameEn}
+                                    {item.descriptionEn}
                                 </div>
                             )
                         }))}
@@ -161,7 +161,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={kpi?.map(item => ({
-                            value: item.nameEn,
+                            value: item.descriptionEn,
                             label: (
                                 <div style={{
                                     whiteSpace: 'pre-wrap',
@@ -170,7 +170,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                     paddingBottom: 5,
                                     marginBottom: 5
                                 }}>
-                                    {item.nameEn}
+                                    {item.descriptionEn}
                                 </div>
                             )
                         }))}

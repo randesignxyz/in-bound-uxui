@@ -449,7 +449,7 @@ export default [
     name: 'ios',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessHRMIPO',
+    access: 'canAccessHRMIOS',
     component: './hrm/ios',
   },
   {

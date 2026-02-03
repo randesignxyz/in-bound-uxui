@@ -45,8 +45,19 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
         onReset={() => onReset()}
         submitter={{
           onSubmit: async () => {
-            const data = await form.validateFields();
-            onSearch(data);
+            const values = await form.validateFields();
+
+            const payload = {
+              ...values,
+              orderedDate: values.orderedDate
+                ? [
+                  moment(values.orderedDate[0]).startOf('day').toISOString(),
+                  moment(values.orderedDate[1]).endOf('day').toISOString(),
+                ]
+                : undefined,
+            };
+
+            onSearch(payload);
           },
         }}
       >
@@ -81,7 +92,7 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
         <ProFormDateRangePicker
           label="Ordered Date Start - Ordered End"
           name="orderedDate"
-          initialValue={[moment().subtract(3, 'months'), moment()]}
+          initialValue={[moment().subtract(1, 'months'), moment()]}
         />
         <ProFormDateRangePicker label="Posted Start - Posted End" name="postedDate" />
         <ProFormCheckbox name="hasAttachment">Has Attachment</ProFormCheckbox>

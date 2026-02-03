@@ -42,7 +42,7 @@ interface Props {
     actionPlan?: DataSetupItemEntry[];
     onValueChange?: (data: any) => void;
     weighTage: number;
-    editableFormRef?: React.Ref<EditableFormInstance<IosSection2Params>>
+    editableFormRef?: React.Ref<EditableFormInstance<IosSection2Params>> | any
 }
 
 const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective, kpi, actionPlan, onValueChange, weighTage, editableFormRef }) => {
@@ -56,6 +56,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             onCell: () => ({ style: { backgroundColor: '#d9d9d9', fontWeight: 'bold' } }),
             editable: false,
             render(dom, entity, index, action, schema) {
+
                 return <div style={{ position: "sticky", left: 0 }}>{index + 1}</div>;
             },
         },
@@ -68,6 +69,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
+            editable: (_, record) => record.id !== 0,
             renderFormItem: (item, { record, ...rest }, form) => {
 
                 return (
@@ -75,7 +77,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={objective?.map(item => ({
-                            value: item.code,
+                            value: `${item.nameEn} ${item.descriptionEn}`,
                             label: (
                                 <div style={{
                                     whiteSpace: 'pre-wrap',
@@ -88,21 +90,13 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                 </div>
                             )
                         }))}
-                        // onSelect={(value, option) => {
-                        //     console.log(option);
-                        //     form.setFieldValue(item.dataIndex, option?.label?.props?.children);
-                        //     rest.onChange?.(option?.label?.props?.children)
-                        //     // dataSource.filter(item => item.key === record.key).map(o => ({ ...o, objectives: option?.label?.props?.children }))
-                        //     onValueChange(dataSource);
-                        //     // // 👇 force label text into TextArea
-
-                        // }}
                         filterOption={(inputValue, option) =>
                             String(option?.value).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                         }
                     >
                         <Input.TextArea
                             {...rest}
+
                             placeholder="Enter objective"
                             autoSize={{ minRows: 3 }}
                         />
@@ -115,6 +109,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'actionPlan',
             key: 'actionPlan',
             width: 300,
+            editable: (_, record) => record.id !== 0,
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter action plan' }]
@@ -125,8 +120,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={actionPlan?.map(item => ({
-                            value: item.code,
-                            // value: item.nameEn,
+                            value: item.nameEn,
                             label: (
                                 <div style={{
                                     whiteSpace: 'pre-wrap',
@@ -140,21 +134,11 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                 </div>
                             )
                         }))}
-                        onSelect={(_, option) => {
-                            // 👇 force label text into TextArea
-                            form.setFieldValue(item.dataIndex, option.value);
-                        }}
-                    // filterOption={(inputValue, option) =>
-                    //     String(option?.value).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                    // }
                     >
                         <Input.TextArea
                             {...rest}
                             placeholder="Enter action plan"
                             autoSize={{ minRows: 3, }}
-
-                        // bordered={false}
-
                         />
                     </AutoComplete>
                 );
@@ -165,6 +149,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             title: 'KPI',
             dataIndex: 'kpi',
             key: 'kpi',
+            editable: (_, record) => record.id !== 0,
             width: 300,
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
@@ -189,9 +174,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                 </div>
                             )
                         }))}
-                        filterOption={(inputValue, option) =>
-                            String(option?.value).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                        }
+
                     >
                         <Input.TextArea
                             placeholder="Enter KPI"
@@ -214,17 +197,11 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             align: 'center',
             valueType: "digit",
             formItemProps: {
-                rules: [
-                    { required: true, message: 'Please enter weight' },
-                    { type: 'number', min: 0.1, max: 100, message: 'Please enter 0.1% - 100%' }
-                ],
-
             },
             fieldProps: {
-                rows: 6,
                 suffix: "%",
                 controls: false,
-                placeholder: "0.1",
+                placeholder: "",
                 style: {
                     textAlign: 'right',
                     width: 65
@@ -263,6 +240,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             width: 40,
             align: 'center',
             valueType: 'select',
+            editable: false,
             valueEnum: {
                 'Completed': { text: 'Completed', status: 'Success' },
                 'On-Track': { text: 'On-Track', status: 'Processing' },
@@ -279,15 +257,15 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             key: 'selfEvaluation',
             width: 20,
             align: 'center',
-            valueType: 'digit',
-            formItemProps: {
-                rules: [
-                    { required: true, message: 'Please enter self evaluation' },
-                    { type: 'number', min: 1, max: 5, message: 'Please enter 1-5' },],
+            valueType: 'select',
+            valueEnum: {
+                '1': { text: '1', status: 'Success' },
+                '2': { text: '2', status: 'Processing' },
+                '3': { text: '3', status: 'Error' },
+                '4': { text: '4', status: 'Error' },
+                '5': { text: '5', status: 'Error' },
             },
             fieldProps: {
-                precision: 0,
-                step: 1,
                 controls: false,
                 placeholder: "0",
                 style: {
@@ -305,18 +283,22 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             key: 'yearEndReview',
             width: 20,
             align: 'center',
-            valueType: 'digit',
+            valueType: 'select',
+            valueEnum: {
+                '1': { text: '1', status: 'Success' },
+                '2': { text: '2', status: 'Processing' },
+                '3': { text: '3', status: 'Error' },
+                '4': { text: '4', status: 'Error' },
+                '5': { text: '5', status: 'Error' },
+            },
+            editable: false,
             onHeaderCell: () => ({
                 style: { backgroundColor: '#ddebf7' },
             }),
-            formItemProps: {
-                rules: [
-                    { type: 'number', min: 1, max: 5, message: 'Please enter 1-5' }
-                ]
-            },
+
             fieldProps: {
                 min: 1,
-                max: 5,            // logical limit
+                max: 5,
                 controls: false,
                 placeholder: '',
                 rules: [
@@ -357,7 +339,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             <div style={{ backgroundColor: '#bf9000', padding: '8px 16px', color: 'white' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '16px' }}>
                     <span>SECTION II: "HOW" PART (APPROACH/BEHAVIORS)</span>
-                    <span>(Weightage: {numeral(weighTage * 100)?.format('0.00')}%)</span>
+                    <span>(Weightage: {numeral(weighTage * 100)?.format('0')}%)</span>
                 </div>
             </div>
             <div style={{ fontSize: '12px', fontStyle: 'italic', marginTop: '4px' }}>
@@ -373,7 +355,6 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 editableFormRef={editableFormRef}
                 onValuesChange={(values) => {
                     const wieght = values.reduce((total, item) => total + (item.weight || 0), 0);
-                    console.log(values);
 
                     if (wieght > 100) {
                         message.error('Weightage should not be more than 100');
@@ -388,13 +369,15 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 }}
                 editable={!readOnly ? {
                     type: 'multiple',
-                    editableKeys: dataSource?.map(item => item.key),
+                    editableKeys: readOnly ? [] : dataSource?.map(l => l.key),
                     actionRender: (row, config, defaultDom) => {
+                        const isDelete = row.id == 0;
                         return [<Space size={0}>
                             <Button
                                 type="link"
                                 danger
                                 icon={<DeleteOutlined />}
+                                disabled={isDelete}
                                 onClick={() => config?.onDelete?.(row.key, row)}
                             />
                         </Space>]
@@ -424,7 +407,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                     return (
                         <Table.Summary.Row style={{ backgroundColor: '#d9d9d9', fontWeight: 'bold' }}>
                             <Table.Summary.Cell index={0} colSpan={3} align="right" >
-                                Section II: Average Score x {numeral(weighTage * 100)?.format('0.00')}%
+                                Section II: Average Score x {numeral(weighTage * 100)?.format('0')}%
                             </Table.Summary.Cell>
                             <Table.Summary.Cell index={1} colSpan={6} align="right">
                                 {finalSelfEval.toFixed(2)}

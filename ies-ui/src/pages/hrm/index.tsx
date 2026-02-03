@@ -98,7 +98,7 @@ export default () => {
             id: 'ios',
             name: 'Performance Objectives',
             description: 'Create, review, and endorse objectives',
-            visible: access.canAccessHRMIPO,
+            visible: access.can("HRM_IOS_LIST", "VIEW"),
             link: `${HrmPaths.ios}/list`,
             icon: ipoImage,
         },
@@ -106,7 +106,7 @@ export default () => {
             id: 'ios',
             name: 'Master Set Up',
             description: 'Manage system master data',
-            visible: access.canAccessHRMasterData,
+            visible: access.can("HRM_MASTER_DATA", "VIEW"),
             link: `${HrmPaths.masterData}/list`,
             icon: ipoImage,
         },
@@ -124,7 +124,7 @@ export default () => {
         <PageContainer title={false}>
             <ListMenuComp items={items} />
             {
-                access.canAccessHrJOB && (
+                access.canAccessHRMIOS && (
                     <>
                         <Divider plain orientation="left" >Individual Objectives Setting</Divider>
                         <ListMenuComp items={iosItem} />

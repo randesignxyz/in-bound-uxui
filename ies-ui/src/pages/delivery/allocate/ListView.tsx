@@ -651,6 +651,19 @@ export default () => {
     }
   };
 
+  const onSyncBySO = async (so_entry: []) => {
+    try {
+      isLoading(true)
+      await services.syncAllocateBySO(so_entry);
+      actionRef.current?.reloadAndRest?.();
+    } catch (error: any) {
+      message.error(error.message);
+      return Promise.reject(error);
+    } finally {
+      isLoading(false)
+    }
+  };
+
   const normalizeUOM = (uom: string | undefined): 'pack' | 'bowl' | null => {
     if (!uom) return null;
     const lower = uom.toLowerCase();
@@ -817,90 +830,90 @@ export default () => {
     }
   };
 
-  const onHistoryRequestDNDeatilHandler = async (
-    params: TableViewSearchParams<AllocateSOAdvanceParams>
-  ): Promise<Paging<DNList>> => {
-    try {
-      const sortBy: string[] = [];
-      const sortOrders: string[] = [];
+  // const onHistoryRequestDNDeatilHandler = async (
+  //   params: TableViewSearchParams<AllocateSOAdvanceParams>
+  // ): Promise<Paging<DNList>> => {
+  //   try {
+  //     const sortBy: string[] = [];
+  //     const sortOrders: string[] = [];
 
-      if (params?.criteria?.sort) {
-        Object.entries(params.criteria.sort).forEach(([key, value]) => {
-          sortBy.push(key);
-          sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
-        });
-      }
+  //     if (params?.criteria?.sort) {
+  //       Object.entries(params.criteria.sort).forEach(([key, value]) => {
+  //         sortBy.push(key);
+  //         sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
+  //       });
+  //     }
 
-      const res = await services.list_dn_detail({
-        criteria: {
-          ...hisSearch,
-          ...params.criteria,
-          sap_delivery_date:
-            hisSearch.sap_from_date && hisSearch.sap_to_date
-              ? null
-              : hisSearch.sap_delivery_date,
-          filterPass: 'Claimed',
-        },
-        pagination: {
-          current: params.pagination?.current ?? 1,
-          pageSize: params.pagination?.pageSize ?? 10,
-        },
-        sort: params.sort,
-      });
+  //     const res = await services.list_dn_detail({
+  //       criteria: {
+  //         ...hisSearch,
+  //         ...params.criteria,
+  //         sap_delivery_date:
+  //           hisSearch.sap_from_date && hisSearch.sap_to_date
+  //             ? null
+  //             : hisSearch.sap_delivery_date,
+  //         filterPass: 'Claimed',
+  //       },
+  //       pagination: {
+  //         current: params.pagination?.current ?? 1,
+  //         pageSize: params.pagination?.pageSize ?? 10,
+  //       },
+  //       sort: params.sort,
+  //     });
 
 
-      if (!res || !Array.isArray(res.items)) {
-        throw new Error('Unexpected response format');
-      }
+  //     if (!res || !Array.isArray(res.items)) {
+  //       throw new Error('Unexpected response format');
+  //     }
 
-      const transformedItems = res.items.map((delivery) => {
-        const skuValues: Record<string, number> = {};
+  //     const transformedItems = res.items.map((delivery) => {
+  //       const skuValues: Record<string, number> = {};
 
-        skuList.forEach((sku) => {
-          if (sku.item_category === 2) {
-            skuValues[`${sku.sku_code}_pack`] = 0;
-            skuValues[`${sku.sku_code}_bowl`] = 0;
-          } else {
-            skuValues[sku.sku_code] = 0;
-          }
-        });
+  //       skuList.forEach((sku) => {
+  //         if (sku.item_category === 2) {
+  //           skuValues[`${sku.sku_code}_pack`] = 0;
+  //           skuValues[`${sku.sku_code}_bowl`] = 0;
+  //         } else {
+  //           skuValues[sku.sku_code] = 0;
+  //         }
+  //       });
 
-        const itemsToUse =
-          delivery.mergeItems?.length > 0
-            ? delivery.mergeItems
-            : delivery.deliveryItems;
+  //       const itemsToUse =
+  //         delivery.mergeItems?.length > 0
+  //           ? delivery.mergeItems
+  //           : delivery.deliveryItems;
 
-        itemsToUse.forEach((item) => {
-          const sku = skuList.find(
-            (s) => s.id.toString() === item.sku_id
-          );
-          if (!sku) return;
+  //       itemsToUse.forEach((item) => {
+  //         const sku = skuList.find(
+  //           (s) => s.id.toString() === item.sku_id
+  //         );
+  //         if (!sku) return;
 
-          const key =
-            sku.item_category === 2
-              ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}`
-              : sku.sku_code;
+  //         const key =
+  //           sku.item_category === 2
+  //             ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}`
+  //             : sku.sku_code;
 
-          skuValues[key] += item?.qty;
-        });
+  //         skuValues[key] += item?.qty;
+  //       });
 
-        return {
-          ...delivery,
-          key: delivery.id,
-          ...skuValues,
-        };
-      });
+  //       return {
+  //         ...delivery,
+  //         key: delivery.id,
+  //         ...skuValues,
+  //       };
+  //     });
 
-      return {
-        items: transformedItems,
-        total: res.total,
-        pageSize: res.pageSize,
-      };
-    } catch (error: any) {
-      message.error(error.message);
-      return Promise.reject(error);
-    }
-  };
+  //     return {
+  //       items: transformedItems,
+  //       total: res.total,
+  //       pageSize: res.pageSize,
+  //     };
+  //   } catch (error: any) {
+  //     message.error(error.message);
+  //     return Promise.reject(error);
+  //   }
+  // };
 
   const skuColumns: ProColumns<DNList>[] = skuList.map((sku) => {
     if (sku.item_category === 1) {
@@ -1073,6 +1086,15 @@ export default () => {
       //     (b.sap_delivery_date ? dayjs(b.sap_delivery_date).unix() : 0),
       //   multiple: 4,
       // },
+    },
+    {
+      title: 'Customer Code', dataIndex: 'customer_code', width: 150, render: (_, value) => (
+        <>
+          <a>
+            <Typography.Link strong copyable >{value.customer_code}</Typography.Link>
+          </a>
+        </>
+      ),
     },
     {
       title: 'Shipping Address',
@@ -1269,6 +1291,17 @@ export default () => {
                   Unpick All
                 </Button>
                 : <></>}
+              <Button style={{ marginLeft: 10 }} type="default"
+                onClick={() => {
+                  console.log(record.data.map(v => v.so_doc_entry)),
+                    (onSyncBySO(record.data.map(v => v.so_doc_entry)))
+                }
+
+                }
+                icon={<SyncOutlined />}
+              >
+                Sync
+              </Button>
             </div>
             <Divider />
             {record?.data?.map((item: any, index: number) => (
@@ -1346,13 +1379,15 @@ export default () => {
                                     : <></>}
 
                                 </div>
-                              ) : access.canAccesAddRemarkAllocate ? (
-                                <Button type="primary"
-                                  onClick={() => handleClaim(item.id)}
-                                >
-                                  Pick
-                                </Button>
-                              ) : <></>}
+                              )
+                                //  : access.canAccesAddRemarkAllocate ? (
+                                //   <Button type="primary"
+                                //     onClick={() => handleClaim(item.id)}
+                                //   >
+                                //     Pick
+                                //   </Button>
+                                // ) 
+                                : <></>}
 
                               <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
                                 <Button onClick={() => getActivities(item.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
@@ -1829,9 +1864,11 @@ export default () => {
                           },
                         }}
                       />
-                      <Button type="text" size='large' onClick={() => onSync()}>
-                        <SyncOutlined />
-                      </Button>
+                      {access.canAccesSyncSAP &&
+                        <Button type="text" size='large' onClick={() => onSync()}>
+                          <SyncOutlined />
+                        </Button>
+                      }
                       <Button
                         type="text"
                         onClick={() => actionRef.current?.reloadAndRest?.()}
@@ -1863,7 +1900,7 @@ export default () => {
                     {/* <Radio.Button value="OV">Over View</Radio.Button>
                     <Radio.Button value="SO">Sales Order</Radio.Button> */}
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                    <Radio.Button value="HIS">History</Radio.Button>
+                    {/* <Radio.Button value="HIS">History</Radio.Button> */}
                     <Radio.Button value="MT">My Task</Radio.Button>
                     {/* <Radio.Button value="FG">FG</Radio.Button> */}
                   </Radio.Group>
@@ -1890,6 +1927,7 @@ export default () => {
           : advanceSearchParams.filter == 'DN' ?
             <TableView<DNList, { searchValue?: string }>
               displayOnly
+              scroll={{ y: 55 * 5 }}
               tableProps={{
                 actionRef: actionRef,
                 options: {
@@ -1915,7 +1953,7 @@ export default () => {
                           options={[
                             { value: 'all', label: 'ALL' },
                             { value: 'as_of_now', label: 'As Date' },
-                            { value: 'today', label: 'Today' },
+                            // { value: 'today', label: 'Today' },
                             { value: 'unplan', label: 'DOP Pending' },
                             { value: 'TBA', label: 'TBA' },
                             { value: 'walk-in', label: 'Self Pickup' },
@@ -1948,7 +1986,7 @@ export default () => {
 
                             setRouteId(routeIds);
 
-                            setDnSearch(v => ({ ...v, district_id: districtIds }));
+                            setDnSearch(v => ({ ...v, district_id: districtIds, route: routeIds }));
                             actionRef.current?.reloadAndRest?.();
                           }}
                         />
@@ -1965,7 +2003,7 @@ export default () => {
                             //  const zoneIds = zoneOptions
                             //   .filter(opt => val.includes(opt.value))
                             //   .map(opt => opt.id);
-                            setDnSearch((v) => ({ ...v, commune_id: communeIds }))
+                            setDnSearch((v) => ({ ...v, commune_id: communeIds, zone: val }))
                             // // setZoneId(zoneIds)
                             // console.log(val)
                             // setOfficerArea(val)
@@ -2110,9 +2148,11 @@ export default () => {
                         <Tooltip title="Sort"><Button type="text" size='large' onClick={() => setSortModalOpen(true)} >
                           <ColumnHeightOutlined />
                         </Button></Tooltip>
-                        <Tooltip title="Sync From SAP"><Button type="text" size='large' onClick={() => onSync()} >
-                          <SyncOutlined />
-                        </Button></Tooltip>
+                        {access.canAccesSyncSAP &&
+                          <Tooltip title="Sync From SAP"><Button type="text" size='large' onClick={() => onSync()} >
+                            <SyncOutlined />
+                          </Button></Tooltip>
+                        }
                         <Tooltip title="Dowload Excel File"><Button type="text" size='large' icon={<FileExcelOutlined />}
                           onClick={() => setExportModal({ visible: true })}
                         >
@@ -2166,7 +2206,7 @@ export default () => {
                     {/* <Radio.Button value="OV">Over View</Radio.Button>
                         <Radio.Button value="SO">Sales Order</Radio.Button> */}
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                    <Radio.Button value="HIS">History</Radio.Button>
+                    {/* <Radio.Button value="HIS">History</Radio.Button> */}
                     <Radio.Button value="MT">My Task</Radio.Button>
                   </Radio.Group>
                 </Space>
@@ -2209,11 +2249,11 @@ export default () => {
                             options={[
                               { value: 'all', label: 'ALL' },
                               { value: 'as_of_now', label: 'As Date' },
-                              { value: 'today', label: 'Today' },
+                              // { value: 'today', label: 'Today' },
                               { value: 'unplan', label: 'DOP Pending' },
                               { value: 'TBA', label: 'TBA' },
-                               { value: 'walk-in', label: 'Self Pickup' },
-                               { value: 'hold', label: 'On Hold' },
+                              { value: 'walk-in', label: 'Self Pickup' },
+                              { value: 'hold', label: 'On Hold' },
                             ]}
                             width={150}
                             showSearch
@@ -2332,9 +2372,11 @@ export default () => {
                             { value: 'force-close', label: 'Close' },
                           ]}
                         />
-                        <Button type="text" size='large' onClick={() => onSync()} >
-                          <SyncOutlined />
-                        </Button>
+                        {access.canAccesSyncSAP &&
+                          <Button type="text" size='large' onClick={() => onSync()} >
+                            <SyncOutlined />
+                          </Button>
+                        }
                         <Button
                           type="text"
                           onClick={() => actionRef.current?.reloadAndRest?.()}
@@ -2366,7 +2408,7 @@ export default () => {
                       {/* <Radio.Button value="OV">Over View</Radio.Button>
                           <Radio.Button value="SO">Sales Order</Radio.Button> */}
                       <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                      <Radio.Button value="HIS">History</Radio.Button>
+                      {/* <Radio.Button value="HIS">History</Radio.Button> */}
                       <Radio.Button value="MT">My Task</Radio.Button>
                     </Radio.Group>
                   </Space>
@@ -2557,15 +2599,20 @@ export default () => {
         title="Export Excel"
         open={exportModel.visible}
         loading={excelLoading}
+        initValues={dnSearch}
         onCancel={() => setExportModal({ visible: false })}
-        onSave={async (customer, ordered_date, request_delivery_date) => {
+        onSave={async (request_delivery_date, route, zone, province, district, commune, customer,type) => {
           const result = [
             {
               key: 'customer',
               value: customer ?? null,
               type: 'string',
             },
-
+            {
+              key: 'type',
+              value: type ?? 'as_of_now',
+              type: 'string',
+            },
             {
               key: 'request_delivery_startdate',
               value: request_delivery_date?.[0]
@@ -2580,29 +2627,40 @@ export default () => {
                 : null,
               type: 'dateTime',
             },
+            {
+              key: 'province_id',
+              value: province?.length ? province.join(',') : '',
+              type: 'string',
+            }, {
+              key: 'district_id',
+              value:
+                district?.length
+                  ? district.join(',')
+                  : route?.length
+                    ? route.join(',')
+                    : '',
+              type: 'string',
+            },
+            {
+              key: 'commune_id',
+              value:
+                commune?.length
+                  ? commune.join(',')
+                  : zone?.length
+                    ? zone.join(',')
+                    : '',
+              type: 'string',
+            }
 
-            {
-              key: 'ordered_startdate',
-              value: ordered_date?.[0]
-                ? (ordered_date[0])
-                : null,
-              type: 'dateTime',
-            },
-            {
-              key: 'ordered_enddate',
-              value: ordered_date?.[1]
-                ? (ordered_date[1])
-                : null,
-              type: 'dateTime',
-            },
           ]
+          console.log(result)
           try {
             setExcelLoading(true)
             await downloadGenericReport(requestActions)({
               fileName: `dop-${moment().format()}.xls`,
               type: 'EXCEL',
               data: {
-                reportName: 'DOPDetail',
+                reportName: 'DOP_Delivery_Detail',
                 reportPath: '/Reports/Delivery',
                 data: result,
               },

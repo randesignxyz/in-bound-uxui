@@ -174,7 +174,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
           content={
             <OrderFormView
               soDetail={state.data?.soDetail}
-              {...(access.canCreateEditSo ? { actionButtons: buttons } : {})}
+              // {...(access.canCreateEditSo ? { actionButtons: buttons } : {})}
             />
           } extra={
             access.canCreateEditSo &&

@@ -40,14 +40,12 @@ const IPOHeaderForm: React.FC<Props> = ({ basiceInfo, jobLevel }) => {
 
     return (
         <Flex vertical gap={16}>
-            {/* Section 1: Employee Information */}
             <Card size="small" title={"Employee Information"}>
                 <ProDescriptions
                     column={{ xxl: 4, xl: 4, lg: 4, md: 2, sm: 1, xs: 1 }}
                     bordered={false}
                     size="small"
                     dataSource={basiceInfo}
-                    // loading={basiceInfo ? false : true}
                     labelStyle={{
                         width: '120px'
                     }}

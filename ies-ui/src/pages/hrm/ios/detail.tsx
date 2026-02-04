@@ -160,7 +160,7 @@ const IPODetail: React.FC<Props> = ({ id }) => {
                 onBack={() => history.push("/hrm/ios/list")}
                 title={"Back"}
             >
-                <Spin spinning={iosFetching} fullscreen>
+                <Spin spinning={iosFetching} >
                     {
                         isError && <Empty description={false} /> || <>
                             <ProForm

@@ -107,3 +107,20 @@ ol {
   padding: 0 8px;
   margin-inline-end: 2px;
 }
+
+.thin-scrollbar-cust .ant-table-content {
+  scrollbar-width: thin;
+  /* Firefox */
+  // scrollbar-color: #eaeaea transparent;
+}
+
+/* Chrome / Edge / Safari */
+.thin-scrollbar-cust .ant-table-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.thin-scrollbar-cust .ant-table-content::-webkit-scrollbar-thumb {
+  background-color: #eaeaea;
+  border-radius: 6px;
+}

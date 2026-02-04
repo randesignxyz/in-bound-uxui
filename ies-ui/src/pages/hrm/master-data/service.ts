@@ -1,86 +1,49 @@
-import { MasterData, MasterDataItem } from "./data.d";
+import { TableViewSearchParams } from "@/components/DataCrud/TableView";
+import { DataSetupDTO, DataSetupItemSearchParam, DataSetupSearchParam, MasterData, MasterDataItem } from "./data.d";
+import { execDataService, execDataService0, fetchDataListService, fetchDataPagingService, queryDataPagingService } from "@/services/apiGateway";
 
-const API_URL = '/api/master-data/db';
+
 
 // --- Service to simulate Backend ---
 
-export const MasterDataService = {
+export const DataSetupService = {
+    pageDataSetup: (param?: TableViewSearchParams<any>) => fetchDataPagingService<DataSetupDTO>({
+        actionName: "data-setups",
+        endpoint: "HR",
+        payload: param?.criteria,
+    }),
+    listDataSetup: (param?: TableViewSearchParams<DataSetupSearchParam>) => fetchDataListService<DataSetupDTO>({
+        actionName: "data-setup-list",
+        endpoint: "HR",
+        payload: param?.criteria,
+    }),
+    saveDataSetup: (param: any) => execDataService0({
+        actionName: "data-setup",
+        endpoint: "HR",
+        payload: param,
+    }),
+    deleteDataSetup: (id: number) => execDataService0({
+        actionName: "data-setup-delete",
+        endpoint: "HR",
+        payload: { id }
+    }),
+    pageDataSetupItems: (param: TableViewSearchParams<DataSetupItemSearchParam>) => queryDataPagingService({
+        actionName: "data-setup-items",
+        endpoint: "HR",
+        payload: param.criteria,
+        pagination: param.pagination
+    }),
+    saveDataSetupItem: (param: any) => execDataService0({
+        actionName: "data-setup-item",
+        endpoint: "HR",
+        payload: param
+    }),
+    deleteDataSetupItem: (id: number) => execDataService0({
+        actionName: "data-setup-item-delete",
+        endpoint: "HR",
+        payload: { id }
+    }),
+}
 
-    // --- Types ---
-    getTypes: async (): Promise<MasterData[]> => {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        return data.types || [];
-    },
 
-    saveTypes: async (types: MasterData[]): Promise<void> => {
-        // We need to fetch current items to preserve them
-        const response = await fetch(API_URL);
-        const currentDb = await response.json();
 
-        await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                types: types,
-                items: currentDb.items // Preserve items
-            })
-        });
-    },
-
-    // --- Items ---
-    getItems: async (typeId: number): Promise<MasterDataItem[]> => {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        const allItems: MasterDataItem[] = data.items || [];
-
-        // Return only items for this type
-        return allItems.filter(item => item.mdTypeId === typeId);
-    },
-    getItemsByCode: async (code: string | string[]): Promise<(MasterDataItem & { typeCode?: string, typeName?: string })[]> => {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        const types: MasterData[] = data.types || [];
-
-        const codes = Array.isArray(code) ? code : [code];
-        const matchingTypes = types.filter(t => codes.includes(t.code));
-
-        if (matchingTypes.length === 0) return [];
-
-        const typeMap = new Map(matchingTypes.map(t => [t.id, t]));
-        const allItems: MasterDataItem[] = data.items || [];
-
-        return allItems
-            .filter(item => typeMap.has(item.mdTypeId))
-            .map(item => {
-                const typeInfo = typeMap.get(item.mdTypeId);
-                return {
-                    ...item,
-                    typeCode: typeInfo?.code,
-                    typeName: typeInfo?.name
-                };
-            });
-    },
-
-    saveAllItems: async (items: MasterDataItem[], typeId: number): Promise<void> => {
-        const response = await fetch(API_URL);
-        const currentDb = await response.json();
-
-        const allItems: MasterDataItem[] = currentDb.items || [];
-
-        // Remove all items of this type from the Main Store (cleanup old)
-        const otherItems = allItems.filter(item => item.mdTypeId !== typeId);
-
-        // Add the new/updated items for this type
-        const newStore = [...otherItems, ...items];
-
-        await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                types: currentDb.types, // Preserve types
-                items: newStore
-            })
-        });
-    }
-};

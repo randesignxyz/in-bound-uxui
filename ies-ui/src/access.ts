@@ -1389,7 +1389,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
 
     // ============= REACH PHEUN HRM Customer 15-01-2026 ============
-    canAccessHRMIPO: canAccess("HRM_IPO"),
+    canAccessHRM: currentUser?.authorities?.some((it: string) => it.toUpperCase().startsWith("ROLE_HRM") || it == "ROLE_ADMIN"),
+    canAccessHRMIOS: canAccess("HRM_IOS"),
     canAccessHRMasterData: canAccess("HRM_MASTER_DATA"),
 
     canAccessSALE: currentUser?.authorities?.some((it: string) => it.toUpperCase().startsWith("ROLE_SALE") || it == "ROLE_ADMIN"),

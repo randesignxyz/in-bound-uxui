@@ -5,6 +5,11 @@ export interface allocateSearch {
   date?: moment.Moment;
 }
 
+export interface myTaskSearch{
+  status?: string, 
+  startDate?: string, 
+  endDate?: string
+}
 export interface Allocate {
   id: string,
   so_entry?: string,

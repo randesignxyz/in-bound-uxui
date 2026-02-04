@@ -120,7 +120,7 @@ export interface IosSection3Params {
 export interface IosEmpRequestDetail {
     id: number;
     iosEmpRequestId: number;
-    status: "PENDING" | "APPROVED" | "REJECTED";
+    status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
 
     iosEmpRequest: IosEmpRequest;
     iosWorkFlow: IosWorkFlow;

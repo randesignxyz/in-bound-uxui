@@ -183,7 +183,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                         <StepActionActivity
                             employeeName={iosData?.iosEmpRequest?.empName ?? ""}
                             stepItems={{
-                                current: iosData?.iosWorkFlow?.currentLevel ?? 0,
+                                current: (iosData?.status == "COMPLETED") ? 4 : iosData?.iosWorkFlow?.currentLevel ?? 0,
                                 items: [
                                     iosData?.iosEmpRequest?.empName ?? undefined,
                                     iosData?.iosEmpRequest?.appraiser1 ?? undefined,

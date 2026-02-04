@@ -1,115 +1,261 @@
 
 
-import React, { useState } from 'react';
-import { Card, Steps, Typography, Flex, Space, Spin } from 'antd';
-import { UserOutlined, CheckCircleOutlined, FileDoneOutlined, SolutionOutlined } from '@ant-design/icons';
+import React, { useEffect, useRef, useState } from 'react';
+import { Flex, Space, Spin, Button, message, Modal, Empty } from 'antd';
 import IPOHeaderForm from "./IOSHeaderForm";
-import { useQuery } from '@umijs/max';
+import { useParams, useQuery } from '@umijs/max';
 import { IOSService } from './service';
 import { simpleRequestActions } from '@/services/model';
 import Section1Form from './Section1Form';
 import Section2Form from './Section2Form';
 import Section3Form from './Section3Form';
+import { ProForm, FooterToolbar, EditableFormInstance, PageContainer } from '@ant-design/pro-components';
+import { Props } from 'ahooks/lib/useControllableValue';
+import StepActionActivity from './employee/StepActionActivity';
+import { useForm } from 'antd/es/form/Form';
+import moment from 'moment';
+import { DataSetupService } from '../master-data/service';
+import { IosRequestPayload, IosSection1Params, IosSection2Params, IosSection3Params } from './data';
+import { EmployeeMasterIOS } from './employee/data';
 
 
 
 
 
 const IPODetail: React.FC<Props> = ({ id }) => {
-    const [currentStep, setCurrentStep] = useState(2); // Default to current state
-    // Determine data based on step for preview
-    // const getStepData = (step: number) => {
-    //     switch (step) {
-    //         case 0: // Draft
-    //             return { s1: draftData1, s2: draftData2, s3: draftData3, readOnly: true };
-    //         case 1: // Submitted
-    //             return { s1: submittedData1, s2: submittedData2, s3: draftData3, readOnly: true };
-    //         case 2: // Review (Current)
-    //             // Current state is editable for the reviewer
-    //             return { s1: reviewData1, s2: reviewData2, s3: draftData3, readOnly: false };
-    //         case 3: // Approved
-    //             return { s1: reviewData1, s2: reviewData2, s3: draftData3, readOnly: true };
-    //         default:
-    //             return { s1: [], s2: [], s3: [], readOnly: true };
-    //     }
-    // };
-
-    // const { s1, s2, s3, readOnly } = getStepData(currentStep);
-
-
+    const [form] = useForm<IosRequestPayload>();
+    const [detail, setDetail] = useState<EmployeeMasterIOS>();
     const requestAction = simpleRequestActions();
-    const { data, isFetching, refetch } = useQuery({
-        queryKey: ['ipo-detail', id],
-        queryFn: () => IOSService.detail({ id: id }).query(requestAction),
+    const section1Ref = useRef<EditableFormInstance<IosSection1Params>>();
+    const section2Ref = useRef<EditableFormInstance<IosSection2Params>>();
+    const section3Ref = useRef<EditableFormInstance<IosSection3Params>>();
+    const { ids } = useParams();
+
+    const [section1State, setSection1State] = useState<IosSection1Params[]>(Array.from({ length: 3 }).map((_, i) => ({
+        key: (i + 1).toString(),
+        id: i + 1,
+        iosEmpRequestId: null,
+        obj: null,
+        actionPlan: null,
+        weight: null,
+        startedDate: moment() ?? undefined,
+        dueDate: moment() ?? undefined,
+        initail: false,
+    })));
+    const [section2State, setSection2State] = useState<IosSection2Params[]>([]);
+    const [section3State, setSection3State] = useState<IosSection3Params[]>(Array.from({ length: 1 }).map((_, i) => ({
+        key: (i + 1).toString(),
+        id: i + 1,
+        iosEmpRequestId: null,
+        achieve: '',
+        strength: '',
+        develop: '',
+    })));
+
+    const { data: lookup } = useQuery({
+        queryKey: ["master-data"],
+        queryFn: () => DataSetupService.listDataSetup({ criteria: { advanceSearch: { code: ["OBJECTIVES", "ACTION-PLAN", "KPI"] } } }).query(requestAction),
+        refetchOnWindowFocus: false
+    });
+
+    const { data: iosData, isFetching: iosFetching, isError } = useQuery({
+        queryKey: ["ios-data", id],
+        queryFn: () => IOSService.detail({ id: id ?? ids }).query(requestAction),
         refetchOnWindowFocus: false,
     });
 
+    const onSave = async (type: string) => {
+        const dataForm = await form.validateFields();
+
+        // if (type !== "DRAFTED") {
+        await section1Ref.current?.validateFields();
+        await section2Ref.current?.validateFields();
+        await section3Ref.current?.validateFields();
+        // }
+
+        Modal.confirm({
+            title: "Confirmation",
+            content: `Are you sure you want to ${type} this record?`,
+            onOk: async () => {
+
+                const entry: IosRequestPayload = {
+                    ...dataForm,
+                    iosMasterListId: detail?.id,
+                    iosEmpRequestId: id,
+                    action: type,
+                    payload: {
+                        section1: section1State.filter(p => p.obj != null).map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+                        section2: section2State.map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+                        section3: section3State
+                    }
+                }
+                const res = await IOSService.update(entry)(requestAction);
+                if (res.id == 0 || res.id == undefined) {
+                    message.error(res.message)
+                    return;
+                }
+                message.success(`${type} successfully`)
+                onCancel?.()
+            }
+        })
+    }
+
+    const actionPlan = lookup?.find(i => i.code === "ACTION-PLAN")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
+    const objective = lookup?.find(i => i.code === "OBJECTIVES")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
+    const kpi = lookup?.find(i => i.code === "KPI")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
+
+    const weightageSection1 = section1State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
+    const weightageSection2 = section2State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
+
+    const readOnly = iosData?.iosWorkFlow?.actions?.some(action => ["DRAFTED", "SUBMITTED", "ENDORSED"].includes(action.code))
+
+    const sections1 = (section1: any[]) => {
+        const filledSection1: IosSection2Params[] = Array.from({ length: readOnly ? 5 : section1?.length }, (_, index) => {
+            const item = section1?.[index];
+            return {
+                key: (index + 1).toString(),
+                ...(item || {}),
+                dueDate: moment(item?.dueDate ?? moment()).endOf('year'),
+                startedDate: moment(item?.startedDate ?? moment()).startOf('year'),
+                weight: (item?.weight == 0) ? undefined : item?.weight
+            };
+        });
+        setSection1State(filledSection1);
+    }
+    const sections2 = (section2: any[]) => {
+        const filledSection2: IosSection2Params[] = section2.map((o, index) => (
+            {
+                ...o,
+                dueDate: moment(o.dueDate ?? moment()).endOf('year'),
+                startedDate: moment(o.startedDate ?? moment()).startOf('year'),
+                key: (index + 1).toString(),
+                weight: (o.weight == 0) ? undefined : o.weight
+            }
+        ));
+        setSection2State(filledSection2);
+    }
+    const sections3 = (section3: any[]) => {
+        const filledSection3: IosSection3Params[] = section3.map((o, index) => (
+            {
+                ...o,
+                key: (index + 1).toString(),
+            }
+        ));
+        setSection3State(filledSection3);
+    }
+
+    useEffect(() => {
+        iosData && setDetail({ ...iosData.iosEmpRequest as unknown as EmployeeMasterIOS });
+        iosData && sections1(iosData.section1);
+        iosData && sections2(iosData.section2);
+        iosData && sections3(iosData.section3);
+    }, [iosData]);
+
+
     return (
-        <Space direction="vertical" size="middle" style={{ width: '100%', }}>
-            <Spin spinning={isFetching}>
-                {/* Workflow Steps */}
-                {/* <Card size="small">
-                    <Steps
-                        current={
-                            data?.activities?.some((o: { action: string; }) => o.action?.trim().toUpperCase() === "DRAFTED") ? 0 :
-                                data?.activities?.some((o: { action: string; }) => o.action?.trim().toUpperCase() === "SUBMITTED") ? 1 :
-                                    data?.activities?.some((o: { action: string; }) => o.action?.trim().toUpperCase() === "REVIEW") ? 2 :
-                                        data?.activities?.some((o: { action: string; }) => o.action?.trim().toUpperCase() === "APPROVED") ? 3 : 0
-                        }
-                        size="small"
-                        // onChange={setCurrentStep} // Allow clicking steps
-                        // type="navigation"
-                        className="site-navigation-steps"
-                        items={[
-                            {
-                                title: "Draft",
-                                // description: "Employee",
-                                icon: <UserOutlined />,
-                                status: currentStep === 0 ? 'process' : 'wait'
-                            },
-                            {
-                                title: "Submitted",
-                                // description: "Employee",
-                                icon: <FileDoneOutlined />,
-                                status: currentStep === 1 ? 'process' : 'wait'
-                            },
-                            {
-                                title: "Line Manager Review",
-                                // description: "Manager",
-                                icon: <SolutionOutlined />,
-                                status: currentStep === 2 ? 'process' : 'wait'
-                            },
-                            {
-                                title: "Approved",
-                                // description: "Final",
-                                icon: <CheckCircleOutlined />,
-                                status: currentStep === 3 ? 'process' : 'wait'
-                            }
-                        ]}
-                    />
-                </Card> */}
+        <>
+            <PageContainer ghost>
+                <Spin spinning={iosFetching}>
+                    {
+                        isError && <Empty description={false} /> || <>
+                            <ProForm
+                                form={form}
+                                submitter={{
+                                    render: () => {
+                                        return (
+                                            <FooterToolbar portalDom={readOnly}>
 
-                {/* Main Content Areas */}
-                <Flex gap={16} align="start" wrap="wrap">
+                                                <Space>
+                                                    {readOnly && <Button key="cancel" type="default" danger onClick={() => onCancel?.()}>Cancel</Button>}
+                                                    {
+                                                        iosData?.iosWorkFlow?.actions?.map(action => {
+                                                            return (
+                                                                <Space>
+                                                                    <Button key={action.code} type={action.code === "DRAFTED" ? "dashed" : "primary"}
+                                                                        onClick={() => onSave(action.code)}
+                                                                    >{action.name}</Button>
+                                                                </Space>
+                                                            )
+                                                        })
+                                                    }
+                                                </Space>
+                                            </FooterToolbar>
+                                        )
+                                    }
+                                }}
+                            >
+                                <Flex vertical gap={16}>
+                                    <StepActionActivity
+                                        employeeName={iosData?.iosEmpRequest?.empName ?? ""}
+                                        stepItems={{
+                                            current: (iosData?.status == "COMPLETED") ? 4 : iosData?.iosWorkFlow?.currentLevel ?? 0,
+                                            items: [
+                                                iosData?.iosEmpRequest?.empName ?? undefined,
+                                                iosData?.iosEmpRequest?.appraiser1 ?? undefined,
+                                                iosData?.iosEmpRequest?.appraiser2 ?? undefined,
+                                                "Completed"
+                                            ].filter(o => o)
+                                        }}
+                                    />
+                                    <IPOHeaderForm
+                                        basiceInfo={detail}
+                                        jobLevel={detail?.jobLevelId}
+                                    />
+                                    <Section1Form
+                                        dataSource={section1State ?? []}
+                                        onValuesChange={(values) => {
+                                            setSection1State(values)
+                                        }}
+                                        readOnly={!readOnly}
+                                        weighTage={iosData?.weightageSection1 ?? 0}
+                                        editableFormRef={section1Ref}
+                                        formSetting={{
+                                            midYear: true,
+                                            selfRating: true,
+                                            yearEndRating: true,
+                                            justification: true,
+                                            weightage: true,
+                                        }}
+                                    />
+                                    <Section2Form
+                                        dataSource={section2State ?? []}
+                                        objective={objective}
+                                        actionPlan={actionPlan}
+                                        editableFormRef={section2Ref}
+                                        kpi={kpi}
+                                        readOnly={!readOnly}
+                                        weighTage={iosData?.weightageSection2 ?? 0}
+                                        onValueChange={(values) => {
+                                            setSection2State(values)
+                                        }}
+                                        formSetting={{
+                                            midYear: true,
+                                            selfRating: true,
+                                            yearEndRating: true,
+                                            justification: true,
+                                            weightage: true,
+                                        }}
+                                    />
+                                    <Section3Form
+                                        dataSource={section3State}
+                                        onValueChange={(values) => {
+                                            setSection3State(values)
+                                        }}
+                                        formSetting={{
+                                            showComment: true
+                                        }}
+                                        readOnly={!readOnly}
+                                        finalScore={((weightageSection1 ?? 0) + (weightageSection2 ?? 0))}
+                                    />
+                                </Flex>
+                            </ProForm>
+                        </>
 
-                    {/* Left Side - Forms */}
-                    <div style={{ flex: 1, minWidth: '600px' }}>
-                        {/* <Card size="small" title="IPO Detail"> */}
-                        <Flex vertical gap={24}>
-                            <IPOHeaderForm basiceInfo={data?.iosEmpRequest} jobLevel={data?.iosEmpRequest?.jobLevel} />
-                            <Section1Form dataSource={data?.section1} readOnly={true} weighTage={data?.iosEmpRequest?.weightage} />
-                            <Section2Form dataSource={data?.section2} readOnly={true} weighTage={data?.iosEmpRequest?.weightage} />
-                            <Section3Form dataSource={data?.section3} readOnly={true} />
-                        </Flex>
-                        {/* </Card> */}
-                    </div>
-
-                    {/* Right Side - Activity Logs & Actions */}
-
-                </Flex>
-            </Spin>
-        </Space>
-    );
+                    }
+                </Spin>
+            </PageContainer>
+        </>
+    )
 };
 
 export default IPODetail;

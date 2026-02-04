@@ -33,10 +33,6 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
         return (dataSource ?? []).length;
     }, [dataSource]);
 
-    console.log(dataSource);
-
-
-
     const columns: ProColumns<IosSection1Params>[] = [
         {
             title: 'No.',
@@ -44,8 +40,8 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             key: 'no',
             width: 20,
             align: 'center',
-            fixed: 'left',
-            onCell: () => ({ style: { backgroundColor: '#f5f4f4ff', fontWeight: 'bold' } }),
+            // fixed: 'left',
+            onCell: () => ({ style: { backgroundColor: '#f5f4f4', fontWeight: 'bold' } }),
             editable: false,
             render(dom, entity, index, action, schema) {
                 return <div style={{ left: 0 }}>{index + 1}</div>;
@@ -339,7 +335,7 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                     summary={(pageData) => {
                         const totalWeight = pageData?.reduce((acc, item) => acc + (item?.weight ?? 0), 0)
                         return (
-                            <Table.Summary.Row style={{ backgroundColor: '#d9d9d9', fontWeight: 'bold' }}>
+                            <Table.Summary.Row style={{ backgroundColor: '#f5f4f4', fontWeight: 'bold' }}>
                                 <Table.Summary.Cell index={0} colSpan={2} align="right" >
                                     Total Weight
                                 </Table.Summary.Cell>

@@ -53,13 +53,15 @@ export default () => {
                                 ...params
                             },
                             pagination: page,
-
                         })
                     },
-                    // statuses: [
-                    //     { option: { label: "Submmited", value: "Submitted" } },
-                    //     { option: { label: "Approved", value: "Approved" } },
-                    //     { option: { label: "Rejected", value: "Rejected" } }
+                    // actionButtons: [
+                    //     {
+                    //         label: "Add IOS",
+                    //         onClick: () => {
+                    //             history.push("/hrm/ios/add")
+                    //         }
+                    //     }
                     // ],
                     advanceSearchButton: <Button icon={<FileSearchOutlined style={{ color: filter.criteria?.advanceSearch ? "red" : "" }} />}
                         onClick={() => setAdvanceSearchState({ visible: { open: true } })}

@@ -29,7 +29,17 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
     const section2Ref = useRef<EditableFormInstance<IosSection2Params>>();
     const section3Ref = useRef<EditableFormInstance<IosSection3Params>>();
 
-    const [section1State, setSection1State] = useState<IosSection1Params[]>([])
+    const [section1State, setSection1State] = useState<IosSection1Params[]>(Array.from({ length: 3 }).map((_, i) => ({
+        key: (i + 1).toString(),
+        id: i + 1,
+        iosEmpRequestId: null,
+        obj: null,
+        actionPlan: null,
+        weight: null,
+        startedDate: moment() ?? undefined,
+        dueDate: moment() ?? undefined,
+        initail: false,
+    })));
     const [section2State, setSection2State] = useState<IosSection2Params[]>([]);
     const [section3State, setSection3State] = useState<IosSection3Params[]>(Array.from({ length: 1 }).map((_, i) => ({
         key: (i + 1).toString(),
@@ -52,11 +62,14 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
         refetchOnWindowFocus: false,
     });
 
-    const onSave = async (type: string | "Draft" | "Submit") => {
+    const onSave = async (type: string) => {
         const dataForm = await form.validateFields();
+
+        // if (type !== "DRAFTED") {
         await section1Ref.current?.validateFields();
         await section2Ref.current?.validateFields();
         await section3Ref.current?.validateFields();
+        // }
 
         Modal.confirm({
             title: "Confirmation",
@@ -69,7 +82,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                     iosEmpRequestId: id,
                     action: type,
                     payload: {
-                        section1: section1State.map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+                        section1: section1State.filter(p => p.obj != null).map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
                         section2: section2State.map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
                         section3: section3State
                     }
@@ -177,14 +190,6 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                                     iosData?.iosEmpRequest?.appraiser2 ?? undefined,
                                     "Completed"
                                 ].filter(o => o)
-                                // items: iosData?.iosEmpApprovalSteps.map(step => {
-                                //     return {
-                                //         title: step.name,
-                                //         description: step.description,
-                                //         icon: step.icon,
-                                //         status: step.status
-                                //     }
-                                // })
                             }}
                         />
                         <IPOHeaderForm

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Flex, AutoComplete, Input, Table, Button, Space, message } from 'antd';
 import type { EditableFormInstance, ProColumns } from '@ant-design/pro-components';
 import { EditableProTable } from '@ant-design/pro-components';
@@ -48,6 +48,10 @@ interface Props {
 }
 
 const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective, kpi, actionPlan, onValueChange, weighTage, editableFormRef, formSetting }) => {
+
+    const totalRecords = useMemo(() => {
+        return (dataSource ?? []).length;
+    }, [dataSource]);
     const columns: ProColumns<IosSection2Params>[] = [
         {
             title: 'No.',
@@ -71,7 +75,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
-            editable: (_, record) => record.initial,
+            editable: (_, record) => !(record.id == 0),
             renderFormItem: (item, { record, ...rest }, form) => {
 
                 return (
@@ -111,7 +115,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'actionPlan',
             key: 'actionPlan',
             width: 300,
-            editable: (_, record) => record.initial,
+            editable: (_, record) => !(record.id == 0),
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter action plan' }]
@@ -151,7 +155,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             title: 'KPI',
             dataIndex: 'kpi',
             key: 'kpi',
-            editable: (_, record) => record.initial,
+            editable: (_, record) => !(record.id == 0),
             width: 300,
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
@@ -204,6 +208,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             fieldProps: {
                 suffix: "%",
                 controls: false,
+                placeholder: "0",
                 style: {
                     textAlign: 'right',
                     width: 65
@@ -370,13 +375,14 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                     }
                     onValueChange?.(values)
                 }}
-                recordCreatorProps={readOnly ? false : {
+                recordCreatorProps={((totalRecords >= 7) || readOnly) ? false : {
                     newRecordType: 'dataSource',
                     position: 'bottom',
                     record: () => ({
                         key: Date.now().toString(),
                         no: (dataSource?.length || 0) + 1,
                         initial: true,
+                        id: undefined,
                         startedDate: moment()?.startOf('year')?.toDate(),
                         dueDate: moment()?.endOf('year')?.toDate(),
                     } as unknown as IosSection2Params),
@@ -386,15 +392,16 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                     type: 'multiple',
                     editableKeys: readOnly ? [] : dataSource?.map(l => l.key),
                     actionRender: (row, config, defaultDom) => {
-                        console.log(row);
 
-                        const isDelete = row.id == 0;
+                        const disable = ["1", "2", "3"].includes(row.key);
+
+
                         return [<Space size={0}>
                             <Button
                                 type="link"
                                 danger
                                 icon={<DeleteOutlined />}
-                                disabled={!row.initial}
+                                disabled={disable}
                                 onClick={() => config?.onDelete?.(row.key, row)}
                             />
                         </Space>]

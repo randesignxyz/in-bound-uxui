@@ -416,26 +416,6 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                     bordered
                     size="small"
                     summary={(pageData) => {
-                        // let totalSelfEval = 0;
-                        // let totalYearEnd = 0;
-                        // let count = 0;
-                        // let totalWeight = 0;
-
-                        // pageData.forEach(({ weight, selfEvaluation, mEvaluation }) => {
-                        //     totalSelfEval += Number(selfEvaluation || 0);
-                        //     totalYearEnd += Number(mEvaluation || 0);
-                        //     count++;
-                        //     totalWeight += Number(weight || 0);
-                        // });
-
-                        // // Weighted calc
-                        // const weightedSelfEval = pageData?.reduce((acc, curr) => acc + (Number(curr.selfEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
-                        // const finalSelfEval = weightedSelfEval * (weighTage || 0); // =SUMPRODUCT(J28:J31,$F$28:$F$31)*70%
-
-                        // const weightedYearEnd = pageData?.reduce((acc, curr) => acc + (Number(curr.mEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
-                        // const finalYearEnd = weightedYearEnd * (weighTage || 0);
-                        // // const percentage = pageData?.reduce((acc, item) => acc + (item?.weight ?? 0), 0)
-
 
                         return (
                             <Table.Summary.Row style={{ backgroundColor: '#f5f4f4', fontWeight: 'bold' }}>
@@ -449,12 +429,6 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                                 <Table.Summary.Cell index={2} colSpan={3} align="right">
                                     {/* {finalYearEnd.toFixed(2)} */}
                                 </Table.Summary.Cell>
-                                {/* <Table.Summary.Cell index={3} colSpan={1} align="right"> */}
-                                {/* <ProFormDigit
-                                    name={"finalYearEnd"}
-                                /> */}
-                                {/* {finalYearEnd.toFixed(2)} */}
-                                {/* </Table.Summary.Cell> */}
                             </Table.Summary.Row>
                         );
                     }}

@@ -1,6 +1,6 @@
 import PageWrapper from "@/components/PageWrapper";
 import IOSForm from "./IOSForm";
-import { history, useQuery } from "@umijs/max";
+import { useQuery } from "@umijs/max";
 import { IOSService } from "./service";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { useState } from "react";
@@ -8,12 +8,16 @@ import { simpleRequestActions } from "@/services/model";
 import AdvancSearch from "./AdvancSearch";
 import { Button } from "antd";
 import { FileSearchOutlined } from "@ant-design/icons";
+import { Footer } from "antd/es/layout/layout";
+import { FooterToolbar, ModalForm, ProFormTextArea } from "@ant-design/pro-components";
+import TextArea from "antd/es/input/TextArea";
 
 
 export default () => {
     const requestAction = simpleRequestActions();
     const [filter, setFilter] = useState<TableViewSearchParams<any>>({});
     const [advanceSearchState, setAdvanceSearchState] = useState<{ visible?: { open: boolean, payload?: any } }>();
+    const [batchSelectState, setBatchSelectState] = useState<{ visible?: { open?: boolean, ids?: number[], comment?: string, footer?: boolean } }>();
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['ipo-list', filter],
         queryFn: () => IOSService.page(filter).query(requestAction),
@@ -24,6 +28,7 @@ export default () => {
     })
     return (
         <>
+
             <PageWrapper
                 tabRender={(item) => [
                     {
@@ -42,6 +47,7 @@ export default () => {
                     }
                 ]}
                 listView={{
+
                     type: "Table",
                     title: "IOS Performance Review",
                     onStatusRender: false,
@@ -55,41 +61,30 @@ export default () => {
                             pagination: page,
                         })
                     },
-                    // actionButtons: [
-                    //     {
-                    //         label: "Add IOS",
-                    //         onClick: () => {
-                    //             history.push("/hrm/ios/add")
-                    //         }
-                    //     }
-                    // ],
                     advanceSearchButton: <Button icon={<FileSearchOutlined style={{ color: filter.criteria?.advanceSearch ? "red" : "" }} />}
                         onClick={() => setAdvanceSearchState({ visible: { open: true } })}
                     />,
                     props: {
+                        rowSelection: {
+                            preserveSelectedRowKeys: true,
+                            selectedRowKeys: batchSelectState?.visible?.ids,
+                            onChange: (selectedRowKeys) => {
+                                setBatchSelectState((o) => ({
+                                    ...o,
+                                    visible: {
+                                        ...o?.visible,
+                                        open: false,
+                                        ids: selectedRowKeys as number[], // just set it
+                                    },
+                                }));
+                            },
+                        },
                         dataSource: data?.items,
                         loading: isLoading,
                         pagination: {
                             total: data?.total
                         },
-
                         columns: [
-                            // {
-                            //     title: "Action",
-                            //     dataIndex: "action",
-                            //     actionProps: (item) => ({
-                            //         label: "View",
-                            //         action: "view",
-                            //         type: "view",
-                            //         onClick: () => {
-                            //             window
-                            //                 .open(
-                            //                     `/external/hrm/ios/detail/${item?.id}`,
-                            //                 )
-                            //                 ?.focus();
-                            //         }
-                            //     })
-                            // },
                             {
                                 title: "Employee ID",
                                 dataIndex: "empNo",
@@ -153,6 +148,51 @@ export default () => {
                     }))
                 }}
             />
+
+            {
+                (batchSelectState?.visible?.ids?.length ?? 0 > 0) && (
+                    <FooterToolbar portalDom={false} >
+                        <Button type="primary"
+                            onClick={() => {
+                                setBatchSelectState((o => ({
+                                    visible: {
+                                        ...o?.visible,
+                                        open: true,
+                                    }
+                                })))
+                            }}
+                        >Submit</Button>
+
+
+                    </FooterToolbar>
+                )
+            }
+
+            <ModalForm
+                open={batchSelectState?.visible?.open}
+                title="Batch Submit Confirmation"
+                modalProps={{
+                    onCancel: () => {
+                        setBatchSelectState({ visible: undefined })
+                    },
+                    okText: "Save",
+                    cancelText: "Cancel"
+                }}
+                onFinish={async (param) => {
+                    await IOSService.saveBatch({
+                        ids: batchSelectState?.visible?.ids ?? [],
+                        comment: param?.comment
+                    })(requestAction);
+                    setBatchSelectState({ visible: undefined })
+                    refetch();
+                }}
+            >
+                <ProFormTextArea
+                    name="comment"
+                    placeholder={"Comments"}
+                />
+
+            </ModalForm>
         </>
     )
 };

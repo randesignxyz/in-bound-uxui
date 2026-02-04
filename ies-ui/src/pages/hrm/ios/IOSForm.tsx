@@ -50,7 +50,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
         develop: '',
     })));
 
-    const { data: lookup, isFetching, refetch } = useQuery({
+    const { data: lookup } = useQuery({
         queryKey: ["master-data"],
         queryFn: () => DataSetupService.listDataSetup({ criteria: { advanceSearch: { code: ["OBJECTIVES", "ACTION-PLAN", "KPI"] } } }).query(requestAction),
         refetchOnWindowFocus: false
@@ -65,11 +65,11 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
     const onSave = async (type: string) => {
         const dataForm = await form.validateFields();
 
-        // if (type !== "DRAFTED") {
+
         await section1Ref.current?.validateFields();
         await section2Ref.current?.validateFields();
         await section3Ref.current?.validateFields();
-        // }
+
 
         Modal.confirm({
             title: "Confirmation",

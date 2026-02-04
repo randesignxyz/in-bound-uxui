@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Flex, Space, Spin, Button, message, Modal, Empty } from 'antd';
 import IPOHeaderForm from "./IOSHeaderForm";
-import { useParams, useQuery } from '@umijs/max';
+import { history, useParams, useQuery } from '@umijs/max';
 import { IOSService } from './service';
 import { simpleRequestActions } from '@/services/model';
 import Section1Form from './Section1Form';
@@ -17,6 +17,7 @@ import moment from 'moment';
 import { DataSetupService } from '../master-data/service';
 import { IosRequestPayload, IosSection1Params, IosSection2Params, IosSection3Params } from './data';
 import { EmployeeMasterIOS } from './employee/data';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 
 
 
@@ -154,8 +155,12 @@ const IPODetail: React.FC<Props> = ({ id }) => {
 
     return (
         <>
-            <PageContainer ghost>
-                <Spin spinning={iosFetching}>
+            <PageContainer ghost
+                backIcon={<ArrowLeftOutlined />}
+                onBack={() => history.push("/hrm/ios/list")}
+                title={"Back"}
+            >
+                <Spin spinning={iosFetching} fullscreen>
                     {
                         isError && <Empty description={false} /> || <>
                             <ProForm

@@ -38,7 +38,13 @@ export const IOSService = {
         actionName: 'fetch_ios_emp_request',
         endpoint: 'HR',
         payload: param
-    })
+    }),
+
+    saveBatch: (param: { ids: number[], comment: string }) => execDataService({
+        actionName: 'ios-emp-request-batch',
+        endpoint: 'HR',
+        payload: param
+    }),
 
 
 }

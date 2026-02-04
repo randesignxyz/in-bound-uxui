@@ -195,6 +195,7 @@ const Index = () => {
               {
                 title: "Start Date",
                 dataIndex: "startedDate",
+                width: 99,
                 render: (_, entity) =>
                   entity.startedDate
                     ? moment(entity.startedDate).format("YYYY-MM-DD")

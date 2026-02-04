@@ -66,7 +66,7 @@ const Index = () => {
       onOk: async () => {
         try {
           const res = await services.DeleteEmployeeIOS(record.id);
-          message.success({ title:"Delete Success", content: res.status });
+          message.success({ title:"Delete Success", content: res.message });
           refetch();
         } catch (err) {
           Modal.error({ title: "Delete failed", content: String(err) });
@@ -173,14 +173,14 @@ const Index = () => {
                 //   type: 'view',
                 //   label: item.empNo,
                 // }),
-                render: (_, entity) => (
-
-                  <Flex gap={5} align="center">
-                    <span style={{ color: "#1677ff", cursor: "pointer" }}>
-                  {entity.empNo}
-                  </span>
-                  </Flex>
-                ),
+                // render: (_, entity) => (
+                //
+                //   <Flex gap={5} align="center">
+                //     <span style={{ color: "#1677ff", cursor: "pointer" }}>
+                //   {entity.empNo}
+                //   </span>
+                //   </Flex>
+                // ),
               },
               { title: "Employee Name", dataIndex: "empName" , width:120},
               { title: "Company", dataIndex: "buName" },
@@ -191,9 +191,9 @@ const Index = () => {
               { title: "Job Level", dataIndex: "jobLevel" },
               { title: "Start Date",dataIndex: "startedDate" },
               { title: "Probation EndDate", dataIndex: "probationEndDate", width:140},
-              { title: "LM1 No", dataIndex: "appraiser1No" , width:80},
+              { title: "LM1 ID", dataIndex: "appraiser1No" , width:80},
               { title: "LM1 Name", dataIndex: "appraiser1" ,width:120},
-              { title: "LM2 No", dataIndex: "appraiser2No" , width: 80},
+              { title: "LM2/FM ID", dataIndex: "appraiser2No" , width: 80},
               { title: "LM2/FM Name", dataIndex: "appraiser2" ,width:120},
               { title: "Remark", dataIndex: "remark" },
               {

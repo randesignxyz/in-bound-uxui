@@ -21,6 +21,7 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ExportOutlined } from '@ant-design/icons';
 import AdvanceSearchDrawer from '@/pages/hrm/ios-upload/AdvanceSearchEmpIOS';
 import Profile from '@/pages/profile';
+import moment, { Moment } from 'moment';
 
 const Index = () => {
   const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
@@ -66,10 +67,12 @@ const Index = () => {
       onOk: async () => {
         try {
           const res = await services.DeleteEmployeeIOS(record.id);
-          message.success({ title:"Delete Success", content: res.message });
+          if(res.message==='ok' && res.id || 0 >0 ) {
+            message.success("Deleted successfully.")
           refetch();
+          }
         } catch (err) {
-          Modal.error({ title: "Delete failed", content: String(err) });
+          Modal.error({ title: "Delete failed", content: String(err.message) });
         }
       },
     });
@@ -189,8 +192,23 @@ const Index = () => {
               { title: "Sub Function", dataIndex: "subDeptName" ,width:120},
               { title: "Position", dataIndex: "jobTitle" },
               { title: "Job Level", dataIndex: "jobLevel" },
-              { title: "Start Date",dataIndex: "startedDate" },
-              { title: "Probation EndDate", dataIndex: "probationEndDate", width:140},
+              {
+                title: "Start Date",
+                dataIndex: "startedDate",
+                render: (_, entity) =>
+                  entity.startedDate
+                    ? moment(entity.startedDate).format("YYYY-MM-DD")
+                    : "-",
+              },
+              {
+                title: "Probation End Date",
+                dataIndex: "probationEndDate",
+                width: 140,
+                render: (_, entity) =>
+                  entity.probationEndDate
+                    ? moment(entity.probationEndDate).format("YYYY-MM-DD")
+                    : "-",
+              },
               { title: "LM1 ID", dataIndex: "appraiser1No" , width:80},
               { title: "LM1 Name", dataIndex: "appraiser1" ,width:120},
               { title: "LM2/FM ID", dataIndex: "appraiser2No" , width: 80},

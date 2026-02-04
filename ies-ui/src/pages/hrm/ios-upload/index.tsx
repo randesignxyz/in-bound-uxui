@@ -20,6 +20,7 @@ import { ActionType } from '@ant-design/pro-components';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ExportOutlined } from '@ant-design/icons';
 import AdvanceSearchDrawer from '@/pages/hrm/ios-upload/AdvanceSearchEmpIOS';
+import Profile from '@/pages/profile';
 
 const Index = () => {
   const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
@@ -65,7 +66,7 @@ const Index = () => {
       onOk: async () => {
         try {
           const res = await services.DeleteEmployeeIOS(record.id);
-          message.info({ content: res + "Employee IOS is deleted!" });
+          message.success({ title:"Delete Success", content: res.status });
           refetch();
         } catch (err) {
           Modal.error({ title: "Delete failed", content: String(err) });
@@ -76,7 +77,17 @@ const Index = () => {
   return (
     <>
       <PageWrapper<EmpISOData, IOSEmployeeSearchParams, undefined>
-        tabRender={() => [
+        tabRender={(item) => [
+          {
+            action: 'view',
+            value: item?.empNo,
+            tabLabel: `${item?.empNo} - ${item?.empName}`,
+            // panel: () => (
+            //   <Profile
+            //     id={item?.empNo}
+            //   />
+            // ),
+          },
         ]}
         listView={{
           type: "Table",
@@ -137,47 +148,54 @@ const Index = () => {
                 render(_, entity, index) {
                   return <Flex gap={3} align="center">
                     <span>{index + 1}</span>
-                    <Button
-                      size="small"
-                      type="link"
-                      title="Open in new tab"
-                      icon={<ExportOutlined />}
-                      onClick={() => {
-                        window
-                          .open(
-                            `/profile/2/${entity.id}`,
-                          )
-                          ?.focus();
-                      }}
-                    />
+                    {/*<Button*/}
+                    {/*  size="small"*/}
+                    {/*  type="link"*/}
+                    {/*  title="Open in new tab"*/}
+                    {/*  icon={<ExportOutlined />}*/}
+                    {/*  onClick={() => {*/}
+                    {/*    window*/}
+                    {/*      .open(*/}
+                    {/*        `/profile/2/${entity.empNo}`,*/}
+                    {/*      )*/}
+                    {/*      ?.focus();*/}
+                    {/*  }}*/}
+                    {/*/>*/}
                   </Flex>
                 },
               },
               {
                 title: 'Employee ID',
                 dataIndex: 'empNo',
+                sorter: 'employeeCode',
+                width: 115,
+                // actionProps: (item) => ({
+                //   type: 'view',
+                //   label: item.empNo,
+                // }),
                 render: (_, entity) => (
+
                   <Flex gap={5} align="center">
                     <span style={{ color: "#1677ff", cursor: "pointer" }}>
-                      {entity.empNo}
-                    </span>
+                  {entity.empNo}
+                  </span>
                   </Flex>
                 ),
               },
-              { title: "Employee Name", dataIndex: "empName" },
+              { title: "Employee Name", dataIndex: "empName" , width:120},
               { title: "Company", dataIndex: "buName" },
               { title: "Location", dataIndex: "location" },
               { title: "Function", dataIndex: "deptName" },
-              { title: "Sub Function", dataIndex: "subDeptName" },
+              { title: "Sub Function", dataIndex: "subDeptName" ,width:120},
               { title: "Position", dataIndex: "jobTitle" },
               { title: "Job Level", dataIndex: "jobLevel" },
-              { title: "Started DAte",dataIndex: "startedDate" },
-              { title: "Probation EndDate", dataIndex: "probationEndDate" },
-              { title: "LM1 No", dataIndex: "appraiser1No" },
-              { title: "LM1 Name", dataIndex: "appraiser1" },
-              { title: "LM2 No", dataIndex: "appraiser2No" },
-              { title: "LM2/FM Name", dataIndex: "appraiser2" },
-              { title: "Active", dataIndex: "active" },
+              { title: "Start Date",dataIndex: "startedDate" },
+              { title: "Probation EndDate", dataIndex: "probationEndDate", width:140},
+              { title: "LM1 No", dataIndex: "appraiser1No" , width:80},
+              { title: "LM1 Name", dataIndex: "appraiser1" ,width:120},
+              { title: "LM2 No", dataIndex: "appraiser2No" , width: 80},
+              { title: "LM2/FM Name", dataIndex: "appraiser2" ,width:120},
+              { title: "Remark", dataIndex: "remark" },
               {
                 width: 50, title: "Action",
                 render: (dom, r) => {

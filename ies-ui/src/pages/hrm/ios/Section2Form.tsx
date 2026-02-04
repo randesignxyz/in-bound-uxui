@@ -75,7 +75,8 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
-            editable: (_, record) => !(record.id == 0),
+            // editable: (_, record) => !(record.id == 0),
+            editable: (_, r) => !["1", "2", "3"].includes(r.key),
             renderFormItem: (item, { record, ...rest }, form) => {
 
                 return (
@@ -115,7 +116,8 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'actionPlan',
             key: 'actionPlan',
             width: 300,
-            editable: (_, record) => !(record.id == 0),
+            // editable: (_, record) => !(record.id == 0),
+            editable: (_, r) => !["1", "2", "3"].includes(r.key),
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter action plan' }]
@@ -155,7 +157,8 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             title: 'KPI',
             dataIndex: 'kpi',
             key: 'kpi',
-            editable: (_, record) => !(record.id == 0),
+            // editable: (_, record) => !(record.id == 0),
+            editable: (_, r) => !["1", "2", "3"].includes(r.key),
             width: 300,
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {

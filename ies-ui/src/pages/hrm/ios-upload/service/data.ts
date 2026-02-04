@@ -1,3 +1,4 @@
+import Moment from 'moment';
 
 
 export interface EmpISOData {
@@ -10,8 +11,8 @@ export interface EmpISOData {
   subDeptName: string;
   jobTitle: string;
   jobLevel: string;
-  startedDate: string;
-  probationEndDate: string;
+  startedDate: moment.Moment;
+  probationEndDate: moment.Moment;
   appraiser1No: string;
   appraiser1: string;
   appraiser2No: string;

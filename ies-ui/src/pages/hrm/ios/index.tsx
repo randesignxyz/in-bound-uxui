@@ -162,7 +162,6 @@ export default () => {
                         comment: param?.comment
                     })(requestAction);
                     setConfirmSubmitState({ visible: undefined })
-
                 }}
             >
                 <ProFormTextArea

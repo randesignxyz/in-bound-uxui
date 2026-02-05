@@ -1,11 +1,12 @@
 
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import Status from "@/components/Status";
-import { DrawerForm, DrawerFormProps, ModalForm, ProFormTextArea, ProTable } from "@ant-design/pro-components";
+import { DrawerForm, DrawerFormProps, ModalForm, ProFormSegmented, ProFormTextArea, ProTable } from "@ant-design/pro-components";
 import { useQuery } from "@umijs/max";
 import { useState } from "react";
 import { IOSService } from "./service";
 import { simpleRequestActions } from "@/services/model";
+import { Segmented } from "antd";
 
 
 interface Props extends DrawerFormProps {
@@ -23,9 +24,6 @@ const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
         enabled: props.open
     });
     const [rowSelectionState, setRowSelectionState] = useState<number[]>([]);
-
-    console.log(rowSelectionState);
-
     return (
         <>
             <DrawerForm
@@ -51,33 +49,52 @@ const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
                     options={false}
                     dataSource={data?.items}
                     loading={iosFetching}
+                    style={{
+                        marginTop: "-20px"
+                    }}
                     rowSelection={{
-                        // selectedRowKeys: rowSelectionState,
                         preserveSelectedRowKeys: true,
-                        onSelect: (record, selected, selectedRows) => {
-                            console.log(selectedRows);
-
-                            // setRowSelectionState(selectedRowKeys as number[])
-                        },
-                        onChange: (selectedRowKeys, selectedRows) => {
-                            console.log(selectedRows);
-
-                            // setRowSelectionState(selectedRowKeys as number[])
+                        onChange: (selectedRowKeys) => {
+                            setRowSelectionState(selectedRowKeys as number[])
                         }
                     }}
+                    headerTitle={<>
+                        <ProFormSegmented
+                            name="action"
+                            initialValue={"SUBMITTED"}
+                            request={async () => [
+                                { label: "Submit", value: "SUBMITTED" },
+                                { label: "Endorse", value: "ENDORSED" },
+                                { label: "Approve", value: "APPROVED" },
+                                { label: "Return", value: "RETURN" },
+                            ]}
+                            fieldProps={{
+                                onChange: (value) => {
+                                    setFilter((o) => ({
+                                        ...o,
+                                        criteria: {
+                                            ...o.criteria,
+                                            batchRequest: value
+                                        }
+                                    }))
+                                }
+                            }}
+                        />
+                    </>}
+                    rowKey={"id"}
                     pagination={{
                         pageSize: 20,
                         total: data?.total,
                         current: filter?.pagination?.current,
-                        // onChange: (page, pageSize) => {
-                        //     setFilter((o) => ({
-                        //         ...o,
-                        //         pagination: {
-                        //             current: page,
-                        //             pageSize: pageSize
-                        //         }
-                        //     }))
-                        // }
+                        onChange: (page, pageSize) => {
+                            setFilter((o) => ({
+                                ...o,
+                                pagination: {
+                                    current: page,
+                                    pageSize: pageSize
+                                }
+                            }))
+                        }
                     }}
                     columns={[
                         {

@@ -44,7 +44,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
 
     const { data: lookup } = useQuery({
         queryKey: ["master-data"],
-        queryFn: () => DataSetupService.listDataSetup({ criteria: { advanceSearch: { code: ["OBJECTIVES", "ACTION-PLAN", "KPI"] } } }).query(requestAction),
+        queryFn: () => DataSetupService.listDataSetup({ criteria: { advanceSearch: { code: ["OBJECTIVES", "ACTION-PLAN", "KPI", "WEIGHT"] } } }).query(requestAction),
         refetchOnWindowFocus: false
     });
 
@@ -213,7 +213,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                             }}
                         />
                         <Section2Form
-                            dataSource={section2State ?? []}
+                            dataSource={section2State?.map(p => ({ ...p, initial: objective?.some(o => o.id == p.objId) ?? false })) ?? []}
                             objective={objective}
                             actionPlan={actionPlan}
                             editableFormRef={section2Ref}

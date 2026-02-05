@@ -73,39 +73,36 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'obj',
             key: 'obj',
             width: 300,
-            onCell: () => ({ style: { verticalAlign: 'top' } }),
+            editable: (_, r) => !defualtList.includes(r.key),
+            onCell: () => ({ style: { verticalAlign: 'center' } }),
+            valueType: "textarea",
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
             // editable: (_, record) => !(record.id == 0),
-            editable: (_, r) => !defualtList.includes(r.key),
-            renderFormItem: (item, { record, ...rest }, form) => {
 
+            renderFormItem: (item, { record, ...rest }, form) => {
                 return (
                     <AutoComplete
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={objective?.map(item => ({
-                            value: `${item.nameEn}'\n'${item.descriptionEn}`,
+                            value: item.descriptionEn?.replace(/\\n/g, '\n'),
                             label: (
                                 <div style={{
-                                    whiteSpace: 'pre-wrap',
+                                    whiteSpace: 'pre-line',
                                     wordBreak: 'break-word',
                                     borderBottom: "1px solid #f0f0f0",
                                     paddingBottom: 5,
                                     marginBottom: 5
                                 }}>
-                                    {`${item.nameEn}'\n'${item.descriptionEn}`}
+                                    {item.descriptionEn}
                                 </div>
                             )
                         }))}
-                        filterOption={(inputValue, option) =>
-                            String(option?.value).toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                        }
                     >
                         <Input.TextArea
                             {...rest}
-
                             placeholder="Enter objective"
                             autoSize={{ minRows: 3 }}
                         />
@@ -118,9 +115,10 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'actionPlan',
             key: 'actionPlan',
             width: 300,
+            valueType: "textarea",
             // editable: (_, record) => !(record.id == 0),
             editable: (_, r) => !defualtList.includes(r.key),
-            onCell: () => ({ style: { verticalAlign: 'top' } }),
+            onCell: () => ({ style: { verticalAlign: 'center' } }),
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter action plan' }]
             },
@@ -162,7 +160,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             // editable: (_, record) => !(record.id == 0),
             editable: (_, r) => !defualtList.includes(r.key),
             width: 300,
-            onCell: () => ({ style: { verticalAlign: 'top' } }),
+            onCell: () => ({ style: { verticalAlign: 'center' } }),
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter kpi' }]
             },
@@ -399,7 +397,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         editableKeys: readOnly ? [] : dataSource?.map(l => l.key),
                         actionRender: (row, config, defaultDom) => {
 
-                            const disable = ["1", "2", "3"].includes(row.key);
+                            const disable = defualtList.includes(row.key);
 
                             return [<Space size={0}>
                                 <Button

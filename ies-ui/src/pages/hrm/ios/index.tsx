@@ -7,8 +7,8 @@ import { useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import AdvancSearch from "./AdvancSearch";
 import { Button } from "antd";
-import { DiffOutlined, FileSearchOutlined, ImportOutlined } from "@ant-design/icons";
-import { FooterToolbar, ModalForm, ProFormTextArea } from "@ant-design/pro-components";
+import { DiffOutlined, FileSearchOutlined } from "@ant-design/icons";
+import { ModalForm, ProFormTextArea } from "@ant-design/pro-components";
 import Status from "@/components/Status";
 import BatchSubmitDrawer from "./BatchSubmitDrawer";
 
@@ -20,11 +20,9 @@ export default () => {
 
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['ipo-list', filter],
-        queryFn: () => IOSService.page(filter).query(requestAction),
+        queryFn: () => IOSService.page(filter),
         refetchOnWindowFocus: false,
-        retry: false,
-        staleTime: 0,
-        cacheTime: 0,
+
     })
 
     const [batchSubmitState, setBatchSubmitState] = useState<{ visible?: { open: boolean, ids?: number[] } }>();
@@ -39,14 +37,14 @@ export default () => {
                         tabLabel: `${item?.empNo} - ${item?.empName}`,
                         action: "edit",
                         actionLabel: "Edit IOS",
-                        panel: ({ }) => <IOSForm id={item?.id} key={Math?.random()?.toString()} />
+                        panel: ({ }) => <IOSForm id={item?.id} />
                     },
                     {
                         tabKey: item?.id?.toString(),
                         tabLabel: `${item?.empNo} - ${item?.empName}`,
                         action: "view",
                         actionLabel: "Detail IOS",
-                        panel: ({ onCloseTab, onUpdateTab, key }) => <IOSForm id={item?.id} onCancel={() => onCloseTab()} key={key} />
+                        panel: ({ onCloseTab }) => <IOSForm id={item?.id} onCancel={() => onCloseTab()} />
                     }
                 ]}
                 listView={{

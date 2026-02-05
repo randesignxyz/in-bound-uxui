@@ -1,29 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
-import { EditableProTable, ProCard, ProFormSelect, ProList, ProTable } from '@ant-design/pro-components';
-import { Button, Popconfirm, Tag, Space, Typography, Input, Tooltip, Badge, Divider, theme, Empty, Segmented, message } from 'antd';
+import { ProCard, ProFormSelect, ProTable } from '@ant-design/pro-components';
+import { Button, Popconfirm, Tag, Space, Typography, Tooltip, Badge, theme } from 'antd';
 import {
     PlusOutlined,
     DeleteOutlined,
     EditOutlined,
-    FolderAddOutlined,
     ReloadOutlined,
     AppstoreOutlined,
-    BarsOutlined,
-    SettingOutlined,
-    UnorderedListOutlined,
-    TableOutlined,
-    ArrowUpOutlined,
-    ArrowDownOutlined,
-    CheckOutlined,
     CheckCircleOutlined
 } from '@ant-design/icons';
-import { MasterData as MasterDataType, MasterDataItem } from './data.d';
+import { MasterDataItem } from './data.d';
 import { useQuery } from '@umijs/max';
 import { DataSetupService } from './service';
 import { simpleRequestActions } from '@/services/model';
 import DataSetupItemForm from './DataSetupItemForm';
 import Paragraph from 'antd/lib/typography/Paragraph';
+import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 
 const { Text } = Typography;
 
@@ -39,7 +32,7 @@ export default function MasterItemView({
     const requestAction = simpleRequestActions();
     const [modalAction, setModalAction] = useState<{ open: boolean, record?: MasterDataItem | null }>({ open: false, record: null });
 
-    const [filter, setFilter] = useState<any>(
+    const [filter, setFilter] = useState<TableViewSearchParams<any>>(
         {
             criteria: { advanceSearch: { dataSetupId: dataSetup?.id } }
         }
@@ -53,7 +46,15 @@ export default function MasterItemView({
 
     useEffect(() => {
         if (dataSetup) {
-            setFilter({ criteria: { advanceSearch: { dataSetupId: dataSetup?.id } } });
+            setFilter((e) => ({
+                criteria: {
+                    ...e.criteria,
+                    advanceSearch: {
+                        ...e.criteria?.advanceSearch,
+                        dataSetupId: dataSetup?.id ?? 0
+                    }
+                }
+            }));
         }
     }, [dataSetup]);
 
@@ -118,7 +119,7 @@ export default function MasterItemView({
         },
         {
             title: 'Action',
-            valueType: 'option',
+            // valueType: 'option',
             width: 100,
             fixed: 'right',
             render: (text, record, _) => [
@@ -138,7 +139,15 @@ export default function MasterItemView({
                     title="Delete?"
                 >
                     <Tooltip title="Delete">
-                        <Button type="text" size="small" icon={<DeleteOutlined style={{ color: token.colorError }} />} />
+                        <Button type="text" size="small"
+                            onClick={async () => {
+                                await DataSetupService.deleteDataSetup({
+                                    ids: [record.id ?? 0],
+                                    type: "DS_ITEM"
+                                })(requestAction);
+                                refetch?.()
+                            }}
+                            icon={<DeleteOutlined style={{ color: token.colorError }} />} />
                     </Tooltip>
                 </Popconfirm>,
             ],
@@ -183,16 +192,16 @@ export default function MasterItemView({
                         ]}
                         showSearch
                         onChange={(e) => {
-                            setFilter({
-                                ...filter,
+                            setFilter((o) => ({
+                                ...o.pagination,
                                 criteria: {
-                                    ...filter.criteria,
+                                    ...o.criteria,
                                     advanceSearch: {
-                                        ...filter.criteria.advanceSearch,
+                                        ...o.criteria?.advanceSearch,
                                         access: e
                                     }
                                 }
-                            })
+                            }))
 
                         }}
                     />
@@ -201,20 +210,20 @@ export default function MasterItemView({
                         noStyle
                         request={async () => {
                             const data = await DataSetupService.pageDataSetupItems({})
-                            return data.items.filter((item) => item.dataSetId != dataSetup?.id).map((item) => ({ label: `${item.code}`, value: item.code }));
+                            return data?.items?.map((item) => ({ label: `${item.code}`, value: item.code }));
                         }}
                         showSearch
                         onChange={(e) => {
-                            setFilter({
-                                ...filter,
+                            setFilter((o) => ({
+                                ...o.pagination,
                                 criteria: {
-                                    ...filter.criteria,
+                                    ...o.criteria,
                                     advanceSearch: {
-                                        ...filter.criteria.advanceSearch,
+                                        ...o.criteria?.advanceSearch,
                                         map: e
                                     }
                                 }
-                            })
+                            }))
                         }}
                     />
                     <Button
@@ -250,13 +259,16 @@ export default function MasterItemView({
                 search={false}
                 pagination={{
                     pageSize: 10,
-                    current: filter.page,
+                    current: filter.pagination?.current,
                     total: data?.total,
-                    onChange: (page) => {
-                        setFilter({
-                            ...filter,
-                            page
-                        })
+                    onChange: (page, pageSize) => {
+                        setFilter((o) => ({
+                            ...o.criteria,
+                            pagination: {
+                                current: page,
+                                pageSize: pageSize
+                            }
+                        }))
                     }
                 }}
             />

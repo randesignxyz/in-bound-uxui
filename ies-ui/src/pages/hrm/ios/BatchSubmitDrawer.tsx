@@ -15,13 +15,12 @@ interface Props extends DrawerFormProps {
 
 
 const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
-    const requestAction = simpleRequestActions();
     const [filter, setFilter] = useState<TableViewSearchParams<any>>({});
     const { data, isFetching: iosFetching, isError } = useQuery({
         queryKey: ["ios-data", filter],
-        queryFn: () => IOSService.page(filter).query(requestAction),
+        queryFn: () => IOSService.page(filter),
         refetchOnWindowFocus: false,
-        enabled: props.open
+        enabled: !!props.open
     });
     const [rowSelectionState, setRowSelectionState] = useState<number[]>([]);
     return (

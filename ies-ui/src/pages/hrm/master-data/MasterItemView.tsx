@@ -163,11 +163,10 @@ export default function MasterItemView({
                         noStyle
                         request={async () => {
                             const data = await DataSetupService.pageDataSetupItems({})
-                            return data.items.filter((item) => item.dataSetId !== dataSetup?.id).map((item) => ({ label: `${item.code}`, value: item.code }));
+                            return data.items.filter((item) => item.dataSetId != dataSetup?.id).map((item) => ({ label: `${item.code}`, value: item.code }));
                         }}
+                        showSearch
                         onChange={(e) => {
-                            console.log(e);
-
                             if (!e) {
                                 setDataItemState(data?.items ?? []);
                                 return;

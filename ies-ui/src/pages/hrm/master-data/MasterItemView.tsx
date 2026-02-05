@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import { EditableProTable, ProCard, ProFormSelect, ProList, ProTable } from '@ant-design/pro-components';
 import { Button, Popconfirm, Tag, Space, Typography, Input, Tooltip, Badge, Divider, theme, Empty, Segmented, message } from 'antd';
@@ -23,11 +23,11 @@ import { useQuery } from '@umijs/max';
 import { DataSetupService } from './service';
 import { simpleRequestActions } from '@/services/model';
 import DataSetupItemForm from './DataSetupItemForm';
+import Paragraph from 'antd/lib/typography/Paragraph';
 
 const { Text } = Typography;
 
 interface MasterItemViewProps {
-
     dataSetup: any
 }
 
@@ -38,20 +38,24 @@ export default function MasterItemView({
     const actionRef = React.useRef<ActionType>();
     const requestAction = simpleRequestActions();
     const [modalAction, setModalAction] = useState<{ open: boolean, record?: MasterDataItem | null }>({ open: false, record: null });
-    const [dataItemState, setDataItemState] = useState<MasterDataItem[]>([]);
-    const { data, isFetching, refetch } = useQuery({
-        queryKey: ['master-data-items', dataSetup?.id],
-        queryFn: async () => {
-            const data = await DataSetupService.pageDataSetupItems({
-                criteria: { advanceSearch: { dataSetupId: dataSetup?.id } }
-            });
 
-            setDataItemState(data?.items || []);
-            return data
-        },
+    const [filter, setFilter] = useState<any>(
+        {
+            criteria: { advanceSearch: { dataSetupId: dataSetup?.id } }
+        }
+    );
+    const { data, isFetching, refetch } = useQuery({
+        queryKey: ['master-data-items', filter],
+        queryFn: async () => DataSetupService.pageDataSetupItems(filter),
         refetchOnWindowFocus: false,
-        // enabled: !!dataSetId
+
     });
+
+    useEffect(() => {
+        if (dataSetup) {
+            setFilter({ criteria: { advanceSearch: { dataSetupId: dataSetup?.id } } });
+        }
+    }, [dataSetup]);
 
 
 
@@ -88,8 +92,8 @@ export default function MasterItemView({
             dataIndex: 'descriptionEn',
             render: (dom, entity) => (
                 <Space direction='vertical'>
-                    <Text style={{ whiteSpace: 'pre-line' }}>{entity.descriptionEn}</Text>
-                    <Text type="secondary" style={{ whiteSpace: 'pre-line' }}> {entity.descriptionKm}</Text>
+                    <Paragraph ellipsis={{ rows: 2, expandable: true, symbol: 'more' }} style={{ whiteSpace: 'pre-line' }}>{entity.descriptionEn}</Paragraph>
+                    <Paragraph type="secondary" ellipsis={{ rows: 2, expandable: true, symbol: 'more' }} style={{ whiteSpace: 'pre-line' }}> {entity.descriptionKm}</Paragraph>
                 </Space>
             )
         },
@@ -158,6 +162,40 @@ export default function MasterItemView({
             }
             extra={
                 <Space>
+                    <label>Access</label>
+                    <ProFormSelect
+                        noStyle
+                        fieldProps={{
+                            style: {
+                                width: 200
+                            }
+                        }}
+                        options={[
+                            { label: 'All', value: 'All' },
+                            { label: 'Casual Staff', value: 'Casual Staff' },
+                            { label: 'Staff', value: 'Staff' },
+                            { label: 'Team Leader', value: 'Team Leader' },
+                            { label: 'Middle Management', value: 'Middle Management' },
+                            { label: 'Management', value: 'Management' },
+                            { label: 'Executive Management', value: 'Executive Management' },
+                            { label: 'Board of Directors', value: 'Board of Directors' },
+
+                        ]}
+                        showSearch
+                        onChange={(e) => {
+                            setFilter({
+                                ...filter,
+                                criteria: {
+                                    ...filter.criteria,
+                                    advanceSearch: {
+                                        ...filter.criteria.advanceSearch,
+                                        access: e
+                                    }
+                                }
+                            })
+
+                        }}
+                    />
                     <label>Mapping</label>
                     <ProFormSelect
                         noStyle
@@ -167,12 +205,16 @@ export default function MasterItemView({
                         }}
                         showSearch
                         onChange={(e) => {
-                            if (!e) {
-                                setDataItemState(data?.items ?? []);
-                                return;
-                            }
-                            const dataItem = dataItemState.filter((item) => item.map?.includes(e));
-                            setDataItemState(dataItem);
+                            setFilter({
+                                ...filter,
+                                criteria: {
+                                    ...filter.criteria,
+                                    advanceSearch: {
+                                        ...filter.criteria.advanceSearch,
+                                        map: e
+                                    }
+                                }
+                            })
                         }}
                     />
                     <Button
@@ -200,13 +242,23 @@ export default function MasterItemView({
                 cardProps={{ bodyStyle: { padding: 0 }, bordered: false }}
                 loading={isFetching}
                 columns={columns}
-                dataSource={dataItemState ?? []}
+                dataSource={data?.items ?? []}
                 // toolBarRender={() => [
                 //     <Input.Search key="search" placeholder="Search items..." style={{ width: 200 }} />,
                 // ]}
                 options={false}
                 search={false}
-                pagination={false}
+                pagination={{
+                    pageSize: 10,
+                    current: filter.page,
+                    total: data?.total,
+                    onChange: (page) => {
+                        setFilter({
+                            ...filter,
+                            page
+                        })
+                    }
+                }}
             />
 
             <DataSetupItemForm
@@ -225,7 +277,7 @@ export default function MasterItemView({
                 }}
                 drawerProps={{
                     onClose: () => setModalAction({ open: false }),
-                    width: 500
+                    width: 600
                 }}
             />
         </ProCard>

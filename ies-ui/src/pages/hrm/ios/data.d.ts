@@ -84,6 +84,7 @@ interface IosSection1Params {
 }
 
 export interface IosSection2Params {
+    setDefualt?: boolean;
     initial: any;
     midYearReview: string;
     key: string;

@@ -49,7 +49,7 @@ interface Props {
 
 const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective, kpi, actionPlan, onValueChange, weighTage, editableFormRef, formSetting }) => {
 
-
+    const defualtList = dataSource?.filter(o => o.initial).map(o => o.key) ?? []
 
     const totalRecords = useMemo(() => {
         return (dataSource ?? []).length;
@@ -78,7 +78,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
             // editable: (_, record) => !(record.id == 0),
-            editable: (_, r) => !["1", "2", "3"].includes(r.key),
+            editable: (_, r) => !defualtList.includes(r.key),
             renderFormItem: (item, { record, ...rest }, form) => {
 
                 return (
@@ -119,7 +119,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             key: 'actionPlan',
             width: 300,
             // editable: (_, record) => !(record.id == 0),
-            editable: (_, r) => !["1", "2", "3"].includes(r.key),
+            editable: (_, r) => !defualtList.includes(r.key),
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter action plan' }]
@@ -160,7 +160,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'kpi',
             key: 'kpi',
             // editable: (_, record) => !(record.id == 0),
-            editable: (_, r) => !["1", "2", "3"].includes(r.key),
+            editable: (_, r) => !defualtList.includes(r.key),
             width: 300,
             onCell: () => ({ style: { verticalAlign: 'top' } }),
             formItemProps: {
@@ -387,7 +387,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         record: () => ({
                             key: Date.now().toString(),
                             no: (dataSource?.length || 0) + 1,
-                            initial: true,
+                            initial: false,
                             id: undefined,
                             startedDate: moment()?.startOf('year')?.toDate(),
                             dueDate: moment()?.endOf('year')?.toDate(),

@@ -37,6 +37,8 @@ const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
 
                 }}
                 onFinish={async (param) => {
+                    console.log(param);
+
                     onSubmit?.({
                         ids: rowSelectionState,
                         ...param

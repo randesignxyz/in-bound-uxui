@@ -28,7 +28,7 @@ export default () => {
     })
 
     const [batchSubmitState, setBatchSubmitState] = useState<{ visible?: { open: boolean, ids?: number[] } }>();
-    const [confirmSubmitState, setConfirmSubmitState] = useState<{ visible?: { open: boolean, ids?: number[] } }>();
+    const [confirmSubmitState, setConfirmSubmitState] = useState<{ visible?: { open: boolean, ids?: number[], action?: string } }>();
     return (
         <>
 
@@ -159,6 +159,7 @@ export default () => {
                 onFinish={async (param) => {
                     await IOSService.saveBatch({
                         ids: confirmSubmitState?.visible?.ids ?? [],
+                        action: confirmSubmitState?.visible?.action ?? "",
                         comment: param?.comment
                     })(requestAction);
                     setConfirmSubmitState({ visible: undefined })
@@ -179,7 +180,7 @@ export default () => {
                     },
                 }}
                 onSubmit={async (data) => {
-                    setConfirmSubmitState({ visible: { open: true, ids: data.ids } })
+                    setConfirmSubmitState({ visible: { open: true, ids: data.ids, action: data.action } })
                 }}
             />
         </>

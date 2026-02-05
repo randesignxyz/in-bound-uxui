@@ -11,6 +11,7 @@ import { FileSearchOutlined } from "@ant-design/icons";
 import { Footer } from "antd/es/layout/layout";
 import { FooterToolbar, ModalForm, ProFormTextArea } from "@ant-design/pro-components";
 import TextArea from "antd/es/input/TextArea";
+import Status from "@/components/Status";
 
 
 export default () => {
@@ -119,7 +120,8 @@ export default () => {
 
                             {
                                 title: "Status",
-                                dataIndex: "status"
+                                dataIndex: "status",
+                                render: (_: any, r: any) => <Status text={r.status} />
                             },
                             {
                                 title: "Action Required By",

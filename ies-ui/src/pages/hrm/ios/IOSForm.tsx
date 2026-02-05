@@ -149,7 +149,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
             <Spin spinning={iosFetching}>
                 <ProForm
                     form={form}
-                    submitter={{
+                    submitter={((iosData?.iosWorkFlow?.actions?.length ?? 0) <= 0) ? false : {
                         render: () => {
                             return (
                                 <FooterToolbar portalDom={false}>
@@ -160,7 +160,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                                                 return (
                                                     <Space>
                                                         <Button key={action.code} type={action.code === "DRAFTED" ? "dashed" : "primary"}
-                                                            disabled={["SUBMITTED", "ENDORSED", ""].includes(action.code) && !(total1Weight == 100) && !(total2Weight == 100)}
+                                                            disabled={["SUBMITTED", "ENDORSED"].includes(action.code) && !(total1Weight == 100) && !(total2Weight == 100)}
                                                             onClick={() => onSave(action.code)}
                                                         >{action.name}</Button>
                                                     </Space>

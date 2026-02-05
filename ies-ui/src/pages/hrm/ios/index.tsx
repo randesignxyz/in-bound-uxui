@@ -7,18 +7,17 @@ import { useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import AdvancSearch from "./AdvancSearch";
 import { Button } from "antd";
-import { FileSearchOutlined } from "@ant-design/icons";
-import { Footer } from "antd/es/layout/layout";
+import { FileSearchOutlined, ImportOutlined } from "@ant-design/icons";
 import { FooterToolbar, ModalForm, ProFormTextArea } from "@ant-design/pro-components";
-import TextArea from "antd/es/input/TextArea";
 import Status from "@/components/Status";
+import BatchSubmitDrawer from "./BatchSubmitDrawer";
 
 
 export default () => {
     const requestAction = simpleRequestActions();
     const [filter, setFilter] = useState<TableViewSearchParams<any>>({});
     const [advanceSearchState, setAdvanceSearchState] = useState<{ visible?: { open: boolean, payload?: any } }>();
-    const [batchSelectState, setBatchSelectState] = useState<{ visible?: { open?: boolean, ids?: number[], comment?: string, footer?: boolean } }>();
+    const [batchSelectState, setBatchSelectState] = useState<{ visible?: { open?: boolean, ids?: number[], comment?: string, } }>();
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['ipo-list', filter],
         queryFn: () => IOSService.page(filter).query(requestAction),
@@ -27,6 +26,7 @@ export default () => {
         staleTime: 0,
         cacheTime: 0,
     })
+    const [batchSubmitState, setBatchSubmitState] = useState<{ visible?: { open: boolean, ids?: number[] } }>();
     return (
         <>
 
@@ -37,27 +37,34 @@ export default () => {
                         tabLabel: `${item?.empNo} - ${item?.empName}`,
                         action: "edit",
                         actionLabel: "Edit IOS",
-                        panel: ({ }) => <IOSForm id={item?.id} />
+                        panel: ({ }) => <IOSForm id={item?.id} key={Math?.random()?.toString()} />
                     },
                     {
                         tabKey: item?.id?.toString(),
                         tabLabel: `${item?.empNo} - ${item?.empName}`,
                         action: "view",
                         actionLabel: "Detail IOS",
-                        panel: ({ onCloseTab }) => <IOSForm id={item?.id} onCancel={() => onCloseTab?.()} />
+                        panel: ({ onCloseTab, onUpdateTab, key }) => <IOSForm id={item?.id} onCancel={() => onCloseTab()} key={key} />
                     }
                 ]}
                 listView={{
-
                     type: "Table",
                     title: "IOS Performance Review",
                     onStatusRender: false,
-                    statuses: [],
+                    statuses: [
+                        { option: { value: "ALL", label: "All" } },
+                        { option: { value: "PENDING", label: "Pending" } },
+                        { option: { value: "IN_PROGRESS", label: "In Progress" } },
+                        { option: { value: "COMPLETED", label: "Completed" } },
+                    ],
                     onRefresh: refetch,
                     onFilter(params, page, sort) {
                         setFilter({
                             criteria: {
-                                ...params
+                                searchValue: params?.searchValue,
+                                advanceSearch: {
+                                    ...params
+                                }
                             },
                             pagination: page,
                         })
@@ -65,23 +72,31 @@ export default () => {
                     advanceSearchButton: <Button icon={<FileSearchOutlined style={{ color: filter.criteria?.advanceSearch ? "red" : "" }} />}
                         onClick={() => setAdvanceSearchState({ visible: { open: true } })}
                     />,
+
+                    actionButtons: [
+                        <Button icon={<ImportOutlined />} type="link"
+                            onClick={() => setBatchSubmitState({ visible: { open: true, ids: [] } })}
+                        >Batch Submit</Button>,
+                        <Button icon={<ImportOutlined />} type="link">Import</Button>
+                    ],
                     props: {
-                        rowSelection: {
-                            preserveSelectedRowKeys: true,
-                            selectedRowKeys: batchSelectState?.visible?.ids,
-                            onChange: (selectedRowKeys) => {
-                                setBatchSelectState((o) => ({
-                                    ...o,
-                                    visible: {
-                                        ...o?.visible,
-                                        open: false,
-                                        ids: selectedRowKeys as number[], // just set it
-                                    },
-                                }));
-                            },
-                        },
+                        // rowSelection: ["PENDING", "Batch Submitted", "Batch Endorsed"].includes(filter.criteria?.advanceSearch?.status) ? false : {
+                        //     preserveSelectedRowKeys: true,
+                        //     selectedRowKeys: batchSelectState?.visible?.ids,
+                        //     onChange: (selectedRowKeys) => {
+                        //         setBatchSelectState((o) => ({
+                        //             ...o,
+                        //             visible: {
+                        //                 ...o?.visible,
+                        //                 open: false,
+                        //                 ids: selectedRowKeys as number[], // just set it
+                        //             },
+                        //         }));
+                        //     },
+                        // },
                         dataSource: data?.items,
                         loading: isLoading,
+
                         pagination: {
                             total: data?.total
                         },
@@ -153,7 +168,7 @@ export default () => {
 
             {
                 (batchSelectState?.visible?.ids?.length ?? 0 > 0) && (
-                    <FooterToolbar portalDom={false} >
+                    <FooterToolbar portalDom={false} extra={<></>} >
                         <Button type="primary"
                             onClick={() => {
                                 setBatchSelectState((o => ({
@@ -164,8 +179,6 @@ export default () => {
                                 })))
                             }}
                         >Submit</Button>
-
-
                     </FooterToolbar>
                 )
             }
@@ -195,6 +208,19 @@ export default () => {
                 />
 
             </ModalForm>
+
+            <BatchSubmitDrawer
+                open={batchSubmitState?.visible?.open}
+                onOpenChange={(open) => {
+                    setBatchSubmitState({ visible: { open, ids: batchSelectState?.visible?.ids } })
+                }}
+                width={"calc(100vw - 100px)"}
+                drawerProps={{
+                    onClose: () => {
+                        setBatchSubmitState({ visible: undefined })
+                    },
+                }}
+            />
         </>
     )
 };

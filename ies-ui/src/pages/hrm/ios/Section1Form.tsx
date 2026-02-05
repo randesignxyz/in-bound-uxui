@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, Table, Flex, Button, Space, message } from 'antd';
-import type { EditableFormInstance, ProColumns } from '@ant-design/pro-components';
+import type { ActionType, EditableFormInstance, ProColumns } from '@ant-design/pro-components';
 import { EditableProTable, ProFormDigit } from '@ant-design/pro-components';
 import { DeleteOutlined } from '@ant-design/icons';
 import { FormSection1, IosSection1Params } from './data';
@@ -25,13 +25,13 @@ interface Props {
     onValuesChange?: (values: IosSection1Params[]) => void;
     editableFormRef?: React.Ref<EditableFormInstance<IosSection1Params>> | any;
     formSetting: FormSection1;
+    key?: string;
+    actionRef: any
 }
 
-const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesChange, editableFormRef, weighTage, formSetting }) => {
+const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesChange, editableFormRef, weighTage, formSetting, actionRef }) => {
 
-    const totalRecords = useMemo(() => {
-        return (dataSource ?? []).length;
-    }, [dataSource]);
+    const totalRecords = dataSource?.length ?? 0;
 
     const columns: ProColumns<IosSection1Params>[] = [
         {
@@ -286,7 +286,6 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                 <EditableProTable<IosSection1Params>
                     columns={columns}
                     editableFormRef={editableFormRef}
-                    key={dataSource?.toString()}
                     rowKey="key"
                     className='thin-scrollbar-cust'
                     value={dataSource}

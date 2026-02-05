@@ -3,7 +3,7 @@ import IPOHeaderForm from "./IOSHeaderForm"
 import Section2Form from "./Section2Form"
 import Section3Form from "./Section3Form"
 import { useEffect, useRef, useState } from "react"
-import { EditableFormInstance, FooterToolbar, ProForm } from "@ant-design/pro-components"
+import { ActionType, EditableFormInstance, FooterToolbar, ProForm } from "@ant-design/pro-components"
 import { useForm } from "antd/es/form/Form"
 import { simpleRequestActions } from "@/services/model"
 import { EmployeeMasterIOS } from "./employee/data"
@@ -21,25 +21,16 @@ interface Props {
     onCancel?: () => void;
 }
 
-const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
+const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
     const [form] = useForm<IosRequestPayload>();
     const [detail, setDetail] = useState<EmployeeMasterIOS>();
     const requestAction = simpleRequestActions();
+    const actionRef = useRef<ActionType>();
     const section1Ref = useRef<EditableFormInstance<IosSection1Params>>();
     const section2Ref = useRef<EditableFormInstance<IosSection2Params>>();
     const section3Ref = useRef<EditableFormInstance<IosSection3Params>>();
 
-    const [section1State, setSection1State] = useState<IosSection1Params[]>(Array.from({ length: 3 }).map((_, i) => ({
-        key: (i + 1).toString(),
-        id: i + 1,
-        iosEmpRequestId: null,
-        obj: null,
-        actionPlan: null,
-        weight: null,
-        startedDate: moment() ?? undefined,
-        dueDate: moment() ?? undefined,
-        initail: false,
-    })));
+    const [section1State, setSection1State] = useState<IosSection1Params[]>([]);
     const [section2State, setSection2State] = useState<IosSection2Params[]>([]);
     const [section3State, setSection3State] = useState<IosSection3Params[]>(Array.from({ length: 1 }).map((_, i) => ({
         key: (i + 1).toString(),
@@ -58,13 +49,23 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
 
     const { data: iosData, isFetching: iosFetching } = useQuery({
         queryKey: ["ios-data", id],
-        queryFn: () => IOSService.detail({ id: id }).query(requestAction),
+        queryFn: async () => {
+            const iosData = await IOSService.detail({ id: id }).query(requestAction);
+            iosData && setDetail({ ...iosData.iosEmpRequest as unknown as EmployeeMasterIOS });
+            iosData && sections1(iosData.section1);
+            iosData && sections2(iosData.section2);
+            iosData && sections3(iosData.section3);
+            iosData && form.setFieldValue("comment", iosData?.iosEmpRequest?.comment)
+            return iosData;
+        },
         refetchOnWindowFocus: false,
     });
 
+    const total1Weight = section1State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
+    const total2Weight = section2State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
+
     const onSave = async (type: string) => {
         const dataForm = await form.validateFields();
-
 
         await section1Ref.current?.validateFields();
         await section2Ref.current?.validateFields();
@@ -75,16 +76,15 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
             title: "Confirmation",
             content: `Are you sure you want to ${type} this record?`,
             onOk: async () => {
-
                 const entry: IosRequestPayload = {
                     ...dataForm,
                     iosMasterListId: detail?.id,
                     iosEmpRequestId: id,
                     action: type,
                     payload: {
-                        section1: section1State.filter(p => p.obj != null).map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
-                        section2: section2State.map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
-                        section3: section3State
+                        section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+                        section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+                        section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
                     }
                 }
                 const res = await IOSService.update(entry)(requestAction);
@@ -102,8 +102,6 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
     const objective = lookup?.find(i => i.code === "OBJECTIVES")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
     const kpi = lookup?.find(i => i.code === "KPI")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
 
-    const weightageSection1 = section1State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
-    const weightageSection2 = section2State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
 
     const readOnly = iosData?.iosWorkFlow?.actions?.some(action => ["DRAFTED", "SUBMITTED", "ENDORSED"].includes(action.code))
 
@@ -118,6 +116,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                 weight: (item?.weight == 0) ? undefined : item?.weight
             };
         });
+
         setSection1State(filledSection1);
     }
     const sections2 = (section2: any[]) => {
@@ -142,13 +141,8 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
         setSection3State(filledSection3);
     }
 
-    useEffect(() => {
-        iosData && setDetail({ ...iosData.iosEmpRequest as unknown as EmployeeMasterIOS });
-        iosData && sections1(iosData.section1);
-        iosData && sections2(iosData.section2);
-        iosData && sections3(iosData.section3);
-    }, [iosData]);
-
+    const weightageSection1 = section1State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
+    const weightageSection2 = section2State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
 
     return (
         <>
@@ -159,7 +153,6 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                         render: () => {
                             return (
                                 <FooterToolbar portalDom={false}>
-
                                     <Space>
                                         {readOnly && <Button key="cancel" type="default" danger onClick={() => onCancel?.()}>Cancel</Button>}
                                         {
@@ -167,6 +160,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                                                 return (
                                                     <Space>
                                                         <Button key={action.code} type={action.code === "DRAFTED" ? "dashed" : "primary"}
+                                                            disabled={["SUBMITTED", "ENDORSED", ""].includes(action.code) && !(total1Weight == 100) && !(total2Weight == 100)}
                                                             onClick={() => onSave(action.code)}
                                                         >{action.name}</Button>
                                                     </Space>
@@ -196,12 +190,14 @@ const IOSForm: React.FC<Props> = ({ id, onCancel }) => {
                             basiceInfo={detail}
                             jobLevel={detail?.jobLevelId}
                         />
+
                         <Section1Form
-                            dataSource={section1State ?? []}
+                            dataSource={section1State}
                             onValuesChange={(values) => {
                                 setSection1State(values)
                             }}
                             readOnly={!readOnly}
+                            actionRef={actionRef}
                             weighTage={iosData?.weightageSection1 ?? 0}
                             editableFormRef={section1Ref}
                             formSetting={{

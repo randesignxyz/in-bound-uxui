@@ -82,7 +82,7 @@ const IPODetail: React.FC<Props> = ({ id }) => {
                 const entry: IosRequestPayload = {
                     ...dataForm,
                     iosMasterListId: detail?.id,
-                    iosEmpRequestId: id,
+                    iosEmpRequestId: id ?? ids,
                     action: type,
                     payload: {
                         section1: section1State.filter(p => p.obj != null).map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),

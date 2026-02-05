@@ -2,6 +2,7 @@ import { Moment } from "moment";
 
 
 export interface IosEmpRequest {
+    comment: any;
     id: number;
 
     // Business Unit
@@ -154,9 +155,9 @@ export interface IosEmpRequestDetail {
     buId: number;
     buName: string;
 
-    appraiser1: string;
+    appraiser1?: string;
     appraiser1No: string;
-    appraiser2: string;
+    appraiser2?: string;
     appraiser2No: string;
 
     weightageSection1: number;
@@ -170,6 +171,8 @@ export interface IosEmpRequest {
     empName: string;
     empNameKh: string;
     empEmail: string | null;
+    appraiser1?: string;
+    appraiser2?: string;
 }
 
 export interface IosWorkFlow {

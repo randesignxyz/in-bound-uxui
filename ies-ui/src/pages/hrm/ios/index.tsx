@@ -76,8 +76,8 @@ export default () => {
                     actionButtons: [
                         <Button icon={<DiffOutlined />} type="link"
                             onClick={() => setBatchSubmitState({ visible: { open: true, ids: [] } })}
-                        >Batch Submit</Button>,
-                        <Button icon={<ImportOutlined />} type="link">Import</Button>
+                        >Batch Submit</Button>
+                        // <Button icon={<ImportOutlined />} type="link">Import</Button>
                     ],
                     props: {
 

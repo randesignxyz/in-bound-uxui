@@ -24,6 +24,7 @@ interface Props {
 const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
     const [form] = useForm<IosRequestPayload>();
     const [detail, setDetail] = useState<EmployeeMasterIOS>();
+    const [forceKey, setForceKey] = useState(0);
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
     const section1Ref = useRef<EditableFormInstance<IosSection1Params>>();
@@ -52,10 +53,11 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
         queryFn: async () => {
             const iosData = await IOSService.detail({ id: id }).query(requestAction);
             iosData && setDetail({ ...iosData.iosEmpRequest as unknown as EmployeeMasterIOS });
-            iosData && sections1(iosData.section1);
+            iosData && sections1(iosData.section1, iosData.iosWorkFlow?.actions?.length ?? 0);
             iosData && sections2(iosData.section2);
             iosData && sections3(iosData.section3);
             iosData && form.setFieldValue("comment", iosData?.iosEmpRequest?.comment)
+            setForceKey(prev => prev + 1);
             return iosData;
         },
         refetchOnWindowFocus: false,
@@ -105,8 +107,9 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
 
     const readOnly = iosData?.iosWorkFlow?.actions?.some(action => ["DRAFTED", "SUBMITTED", "ENDORSED"].includes(action.code))
 
-    const sections1 = (section1: any[]) => {
-        const filledSection1: IosSection2Params[] = Array.from({ length: readOnly ? 5 : section1?.length }, (_, index) => {
+    const sections1 = (section1: any[], action: number) => {
+
+        const filledSection1: IosSection2Params[] = Array.from({ length: (action == 0) ? section1.length : 5 }, (_, index) => {
             const item = section1?.[index];
             return {
                 key: (index + 1).toString(),
@@ -143,6 +146,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
 
     const weightageSection1 = section1State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
     const weightageSection2 = section2State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
+
 
     return (
         <>

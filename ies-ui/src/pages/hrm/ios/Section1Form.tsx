@@ -1,12 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { } from 'react';
 import { Card, Table, Flex, Button, Space, message } from 'antd';
-import type { ActionType, EditableFormInstance, ProColumns } from '@ant-design/pro-components';
-import { EditableProTable, ProFormDigit } from '@ant-design/pro-components';
+import type { EditableFormInstance, ProColumns } from '@ant-design/pro-components';
+import { EditableProTable } from '@ant-design/pro-components';
 import { DeleteOutlined } from '@ant-design/icons';
 import { FormSection1, IosSection1Params } from './data';
 import moment from 'moment';
 import numeral from 'numeral';
-
 
 
 const renderStatus = (status: string) => {
@@ -283,12 +282,14 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                     <br />
                     *At least 3 objectives required for staff level
                 </div>
+
                 <EditableProTable<IosSection1Params>
                     columns={columns}
                     editableFormRef={editableFormRef}
                     rowKey="key"
                     className='thin-scrollbar-cust'
                     value={dataSource}
+                    actionRef={actionRef}
                     onValuesChange={async (values) => {
                         const wieght = values?.reduce((total, item) => total + (item.weight ?? 0), 0);
                         if (wieght > 100) {

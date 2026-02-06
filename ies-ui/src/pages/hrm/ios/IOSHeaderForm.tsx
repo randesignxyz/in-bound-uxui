@@ -26,28 +26,26 @@ const IPOHeaderForm: React.FC<Props> = ({ basiceInfo, jobLevel }) => {
         { title: "Function", dataIndex: "deptName" },
         { title: "Sub-Function", dataIndex: "subDeptName" },
 
-        ...([2276, 2275, 2273].some(o => o === jobLevel)
-            ? [
-                { title: "Line Manager 1", dataIndex: "appraiser1" },
-                { title: "Line Manager 2", dataIndex: "appraiser2" },
-            ]
-            : [
-                { title: "FM Name", dataIndex: "appraiser2" },
-                { title: "Sub-FM Name", dataIndex: "appraiser1" },
-            ])
+        // ...([2276, 2275, 2273].some(o => o === jobLevel)
+        //     ? [
+        { title: "LM 1", dataIndex: "appraiser1" },
+        { title: "LM 2", dataIndex: "appraiser2" },
+        // ]
+        // : [
+        //     { title: "FM Name", dataIndex: "appraiser2" },
+        //     { title: "Sub-FM Name", dataIndex: "appraiser1" },
+        // ])
     ]
 
 
     return (
         <Flex vertical gap={16}>
-            {/* Section 1: Employee Information */}
             <Card size="small" title={"Employee Information"}>
                 <ProDescriptions
                     column={{ xxl: 4, xl: 4, lg: 4, md: 2, sm: 1, xs: 1 }}
                     bordered={false}
                     size="small"
                     dataSource={basiceInfo}
-                    // loading={basiceInfo ? false : true}
                     labelStyle={{
                         width: '120px'
                     }}
@@ -66,7 +64,7 @@ const IPOHeaderForm: React.FC<Props> = ({ basiceInfo, jobLevel }) => {
                     <Paragraph>
                         <ul>
                             <li>Information in this form and process is <strong>Private and Confidential</strong>.</li>
-                            <li>Individual objectives shall be set by the employee's FM or eligible Sub-FM at the beginning of each fiscal year (January), and must be <span style={{ color: '#1890ff' }}>aligned with the company's business goals</span>, <span style={{ color: '#fa8c16' }}>the function's priorities</span> and the employee's development needs.</li>
+                            <li>Individual objectives shall be set by the employee's FM or eligible Sub-FM at the beginning of each fiscal year (January), and must be <span >aligned with the company's business goals</span>, <span >the function's priorities</span> and the employee's development needs.</li>
                             <li>Objectives must be set using the <strong>SMART</strong> method, ensuring they are:
                                 <ul>
                                     <li><strong>Specific:</strong> Clear and precise objectives that describe exactly what needs to be achieved.</li>

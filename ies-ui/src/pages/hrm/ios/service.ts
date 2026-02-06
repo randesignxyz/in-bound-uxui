@@ -1,5 +1,5 @@
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
-import { execDataService, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
+import { execDataService, fetchDataItemService, fetchDataListService, fetchDataPagingService, queryDataPagingService } from "@/services/apiGateway";
 import { EmployeeRecord } from "../master-data/data";
 import { IosEmpRequest, IosEmpRequestDetail, IosRequestPayload } from "./data";
 
@@ -12,7 +12,7 @@ export const IOSService = {
     //     pagination: param.pagination
     // }),
 
-    page: (param: TableViewSearchParams<any>) => fetchDataPagingService<IosEmpRequest>({
+    page: (param: TableViewSearchParams<any>) => queryDataPagingService<IosEmpRequest>({
         actionName: 'fetch_ios_emp_request_page',
         endpoint: 'HR',
         payload: param.criteria,
@@ -38,7 +38,13 @@ export const IOSService = {
         actionName: 'fetch_ios_emp_request',
         endpoint: 'HR',
         payload: param
-    })
+    }),
+
+    saveBatch: (param: { ids: number[], comment: string, action: string }) => execDataService({
+        actionName: 'ios-emp-request-batch',
+        endpoint: 'HR',
+        payload: param
+    }),
 
 
 }

@@ -22,10 +22,10 @@ export const DataSetupService = {
         endpoint: "HR",
         payload: param,
     }),
-    deleteDataSetup: (id: number) => execDataService0({
-        actionName: "data-setup-delete",
+    deleteDataSetup: (param: { ids: number[], type: "DS" | string }) => execDataService0({
+        actionName: "delete-data-setup",
         endpoint: "HR",
-        payload: { id }
+        payload: param
     }),
     pageDataSetupItems: (param: TableViewSearchParams<DataSetupItemSearchParam>) => queryDataPagingService({
         actionName: "data-setup-items",
@@ -38,11 +38,7 @@ export const DataSetupService = {
         endpoint: "HR",
         payload: param
     }),
-    deleteDataSetupItem: (id: number) => execDataService0({
-        actionName: "data-setup-item-delete",
-        endpoint: "HR",
-        payload: { id }
-    }),
+
 }
 
 

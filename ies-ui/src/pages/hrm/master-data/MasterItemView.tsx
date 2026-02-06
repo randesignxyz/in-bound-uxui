@@ -1,47 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
-import { EditableProTable, ProCard, ProList, ProTable } from '@ant-design/pro-components';
-import { Button, Popconfirm, Tag, Space, Typography, Input, Tooltip, Badge, Divider, theme, Empty, Segmented, message } from 'antd';
+import { ProCard, ProFormSelect, ProTable } from '@ant-design/pro-components';
+import { Button, Popconfirm, Tag, Space, Typography, Tooltip, Badge, theme } from 'antd';
 import {
     PlusOutlined,
     DeleteOutlined,
     EditOutlined,
-    FolderAddOutlined,
     ReloadOutlined,
     AppstoreOutlined,
-    BarsOutlined,
-    SettingOutlined,
-    UnorderedListOutlined,
-    TableOutlined,
-    ArrowUpOutlined,
-    ArrowDownOutlined,
-    CheckOutlined,
     CheckCircleOutlined
 } from '@ant-design/icons';
-import { MasterData as MasterDataType, MasterDataItem } from './data.d';
+import { MasterDataItem } from './data.d';
 import { useQuery } from '@umijs/max';
 import { DataSetupService } from './service';
 import { simpleRequestActions } from '@/services/model';
 import DataSetupItemForm from './DataSetupItemForm';
+import Paragraph from 'antd/lib/typography/Paragraph';
+import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 
 const { Text } = Typography;
 
 interface MasterItemViewProps {
-    // selectedType: MasterDataType | null;
-    // dataSource: MasterDataItem[];
-    // setDataSource: (data: MasterDataItem[]) => void;
-    // loading: boolean;
-    // onRefresh: () => void;
-    // onEditRow: (record: MasterDataItem) => void;
-    // onSaveRow: (rowKey: React.Key, data: MasterDataItem) => Promise<void>;
-    // onDeleteRow: (id: number) => void;
-    // onMoveRow: (id: number, direction: 'up' | 'down') => void;
-    // onCreateRootItem: () => void;
-    // onCreateSubItem: (record: MasterDataItem) => void;
-    // editableKeys: React.Key[];
-    // setEditableRowKeys: (keys: React.Key[]) => void;
-    // expandedRowKeys: React.Key[];
-    // setExpandedRowKeys: (keys: React.Key[]) => void;
     dataSetup: any
 }
 
@@ -52,29 +31,43 @@ export default function MasterItemView({
     const actionRef = React.useRef<ActionType>();
     const requestAction = simpleRequestActions();
     const [modalAction, setModalAction] = useState<{ open: boolean, record?: MasterDataItem | null }>({ open: false, record: null });
-    const { data, isFetching, refetch } = useQuery({
-        queryKey: ['master-data-items', dataSetup?.id],
-        queryFn: () => DataSetupService.pageDataSetupItems({
+
+    const [filter, setFilter] = useState<TableViewSearchParams<any>>(
+        {
             criteria: { advanceSearch: { dataSetupId: dataSetup?.id } }
-        }),
+        }
+    );
+    const { data, isFetching, refetch } = useQuery({
+        queryKey: ['master-data-items', filter],
+        queryFn: async () => DataSetupService.pageDataSetupItems(filter),
         refetchOnWindowFocus: false,
-        // enabled: !!dataSetId
-    })
+
+    });
+
+    useEffect(() => {
+        if (dataSetup) {
+            setFilter((e) => ({
+                criteria: {
+                    ...e.criteria,
+                    advanceSearch: {
+                        ...e.criteria?.advanceSearch,
+                        dataSetupId: dataSetup?.id ?? 0
+                    }
+                }
+            }));
+        }
+    }, [dataSetup]);
 
 
 
     const columns: ProColumns<MasterDataItem>[] = [
         {
             title: 'Name',
-            // dataIndex: 'nameEn',
             width: '20%',
-            // formItemProps: {
-            //     rules: [{ required: true, message: 'Name (EN) is required' }],
-            // },
             render: (dom, entity) => (
                 <Space direction='vertical'>
-                    <Text>{entity.nameEn}</Text>
-                    <Text type="secondary">{entity.nameKm}</Text>
+                    <Text style={{ whiteSpace: 'pre-line' }}>{entity.nameEn}</Text>
+                    <Text type="secondary" style={{ whiteSpace: 'pre-line' }}>{entity.nameKm}</Text>
                 </Space>
             )
         },
@@ -100,8 +93,8 @@ export default function MasterItemView({
             dataIndex: 'descriptionEn',
             render: (dom, entity) => (
                 <Space direction='vertical'>
-                    <Text>{entity.descriptionEn}</Text>
-                    <Text type="secondary">{entity.descriptionKm}</Text>
+                    <Paragraph ellipsis={{ rows: 2, expandable: true, symbol: 'more' }} style={{ whiteSpace: 'pre-line' }}>{entity.descriptionEn}</Paragraph>
+                    <Paragraph type="secondary" ellipsis={{ rows: 2, expandable: true, symbol: 'more' }} style={{ whiteSpace: 'pre-line' }}> {entity.descriptionKm}</Paragraph>
                 </Space>
             )
         },
@@ -126,7 +119,7 @@ export default function MasterItemView({
         },
         {
             title: 'Action',
-            valueType: 'option',
+            // valueType: 'option',
             width: 100,
             fixed: 'right',
             render: (text, record, _) => [
@@ -141,39 +134,20 @@ export default function MasterItemView({
                         })}
                     />
                 </Tooltip>,
-                <Tooltip title="Move Up" key="up">
-                    <Button
-                        type="text"
-                        size="small"
-                        icon={<ArrowUpOutlined />}
-                    // onClick={() => record.id && onMoveRow(record.id, 'up')}
-                    />
-                </Tooltip>,
-                <Tooltip title="Move Down" key="down">
-                    <Button
-                        type="text"
-                        size="small"
-                        icon={<ArrowDownOutlined />}
-                    // onClick={() => record.id && onMoveRow(record.id, 'down')}
-                    />
-                </Tooltip>,
-                // (
-                //     <Tooltip title="Add Sub Item" key="sub">
-                //         <Button
-                //             type="text"
-                //             size="small"
-                //             icon={<FolderAddOutlined style={{ color: token.colorPrimary }} />}
-                //         // onClick={() => onCreateSubItem(record)}
-                //         />
-                //     </Tooltip>
-                // ),
                 <Popconfirm
                     key="delete"
                     title="Delete?"
-                // onConfirm={() => record.id && onDeleteRow(record.id)}
                 >
                     <Tooltip title="Delete">
-                        <Button type="text" size="small" icon={<DeleteOutlined style={{ color: token.colorError }} />} />
+                        <Button type="text" size="small"
+                            onClick={async () => {
+                                await DataSetupService.deleteDataSetup({
+                                    ids: [record.id ?? 0],
+                                    type: "DS_ITEM"
+                                })(requestAction);
+                                refetch?.()
+                            }}
+                            icon={<DeleteOutlined style={{ color: token.colorError }} />} />
                     </Tooltip>
                 </Popconfirm>,
             ],
@@ -197,13 +171,68 @@ export default function MasterItemView({
             }
             extra={
                 <Space>
+                    <label>Access</label>
+                    <ProFormSelect
+                        noStyle
+                        fieldProps={{
+                            style: {
+                                width: 200
+                            }
+                        }}
+                        options={[
+                            { label: 'All', value: 'All' },
+                            { label: 'Casual Staff', value: 'Casual Staff' },
+                            { label: 'Staff', value: 'Staff' },
+                            { label: 'Team Leader', value: 'Team Leader' },
+                            { label: 'Middle Management', value: 'Middle Management' },
+                            { label: 'Management', value: 'Management' },
+                            { label: 'Executive Management', value: 'Executive Management' },
+                            { label: 'Board of Directors', value: 'Board of Directors' },
+
+                        ]}
+                        showSearch
+                        onChange={(e) => {
+                            setFilter((o) => ({
+                                ...o.pagination,
+                                criteria: {
+                                    ...o.criteria,
+                                    advanceSearch: {
+                                        ...o.criteria?.advanceSearch,
+                                        access: e
+                                    }
+                                }
+                            }))
+
+                        }}
+                    />
+                    <label>Mapping</label>
+                    <ProFormSelect
+                        noStyle
+                        request={async () => {
+                            const data = await DataSetupService.pageDataSetupItems({})
+                            return data?.items?.map((item) => ({ label: `${item.code}`, value: item.code }));
+                        }}
+                        showSearch
+                        onChange={(e) => {
+                            setFilter((o) => ({
+                                ...o.pagination,
+                                criteria: {
+                                    ...o.criteria,
+                                    advanceSearch: {
+                                        ...o.criteria?.advanceSearch,
+                                        map: e
+                                    }
+                                }
+                            }))
+                        }}
+                    />
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}
+                        size='small'
                         onClick={() => setModalAction({ open: true })}
-                    >
-                        New Item
-                    </Button>
+                    />
+
                     <Button
                         onClick={() => refetch()}
                         type='link'
@@ -228,7 +257,20 @@ export default function MasterItemView({
                 // ]}
                 options={false}
                 search={false}
-                pagination={false}
+                pagination={{
+                    pageSize: 10,
+                    current: filter.pagination?.current,
+                    total: data?.total,
+                    onChange: (page, pageSize) => {
+                        setFilter((o) => ({
+                            ...o.criteria,
+                            pagination: {
+                                current: page,
+                                pageSize: pageSize
+                            }
+                        }))
+                    }
+                }}
             />
 
             <DataSetupItemForm
@@ -247,7 +289,7 @@ export default function MasterItemView({
                 }}
                 drawerProps={{
                     onClose: () => setModalAction({ open: false }),
-                    width: 500
+                    width: 600
                 }}
             />
         </ProCard>

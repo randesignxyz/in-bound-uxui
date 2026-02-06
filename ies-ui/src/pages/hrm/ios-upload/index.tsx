@@ -1,103 +1,135 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import PageWrapper from '@/components/PageWrapper';
 import {
   EmpISOData,
-  EmpISOSearchParams,
   IOSEmployeeSearchParams,
 } from '@/pages/hrm/ios-upload/service/data';
-import { PlusOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+  FilterOutlined,
+  SelectOutlined,
+} from '@ant-design/icons';
 import { useQuery } from '@umijs/max';
 import { EmpISOServiceAPI } from '@/pages/hrm/ios-upload/service/EmpISOService';
-import { Button, message, Modal } from 'antd';
+import { Button, Flex, message, Modal, Space } from 'antd';
 import ImportFileButton from '@/components/ImportFileButton';
 import { DataResponse, ImportDataItem } from '@/services/shared/data';
 import UploadData from '@/pages/hrm/ios-upload/upload-data';
 import { ActionType } from '@ant-design/pro-components';
-import { EmployeeListItem } from '@/pages/hrm/data';
-import { EmployeeServices } from '@/pages/hrm/services';
-import { simpleRequestActions } from '@/services/model';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ExportOutlined } from '@ant-design/icons';
+import AdvanceSearchDrawer from '@/pages/hrm/ios-upload/AdvanceSearchEmpIOS';
+import Profile from '@/pages/profile';
+import moment, { Moment } from 'moment';
 
 const Index = () => {
   const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
   const services = EmpISOServiceAPI();
-  const [loading, setLoading] = useState(false);
   const actionRef = useRef<ActionType>();
   const [filter, setFilter] = useState<TableViewSearchParams<IOSEmployeeSearchParams>>({
-    criteria: { advanceSearch: { searchValue: 'ALL' } }
+    criteria: {
+      advanceSearch: {
+        searchValue: undefined,
+        buIds: [],
+        depIds: [],
+        status: "ALL",
+      },
+    },
+    pagination: { current: 1, pageSize: 20 },
   })
   const { data, isLoading, refetch } = useQuery(
     ["fetch_ios_emp_master_page", filter],
     () => services.ListAll(filter),
     { refetchOnWindowFocus: false }
   );
-  const requestActions = simpleRequestActions();
-  const [modalVisible, setModalVisible] = useState<{ type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem }>();
-  const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
-  const saveEmployeeIPOHandler = async (data: EmployeeListItem) => {
+  const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
+  const isAdvancedFiltered = () => {
+    const adv = filter.criteria?.advanceSearch;
+    return (
+      (adv?.buIds?.length ?? 0) > 0 ||
+      (adv?.depIds?.length ?? 0) > 0
+    );
+  };
+  const advanceSearchIcon = useMemo(() => {
+    return isAdvancedFiltered()
+      ? <FilterOutlined style={{ color: "red" }} />
+      : <SelectOutlined />;
+  }, [filter.criteria?.advanceSearch]);
+  const handleDelete = async (record: EmpISOData) => {
     Modal.confirm({
-      title: 'Save employee profiles',
-      content: 'Are you sure?',
+      title: "Delete Confirmation",
+      icon: <ExclamationCircleOutlined />,
+      content: "Are you sure you want to delete this Employee IOS?",
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "Cancel",
       onOk: async () => {
         try {
-          await EmployeeServices.EmployeeUpdate(data)(requestActions);
-          if (modalVisible?.type === 'EDIT') hideModal();
-          actionRef.current?.reloadAndRest?.();
-        } catch (error: any) {
-          message.error(error.message || 'Failed to save employee profiles.');
+          const res = await services.DeleteEmployeeIOS(record.id);
+          if(res.message==='ok' && res.id || 0 >0 ) {
+            message.success("Deleted successfully.")
+          refetch();
+          }
+        } catch (err) {
+          Modal.error({ title: "Delete failed", content: String(err.message) });
         }
       },
     });
-  }
-
+  };
   return (
     <>
-      <PageWrapper<EmpISOData, EmpISOSearchParams, undefined>
-        tabRender={() => [
+      <PageWrapper<EmpISOData, IOSEmployeeSearchParams, undefined>
+        tabRender={(item) => [
           {
-            action: "add",
-            tabIcon: <PlusOutlined />,
-            tabLabel: "Add New",
+            action: 'view',
+            value: item?.empNo,
+            tabLabel: `${item?.empNo} - ${item?.empName}`,
+            // panel: () => (
+            //   <Profile
+            //     id={item?.empNo}
+            //   />
+            // ),
           },
         ]}
         listView={{
           type: "Table",
-          title: "ISO List",
-          statuses: [
-            { option: { label: "ALL", value: "All" } },
-            { option: { label: "Draft", value: "Draft", } },
-            { option: { label: "Submitted", value: "Submitted" } },
-            { option: { label: "Revert", value: "Revert" } }
-          ],
+          title: "IOS List",
           advanceSearchButton: (
             <Button
-              // onClick={() => setAdvanceSearchVisible(true)}
-              icon={<ExportOutlined />}
+              onClick={() => setAdvanceSearchVisible(true)}
+              icon={advanceSearchIcon}
             />
           ),
           actionButtons: [
-            <ImportFileButton<ImportDataItem>
-              importedKey="IMPORT_EMPLOYEE_IPO"
-              onDataResponse={data => {
-                setImportData(data)
-              }}
-              key={"IMPORT_EMP_IOS_LIST"}
-              onHandleChange={(status) => {
-                if (status === 'done') {
-                  message.info('Data uploaded.');
-                }
-              }}
-            />
+            <Space key="import-with-filter" align="center">
+              <ImportFileButton<ImportDataItem>
+                importedKey="IMPORT_EMPLOYEE_IPO"
+                onDataResponse={data => {
+                  setImportData(data)
+                }}
+                key={"IMPORT_EMP_IOS_LIST"}
+                onHandleChange={(status) => {
+                  if (status === 'done') {
+                    message.info('Data uploaded.');
+                  }
+                }}
+              />
+            </Space>
           ],
-          onFilter(params, page, sort) {
-            setFilter({
-              criteria: params,
-              pagination: {
-                pageSize: page.pageSize,
-                page: page.current,
-              }
-            })
+          onRefresh: refetch,
+          onFilter: (params: any) => {
+            setFilter((p) => ({
+              ...p,
+              criteria: {
+                ...p.criteria,
+                searchValue: params?.searchValue,
+                advanceSearch: {
+                  ...p.criteria?.advanceSearch,
+                  status: params?.status || p.criteria?.advanceSearch?.status,
+                },
+              },
+            }));
           },
           props: {
             dataSource: data?.items || [],
@@ -107,27 +139,132 @@ const Index = () => {
             rowKey: "employeeId",
             pagination: {
               total: data?.total,
+              current: filter.pagination?.current,
+              pageSize: filter.pagination?.pageSize
             },
             columns: [
-              { title: "#", render: (_, __, index) => index + 1 },
-              { title: "Employee Id", dataIndex: "empNo" },
-              { title: "Employee Name", dataIndex: "empName" },
+              {
+                title: '#',
+                width: 40,
+                dataIndex: 'employeeCode',
+                sorter: 'employeeCode',
+                render(_, entity, index) {
+                  return <Flex gap={3} align="center">
+                    <span>{index + 1}</span>
+                    {/*<Button*/}
+                    {/*  size="small"*/}
+                    {/*  type="link"*/}
+                    {/*  title="Open in new tab"*/}
+                    {/*  icon={<ExportOutlined />}*/}
+                    {/*  onClick={() => {*/}
+                    {/*    window*/}
+                    {/*      .open(*/}
+                    {/*        `/profile/2/${entity.empNo}`,*/}
+                    {/*      )*/}
+                    {/*      ?.focus();*/}
+                    {/*  }}*/}
+                    {/*/>*/}
+                  </Flex>
+                },
+              },
+              {
+                title: 'Employee ID',
+                dataIndex: 'empNo',
+                sorter: 'employeeCode',
+                width: 115,
+                // actionProps: (item) => ({
+                //   type: 'view',
+                //   label: item.empNo,
+                // }),
+                // render: (_, entity) => (
+                //
+                //   <Flex gap={5} align="center">
+                //     <span style={{ color: "#1677ff", cursor: "pointer" }}>
+                //   {entity.empNo}
+                //   </span>
+                //   </Flex>
+                // ),
+              },
+              { title: "Employee Name", dataIndex: "empName" , width:120},
               { title: "Company", dataIndex: "buName" },
               { title: "Location", dataIndex: "location" },
               { title: "Function", dataIndex: "deptName" },
-              { title: "Sub Function", dataIndex: "subDeptName" },
+              { title: "Sub Function", dataIndex: "subDeptName" ,width:120},
               { title: "Position", dataIndex: "jobTitle" },
               { title: "Job Level", dataIndex: "jobLevel" },
-              { title: "Appraiser 1", dataIndex: "appraiser1" },
-              { title: "Appraiser 2", dataIndex: "appraiser2" },
-              { title: "Status", dataIndex: "status" },
-              { title: "Action", dataIndex: "action" },
+              {
+                title: "Start Date",
+                dataIndex: "startedDate",
+                width: 99,
+                render: (_, entity) =>
+                  entity.startedDate
+                    ? moment(entity.startedDate).format("YYYY-MM-DD")
+                    : "-",
+              },
+              {
+                title: "Probation End Date",
+                dataIndex: "probationEndDate",
+                width: 140,
+                render: (_, entity) =>
+                  entity.probationEndDate
+                    ? moment(entity.probationEndDate).format("YYYY-MM-DD")
+                    : "-",
+              },
+              { title: "LM1 ID", dataIndex: "appraiser1No" , width:80},
+              { title: "LM1 Name", dataIndex: "appraiser1" ,width:120},
+              { title: "LM2/FM ID", dataIndex: "appraiser2No" , width: 80},
+              { title: "LM2/FM Name", dataIndex: "appraiser2" ,width:120},
+              { title: "Remark", dataIndex: "remark" },
+              {
+                width: 50, title: "Action",
+                render: (dom, r) => {
+                  return (
+                    <Space>
+                      <Button
+                        icon={<DeleteOutlined />}
+                        danger
+                        size="small"
+                        type="link"
+                        onClick={() => handleDelete(r)}   // ✅ FIXED
+                      />
+                    </Space>
+                  );
+                }
+              }
             ],
           },
         }}
       />
-      {/*<UploadData title="Imported List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />*/}
       <UploadData title="Imported Review List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={() => { actionRef.current?.reloadAndRest?.() }} />
+      <AdvanceSearchDrawer
+        open={advanceSearchVisible}
+        onClose={() => setAdvanceSearchVisible(false)}
+        onSearch={(params) => {
+          setFilter((prev) =>
+            ({
+              criteria:{
+                ...prev.criteria,
+                advanceSearch: {
+                  ...prev.criteria?.advanceSearch,
+                  ...params,
+                }
+              }
+            }))
+          setAdvanceSearchVisible(false);
+        }}
+        onReset={() => {
+          setFilter((prev) => ({
+            criteria: {
+              ...prev.criteria,
+              advanceSearch: {
+                buIds: [],
+                depIds: [],
+              },
+            },
+            pagination: { ...prev.pagination, current: 1 },
+          }));
+        }}
+      />
     </>
   );
 };

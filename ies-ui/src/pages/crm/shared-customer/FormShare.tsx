@@ -1,5 +1,5 @@
 import { FooterToolbar, ProForm, ProFormDatePicker, ProFormDependency, ProFormSelect, ProFormTextArea, ProTable } from "@ant-design/pro-components"
-import { Button, Card, Flex, Input, message, Modal } from "antd"
+import { Button, Card, Checkbox, Flex, Input, message, Modal, Space } from "antd"
 import { SalespersonOrgAPI } from "../salesperson/service"
 import { simpleRequestActions } from "@/services/model"
 import { SalePerson, CustomerItemLess } from "@/services/crm/data"
@@ -8,6 +8,7 @@ import { rest } from "lodash"
 import { useState, useEffect } from "react"
 import { CustomerServices } from "../customer/services"
 import { ShareCustomerAPI } from "./service"
+import { useQuery } from "@umijs/max"
 
 interface Props {
     type: 'new' | 'edit';
@@ -20,62 +21,65 @@ type FormDataType = {
     customers: string;
     salespersonId: number;
 }
-const FormShare: React.FC<Props> = ({ type, onBack,  }) => {
+const FormShare: React.FC<Props> = ({ type, onBack, }) => {
     const requestActions = simpleRequestActions();
     const [form] = useForm<FormDataType>()
-    const [saleList, setSaleList] = useState<SalePerson[]>()
-    const [data, setData] = useState<CustomerItemLess[]>()
-    const [customerSearch, setCustomerSearch] = useState<string>()
     const [customerList, setCustomerList] = useState<CustomerItemLess[]>()
     const [selected, setSelected] = useState<any[]>()
+    const [split, setSplit] = useState(false);
+    const [searchValue, setSearchValue] = useState('');
 
-    useEffect(() => {
-        (async () => {
-            const rs = await CustomerServices.listSalesperson.query(requestActions)
-            setSaleList(rs)
-
-        })()
-        const searchList = customerSearch?.split(",").map(it => it.toLocaleLowerCase().trim().replaceAll(/[&\/\\#,+()$~%.'":*?<>{}]/g, '').replaceAll(' ', '')).filter(it => it)
-        setCustomerList(data?.filter(it => !customerSearch || searchList?.some(i => [it.code?.toLocaleLowerCase(), it.name?.toLocaleLowerCase()
-            .replaceAll(/[&\/\\#,+()$~%.'":*?<>{}]/g, '').replaceAll(' ', ''), it.internalName].join().includes(i))))
-    }, [data, customerSearch])
-
-    const loadCustomer = async (saleId?: number) => {
-        if (!saleId) {
-            setData([])
+    const [customerFilter, setCustomerFilter] = useState<any>();
+    const { data: sales } = useQuery({
+        queryKey: ['salesperson'],
+        queryFn: async () => CustomerServices.listSalesperson.query(requestActions),
+        refetchOnWindowFocus: false
+    });
+    const { data: customer, isLoading } = useQuery({
+        queryKey: ['customer', customerFilter],
+        queryFn: async () => {
+            const rs = await ShareCustomerAPI(requestActions).listCustomerLeadBySE({ ids: form.getFieldValue('searchSalespersonId') })
+            setCustomerList(rs)
+            return rs
+        },
+        refetchOnWindowFocus: false
+    });
+    const onSearchValue = (value?: string) => {
+        if (!value?.trim()) {
+            setCustomerList(customer)
             return
         }
-        const rs = await ShareCustomerAPI(requestActions).listCustomerLeadBySE({ id: saleId })
-        setData(rs)
+        setCustomerList(customerList?.filter(it => value?.split(',')?.some(i => [it.code?.toLocaleLowerCase()].includes(i.toLocaleLowerCase()))))
     }
+
     const onSaveActionHandler = async () => {
         const dataForm = await form.validateFields();
-        if ((selected?.length||0) <=0){
+        if ((selected?.length || 0) <= 0) {
             message.warning("No customer selected. Please choose one to share.");
-            return 
+            return
         }
-        const entry ={
+        const entry = {
             ...dataForm,
-            shareCustomerMap:selected
+            shareCustomerMap: selected
         }
         Modal.confirm({
-            title:"Share Confirmation",
-            content:"are you sure?",
-            onOk:async()=>{
+            title: "Share Confirmation",
+            content: "are you sure?",
+            onOk: async () => {
                 await ShareCustomerAPI(requestActions).saveShare(entry);
                 message.success("Success!");
             }
         });
-         onBack?.();
+        onBack?.();
     }
     return (
         <>
             <ProForm
                 form={form} {...rest} title="Transfer Salesperson" onValuesChange={(changedValues) => {
-                    const { searchSalespersonId, customers } = changedValues
+                    const { searchSalespersonId } = changedValues
                     if ('searchSalespersonId' in changedValues) {
                         setSelected([])
-                        loadCustomer(searchSalespersonId)
+                        setCustomerFilter({ searchSalespersonId })
                     }
                 }}
                 submitter={{
@@ -119,7 +123,7 @@ const FormShare: React.FC<Props> = ({ type, onBack,  }) => {
                                             onSaveActionHandler();
                                         }}
                                     >
-                                        Save 
+                                        Save
                                     </Button>
                                 )}
                             </FooterToolbar>
@@ -146,15 +150,47 @@ const FormShare: React.FC<Props> = ({ type, onBack,  }) => {
             >
                 <Flex gap={12} vertical>
                     <Card title={"Share Customer Access Form "} size="small">
-                        <Flex gap={24}>
-                            <ProFormSelect showSearch name={"searchSalespersonId"} width={"lg"} label="Salesperson"
-                                options={saleList?.map(it => ({ label: [it.code, it.name].join(' '), value: it.id }))}
-                            />
-                        </Flex>
+                        <ProFormSelect
+                            showSearch
+                            name={"searchSalespersonId"}
+                            mode="multiple"
+                            label="Salesperson"
+                            debounceTime={500}
+                            options={sales?.map(it => ({ label: [it.code, it.name].join(' '), value: it.id }))}
+                        />
+
                         < ProFormDependency name={['searchSalespersonId']} >
                             {({ searchSalespersonId }) => {
                                 if (searchSalespersonId) {
-                                    return <Input.Search onSearch={value => setCustomerSearch(value?.trim())} title="Search by Customers" placeholder="Please input customer code(s) to filter" />
+                                    return (
+                                        <Flex gap={12} >
+                                            <Input.Search
+                                                onChange={(e) => setSearchValue(e.target.value)}
+                                                value={searchValue}
+                                                onSearch={value => { onSearchValue(value) }}
+                                                title="Search by Customers"
+                                                placeholder="Please input customer code(s) to filter"
+                                                allowClear
+
+                                            />
+                                            <Checkbox
+                                                disabled={!searchValue}
+                                                onClick={(e: any) => {
+                                                    const checked = e.target?.checked;
+                                                    // setSplit(checked);
+                                                    if (checked) {
+                                                        // transform space-separated to comma-separated
+                                                        const newValue = searchValue?.trim().split(/\s+/).join(',');
+                                                        setSearchValue(newValue);
+                                                    } else {
+                                                        // Optionally: transform comma back to space (or keep as is)
+                                                        const newValue = searchValue?.trim().split(/,+/).join(' ');
+                                                        setSearchValue(newValue);
+                                                    }
+                                                }}>
+                                                Split
+                                            </Checkbox>
+                                        </Flex>)
                                 }
                             }}
                         </ProFormDependency>
@@ -164,7 +200,7 @@ const FormShare: React.FC<Props> = ({ type, onBack,  }) => {
                             rowKey="id"
                             rowSelection={{
                                 selections: ["SELECT_ALL", "SELECT_INVERT", "SELECT_NONE"],
-                                selectedRowKeys: selected?.map(o=>o.id),
+                                selectedRowKeys: selected?.map(o => o.id),
                                 onSelect(item, selected) {
                                     setSelected(prev => {
                                         const safePrev = prev || [];
@@ -183,6 +219,7 @@ const FormShare: React.FC<Props> = ({ type, onBack,  }) => {
                             }}
                             pagination={{
                                 defaultPageSize: 10,
+                                total: customerList?.length,
                             }}
                             options={{
                                 density: false,
@@ -194,7 +231,10 @@ const FormShare: React.FC<Props> = ({ type, onBack,  }) => {
                                 { title: 'Customer Name (kh)', dataIndex: 'internalName' },
                                 { title: 'Type', dataIndex: 'type' },
                                 { title: "SE", dataIndex: 'sale' }
-                            ]} dataSource={customerList} loading={requestActions.request?.loading} />
+                            ]}
+                            dataSource={customerList}
+                            loading={isLoading}
+                        />
                     </Card>
                     <Card size="small">
                         <ProFormSelect
@@ -202,14 +242,14 @@ const FormShare: React.FC<Props> = ({ type, onBack,  }) => {
                             label={"Share To (SE Receiver)"}
                             rules={[{ required: true }]}
                             showSearch
-                            onChange={(e)=>{
-                                if (e == form.getFieldValue("searchSalespersonId")){
+                            onChange={(e) => {
+                                if (e == form.getFieldValue("searchSalespersonId")) {
                                     form.resetFields(["recipientId"])
                                     message.warning("This customer is already assigned to the selected salesperson.");
                                 }
                             }}
                             debounceTime={500}
-                            request={async ({ keyWords }) => {
+                            request={async () => {
                                 const data = await SalespersonOrgAPI(requestActions).salespersonList();
                                 return data?.map(p => ({
                                     value: p.id,

@@ -62,14 +62,14 @@ export default ({ data }: { data?: SoDetail; }) => {
                     align: 'right',
 
                     render: (_, r) => {
-                        return numeral(r.price).format('$ 0,0.000000');
+                        return numeral(r.price).format('$ 0,0.00');
                     },
                 },
                 {
                     title: 'Amount',
                     align: 'right',
                     render: (_, r) => {
-                        return numeral(r.amount).format('$ 0,0.000000');
+                        return numeral(r.amount).format('$ 0,0.00');
                     },
                 },
                 {
@@ -84,7 +84,7 @@ export default ({ data }: { data?: SoDetail; }) => {
                     title: 'Total Amount',
                     align: 'right',
                     render: (_, r) => {
-                        return numeral(r.totalAmount).format('$ 0,0.000000');
+                        return numeral(r.totalAmount).format('$ 0,0.00');
                     },
                 },
 
@@ -180,7 +180,7 @@ export default ({ data }: { data?: SoDetail; }) => {
                     <ProFormField
                         // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
                         render={(_, r) => {
-                            return numeral(r['value']).format('$ 0,0.000000');
+                            return numeral(r['value']).format('$ 0,0.00');
                         }}
                         label="Sub Total"
                         name="subTotal"
@@ -195,7 +195,7 @@ export default ({ data }: { data?: SoDetail; }) => {
                     <ProFormField
                         // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
                         render={(_, r) => {
-                            return numeral(r['value']).format('$ 0,0.000000');
+                            return numeral(r['value']).format('$ 0,0.00');
                         }}
                         label="VAT Amount"
                         name="vatAmount"
@@ -204,7 +204,7 @@ export default ({ data }: { data?: SoDetail; }) => {
                     <ProFormField
                         // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
                         render={(_, r) => {
-                            return numeral(r['value']).format('$ 0,0.000000');
+                            return numeral(r['value']).format('$ 0,0.00');
                         }}
                         label="Total Amount"
                         name="totalAmount"

@@ -10,6 +10,7 @@ import PerformancePurchaseOrderReport from './PerformancePurchaseOrderReport';
 import VisitReports from './VisitReports';
 import { DSDReportAPI } from './service';
 import DSDSalesInvoiceReportV1 from './DSDSalesInvoiceReportV1';
+import SaleOrderSummaryReport from './SaleOrderSummaryReport';
 
 interface Props {
   reportName?: ReportName;
@@ -18,6 +19,7 @@ interface Props {
 
 export type ReportName =
   | 'sale-order-report'
+  | 'sale-order-summary-report'
   | 'dsd-reports'
   | 'dsd-lead-report'
   | 'visit-report'
@@ -50,6 +52,12 @@ const Reports: React.FC<Props> = ({ reportName, onClose }) => {
         title="Puchase Order Report"
         width="800px"
         open={reportName === 'sale-order-report'}
+        onCancel={onClose}
+      />
+      <SaleOrderSummaryReport
+        title="Sale Order Summary Report"
+        width="800px"
+        open={reportName === 'sale-order-summary-report'}
         onCancel={onClose}
       />
       <DSDSalesInvoiceReport

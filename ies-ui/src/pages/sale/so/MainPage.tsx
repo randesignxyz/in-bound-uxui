@@ -6,11 +6,10 @@ import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
 import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
-import { FetchPagingParams, TableViewSearchParams } from "@/components/DataCrud/TableView"
-import { ActionType, ProForm, ProFormCascader } from "@ant-design/pro-components"
-import { useAccess, useParams, useQuery } from "@umijs/max"
+import { TableViewSearchParams } from "@/components/DataCrud/TableView"
+import { ActionType, ProForm } from "@ant-design/pro-components"
+import { useAccess, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
-import { formatDateTime } from "@/pages/utils"
 import Status from "@/components/Status"
 import StatusBar from "./components/List/StatusBar"
 import ViewWrapper from './ViewWrapper'
@@ -29,7 +28,6 @@ export default () => {
     const actionRef = useRef<ActionType>();
     const [form] = Form.useForm();
     const access = useAccess();
-    const param = useParams();
     const [filter, setFilter] = useState<TableViewSearchParams<SoAdvanceSearchParams>>({
         criteria: {
             advanceSearch: {
@@ -47,7 +45,6 @@ export default () => {
         refetchInterval: 3600000
     })
 
-console.log('data?.items',data?.items)
 
     const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number, totalPending?: number) => void }>()
 
@@ -350,40 +347,12 @@ console.log('data?.items',data?.items)
                             render: (_, data) => data.shippingAddress,
                         },
                         {
-                            title: 'Salesperson',
-                            render: (_, data) => data.salespersonName,
-                            sorter: 'salespersonName',
-                            dataIndex: 'salespersonName',
-                        },
-                        {
-                            title: 'Province',
-                            dataIndex: 'province',
-                            width: 70
-                        },
-                        {
-                            title: "Sec.",
-                            dataIndex: "section",
-                            width: 50,
-                            tooltip: "Section"
-                        },
-                        {
-                            title: "Sub-Sec.",
-                            dataIndex: "subSection",
-                            width: 80,
-                        },
-
-                        {
-                            title: 'Del. Method',
-                            width: 60,
-                            render: (_, r) => r.deliveryMethod,
-                        },
-                        {
                             title: 'Order Date',
                             align: 'right',
                             sorter: 'orderDate',
                             dataIndex: "orderDate",
                             width: 110,
-                            render: (_, data) => moment(data.orderedDate).format('YYYY-MM-DD'),
+                            render: (_, data) => moment(data.orderedDate).format('DD-MMM-YYYY'),
 
                         },
                         {
@@ -392,26 +361,51 @@ console.log('data?.items',data?.items)
                             render: (_, data) => moment(data.orderedDate).format('HH:mm:ss'),
                         },
                         {
-                            title: 'Req. Del. Date',
+                            title: 'DOD',
                             width: 90,
-                            render: (_, r) => moment(r.deliveryDate).format('YYYY-MM-DD'),
+                            render: (_, r) => moment(r.deliveryDate).format('DD-MMM-YYYY'),
                         },
-                        // {
-                        //     title: 'First Delivery Date',
-                        //     align: 'right',
-                        //     sorter: 'deliveryDate',
-
-                        //     width: 150,
-                        //     render: (_, data) => formatDate(data.deliveryDate),
-                        // },
                         {
-                            title: 'Amount',
+                            title: 'Del. Service',
+                            width: 60,
+                            render: (_, r) => r.deliveryMethod,
+                        },
+                        {
+                            title: 'Gross Qty',
+                            width: 60,
+                            align: 'right',
+                            render: (_, r) => r.qty,
+                        },
+                        {
+                            title: 'Amount(USD)',
                             align: 'right',
                             valueType: {
                                 type: 'money',
                                 locale: 'en-US',
                             },
                             dataIndex: 'amount',
+                        },
+                        {
+                            title: 'Salesperson',
+                            render: (_, data) => data.salespersonName,
+                            sorter: 'salespersonName',
+                            dataIndex: 'salespersonName',
+                        },
+                        {
+                            title: 'PRO',
+                            dataIndex: 'province',
+                            width: 70
+                        },
+                        {
+                            title: "Sub-Sec.",
+                            dataIndex: "subSection",
+                            width: 80,
+                        },
+                        {
+                            title: "Sec.",
+                            dataIndex: "section",
+                            width: 50,
+                            tooltip: "Section"
                         },
                         {
                             title: 'Status',
@@ -445,7 +439,7 @@ console.log('data?.items',data?.items)
             salespersons={state.data?.initData?.salespersons}
             lookDataList={state.data?.initData?.lookDataList}
             onSearch={(data) => {
-                console.log('data',data)
+                console.log('data', data)
                 setFilter(v => ({
                     ...v,
                     criteria: {

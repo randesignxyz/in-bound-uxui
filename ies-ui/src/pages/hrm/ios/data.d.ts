@@ -2,6 +2,7 @@ import { Moment } from "moment";
 
 
 export interface IosEmpRequest {
+    comment: any;
     id: number;
 
     // Business Unit
@@ -51,7 +52,8 @@ export interface IosEmpRequest {
 
 
 export interface IosRequestPayload {
-    iosMasterListId: number;
+    iosMasterListId?: number;
+    iosEmpRequestId?: number;
     action: string;
     comment?: string | null;
     payload: IosData;
@@ -82,6 +84,8 @@ interface IosSection1Params {
 }
 
 export interface IosSection2Params {
+    setDefualt?: boolean;
+    initial: any;
     midYearReview: string;
     key: string;
     id: number;
@@ -118,7 +122,7 @@ export interface IosSection3Params {
 export interface IosEmpRequestDetail {
     id: number;
     iosEmpRequestId: number;
-    status: "PENDING" | "APPROVED" | "REJECTED";
+    status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
 
     iosEmpRequest: IosEmpRequest;
     iosWorkFlow: IosWorkFlow;
@@ -152,9 +156,9 @@ export interface IosEmpRequestDetail {
     buId: number;
     buName: string;
 
-    appraiser1: string;
+    appraiser1?: string;
     appraiser1No: string;
-    appraiser2: string;
+    appraiser2?: string;
     appraiser2No: string;
 
     weightageSection1: number;
@@ -168,11 +172,14 @@ export interface IosEmpRequest {
     empName: string;
     empNameKh: string;
     empEmail: string | null;
+    appraiser1?: string;
+    appraiser2?: string;
 }
 
 export interface IosWorkFlow {
     approverId: number;
     currentLevel: number;
+    actions: IosAction[];
 }
 
 export interface Activity {
@@ -210,9 +217,43 @@ export interface Section2 {
     weight?: number;
     startedDate?: Moment; // ISO 8601 (Instant)
     dueDate?: Moment;     // ISO 8601 (Instant)
+    actionPlan: string;
+    kpi: string;
 }
 export interface Section3 {
     id?: number;
     iosEmpRequestId?: number;
     [key: string]: any;
+}
+
+
+
+
+
+
+
+interface FormSetting {
+    section1: IosSection1Params;
+    section2: IosSection2Params;
+    section3: IosSection3Params;
+}
+interface FormSection1 {
+    midYear: boolean;
+    weightage: boolean;
+    selfRating: boolean;
+    yearEndRating: boolean;
+    justification: boolean;
+
+}
+interface FormSection2 {
+    midYear: boolean;
+    weightage: boolean;
+    selfRating: boolean;
+    yearEndRating: boolean;
+    justification: boolean;
+
+}
+interface FormSection3 {
+    showComment: boolean;
+
 }

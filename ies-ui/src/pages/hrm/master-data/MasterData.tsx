@@ -46,7 +46,7 @@ export default function MasterDataPage() {
             bodyStyle={{ padding: 0 }}
         >
             <ProCard
-                colSpan={{ xs: 24, md: 6 }}
+                colSpan={{ xs: 24, md: 4 }}
                 title={<span style={{ fontWeight: 600 }}>Master Types</span>}
                 extra={
                     <Space>

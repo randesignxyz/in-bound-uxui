@@ -84,6 +84,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                     iosEmpRequestId: id,
                     action: type,
                     payload: {
+                        ...dataForm,
                         section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
                         section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
                         section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))

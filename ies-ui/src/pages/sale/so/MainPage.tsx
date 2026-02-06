@@ -361,7 +361,7 @@ export default () => {
                             render: (_, data) => moment(data.orderedDate).format('HH:mm:ss'),
                         },
                         {
-                            title: 'ReqDelDate',
+                            title: 'DOD',
                             width: 90,
                             render: (_, r) => moment(r.deliveryDate).format('DD-MMM-YYYY'),
                         },
@@ -373,7 +373,8 @@ export default () => {
                         {
                             title: 'Gross Qty',
                             width: 60,
-                            render: (_, r) => r.deliveryMethod,
+                            align: 'right',
+                            render: (_, r) => r.qty,
                         },
                         {
                             title: 'Amount(USD)',

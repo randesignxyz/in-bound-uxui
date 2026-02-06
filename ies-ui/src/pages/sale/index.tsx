@@ -316,6 +316,9 @@ export default () => {
             case 'sale-order-report':
               setReport('sale-order-report');
               break;
+            case 'sale-order-summary-report':
+              setReport('sale-order-summary-report');
+              break;
             default:
               message.error('Something went wrong.');
           }
@@ -333,9 +336,14 @@ export default () => {
             'Reports',
             'report-menu',
             null,
-            [getItem('Purchase Order Report', 'sale-order-report', <BarChartOutlined />)],
+            [
+              getItem('Purchase Order Report', 'sale-order-report', <BarChartOutlined />),
+              getItem('Purchase Order Summary Report', 'sale-order-summary-report', <BarChartOutlined />)
+            ],
+
             'group',
           ),
+
         ],
       },
       // overlay: soMenu,

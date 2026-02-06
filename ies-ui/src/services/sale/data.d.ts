@@ -726,7 +726,7 @@ export interface SoItemLess {
   region?: string;
   soNo?: string;
   amount: number;
-  qty: ?number;
+  qty?: number;
   // discountAmount: number;
   // vatAmount: number;
   // totalAmount: number;

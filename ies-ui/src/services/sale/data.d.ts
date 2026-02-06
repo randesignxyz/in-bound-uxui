@@ -112,7 +112,8 @@ export type SaleServiceName =
   | 'sync-posm'
   | 'list-rsm-request-mpu-item'
   | 'sync-so-from-sfa'
-  | 'list-area';
+  | 'list-area'
+  | 'sync-so-from-sap';
 
 /** Stock */
 // export interface StockControl {
@@ -780,6 +781,7 @@ export interface EditSo {
 export interface SoDetail {
   id: number;
   soNo?: string;
+  docEntry?:string
   amount: number;
   discountAmount: number;
   vatAmount?: number;
@@ -894,6 +896,9 @@ export interface SoItem {
   parentId?: number;
   categoryId?: number;
   type?: string;
+  STD?: number | null;
+  TDO?: number| null;
+  TDP?: number| null;
   budgetCode?: string;
   subItems?: SoItem[];
   associatedTo?: {
@@ -921,7 +926,7 @@ export interface Delivery {
 }
 
 export interface DeliveryItem {
-  id?: number;
+  id: number;
   itemId: number;
   itemCode: string;
   itemDesc: string;
@@ -997,6 +1002,9 @@ export interface SoItemDetail {
   parentKey?: string;
   budgetCode?: string;
   index?: number;
+  STD?: number | null;
+  TDO?: number| null;
+  TDP?: number| null;
 }
 
 export interface Distributor {

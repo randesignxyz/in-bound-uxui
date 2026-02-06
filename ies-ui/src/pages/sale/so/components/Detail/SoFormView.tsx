@@ -6,7 +6,7 @@ import DeliveryListItemView from './DeliveryItemListView';
 import OrderFormView from './OrderFormView';
 import OrderLineItems from './OrderLineItems';
 
-const SoFormView = ({ data }: { data?: SoDetail; }) => {
+const SoFormView = ({ data, onRefreshSo }: { data?: SoDetail; onRefreshSo?: (id: number) => void }) => {
   return (
     <Tabs>
       <Tabs.TabPane
@@ -32,6 +32,14 @@ const SoFormView = ({ data }: { data?: SoDetail; }) => {
             data?.associatedTo.customer.code?.startsWith('L') && data.status === 'Closed'
           }
           deliveries={data?.deliveries}
+          soNum={data?.soNo}
+          docEntry={data?.docEntry}
+          soStatus={data?.status}
+          onSyncSuccess={() => {
+            if (data?.id) {
+              onRefreshSo?.(data.id);
+            }
+          }}
         />
       </Tabs.TabPane>
       <Tabs.TabPane
@@ -41,7 +49,7 @@ const SoFormView = ({ data }: { data?: SoDetail; }) => {
           </Space>
         }
         key="attachments"
-      > 
+      >
         <AttachmentsView attachments={data?.associatedTo.attachments || []} />
       </Tabs.TabPane>
     </Tabs>

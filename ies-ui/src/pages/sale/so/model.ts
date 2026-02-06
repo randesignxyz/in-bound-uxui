@@ -483,6 +483,9 @@ export const Model = () => {
   const syncFromSFA = async () => {
     return await saleServices.syncFromSFA({});
   };
+  const syncSOFromSAP = async (docNum: string,data:any) => {
+    return await saleServices.syncSOFromSAP({docNum,data});
+  };
 
   const cancelSo = async (soId: number, remarks: string) => {
     return await saleServices.cancelSo({ soId, remarks });
@@ -565,6 +568,7 @@ export const Model = () => {
       postSo,
       postSoNew,
       syncFromSFA,
+      syncSOFromSAP,
       cancelSo,
       closeSo,
       listTransportationOffer,

@@ -78,6 +78,9 @@ export interface DeliverySoItemEntry {
   status?:string
   so_status?:string
   selectedDeliveryDate?:moment.Moment
+   STD: number;
+  TDO: number;
+  TDP: number;
 }
 
 export interface InitData {

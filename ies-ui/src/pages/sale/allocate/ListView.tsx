@@ -1060,17 +1060,18 @@ export default () => {
     //   },
     // },
     {
-      title: 'Delivery Date',
+      title: 'DOP',
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY hh:mm'),// forces UTC, no timezone shift
-      // sorter: {
-      //   compare: (a, b) =>
-      //     (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
-      //     (b.sap_delivery_date ? dayjs(b.sap_delivery_date).unix() : 0),
-      //   multiple: 4,
-      // },
+        dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY hh:mm'),
+    },
+    {
+      title: 'DOD',
+      dataIndex: 'dod_date',
+      width: '6%',
+      render: (_, r) =>
+        dayjs.utc(r.dod_date).format('DD-MMM-YYYY hh:mm'),
     },
     {
       title: 'Shipping Address',

@@ -115,6 +115,7 @@ export default ({ loading, onSave, ...props }: Props) => {
                 fieldProps={{
                   format: 'YYYY-MM-DD',
                 }}
+                rules={[{ required: true }]}
               />
             </Col>
           </Row>

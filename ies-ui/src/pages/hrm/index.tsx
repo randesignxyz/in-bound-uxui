@@ -104,7 +104,7 @@ export default () => {
         },
         {
             id: 'ios',
-            name: 'Master Set Up',
+            name: 'Objective Master',
             description: 'Manage system master data',
             visible: access.can("HRM_MASTER_DATA", "VIEW"),
             link: `${HrmPaths.masterData}/list`,
@@ -112,8 +112,8 @@ export default () => {
         },
         {
             id: 'ios',
-            name: 'Employee',
-            description: 'Employee',
+            name: 'IOS Employee Profile',
+            description: 'Employee Profile',
             // visible: access.canAccessHREmployee,
             link: `${HrmPaths.iosUpload}/list`,
             icon: ipoImage,

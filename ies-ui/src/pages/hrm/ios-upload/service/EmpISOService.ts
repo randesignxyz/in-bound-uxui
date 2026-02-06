@@ -1,35 +1,36 @@
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
-import { EmpISOData } from '@/pages/hrm/ipo-upload/service/data';
+import { EmpISOData, IOSEmployeeSearchParams } from '@/pages/hrm/ios-upload/service/data';
 import { Paging } from '@/services/API';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 
 export const IEmpISOService = {
-  List: (params: { criteria: { searchValue?: string } }): ServiceApiType<{ searchValue?: string }> => ({
+  List: (params: TableViewSearchParams<IOSEmployeeSearchParams>): ServiceApiType<{ searchValue?: string }> => ({
     type: 'PAGING_QUERY',
     endpoint: 'HR',
     actionName: 'fetch_ios_emp_master_page',
     payload: { ...params.criteria },
-    pagination: params.pagination,
+    pagination: {
+      pageSize: params.pagination?.pageSize,
+      page: params.pagination?.current
+    }
   }),
-};
-interface ListParams {
-  criteria: { searchValue?: string };
-}
 
-interface ListParams {
-  searchValue?: string;
-}
+  DeleteEmpIOS: (id: string | number ): ServiceApiType<{ id: number | string }> => ({
+    type: "EXEC",
+    endpoint: "HR",
+    actionName: "remove_ios_emp_master_list",
+    payload: { id }
+  })
+};
+
 
 export const EmpISOServiceAPI = (requestActions?: RequestActions) => ({
-  ListAll: (params: TableViewSearchParams<ListParams>) =>
+  ListAll: (params: TableViewSearchParams<IOSEmployeeSearchParams>) =>
     singleRequest<EmpISOData>(
-      IEmpISOService.List({
-        criteria: {
-          searchValue: params.criteria?.searchValue,
-        },
-        pagination: params.pagination,
-      })
-    )(requestActions) as Promise<Paging<EmpISOData>>,
+      IEmpISOService.List(params))(requestActions) as Promise<Paging<EmpISOData>>,
+
+  DeleteEmployeeIOS: (id: number | string)=> singleRequest(IEmpISOService.DeleteEmpIOS(id))(requestActions)
+
 });
 
 

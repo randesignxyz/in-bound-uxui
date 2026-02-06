@@ -1,12 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { } from 'react';
 import { Card, Table, Flex, Button, Space, message } from 'antd';
 import type { EditableFormInstance, ProColumns } from '@ant-design/pro-components';
-import { EditableProTable, ProFormDigit } from '@ant-design/pro-components';
+import { EditableProTable } from '@ant-design/pro-components';
 import { DeleteOutlined } from '@ant-design/icons';
-import { IosSection1Params } from './data';
+import { FormSection1, IosSection1Params } from './data';
 import moment from 'moment';
 import numeral from 'numeral';
-
 
 
 const renderStatus = (status: string) => {
@@ -23,16 +22,15 @@ interface Props {
     readOnly?: boolean;
     weighTage: number | 0;
     onValuesChange?: (values: IosSection1Params[]) => void;
-    editableFormRef?: React.Ref<EditableFormInstance<IosSection1Params>>
+    editableFormRef?: React.Ref<EditableFormInstance<IosSection1Params>> | any;
+    formSetting: FormSection1;
+    key?: string;
+    actionRef: any
 }
 
-const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesChange, editableFormRef, weighTage }) => {
+const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesChange, editableFormRef, weighTage, formSetting, actionRef }) => {
 
-    const totalWeight = useMemo(() => {
-        return numeral(
-            (dataSource ?? []).reduce((acc, item) => acc + (item?.weight ?? 0), 0)
-        ).format("0.00");
-    }, [dataSource]);
+    const totalRecords = dataSource?.length ?? 0;
 
     const columns: ProColumns<IosSection1Params>[] = [
         {
@@ -41,17 +39,17 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             key: 'no',
             width: 20,
             align: 'center',
-            fixed: 'left',
-            onCell: () => ({ style: { backgroundColor: '#f5f4f4ff', fontWeight: 'bold' } }),
+            // fixed: 'left',
+            onCell: () => ({ style: { backgroundColor: '#f5f4f4', fontWeight: 'bold' } }),
             editable: false,
             render(dom, entity, index, action, schema) {
                 return <div style={{ left: 0 }}>{index + 1}</div>;
             },
         },
         {
-            title: 'OBJECTIVES',
-            dataIndex: 'objectives',
-            key: 'objectives',
+            title: 'OBJECTIVE',
+            dataIndex: 'obj',
+            key: 'obj',
             width: 300,
             valueType: 'textarea',
             fieldProps: {
@@ -75,6 +73,7 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             render: (_, record) => <div style={{ whiteSpace: 'pre-wrap' }}>{record.actionPlan}</div>,
             fieldProps: {
                 rows: 6,
+                // placeholder: "",
                 style: {
                     fontSize: '13px'
                 }
@@ -111,13 +110,12 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             }
         },
         {
-            title: `WEIGHT (${totalWeight}%)`,
+            title: `WEIGHT`,
             dataIndex: 'weight',
             key: 'weight',
             width: 20,
             align: 'center',
             valueType: "digit",
-            // onCell: () => ({ style: { border: '1px solid #ff4d4f', borderRadius: '5px' } }),
             formItemProps: {
                 rules: [
                     { type: 'number', min: 0.1, max: 100, message: 'Please enter 0.1% - 100%' }
@@ -125,12 +123,10 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
 
             },
             fieldProps: {
-                // step: 0.1,
-                // precision: 1,
                 rows: 6,
                 suffix: "%",
                 controls: false,
-                placeholder: "0.1",
+                placeholder: "0",
                 style: {
                     textAlign: 'right',
                     width: 65
@@ -177,10 +173,11 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
         },
         {
             title: 'MID-YEAR REVIEW',
-            dataIndex: 'midYearReview',
-            key: 'midYearReview',
+            dataIndex: 'mid',
+            key: 'mid',
             width: 80,
             align: 'center',
+            hidden: formSetting?.midYear,
             valueType: 'select',
             valueEnum: {
                 'Completed': { text: 'Completed', status: 'Success' },
@@ -197,18 +194,24 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             dataIndex: 'selfEvaluation',
             key: 'selfEvaluation',
             width: 20,
+            hidden: formSetting?.selfRating,
             align: 'center',
-            valueType: 'digit',
-            initialValue: moment().startOf('year'),
+            valueType: 'select',
+            valueEnum: {
+                '1': { text: '1', status: 'Success' },
+                '2': { text: '2', status: 'Processing' },
+                '3': { text: '3', status: 'Error' },
+                '4': { text: '4', status: 'Error' },
+                '5': { text: '5', status: 'Error' },
+            },
             onHeaderCell: () => ({
                 style: { backgroundColor: '#ddebf7', fontSize: 12 }
             }),
-            formItemProps: {
-                rules: [{ type: 'number', min: 1, max: 5, message: 'Please enter 1-5' },],
-            },
+
             fieldProps: {
                 precision: 0,
                 step: 1,
+                allowClear: false,
                 controls: false,
                 placeholder: "0",
                 style: {
@@ -222,6 +225,7 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             dataIndex: 'yearEndReview',
             key: 'yearEndReview',
             width: 20,
+            hidden: formSetting?.yearEndRating,
             align: 'center',
             valueType: 'digit',
             initialValue: moment().endOf('year'),
@@ -229,14 +233,6 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                 style: { backgroundColor: '#ddebf7', fontSize: 12 }
             }),
             formItemProps: {
-                // rules: [
-                //     {
-                //         // pattern: /^\f+$/,
-                //         min: 0.1,
-                //         max: 100,
-                //         message: 'Please enter a valid number',
-                //     },
-                // ],
             },
             fieldProps: {
                 min: 0,
@@ -256,6 +252,7 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             key: 'justification',
             width: 400,
             valueType: 'textarea',
+            hidden: formSetting?.justification,
             fieldProps: {
                 rows: 6,
             },
@@ -268,7 +265,6 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             valueType: 'option',
             width: 5,
             fixed: 'right',
-
         },
     ];
 
@@ -278,7 +274,7 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                 <div style={{ backgroundColor: '#bf9000', padding: '8px 16px', color: 'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold', fontSize: '16px' }}>
                         <span>SECTION I: "WHAT" PART (RESULTS)</span>
-                        <span>(Weightage: {numeral(weighTage * 100)?.format('0.00')}%)</span>
+                        <span>(Weightage: {numeral(weighTage * 100)?.format('0')}%)</span>
                     </div>
                 </div>
                 <div style={{ fontSize: '12px', fontStyle: 'italic', marginTop: '4px' }}>
@@ -286,37 +282,50 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                     <br />
                     *At least 3 objectives required for staff level
                 </div>
+
                 <EditableProTable<IosSection1Params>
                     columns={columns}
                     editableFormRef={editableFormRef}
                     rowKey="key"
                     className='thin-scrollbar-cust'
                     value={dataSource}
-                    // onDataSourceChange={onValuesChange}
+                    actionRef={actionRef}
                     onValuesChange={async (values) => {
-                        const wieght = values?.reduce((total, item) => total + (item.weight || 0), 0);
+                        const wieght = values?.reduce((total, item) => total + (item.weight ?? 0), 0);
                         if (wieght > 100) {
                             message.error('Weightage should not be more than 100');
-                            return;
+                            return dataSource
                         }
                         onValuesChange?.(values)
                     }}
-                    // recordCreatorProps={{
-                    //     newRecordType: 'dataSource',
-                    //     position: 'bottom',
-                    //     record: () => ({ key: Date.now().toString() } as IosSection1Params),
-                    // }}
-                    recordCreatorProps={false}
+                    recordCreatorProps={((totalRecords >= 5) || readOnly) ? false : {
+                        newRecordType: 'dataSource',
+                        creatorButtonText: ' Add',
+                        record: () => ({
+                            key: (totalRecords + 1).toString(),
+                            id: totalRecords + 1,
+                            iosEmpRequestId: null,
+                            obj: null,
+                            actionPlan: null,
+                            weight: null,
+                            startedDate: moment() ?? undefined,
+                            dueDate: moment() ?? undefined,
+                            initail: false,
+                        }),
+                    }}
                     editable={{
                         type: 'multiple',
-                        editableKeys: dataSource?.map((item) => item.key),
+                        editableKeys: readOnly ? [] : dataSource?.map((item) => item.key),
+
                         actionRender: (row, config, defaultDom) => {
+                            const disable = ["1", "2", "3"].includes(row.key)
                             return [<Space size={0}>
                                 <Button
                                     type="link"
                                     danger
                                     icon={<DeleteOutlined />}
                                     onClick={() => config?.onDelete?.(row.key, row)}
+                                    disabled={disable}
                                 />
                             </Space>]
                         },
@@ -324,38 +333,16 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
                     bordered
                     size="small"
                     summary={(pageData) => {
-                        let totalSelfEval = 0;
-                        let totalYearEnd = 0;
-                        let count = 0;
-
-                        pageData.forEach(({ selfEvaluation, mEvaluation }) => {
-                            totalSelfEval += Number(selfEvaluation || 0);
-                            totalYearEnd += Number(mEvaluation || 0);
-                            count++;
-                        });
-
-                        // Weighted calc
-                        const weightedSelfEval = pageData?.reduce((acc, curr) => acc + (Number(curr.selfEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
-                        const finalSelfEval = weightedSelfEval * (weighTage || 0); // =SUMPRODUCT(J28:J31,$F$28:$F$31)*70%
-
-                        const weightedYearEnd = pageData?.reduce((acc, curr) => acc + (Number(curr.mEvaluation || 0) * (parseFloat((curr.weight || 0).toString()) / 100)), 0);
-                        const finalYearEnd = weightedYearEnd * (weighTage || 0);
-
+                        const totalWeight = pageData?.reduce((acc, item) => acc + (item?.weight ?? 0), 0)
                         return (
-                            <Table.Summary.Row style={{ backgroundColor: '#d9d9d9', fontWeight: 'bold' }}>
-                                <Table.Summary.Cell index={0} colSpan={3} align="right" >
-                                    Section I: Average Score x {numeral(weighTage * 100)?.format('0.00')}%
+                            <Table.Summary.Row style={{ backgroundColor: '#f5f4f4', fontWeight: 'bold' }}>
+                                <Table.Summary.Cell index={0} colSpan={2} align="right" >
+                                    Total Weight
                                 </Table.Summary.Cell>
-                                <Table.Summary.Cell index={1} colSpan={6} align="right">
-                                    {finalSelfEval.toFixed(2)}
+                                <Table.Summary.Cell index={1} colSpan={3} align="right">
+                                    {numeral(totalWeight ?? 0)?.format('0 ') + ' %'}
                                 </Table.Summary.Cell>
-                                <Table.Summary.Cell index={2} colSpan={1} align="right">
-                                    {finalYearEnd.toFixed(2)}
-                                    <ProFormDigit
-                                        name={"finalYearEnd"}
-                                        hidden
-                                        initialValue={finalYearEnd}
-                                    />
+                                <Table.Summary.Cell index={2} colSpan={3} align="right">
                                 </Table.Summary.Cell>
                             </Table.Summary.Row>
                         );

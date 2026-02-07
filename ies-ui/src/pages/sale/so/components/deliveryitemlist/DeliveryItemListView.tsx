@@ -49,6 +49,106 @@ const DeliveryListItemView: React.FC<Props> = ({ deliveries }) => {
     setItemList(sortedItems);
   }, []);
 
+  // useEffect(() => {
+  //   if (!deliveries) {
+  //     setItemList([]);
+  //     return;
+  //   }
+
+  //   const rows: DeliverySoItemEntry[] = [];
+
+  //   deliveries.forEach((dlv) => {
+  //     // group main types per itemCode per deliveryDate
+  //     const mainTypeMap = new Map<string, DeliverySoItemEntry>();
+
+  //     dlv.itemList.forEach((it) => {
+  //       const isSTD = it.type === 'STD';
+  //       const isTDO = it.type === 'TDO';
+  //       const isTDP = it.type === 'TDP';
+  //       const isMainType = isSTD || isTDO || isTDP;
+
+  //       const groupKey = `${dlv.deliveryDate}_${it.itemCode}`;
+
+  //       if (isMainType) {
+  //         if (!mainTypeMap.has(groupKey)) {
+  //           mainTypeMap.set(groupKey, {
+  //             key: uniqueId(),
+  //             id: it.id,
+  //             itemId: it.itemId,
+  //             itemCode: it.itemCode,
+  //             description: it.itemDesc,
+  //             uomId: it.uomId,
+  //             uomName: it.associatedTo?.uom.code,
+
+  //             type: '',
+  //             STD: null,
+  //             TDO: null,
+  //             TDP: null,
+  //             qty: 0,
+
+  //             shippedQty: it.shippedQty,
+  //             deliveryDate: dlv.deliveryDate,
+  //             shippingAddressId: dlv.shippingAddressId,
+  //             shippingAddressCode: dlv.shippingAddress,
+  //             main: true,
+  //           } as unknown as DeliverySoItemEntry);
+  //         }
+
+  //         const row = mainTypeMap.get(groupKey)!;
+
+  //         if (isSTD) row.STD = (row.STD || 0) + it.qty;
+  //         if (isTDO) row.TDO = (row.TDO || 0) + it.qty;
+  //         if (isTDP) row.TDP = (row.TDP || 0) + it.qty;
+
+  //         row.qty =
+  //           (row.STD || 0) +
+  //           (row.TDO || 0) +
+  //           (row.TDP || 0);
+  //       } else {
+  //         // FOC / TDL / other types → separate row
+  //         rows.push({
+  //           key: uniqueId(),
+  //           id: it.id,
+  //           itemId: it.itemId,
+  //           itemCode: it.itemCode,
+  //           description: it.itemDesc,
+  //           uomId: it.uomId,
+  //           uomName: it.associatedTo?.uom.code,
+
+  //           type: it.type,
+  //           STD: null,
+  //           TDO: null,
+  //           TDP: null,
+  //           qty: it.qty,
+
+  //           shippedQty: it.shippedQty,
+  //           deliveryDate: dlv.deliveryDate,
+  //           shippingAddressId: dlv.shippingAddressId,
+  //           shippingAddressCode: dlv.shippingAddress,
+  //           main: true,
+  //         } as unknown as DeliverySoItemEntry);
+  //       }
+  //     });
+
+  //     rows.push(...mainTypeMap.values());
+  //   });
+
+  //   // sort by delivery date
+  //   rows.sort((a, b) => {
+  //     if (!a.deliveryDate && !b.deliveryDate) return 0;
+  //     if (!a.deliveryDate) return 1;
+  //     if (!b.deliveryDate) return -1;
+
+  //     return (
+  //       moment(a.deliveryDate).valueOf() -
+  //       moment(b.deliveryDate).valueOf()
+  //     );
+  //   });
+
+  //   setItemList(rows);
+  // }, []);
+
+
   return (
     <Card size="small" title="Delivery Info">
       <ProTable<DeliverySoItemEntry>
@@ -67,7 +167,10 @@ const DeliveryListItemView: React.FC<Props> = ({ deliveries }) => {
           { title: 'Item Code', dataIndex: 'itemCode' },
           { title: 'Description', dataIndex: 'description' },
           { title: 'Type', dataIndex: 'type' },
-          { title: 'Qunatity', dataIndex: 'qty' },
+          // { title: 'STD', dataIndex: 'STD' },
+          // { title: 'TDO', dataIndex: 'TDO' },
+          // { title: 'TDP', dataIndex: 'TDP' },
+          { title: 'Qty', dataIndex: 'qty' },
           { title: 'UoM', dataIndex: 'uomName' },
           { title: 'Remarks', dataIndex: 'remarks' },
         ]}

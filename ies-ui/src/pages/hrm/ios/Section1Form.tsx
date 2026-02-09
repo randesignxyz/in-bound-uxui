@@ -142,6 +142,11 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             valueType: 'dateMonth',
             fieldProps: {
                 format: 'MMM-YYYY',
+                disabledDate: (current: { year: () => number; }) => {
+                    if (!current) return false;
+                    const currentYear = moment().year();
+                    return current.year() !== currentYear;
+                },
             },
             formItemProps: {
                 rules: [
@@ -161,6 +166,12 @@ const Section1Form: React.FC<Props> = ({ dataSource, readOnly = false, onValuesC
             valueType: 'dateMonth',
             fieldProps: {
                 format: 'MMM-YYYY',
+                disabledDate: (current: { year: () => number; }) => {
+                    if (!current) return false;
+
+                    const currentYear = moment().year();
+                    return current.year() !== currentYear;
+                },
             },
             formItemProps: {
                 rules: [

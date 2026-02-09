@@ -18,7 +18,7 @@ const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
     const [filter, setFilter] = useState<TableViewSearchParams<any>>({});
     const { data, isFetching: iosFetching, isError } = useQuery({
         queryKey: ["ios-data", filter],
-        queryFn: () => IOSService.page(filter),
+        queryFn: () => IOSService.page4Batch(filter),
         refetchOnWindowFocus: false,
         enabled: !!props.open
     });
@@ -67,7 +67,7 @@ const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
                                 { label: "Submit", value: "SUBMITTED" },
                                 { label: "Endorse", value: "ENDORSED" },
                                 { label: "Approve", value: "APPROVED" },
-                                { label: "Return", value: "RETURN" },
+                                { label: "Send Back", value: "RETURN" },
                             ]}
                             fieldProps={{
                                 onChange: (value) => {

@@ -3,7 +3,7 @@ import IPOHeaderForm from "./IOSHeaderForm"
 import Section2Form from "./Section2Form"
 import Section3Form from "./Section3Form"
 import { useEffect, useRef, useState } from "react"
-import { ActionType, EditableFormInstance, FooterToolbar, ProForm } from "@ant-design/pro-components"
+import { ActionType, EditableFormInstance, FooterToolbar, ModalForm, ProForm, ProFormTextArea } from "@ant-design/pro-components"
 import { useForm } from "antd/es/form/Form"
 import { simpleRequestActions } from "@/services/model"
 import { EmployeeMasterIOS } from "./employee/data"
@@ -30,6 +30,8 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
     const section1Ref = useRef<EditableFormInstance<IosSection1Params>>();
     const section2Ref = useRef<EditableFormInstance<IosSection2Params>>();
     const section3Ref = useRef<EditableFormInstance<IosSection3Params>>();
+
+    const [submitState, setSubmitState] = useState<{ visible?: { actionType: string, open: boolean, entry: any } }>();
 
     const [section1State, setSection1State] = useState<IosSection1Params[]>([]);
     const [section2State, setSection2State] = useState<IosSection2Params[]>([]);
@@ -73,32 +75,101 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
         await section2Ref.current?.validateFields();
         await section3Ref.current?.validateFields();
 
+        const totalWeightSec1 = section1State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
+        const totalWeightSec2 = section2State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
 
-        Modal.confirm({
-            title: "Confirmation",
-            content: `Are you sure you want to ${type} this record?`,
-            onOk: async () => {
-                const entry: IosRequestPayload = {
-                    ...dataForm,
-                    iosMasterListId: detail?.id,
-                    iosEmpRequestId: id,
-                    action: type,
-                    payload: {
-                        ...dataForm,
-                        section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
-                        section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
-                        section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
-                    }
-                }
-                const res = await IOSService.update(entry)(requestAction);
-                if (res.id == 0 || res.id == undefined) {
-                    message.error(res.message)
-                    return;
-                }
-                message.success(`${type} successfully`)
-                onCancel?.()
+        if (type == "SUBMITTED" && totalWeightSec1 !== 100) {
+            message.error("Total weight of section 1 must be 100")
+            return;
+        }
+
+        if (type == "SUBMITTED" && totalWeightSec2 !== 100) {
+            message.error("Total weight of section 2 must be 100")
+            return;
+        }
+
+        const entry: IosRequestPayload = {
+            ...dataForm,
+            iosMasterListId: detail?.id,
+            iosEmpRequestId: id,
+            action: type,
+            payload: {
+                ...dataForm,
+                section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+                section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+                section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
             }
-        })
+        }
+        if (type !== "DRAFTED") {
+            setSubmitState({ visible: { actionType: type, open: true, entry: entry } })
+        } else {
+            Modal.confirm({
+                title: "Confirmation",
+                content: `Are you sure you want to ${type} this record?`,
+                onOk: async () => {
+                    const entry: IosRequestPayload = {
+                        ...dataForm,
+                        iosMasterListId: detail?.id,
+                        iosEmpRequestId: id,
+                        action: type,
+                        payload: {
+                            ...dataForm,
+                            section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+                            section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+                            section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
+                        }
+                    }
+                    const res = await IOSService.update(entry)(requestAction);
+                    if (res.id == 0 || res.id == undefined) {
+                        message.error(res.message)
+                        return;
+                    }
+                    message.success(`${type} successfully`)
+                    onCancel?.()
+                }
+            })
+        }
+
+
+        // const entry: IosRequestPayload = {
+        //     ...dataForm,
+        //     iosMasterListId: detail?.id,
+        //     iosEmpRequestId: id,
+        //     action: type,
+        //     payload: {
+        //         ...dataForm,
+        //         section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+        //         section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+        //         section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
+        //     }
+        // }
+
+
+        // Modal.confirm({
+        //     title: "Confirmation",
+        //     content: `Are you sure you want to ${type} this record?`,
+        //     onOk: async () => {
+        //         const entry: IosRequestPayload = {
+        //             ...dataForm,
+        //             iosMasterListId: detail?.id,
+        //             iosEmpRequestId: id,
+        //             action: type,
+        //             payload: {
+        //                 ...dataForm,
+        //                 section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+        //                 section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+        //                 section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
+        //             }
+        //         }
+        //         const res = await IOSService.update(entry)(requestAction);
+        //         if (res.id == 0 || res.id == undefined) {
+        //             message.error(res.message)
+        //             return;
+        //         }
+        //         message.success(`${type} successfully`)
+        //         onCancel?.()
+        //     }
+        // })
     }
 
     const actionPlan = lookup?.find(i => i.code === "ACTION-PLAN")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
@@ -110,7 +181,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
 
     const sections1 = (section1: any[], action: number) => {
 
-        const filledSection1: IosSection2Params[] = Array.from({ length: (action == 0) ? section1.length : 5 }, (_, index) => {
+        const filledSection1: IosSection2Params[] = Array.from({ length: ((action == 0) || iosData?.iosWorkFlow?.actions?.some(action => ["APPROVED", "RETURNED"].includes(action.code))) ? section1.length : 5 }, (_, index) => {
             const item = section1?.[index];
             return {
                 key: (index + 1).toString(),
@@ -185,8 +256,8 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                                 current: (iosData?.status == "COMPLETED") ? 4 : iosData?.iosWorkFlow?.currentLevel ?? 0,
                                 items: [
                                     iosData?.iosEmpRequest?.empName ?? undefined,
-                                    iosData?.iosEmpRequest?.appraiser1 ?? undefined,
-                                    iosData?.iosEmpRequest?.appraiser2 ?? undefined,
+                                    iosData?.iosEmpRequest?.appraiser1 ? `LM1-${iosData?.iosEmpRequest?.appraiser1}` : undefined,
+                                    iosData?.iosEmpRequest?.appraiser2 ? `LM2-${iosData?.iosEmpRequest?.appraiser2}` : undefined,
                                     "Completed"
                                 ].filter(o => o)
                             }}
@@ -246,6 +317,43 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                     </Flex>
                 </ProForm>
             </Spin>
+
+            <ModalForm
+                open={submitState?.visible?.open}
+                title="Submit Confirmation"
+                width={500}
+                modalProps={{
+                    onCancel: () => {
+                        setSubmitState({ visible: undefined })
+                    },
+                    okText: "Submit",
+                    cancelText: "Cancel"
+                }}
+                onFinish={async (param) => {
+                    const res = await IOSService.update({
+                        ...submitState?.visible?.entry,
+                        comment: param.comment,
+                        payload: {
+                            ...submitState?.visible?.entry?.payload,
+                            comment: param.comment
+                        }
+                    })(requestAction);
+                    if (res.id == 0 || res.id == undefined) {
+                        message.error(res.message)
+                        return;
+                    }
+                    message.success(`Successfully`)
+                    setSubmitState({ visible: undefined })
+                    onCancel?.()
+
+                }}
+            >
+                <ProFormTextArea
+                    name="comment"
+                    placeholder={"Comments"}
+                />
+
+            </ModalForm>
         </>
     )
 }

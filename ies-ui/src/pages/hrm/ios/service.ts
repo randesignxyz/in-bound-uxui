@@ -18,6 +18,12 @@ export const IOSService = {
         payload: param.criteria,
         pagination: param.pagination
     }),
+    page4Batch: (param: TableViewSearchParams<any>) => queryDataPagingService<IosEmpRequest>({
+        actionName: 'fetch_ios_emp_4_batch_request_page',
+        endpoint: 'HR',
+        payload: param.criteria,
+        pagination: param.pagination
+    }),
     // page: (param: TableViewSearchParams<any>) => fetchDataPagingService<EmployeeRecord>({
     //     actionName: 'ios-employee-request',
     //     endpoint: 'HR',
@@ -42,6 +48,12 @@ export const IOSService = {
 
     saveBatch: (param: { ids: number[], comment: string, action: string }) => execDataService({
         actionName: 'ios-emp-request-batch',
+        endpoint: 'HR',
+        payload: param
+    }),
+
+    fetchStatus: (param: {}) => fetchDataItemService<any>({
+        actionName: 'fetch_ios_request_pending_status',
         endpoint: 'HR',
         payload: param
     }),

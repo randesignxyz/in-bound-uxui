@@ -834,7 +834,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_PROBATION_EVALUATION_REQUESTER',
           'ROLE_HR_DF360_VIEW',
           'ROLE_HR_DF360_SUPPORT',
-          'ROLE_HR_JOB_VIEW'
+          'ROLE_HR_JOB_VIEW',
+          'ROLE_HR_IOS_ADMIN',
+          'ROLE_HR_IOS_REQUESTER',
         ].some((it) => it === item),
       ) || false,
     canAccessHrEmployeeMenuItem:
@@ -905,6 +907,25 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canRequestHrStaffProposal:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ADMIN', 'ROLE_ADMIN', 'ROLE_HR_WF_STAFF_PROPOSAL_REQUESTER'].some(
+          (it) => it === item,
+        ),
+      ) || false,
+
+    canAccessHrIOSRequest:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ADMIN', 'ROLE_ADMIN', "ROLE_HR_IOS_ADMIN", 'ROLE_HR_IOS_REQUESTER'].some(
+          (it) => it === item,
+        ),
+      ) || false,
+    canAccessHrIOSMasterData:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ADMIN', 'ROLE_ADMIN', "ROLE_HR_IOS_ADMIN", 'ROLE_HR_IOS_MASTER_DATA'].some(
+          (it) => it === item,
+        ),
+      ) || false,
+    canAccessHrIOSObjective:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ADMIN', 'ROLE_ADMIN', "ROLE_HR_IOS_ADMIN", 'ROLE_HR_IOS_OBJECTIVE'].some(
           (it) => it === item,
         ),
       ) || false,
@@ -1390,8 +1411,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     // ============= REACH PHEUN HRM Customer 15-01-2026 ============
     canAccessHRM: currentUser?.authorities?.some((it: string) => it.toUpperCase().startsWith("ROLE_HRM") || it == "ROLE_ADMIN"),
-    canAccessHRMIOS: canAccess("HRM_IOS"),
-    canAccessHRMasterData: canAccess("HRM_MASTER_DATA"),
+    // canAccessHRMIOSRequest: canAccess("HRM_IOS_REQUEST_LIST"),
+    canAccessHRMIOSRequest: canAccess("HRM_IOS_REQUEST_LIST"),
+    canAccessHRMIOSObjectiveSetup: canAccess("HRM_IOS_OBJECTIVE_SETUP"),
+    canAccessHRMIOSEmployeeMaster: canAccess("HRM_IOS_EMPLOYEE_MASTER"),
 
     canAccessSALE: currentUser?.authorities?.some((it: string) => it.toUpperCase().startsWith("ROLE_SALE") || it == "ROLE_ADMIN"),
     canAccess,

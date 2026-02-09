@@ -26,7 +26,8 @@ const AdvancSearch: React.FC<Props> = ({ onCancel, param, ...props }) => {
             EmployeeServices.listDepartment.queryParams,
         ])(requestAction),
         enabled: props.open,
-        cacheTime: 1
+        cacheTime: 1,
+        refetchOnWindowFocus: false,
     });
     useEffect(() => {
         props.open && form.resetFields()

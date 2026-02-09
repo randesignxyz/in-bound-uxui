@@ -229,6 +229,11 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             fieldProps: {
                 placeholder: "",
                 format: 'MMM-YYYY',
+                disabledDate: (current: { year: () => number; }) => {
+                    if (!current) return false;
+                    const currentYear = moment().year();
+                    return current.year() !== currentYear;
+                },
             }
         },
         {
@@ -241,6 +246,11 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             fieldProps: {
                 placeholder: "",
                 format: 'MMM-YYYY',
+                disabledDate: (current: { year: () => number; }) => {
+                    if (!current) return false;
+                    const currentYear = moment().year();
+                    return current.year() !== currentYear;
+                },
             }
         },
         {

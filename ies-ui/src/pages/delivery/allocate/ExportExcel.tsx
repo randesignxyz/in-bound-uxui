@@ -15,11 +15,11 @@ interface Props extends FormModalProps {
   // transfer_id:string,
   loading: boolean
   initValues?: any
-  onSave: (request_delivery_date: string, route: string, zone: string, province?: string, district?: string, commune?: string, customer?: string, type?: string,) => void;
+  onSave: (customer: string, ordered_date: any,request_delivery_date: string) => void;
 }
 
 export default ({ loading, onSave, ...props }: Props) => {
-  const [form] = useForm<{ customer: string; ordered_date: any; request_delivery_date: string,type:string }>();
+  const [form] = useForm<{ customer: string; ordered_date: any; request_delivery_date: string, type: string }>();
   const requestActions = simpleRequestActions();
   const services = AllocateServiceAPI(requestActions);
   const [customer, setCustomer] = useState('')
@@ -44,89 +44,96 @@ export default ({ loading, onSave, ...props }: Props) => {
   //   }
   // }, [props.open]);
 
+  // useEffect(() => {
+  //   if (props.open && props.initValues) {
+
+  //     form.setFieldsValue({
+  //       type: props.initValues.sap_delivery_date ?? 'as_of_now',
+
+  //       request_delivery_date:
+  //         props.initValues.sap_from_date && props.initValues.sap_to_date
+  //           ? [props.initValues.sap_from_date, props.initValues.sap_to_date]
+  //           : undefined,
+
+  //       province: props.initValues.province_id,
+  //       district: props.initValues.district_id,
+  //       commune: props.initValues.commune_id,
+  //       route: props.initValues.route,
+  //       zone: props.initValues.zone,
+  //       customer: props.initValues.customer,
+  //     });
+
+  //     setRoute(props.initValues.route?.join(',') ?? '');
+  //     setZone(props.initValues.zone ?? []);
+  //     setCustomer(props.initValues.customer?.join(',') ?? '');
+  //     seType(props.initValues.sap_delivery_date ?? 'as_of_now');
+  //     setProvince(props.initValues.province_id);
+  //     setDistrict(props.initValues.district_id);
+  //     setCommune(props.initValues.commune_id);
+
+  //     // 🔥 ADD THIS BLOCK
+  //     if (props.initValues.route?.length) {
+  //       (async () => {
+  //         const res = await services.list_zone(props.initValues.route);
+  //         const zones = res.map((c: any) => ({
+  //           value: c.location_id,
+  //           label: c.name,
+  //         }));
+  //         setZoneOptions(zones);
+  //       })();
+  //     }
+  //     if (props.initValues.province_id?.length) {
+  //       (async () => {
+  //         const dis = await services.list_Location("DISTRICT", props.initValues.province_id);
+  //         setDistrictOpt(dis.map((c: any) => ({
+  //           value: c.id, label: c.name
+  //         })));
+  //       })();
+  //     }
+  //     if (props.initValues.district_id?.length) {
+  //       (async () => {
+  //         const com = await services.list_Location("COMMUNE", props.initValues.district_id);
+
+  //         const options = com.map((c: any) => ({
+  //           value: c.id,
+  //           label: c.name
+  //         }));
+
+  //         setCommuneOpt(options);
+
+  //         // ⭐ rebind value after options exist
+  //         form.setFieldsValue({
+  //           commune: props.initValues.commune_id
+  //         });
+  //       })();
+  //     }
+
+  //     // 🔥 END
+  //   }
+  // }, [props.open]);
   useEffect(() => {
-    if (props.open && props.initValues) {
-
-      form.setFieldsValue({
-        type: props.initValues.sap_delivery_date ?? 'as_of_now',
-
-        request_delivery_date:
-          props.initValues.sap_from_date && props.initValues.sap_to_date
-            ? [props.initValues.sap_from_date, props.initValues.sap_to_date]
-            : undefined,
-
-        province: props.initValues.province_id,
-        district: props.initValues.district_id,
-        commune: props.initValues.commune_id,
-        route: props.initValues.route,
-        zone: props.initValues.zone,
-        customer: props.initValues.customer,
-      });
-
-      setRoute(props.initValues.route?.join(',') ?? '');
-      setZone(props.initValues.zone ?? []);
-      setCustomer(props.initValues.customer?.join(',') ?? '');
-      seType(props.initValues.sap_delivery_date ?? 'as_of_now');
-      setProvince(props.initValues.province_id);
-      setDistrict(props.initValues.district_id);
-      setCommune(props.initValues.commune_id);
-
-      // 🔥 ADD THIS BLOCK
-      if (props.initValues.route?.length) {
-        (async () => {
-          const res = await services.list_zone(props.initValues.route);
-          const zones = res.map((c: any) => ({
-            value: c.location_id,
-            label: c.name,
-          }));
-          setZoneOptions(zones);
-        })();
-      }
-      if (props.initValues.province_id?.length) {
-        (async () => {
-          const dis = await services.list_Location("DISTRICT", props.initValues.province_id);
-          setDistrictOpt(dis.map((c: any) => ({
-            value: c.id, label: c.name
-          })));
-        })();
-      }
-      if (props.initValues.district_id?.length) {
-        (async () => {
-          const com = await services.list_Location("COMMUNE", props.initValues.district_id);
-
-          const options = com.map((c: any) => ({
-            value: c.id,
-            label: c.name
-          }));
-
-          setCommuneOpt(options);
-
-          // ⭐ rebind value after options exist
-          form.setFieldsValue({
-            commune: props.initValues.commune_id
-          });
-        })();
-      }
-
-      // 🔥 END
+    if (props.open) {
+      form.resetFields();
+      setCustomer('')
     }
   }, [props.open]);
 
 
+
   return (
     <FormModalComp
-      width="700px"
+      width="550px"
       {...props}
       confirmLoading={loading}
       onResetForm={() => form.resetFields()}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-        onSave(dataForm.request_delivery_date, route, zone, province, district, commune, customer, dataForm.type);
+        onSave(customer, dataForm.ordered_date, dataForm.request_delivery_date);
       }}
     >
       <Card>
         <ProForm form={form} submitter={false}>
-          <Row gutter={6}>
+          {/* <Row gutter={6} hidden>
             <Col span={12}>
               <ProFormSelect
                 name="type"
@@ -162,7 +169,7 @@ export default ({ loading, onSave, ...props }: Props) => {
               />
             </Col>
           </Row>
-          <Row gutter={6}>
+          <Row gutter={6} hidden>
             <Col span={12}>
               <ProFormSelect
                 label="Route"
@@ -219,7 +226,7 @@ export default ({ loading, onSave, ...props }: Props) => {
             </Col>
           </Row>
 
-          <Row gutter={6}>
+          <Row gutter={6} hidden>
             <Col span={12}>
               <ProFormSelect
                 label="Province"
@@ -276,7 +283,7 @@ export default ({ loading, onSave, ...props }: Props) => {
               />
             </Col>
           </Row>
-          <Row gutter={6}>
+          <Row gutter={6} hidden>
             <Col span={12}>
               <ProFormSelect
                 label="Commune"
@@ -326,41 +333,41 @@ export default ({ loading, onSave, ...props }: Props) => {
                 }}
               />
             </Col>
-          </Row>
-          {/* <Row gutter={6}>
-            <Col span={12}>
+          </Row> */}
+
+          <Row gutter={6}>
+            <Col span={24}>
               <ProFormSelect
-                options={[
-                  {
-                    value: 'PM/RM',
-                    label: 'PM/RM',
-                  },
-                  {
-                    value: 'FG',
-                    label: 'FG',
-                  },
-                ]}
-                name="request_type"
-                label="Type"
-              />
-            </Col>
-            <Col span={11}>
-              <ProFormSelect
-                options={type == 'request' ? request : type == 'transfer' ? transfer : []}
-                name="state"
-                label="Status"
+                name="customer"
+                label="Customer"
                 mode="multiple"
+                request={async ({ keyWords }) => {
+                  const res = await services.pageCustomer({
+                    criteria: {
+                      searchValue: keyWords,
+                    },
+                    pagination: {
+                      current: 1,
+                      pageSize: 20,
+                    },
+                  })
+
+                  return res.items.map((c: any) => ({
+                    value: c.code,
+                    label: `${c.code} - ${c.name}`,
+                  }));
+                }}
                 fieldProps={{
                   onChange: (value: any) => {
-                    const stateString = value.join(',');
-                    const finalValues = { ...value, state: stateString };
-                    setState(finalValues.state)
+                    const customerString = value.join(',');
+                    const finalValues = { ...value, customer: customerString };
+                    setCustomer(finalValues.customer)
                   },
                 }}
               />
             </Col>
-          </Row> */}
-          {/* <Row gutter={6}>
+          </Row>
+          <Row gutter={6}>
             <Col span={24}>
               <ProFormDateRangePicker
                 width={'lg'}
@@ -370,9 +377,24 @@ export default ({ loading, onSave, ...props }: Props) => {
                 fieldProps={{
                   format: 'YYYY-MM-DD',
                 }}
+                rules={[{ required: true }]}
               />
             </Col>
-          </Row> */}
+          </Row>
+          <Row gutter={6}>
+            <Col span={24}>
+              <ProFormDateRangePicker
+                width={'lg'}
+                name="request_delivery_date"
+                label="Request Delivery Date"
+                placeholder={['From Date', 'To Date']}
+                fieldProps={{
+                  format: 'YYYY-MM-DD',
+                }}
+              // rules={[{ required: true }]}
+              />
+            </Col>
+          </Row>
         </ProForm>
       </Card>
     </FormModalComp >

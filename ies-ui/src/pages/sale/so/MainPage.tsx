@@ -298,7 +298,7 @@ export default () => {
                             sorter: 'poNo',
                             dataIndex: 'poNo',
                             key: 'poNo',
-                            width: 180,
+                            width: 170,
                             align: "center",
                             actionProps: (item) => ({
                                 type: 'view',
@@ -364,8 +364,8 @@ export default () => {
                         },
                         {
                             title: 'DOP',
-                            width: 90,
-                            render: (_, r) => moment(r.deliveryDate).format('DD-MMM-YYYY'),
+                            width: 100,
+                            render: (_, r) => r.deliveryDate ? moment(r.deliveryDate).format('DD-MMM-YYYY') : '-',
                         },
                         {
                             title: 'Gross Qty',

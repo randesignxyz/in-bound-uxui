@@ -188,7 +188,7 @@ export default () => {
                     onCancel: () => {
                         setConfirmSubmitState({ visible: undefined })
                     },
-                    okText: "Save",
+                    okText: "OK",
                     cancelText: "Cancel"
                 }}
                 onFinish={async (param) => {

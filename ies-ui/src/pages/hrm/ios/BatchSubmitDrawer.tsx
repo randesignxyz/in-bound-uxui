@@ -67,7 +67,7 @@ const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
                                 { label: "Submit", value: "SUBMITTED" },
                                 { label: "Endorse", value: "ENDORSED" },
                                 { label: "Approve", value: "APPROVED" },
-                                { label: "Return", value: "RETURN" },
+                                { label: "Send Back", value: "RETURN" },
                             ]}
                             fieldProps={{
                                 onChange: (value) => {

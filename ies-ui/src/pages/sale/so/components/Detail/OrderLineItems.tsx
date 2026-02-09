@@ -22,7 +22,7 @@ export default ({ data }: { data?: SoDetail; }) => {
     const [formSum] = Form.useForm<SummaryAmount>();
 
     useEffect(() => {
-        console.log(data);
+        console.log('datadata',data);
 
         formSum.setFieldsValue({ subTotal: data?.amount, totalAmount: data?.totalAmount })
     }, [data])

@@ -181,6 +181,7 @@ export const Model = () => {
       rs.items?.map((it, index) => ({
         ...it,
         seq: index * 1000,
+        baseSeq: index * 1000,
         key: uniqueId('so-item'),
       })) || [];
 
@@ -189,7 +190,10 @@ export const Model = () => {
       return {
         ...it,
         parentKey: parent?.key,
-        seq: (parent?.id || it.seq) + index,
+        // seq: (parent?.id || it.seq) + index,
+         seq: parent
+      ? parent.baseSeq + index + 1   // child just after parent
+      : it.baseSeq,
       };
     });
 

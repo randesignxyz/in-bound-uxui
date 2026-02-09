@@ -6,7 +6,7 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import AdvancSearch from "./AdvancSearch";
-import { Button } from "antd";
+import { Badge, Button, Radio, Segmented } from "antd";
 import { DiffOutlined, FileSearchOutlined } from "@ant-design/icons";
 import { ModalForm, ProFormTextArea } from "@ant-design/pro-components";
 import Status from "@/components/Status";
@@ -24,6 +24,14 @@ export default () => {
         refetchOnWindowFocus: false,
 
     })
+
+    const { data: fetchStatus, isLoading: isLoading2, refetch: refetch2 } = useQuery({
+        queryKey: ['ipo-list'],
+        queryFn: () => IOSService.fetchStatus({}).query(requestAction),
+        refetchOnWindowFocus: false,
+
+    })
+
 
     const [batchSubmitState, setBatchSubmitState] = useState<{ visible?: { open: boolean, ids?: number[] } }>();
     const [confirmSubmitState, setConfirmSubmitState] = useState<{ visible?: { open: boolean, ids?: number[], action?: string } }>();
@@ -50,13 +58,33 @@ export default () => {
                 listView={{
                     type: "Table",
                     title: "IOS Performance Review",
-                    onStatusRender: false,
-                    statuses: [
-                        { option: { value: "ALL", label: "All" } },
-                        { option: { value: "PENDING", label: "Pending" } },
-                        { option: { value: "IN_PROGRESS", label: "In Progress" } },
-                        { option: { value: "COMPLETED", label: "Completed" } },
-                    ],
+                    onStatusRender: <Segmented
+                        defaultValue={"ALL"}
+                        style={{ overflow: 'unset !important' }}
+                        options={[
+                            { value: "ALL", label: "All" },
+                            {
+                                value: "PENDING", label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                    Pending
+                                    <Badge count={fetchStatus?.pending ?? 0} size="small" />
+                                </span>
+                            },
+                            {
+                                value: "IN_PROGRESS", label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                    In Progress
+                                    <Badge count={fetchStatus?.inProgress ?? 0} size="small" showZero />
+                                </span>
+                            },
+                            { value: "COMPLETED", label: "Completed" },
+                        ]}
+                    />,
+
+                    // statuses: [
+                    //     { option: { value: "ALL", label: "All", } },
+                    //     { option: { value: "PENDING", label: "Pending" } },
+                    //     { option: { value: "IN_PROGRESS", label: "In Progress" } },
+                    //     { option: { value: "COMPLETED", label: "Completed" } },
+                    // ],
                     onRefresh: refetch,
                     onFilter(params, page, sort) {
                         setFilter((prev) => ({

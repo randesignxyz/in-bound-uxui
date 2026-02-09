@@ -73,6 +73,18 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
         await section2Ref.current?.validateFields();
         await section3Ref.current?.validateFields();
 
+        const totalWeightSec1 = section1State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
+        const totalWeightSec2 = section2State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
+
+        if (type == "SUBMITTED" && totalWeightSec1 !== 100) {
+            message.error("Total weight of section 1 must be 100")
+            return;
+        }
+
+        if (type == "SUBMITTED" && totalWeightSec2 !== 100) {
+            message.error("Total weight of section 2 must be 100")
+            return;
+        }
 
         Modal.confirm({
             title: "Confirmation",
@@ -185,8 +197,8 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                                 current: (iosData?.status == "COMPLETED") ? 4 : iosData?.iosWorkFlow?.currentLevel ?? 0,
                                 items: [
                                     iosData?.iosEmpRequest?.empName ?? undefined,
-                                    iosData?.iosEmpRequest?.appraiser1 ?? undefined,
-                                    iosData?.iosEmpRequest?.appraiser2 ?? undefined,
+                                    iosData?.iosEmpRequest?.appraiser1 ? `LM1-${iosData?.iosEmpRequest?.appraiser1}` : undefined,
+                                    iosData?.iosEmpRequest?.appraiser2 ? `LM2-${iosData?.iosEmpRequest?.appraiser2}` : undefined,
                                     "Completed"
                                 ].filter(o => o)
                             }}

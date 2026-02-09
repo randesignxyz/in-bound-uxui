@@ -76,7 +76,7 @@ const SaleOrderSummaryReport: React.FC<FormModalProps> = ({ ...props }) => {
         const dataForm = await form.validateFields();
         try {
             // const dataForm = await form.validateFields()
-            const reportName = 'so-summary-report';
+            const reportName = 'so-compatibility-summary-report';
             // setLoading(true)
             await downloadGenericReport(requestActions)({
                 fileName: `${reportName}-${moment().format()}.xlsx`,

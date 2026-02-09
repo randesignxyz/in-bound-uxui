@@ -298,7 +298,8 @@ export default () => {
                             sorter: 'poNo',
                             dataIndex: 'poNo',
                             key: 'poNo',
-                            width: 170,
+                            width: 180,
+                            align: "center",
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.poNo || '',
@@ -335,7 +336,7 @@ export default () => {
                             dataIndex: 'soNo',
                             //render: colLink(actionHandlers?.onDetail, (d) => d.soNo || 'Not Assigned'),
                         }, {
-                            title: 'Customer',
+                            title: 'Cust ID',
                             sorter: 'customerCode',
                             dataIndex: 'customerCode',
                             key: 'customerCode',
@@ -343,7 +344,8 @@ export default () => {
                             actionProps: item => ({ type: 'action1', label: item.customerCode, actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => { window.open(`/external/crm/customer/detail/${item?.customerId}`, '_blank')?.focus() } }] }),
 
                         }, {
-                            title: 'Ship To',
+                            title: 'Ship to',
+                            width: 200,
                             render: (_, data) => data.shippingAddress,
                         },
                         {
@@ -361,23 +363,19 @@ export default () => {
                             render: (_, data) => moment(data.orderedDate).format('HH:mm:ss'),
                         },
                         {
-                            title: 'DOD',
+                            title: 'DOP',
                             width: 90,
                             render: (_, r) => moment(r.deliveryDate).format('DD-MMM-YYYY'),
                         },
                         {
-                            title: 'Del. Service',
-                            width: 60,
-                            render: (_, r) => r.deliveryMethod,
-                        },
-                        {
                             title: 'Gross Qty',
-                            width: 60,
+                            width: 80,
                             align: 'right',
                             render: (_, r) => r.qty,
                         },
                         {
                             title: 'Amount(USD)',
+                            width: 120,
                             align: 'right',
                             valueType: {
                                 type: 'money',
@@ -386,15 +384,23 @@ export default () => {
                             dataIndex: 'amount',
                         },
                         {
+                            title: 'Del.Serv',
+                            width: 60,
+                            render: (_, r) => r.deliveryMethod,
+                        },
+
+
+                        {
                             title: 'Salesperson',
                             render: (_, data) => data.salespersonName,
                             sorter: 'salespersonName',
                             dataIndex: 'salespersonName',
+                            width: 120
                         },
                         {
                             title: 'PRO',
                             dataIndex: 'province',
-                            width: 70
+                            width: 50
                         },
                         {
                             title: "Sub-Sec.",
@@ -405,15 +411,16 @@ export default () => {
                             title: "Sec.",
                             dataIndex: "section",
                             width: 50,
-                            tooltip: "Section"
                         },
                         {
                             title: 'Status',
+                            width: 80,
                             render: (_, r) => r.status && <Status text={r.status} />,
                         },
                         {
                             title: 'Source',
                             dataIndex: 'source',
+                            width: 60,
                         },]
                 }
             }} />

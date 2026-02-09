@@ -100,7 +100,35 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                 section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
             }
         }
-        setSubmitState({ visible: { actionType: type, open: true, entry: entry } })
+        if (type !== "DRAFTED") {
+            setSubmitState({ visible: { actionType: type, open: true, entry: entry } })
+        } else {
+            Modal.confirm({
+                title: "Confirmation",
+                content: `Are you sure you want to ${type} this record?`,
+                onOk: async () => {
+                    const entry: IosRequestPayload = {
+                        ...dataForm,
+                        iosMasterListId: detail?.id,
+                        iosEmpRequestId: id,
+                        action: type,
+                        payload: {
+                            ...dataForm,
+                            section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+                            section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+                            section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
+                        }
+                    }
+                    const res = await IOSService.update(entry)(requestAction);
+                    if (res.id == 0 || res.id == undefined) {
+                        message.error(res.message)
+                        return;
+                    }
+                    message.success(`${type} successfully`)
+                    onCancel?.()
+                }
+            })
+        }
 
 
         // const entry: IosRequestPayload = {
@@ -292,7 +320,8 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
 
             <ModalForm
                 open={submitState?.visible?.open}
-                title="Batch Submit Confirmation"
+                title="Submit Confirmation"
+                width={500}
                 modalProps={{
                     onCancel: () => {
                         setSubmitState({ visible: undefined })

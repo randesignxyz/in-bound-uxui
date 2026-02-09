@@ -46,7 +46,7 @@ export default ({ data }: { data?: SoDetail; }) => {
                 { title: 'Code', dataIndex: 'itemCode' },
                 { title: 'Description', dataIndex: 'description' },
                 { title: 'Type', dataIndex: 'type' },
-                
+
                 { title: 'Budget Code', dataIndex: 'budgetCode' },
                 // { title: 'STD', dataIndex: 'STD', align: 'right' },
                 // { title: 'TDO', dataIndex: 'TDO', align: 'right' },
@@ -100,71 +100,71 @@ export default ({ data }: { data?: SoDetail; }) => {
                 reload: false,
             }}
             dataSource={data?.items}
-            // dataSource={(() => {
-            //     const rows: SoItemDetail[] = []
-            //     const map = new Map<string, SoItemDetail>()
+        // dataSource={(() => {
+        //     const rows: SoItemDetail[] = []
+        //     const map = new Map<string, SoItemDetail>()
 
-            //         ; (data?.items || []).forEach((i) => {
-            //             const isSTD = i.type === 'STD'
-            //             const isTDO = i.type === 'TDO'
-            //             const isTDP = i.type === 'TDP'
-            //             const isMainType = isSTD || isTDO || isTDP
+        //         ; (data?.items || []).forEach((i) => {
+        //             const isSTD = i.type === 'STD'
+        //             const isTDO = i.type === 'TDO'
+        //             const isTDP = i.type === 'TDP'
+        //             const isMainType = isSTD || isTDO || isTDP
 
-            //             const key = i.itemCode || ''
+        //             const key = i.itemCode || ''
 
-            //             if (isMainType) {
-            //                 if (!map.has(key)) {
-            //                     map.set(key, {
-            //                         ...i,
-            //                         type: '',
-            //                         STD: null,
-            //                         TDO: null,
-            //                         TDP: null,
-            //                         qty: 0,
-            //                     })
-            //                 }
+        //             if (isMainType) {
+        //                 if (!map.has(key)) {
+        //                     map.set(key, {
+        //                         ...i,
+        //                         type: '',
+        //                         STD: null,
+        //                         TDO: null,
+        //                         TDP: null,
+        //                         qty: 0,
+        //                     })
+        //                 }
 
-            //                 const row = map.get(key)!
+        //                 const row = map.get(key)!
 
-            //                 if (isSTD) row.STD = (row.STD || 0) + i.qty
-            //                 if (isTDO) row.TDO = (row.TDO || 0) + i.qty
-            //                 if (isTDP) row.TDP = (row.TDP || 0) + i.qty
+        //                 if (isSTD) row.STD = (row.STD || 0) + i.qty
+        //                 if (isTDO) row.TDO = (row.TDO || 0) + i.qty
+        //                 if (isTDP) row.TDP = (row.TDP || 0) + i.qty
 
-            //                 row.qty =
-            //                     (row.STD || 0) +
-            //                     (row.TDO || 0) +
-            //                     (row.TDP || 0)
-            //             } else {
-            //                 // FOC / TDL / others
-            //                 rows.push({
-            //                     ...i,
-            //                     type: i.type,
-            //                     STD: null,
-            //                     TDO: null,
-            //                     TDP: null,
-            //                     qty: i.qty,
-            //                 })
-            //             }
-            //         })
+        //                 row.qty =
+        //                     (row.STD || 0) +
+        //                     (row.TDO || 0) +
+        //                     (row.TDP || 0)
+        //             } else {
+        //                 // FOC / TDL / others
+        //                 rows.push({
+        //                     ...i,
+        //                     type: i.type,
+        //                     STD: null,
+        //                     TDO: null,
+        //                     TDP: null,
+        //                     qty: i.qty,
+        //                 })
+        //             }
+        //         })
 
-            //     rows.push(...map.values())
+        //     rows.push(...map.values())
 
-            //     // sort by seq ascending
-            //     rows.sort((a, b) => {
-            //         const aSeq = a.seq || 0
-            //         const bSeq = b.seq || 0
+        //     // sort by seq ascending
+        //     rows.sort((a, b) => {
+        //         const aSeq = a.seq || 0
+        //         const bSeq = b.seq || 0
 
-            //         if (aSeq !== bSeq) return aSeq - bSeq
+        //         if (aSeq !== bSeq) return aSeq - bSeq
 
-            //         // same item → main row first
-            //         if (!a.type && b.type) return -1
-            //         if (a.type && !b.type) return 1
+        //         // same item → main row first
+        //         if (!a.type && b.type) return -1
+        //         if (a.type && !b.type) return 1
 
-            //         return 0
-            //     })
+        //         return 0
+        //     })
 
-            //     return rows
-            // })()}
+        //     return rows
+        // })()}
         />
 
         <ProForm

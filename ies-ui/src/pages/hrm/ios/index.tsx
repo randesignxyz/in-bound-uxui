@@ -81,7 +81,7 @@ export default () => {
                             {
                                 value: "IN_PROGRESS", label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                                     In Progress
-                                    <Badge count={fetchStatus?.inProgress ?? 0} size="small" showZero />
+                                    <Badge count={fetchStatus?.inProgress ?? 0} size="small" />
                                 </span>
                             },
                             { value: "COMPLETED", label: "Completed" },

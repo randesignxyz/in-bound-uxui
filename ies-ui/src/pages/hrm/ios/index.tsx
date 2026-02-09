@@ -61,6 +61,15 @@ export default () => {
                     onStatusRender: <Segmented
                         defaultValue={"ALL"}
                         style={{ overflow: 'unset !important' }}
+                        onChange={(value) => {
+                            setFilter((prev) => ({
+                                ...prev,
+                                criteria: {
+                                    ...prev.criteria,
+                                    status: value,
+                                },
+                            }));
+                        }}
                         options={[
                             { value: "ALL", label: "All" },
                             {

@@ -122,7 +122,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
 
     const sections1 = (section1: any[], action: number) => {
 
-        const filledSection1: IosSection2Params[] = Array.from({ length: (action == 0) ? section1.length : 5 }, (_, index) => {
+        const filledSection1: IosSection2Params[] = Array.from({ length: ((action == 0) && !iosData?.iosWorkFlow?.actions?.some(action => ["APPROVED", "RETURNED"].includes(action.code))) ? section1.length : 5 }, (_, index) => {
             const item = section1?.[index];
             return {
                 key: (index + 1).toString(),

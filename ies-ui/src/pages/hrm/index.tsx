@@ -123,14 +123,14 @@ export default () => {
     return (
         <PageContainer title={false}>
             <ListMenuComp items={items} />
-            {
-                access.canAccessHRMIOS && (
-                    <>
-                        <Divider plain orientation="left" >Individual Objectives Setting</Divider>
-                        <ListMenuComp items={iosItem} />
-                    </>
-                )
-            }
+            {/* {
+                access.canAccessHRMIOS && ( */}
+            <>
+                <Divider plain orientation="left" >Individual Objectives Setting</Divider>
+                <ListMenuComp items={iosItem} />
+            </>
+            {/* //     )
+            // } */}
         </PageContainer>
     )
 }

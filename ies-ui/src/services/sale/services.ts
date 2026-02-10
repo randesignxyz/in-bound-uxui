@@ -278,6 +278,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     SaleService('sync-so-from-sfa')
     , actions
   ),
+  syncSOFromSAP: execService<{docNum: string,data:any}, { data: string, message: string }>(
+    SaleService('sync-so-from-sap')
+    , actions
+  ),
   cancelSo: execService<{ soId: number; remarks: string }, { data: string; message: string }>(
     SaleService('cancel-so'),
     actions,

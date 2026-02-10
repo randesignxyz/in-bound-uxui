@@ -164,7 +164,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
       {openInTab ? (
         <>
           <OrderFormView actionButtons={buttons} soDetail={state.data?.soDetail} />
-          <SoFormView data={state.data?.soDetail} />
+          <SoFormView data={state.data?.soDetail} onRefreshSo={(id) => actions.fetchSo(id)}/>
         </>
       ) : (
         <PageContainer
@@ -183,7 +183,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
             buttons
           }
         >
-          <SoFormView data={state.data?.soDetail} />
+          <SoFormView data={state.data?.soDetail} onRefreshSo={(id) => actions.fetchSo(id)}/>
         </PageContainer>
       )}
 

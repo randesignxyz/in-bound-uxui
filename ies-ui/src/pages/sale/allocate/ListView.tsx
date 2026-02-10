@@ -1011,27 +1011,54 @@ export default () => {
       width: 300,
       render: (_, value) => (
         <>
-          <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
-            <Typography.Link strong copyable >{value.so_no}</Typography.Link>
-          </a>
-          <a style={{ marginLeft: 5 }} onClick={() => window.open(`/external/sale/so/detail/${value.soId}`, '_blank')?.focus()}>
-            <Typography.Link >< ExportOutlined /></Typography.Link>
-          </a>
-          {value.status == 'TBA' &&
-            <a style={{ marginLeft: 5 }} onClick={() => { console.log(value) }}>
-              <Typography.Link ><Dropdown
-                menu={{
-                  items: getClearTBA(value),
-                  style: { width: 200 },
-                }}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+
+            {/* FIRST ROW */}
+            <Space
+              align="center"
+              size={6}
+              style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}
+            >
+              <Typography.Link
+                strong
+                copyable
+                onClick={() =>
+                  setDrawerTypeOpen({ visible: true, data: value })
+                }
               >
-                <a onClick={(e) => e.preventDefault()}>
-                  <MoreOutlined />
-                </a>
-              </Dropdown></Typography.Link>
-            </a>
-          }
+                {value.so_no}
+              </Typography.Link>
+            </Space>
+
+            {/* SECOND ROW */}
+            <Space size={8} style={{ marginTop: 4 }}>
+              <Typography.Link
+                onClick={() =>
+                  window
+                    .open(`/external/sale/so/detail/${value.soId}`, '_blank')
+                    ?.focus()
+                }
+              >
+                <ExportOutlined />
+              </Typography.Link>
+
+              {value.status === 'TBA' && (
+                <Dropdown
+                  menu={{
+                    items: getClearTBA(value),
+                    style: { width: 200 },
+                  }}
+                >
+                  <Typography.Link onClick={(e) => e.preventDefault()}>
+                    <MoreOutlined />
+                  </Typography.Link>
+                </Dropdown>
+              )}
+            </Space>
+
+          </div>
         </>
+
       ),
     },
     {
@@ -1060,17 +1087,18 @@ export default () => {
     //   },
     // },
     {
-      title: 'Delivery Date',
+      title: 'DOP',
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY hh:mm'),// forces UTC, no timezone shift
-      // sorter: {
-      //   compare: (a, b) =>
-      //     (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
-      //     (b.sap_delivery_date ? dayjs(b.sap_delivery_date).unix() : 0),
-      //   multiple: 4,
-      // },
+        dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY hh:mm'),
+    },
+    {
+      title: 'DOD',
+      dataIndex: 'dod_date',
+      width: '6%',
+      render: (_, r) =>
+        dayjs.utc(r.dod_date).format('DD-MMM-YYYY hh:mm'),
     },
     {
       title: 'Shipping Address',

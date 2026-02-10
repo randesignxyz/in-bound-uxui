@@ -14,7 +14,7 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
-import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, DashOutlined, ExportOutlined, FileSearchOutlined, HistoryOutlined, MoreOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, DashOutlined, ExportOutlined, FileSearchOutlined, HistoryOutlined, MoreOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined, FileExcelOutlined, DownloadOutlined } from '@ant-design/icons';
 import AdvanceSearch from './advanceSearchDrawer';
 import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
@@ -523,7 +523,74 @@ export default () => {
     });
   };
 
+  const handleExport = async (data: any) => {
+    console.log('data', data)
+    const result = [
+      {
+        key: "customer",
+        value: Array.isArray(data.customer)
+          ? data.customer.join(',')
+          : data.customer ?? '',
+        type: "string"
+      },
 
+      {
+        key: 'type',
+        value: data.sap_delivery_date ?? 'as_of_now',
+        type: 'string',
+      },
+      {
+        key: 'request_delivery_startdate',
+        value: data.sap_from_date
+          ? (data.sap_from_date)
+          : null,
+        type: 'date',
+      },
+      {
+        key: 'request_delivery_enddate',
+        value: data.sap_to_date
+          ? (data.sap_to_date)
+          : null,
+        type: 'date',
+      },
+      {
+        key: 'province_id',
+        value: Array.isArray(data?.province_id) && data.province_id.length > 0
+          ? data.province_id.join(',')
+          : '',
+        type: 'string',
+      },
+      {
+        key: 'district_id',
+        value: Array.isArray(data?.district_id) && data.district_id.length > 0
+          ? data.district_id.join(',')
+          : '',
+        type: 'string',
+      },
+      {
+        key: 'commune_id',
+        value: Array.isArray(data?.commune_id) && data.commune_id.length > 0
+          ? data.commune_id.join(',')
+          : '',
+        type: 'string',
+      }
+
+    ]
+    console.log(result)
+    try {
+      await downloadGenericReport(requestActions)({
+        fileName: `dop-${moment().format()}.xls`,
+        type: 'EXCEL',
+        data: {
+          reportName: 'DOP_Delivery_Detail',
+          reportPath: '/Reports/Delivery',
+          data: result,
+        },
+      }).then(() => { })
+    } catch (error) {
+      message.error('Failed to download.');
+    }
+  }
 
   const getActivities = async (id: number) => {
     try {
@@ -830,91 +897,6 @@ export default () => {
     }
   };
 
-  // const onHistoryRequestDNDeatilHandler = async (
-  //   params: TableViewSearchParams<AllocateSOAdvanceParams>
-  // ): Promise<Paging<DNList>> => {
-  //   try {
-  //     const sortBy: string[] = [];
-  //     const sortOrders: string[] = [];
-
-  //     if (params?.criteria?.sort) {
-  //       Object.entries(params.criteria.sort).forEach(([key, value]) => {
-  //         sortBy.push(key);
-  //         sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
-  //       });
-  //     }
-
-  //     const res = await services.list_dn_detail({
-  //       criteria: {
-  //         ...hisSearch,
-  //         ...params.criteria,
-  //         sap_delivery_date:
-  //           hisSearch.sap_from_date && hisSearch.sap_to_date
-  //             ? null
-  //             : hisSearch.sap_delivery_date,
-  //         filterPass: 'Claimed',
-  //       },
-  //       pagination: {
-  //         current: params.pagination?.current ?? 1,
-  //         pageSize: params.pagination?.pageSize ?? 10,
-  //       },
-  //       sort: params.sort,
-  //     });
-
-
-  //     if (!res || !Array.isArray(res.items)) {
-  //       throw new Error('Unexpected response format');
-  //     }
-
-  //     const transformedItems = res.items.map((delivery) => {
-  //       const skuValues: Record<string, number> = {};
-
-  //       skuList.forEach((sku) => {
-  //         if (sku.item_category === 2) {
-  //           skuValues[`${sku.sku_code}_pack`] = 0;
-  //           skuValues[`${sku.sku_code}_bowl`] = 0;
-  //         } else {
-  //           skuValues[sku.sku_code] = 0;
-  //         }
-  //       });
-
-  //       const itemsToUse =
-  //         delivery.mergeItems?.length > 0
-  //           ? delivery.mergeItems
-  //           : delivery.deliveryItems;
-
-  //       itemsToUse.forEach((item) => {
-  //         const sku = skuList.find(
-  //           (s) => s.id.toString() === item.sku_id
-  //         );
-  //         if (!sku) return;
-
-  //         const key =
-  //           sku.item_category === 2
-  //             ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}`
-  //             : sku.sku_code;
-
-  //         skuValues[key] += item?.qty;
-  //       });
-
-  //       return {
-  //         ...delivery,
-  //         key: delivery.id,
-  //         ...skuValues,
-  //       };
-  //     });
-
-  //     return {
-  //       items: transformedItems,
-  //       total: res.total,
-  //       pageSize: res.pageSize,
-  //     };
-  //   } catch (error: any) {
-  //     message.error(error.message);
-  //     return Promise.reject(error);
-  //   }
-  // };
-
   const skuColumns: ProColumns<DNList>[] = skuList.map((sku) => {
     if (sku.item_category === 1) {
 
@@ -1026,27 +1008,54 @@ export default () => {
       width: 300,
       render: (_, value) => (
         <>
-          <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
-            <Typography.Link strong copyable >{value.so_no}</Typography.Link>
-          </a>
-          <a style={{ marginLeft: 5 }} onClick={() => window.open(`/external/sale/so/detail/${value.soId}`, '_blank')?.focus()}>
-            <Typography.Link >< ExportOutlined /></Typography.Link>
-          </a>
-          {value.status == 'TBA' &&
-            <a style={{ marginLeft: 5 }} onClick={() => { console.log(value) }}>
-              <Typography.Link ><Dropdown
-                menu={{
-                  items: getClearTBA(value),
-                  style: { width: 200 },
-                }}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+
+            {/* FIRST ROW */}
+            <Space
+              align="center"
+              size={6}
+              style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}
+            >
+              <Typography.Link
+                strong
+                copyable
+                onClick={() =>
+                  setDrawerTypeOpen({ visible: true, data: value })
+                }
               >
-                <a onClick={(e) => e.preventDefault()}>
-                  <MoreOutlined />
-                </a>
-              </Dropdown></Typography.Link>
-            </a>
-          }
+                {value.so_no}
+              </Typography.Link>
+            </Space>
+
+            {/* SECOND ROW */}
+            <Space size={8} style={{ marginTop: 4 }}>
+              <Typography.Link
+                onClick={() =>
+                  window
+                    .open(`/external/sale/so/detail/${value.soId}`, '_blank')
+                    ?.focus()
+                }
+              >
+                <ExportOutlined />
+              </Typography.Link>
+
+              {value.status === 'TBA' && (
+                <Dropdown
+                  menu={{
+                    items: getClearTBA(value),
+                    style: { width: 200 },
+                  }}
+                >
+                  <Typography.Link onClick={(e) => e.preventDefault()}>
+                    <MoreOutlined />
+                  </Typography.Link>
+                </Dropdown>
+              )}
+            </Space>
+
+          </div>
         </>
+
       ),
     },
     {
@@ -1075,17 +1084,18 @@ export default () => {
     //   },
     // },
     {
-      title: 'Delivery Date',
+      title: 'DOP',
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY hh:mm'),// forces UTC, no timezone shift
-      // sorter: {
-      //   compare: (a, b) =>
-      //     (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
-      //     (b.sap_delivery_date ? dayjs(b.sap_delivery_date).unix() : 0),
-      //   multiple: 4,
-      // },
+        dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY hh:mm'),
+    },
+    {
+      title: 'DOD',
+      dataIndex: 'dod_date',
+      width: '6%',
+      render: (_, r) =>
+        dayjs.utc(r.dod_date).format('DD-MMM-YYYY hh:mm'),
     },
     {
       title: 'Customer Code', dataIndex: 'customer_code', width: 150, render: (_, value) => (
@@ -2158,6 +2168,11 @@ export default () => {
                         >
                         </Button>
                         </Tooltip>
+                        <Tooltip title="Dowload Excel File"><Button type="text" size='large' icon={<DownloadOutlined />}
+                          onClick={() => handleExport(dnSearch)}
+                        >
+                        </Button>
+                        </Tooltip>
                         <Tooltip title="Refresh">
                           <Button
                             type="text"
@@ -2601,18 +2616,14 @@ export default () => {
         loading={excelLoading}
         initValues={dnSearch}
         onCancel={() => setExportModal({ visible: false })}
-        onSave={async (request_delivery_date, route, zone, province, district, commune, customer,type) => {
+        onSave={async (customer, ordered_date, request_delivery_date) => {
           const result = [
             {
               key: 'customer',
               value: customer ?? null,
               type: 'string',
             },
-            {
-              key: 'type',
-              value: type ?? 'as_of_now',
-              type: 'string',
-            },
+
             {
               key: 'request_delivery_startdate',
               value: request_delivery_date?.[0]
@@ -2627,31 +2638,21 @@ export default () => {
                 : null,
               type: 'dateTime',
             },
+
             {
-              key: 'province_id',
-              value: province?.length ? province.join(',') : '',
-              type: 'string',
-            }, {
-              key: 'district_id',
-              value:
-                district?.length
-                  ? district.join(',')
-                  : route?.length
-                    ? route.join(',')
-                    : '',
-              type: 'string',
+              key: 'ordered_startdate',
+              value: ordered_date?.[0]
+                ? (ordered_date[0])
+                : null,
+              type: 'dateTime',
             },
             {
-              key: 'commune_id',
-              value:
-                commune?.length
-                  ? commune.join(',')
-                  : zone?.length
-                    ? zone.join(',')
-                    : '',
-              type: 'string',
-            }
-
+              key: 'ordered_enddate',
+              value: ordered_date?.[1]
+                ? (ordered_date[1])
+                : null,
+              type: 'dateTime',
+            },
           ]
           console.log(result)
           try {
@@ -2660,7 +2661,7 @@ export default () => {
               fileName: `dop-${moment().format()}.xls`,
               type: 'EXCEL',
               data: {
-                reportName: 'DOP_Delivery_Detail',
+                reportName: 'DOP_Delivery_Detail_V2',
                 reportPath: '/Reports/Delivery',
                 data: result,
               },

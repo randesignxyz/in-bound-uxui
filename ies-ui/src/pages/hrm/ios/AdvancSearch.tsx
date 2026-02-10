@@ -6,13 +6,14 @@ import { useForm } from "antd/es/form/Form"
 import { EmployeeServices } from "../services";
 import { simpleRequestActions } from "@/services/model";
 import { BU, Department } from "../data";
+import { useEffect } from "react";
 
 interface Props extends DrawerFormProps {
     onCancel: () => void;
-
+    param: any
 }
 
-const AdvancSearch: React.FC<Props> = ({ onCancel, ...props }) => {
+const AdvancSearch: React.FC<Props> = ({ onCancel, param, ...props }) => {
     const requestAction = simpleRequestActions();
     const [form] = useForm();
     const { data, isFetching, refetch } = useQuery({
@@ -25,8 +26,13 @@ const AdvancSearch: React.FC<Props> = ({ onCancel, ...props }) => {
             EmployeeServices.listDepartment.queryParams,
         ])(requestAction),
         enabled: props.open,
-        cacheTime: 1
-    })
+        cacheTime: 1,
+        refetchOnWindowFocus: false,
+    });
+    useEffect(() => {
+        props.open && form.resetFields()
+        param && form.setFieldsValue(param)
+    }, [props.open]);
     return (
         <DrawerForm
             {...props}
@@ -36,11 +42,12 @@ const AdvancSearch: React.FC<Props> = ({ onCancel, ...props }) => {
                 onClose: onCancel,
                 width: 500
             }}
+
             submitter={{
                 searchConfig: {
                     submitText: "Search",
-                    resetText: "Reset"
-                }
+                    resetText: "Reset",
+                },
             }}
         >
 

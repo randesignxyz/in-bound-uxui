@@ -37,6 +37,7 @@ const DataSetupItemForm: React.FC<DataSetupItemFormProps> = ({ record, parent, l
             <ProFormText
                 name="code"
                 label="Code"
+                disabled={record?.id}
                 placeholder="e.g. ITEM_CODE"
                 initialValue={generate3LetterCode(parent?.name || 'ITEM',) + '-' + lastNumber}
                 rules={[{ required: true, message: 'Please enter a code' }]}
@@ -59,12 +60,18 @@ const DataSetupItemForm: React.FC<DataSetupItemFormProps> = ({ record, parent, l
                 name="descriptionEn"
                 label="Description (EN)"
                 placeholder="English Description"
+                fieldProps={{
+                    rows: 8
+                }}
             />
 
             <ProFormTextArea
                 name="descriptionKm"
                 label="Description (KM)"
                 placeholder="Khmer Description"
+                fieldProps={{
+                    rows: 8
+                }}
             />
 
             <ProFormSelect
@@ -90,10 +97,14 @@ const DataSetupItemForm: React.FC<DataSetupItemFormProps> = ({ record, parent, l
                 label="Access (Optional)"
                 options={[
                     { label: 'All', value: 'All' },
-                    { label: 'Manager', value: 'Manager' },
-                    { label: 'Employee', value: 'Employee' },
-                    { label: 'Admin', value: 'Admin' },
-                    { label: 'User', value: 'User' },
+                    { label: 'Casual Staff', value: 'Casual Staff' },
+                    { label: 'Staff', value: 'Staff' },
+                    { label: 'Team Leader', value: 'Team Leader' },
+                    { label: 'Middle Management', value: 'Middle Management' },
+                    { label: 'Management', value: 'Management' },
+                    { label: 'Executive Management', value: 'Executive Management' },
+                    { label: 'Board of Directors', value: 'Board of Directors' },
+
                 ]}
             />
 
@@ -103,7 +114,7 @@ const DataSetupItemForm: React.FC<DataSetupItemFormProps> = ({ record, parent, l
                 label="Map (Optional)"
                 request={async ({ keywords }) => {
                     const data = await DataSetupService.pageDataSetupItems({ criteria: { searchValue: keywords } })
-                    return data?.items?.map((item) => ({ label: item.code, value: item.code }));
+                    return data?.items?.map((item) => ({ label: `${item.code}`, value: item.code }));
                 }}
             />
         </DrawerForm>

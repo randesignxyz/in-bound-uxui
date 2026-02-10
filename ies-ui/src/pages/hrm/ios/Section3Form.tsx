@@ -118,7 +118,7 @@ const Section3Form: React.FC<Props> = ({ dataSource, readOnly = false, onValueCh
 
                     <ProFormTextArea
                         name={"comment"}
-                        placeholder={"Comments"}
+                        placeholder={"Remarks"}
                         fieldProps={{
                             rows: 6
                         }}

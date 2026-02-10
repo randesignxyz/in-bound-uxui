@@ -2,6 +2,7 @@ import { Moment } from "moment";
 
 
 export interface IosEmpRequest {
+    comment: any;
     id: number;
 
     // Business Unit
@@ -83,6 +84,7 @@ interface IosSection1Params {
 }
 
 export interface IosSection2Params {
+    setDefualt?: boolean;
     initial: any;
     midYearReview: string;
     key: string;
@@ -120,7 +122,7 @@ export interface IosSection3Params {
 export interface IosEmpRequestDetail {
     id: number;
     iosEmpRequestId: number;
-    status: "PENDING" | "APPROVED" | "REJECTED";
+    status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
 
     iosEmpRequest: IosEmpRequest;
     iosWorkFlow: IosWorkFlow;
@@ -154,9 +156,9 @@ export interface IosEmpRequestDetail {
     buId: number;
     buName: string;
 
-    appraiser1: string;
+    appraiser1?: string;
     appraiser1No: string;
-    appraiser2: string;
+    appraiser2?: string;
     appraiser2No: string;
 
     weightageSection1: number;
@@ -170,6 +172,8 @@ export interface IosEmpRequest {
     empName: string;
     empNameKh: string;
     empEmail: string | null;
+    appraiser1?: string;
+    appraiser2?: string;
 }
 
 export interface IosWorkFlow {

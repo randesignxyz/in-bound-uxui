@@ -181,6 +181,7 @@ export const Model = () => {
       rs.items?.map((it, index) => ({
         ...it,
         seq: index * 1000,
+        baseSeq: index * 1000,
         key: uniqueId('so-item'),
       })) || [];
 
@@ -189,7 +190,10 @@ export const Model = () => {
       return {
         ...it,
         parentKey: parent?.key,
-        seq: (parent?.id || it.seq) + index,
+        // seq: (parent?.id || it.seq) + index,
+         seq: parent
+      ? parent.baseSeq + index + 1   // child just after parent
+      : it.baseSeq,
       };
     });
 
@@ -483,6 +487,9 @@ export const Model = () => {
   const syncFromSFA = async () => {
     return await saleServices.syncFromSFA({});
   };
+  const syncSOFromSAP = async (docNum: string,data:any) => {
+    return await saleServices.syncSOFromSAP({docNum,data});
+  };
 
   const cancelSo = async (soId: number, remarks: string) => {
     return await saleServices.cancelSo({ soId, remarks });
@@ -565,6 +572,7 @@ export const Model = () => {
       postSo,
       postSoNew,
       syncFromSFA,
+      syncSOFromSAP,
       cancelSo,
       closeSo,
       listTransportationOffer,

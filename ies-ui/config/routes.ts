@@ -445,28 +445,28 @@ export default [
   },
 
   {
-    path: '/hrm/ios/:view/*',
+    path: '/hrm/ios/:view',
     name: 'ios',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessHRMIOS',
+    access: 'canAccessHRMIOSRequest',
     component: './hrm/ios',
   },
   {
-    path: 'external/hrm/ios/detail/:id',
+    path: 'external/hrm/ios/detail/:ids',
     name: 'ios',
     icon: 'UnorderedListOutlined',
     layout: false,
     hideInMenu: 'true',
-    access: 'canAccessHRMIOS',
-    component: './hrm/ios',
+    access: 'canAccessHRMIOSRequest',
+    component: './hrm/ios/detail',
   },
   {
     path: '/hrm/master-data/:view/*',
     name: 'master-data',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessHRMasterData',
+    access: 'canAccessHRMIOSObjectiveSetup',
     component: './hrm/master-data',
   },
   {
@@ -474,7 +474,7 @@ export default [
     name: 'master-data',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessHRMasterData',
+    access: 'canAccessHRMIOSEmployeeMaster',
     component: './hrm/ios-upload',
   },
   /**********HRM>>**************/

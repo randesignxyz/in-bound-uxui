@@ -22,7 +22,7 @@ export default ({ data }: { data?: SoDetail; }) => {
     const [formSum] = Form.useForm<SummaryAmount>();
 
     useEffect(() => {
-        console.log(data);
+        console.log('datadata',data);
 
         formSum.setFieldsValue({ subTotal: data?.amount, totalAmount: data?.totalAmount })
     }, [data])
@@ -33,16 +33,24 @@ export default ({ data }: { data?: SoDetail; }) => {
             sortDirections={['ascend']}
             showSorterTooltip={false}
             columns={[
+                // {
+                //     title: '#',
+                //     dataIndex: 'index',
+                //     defaultSortOrder: 'ascend',
+                //     sorter: (a, b) => a.index! - b.index!,
+                // },
                 {
                     title: '#',
-                    dataIndex: 'index',
-                    defaultSortOrder: 'ascend',
-                    sorter: (a, b) => a.index! - b.index!,
+                    render: (_, __, index) => index + 1,
                 },
                 { title: 'Code', dataIndex: 'itemCode' },
                 { title: 'Description', dataIndex: 'description' },
                 { title: 'Type', dataIndex: 'type' },
+
                 { title: 'Budget Code', dataIndex: 'budgetCode' },
+                // { title: 'STD', dataIndex: 'STD', align: 'right' },
+                // { title: 'TDO', dataIndex: 'TDO', align: 'right' },
+                // { title: 'TDP', dataIndex: 'TDP', align: 'right' },
                 {
                     title: 'Qty',
                     dataIndex: 'qty',
@@ -54,14 +62,14 @@ export default ({ data }: { data?: SoDetail; }) => {
                     align: 'right',
 
                     render: (_, r) => {
-                        return numeral(r.price).format('$ 0,0.000000');
+                        return numeral(r.price).format('$ 0,0.00');
                     },
                 },
                 {
                     title: 'Amount',
                     align: 'right',
                     render: (_, r) => {
-                        return numeral(r.amount).format('$ 0,0.000000');
+                        return numeral(r.amount).format('$ 0,0.00');
                     },
                 },
                 {
@@ -76,7 +84,7 @@ export default ({ data }: { data?: SoDetail; }) => {
                     title: 'Total Amount',
                     align: 'right',
                     render: (_, r) => {
-                        return numeral(r.totalAmount).format('$ 0,0.000000');
+                        return numeral(r.totalAmount).format('$ 0,0.00');
                     },
                 },
 
@@ -92,6 +100,71 @@ export default ({ data }: { data?: SoDetail; }) => {
                 reload: false,
             }}
             dataSource={data?.items}
+        // dataSource={(() => {
+        //     const rows: SoItemDetail[] = []
+        //     const map = new Map<string, SoItemDetail>()
+
+        //         ; (data?.items || []).forEach((i) => {
+        //             const isSTD = i.type === 'STD'
+        //             const isTDO = i.type === 'TDO'
+        //             const isTDP = i.type === 'TDP'
+        //             const isMainType = isSTD || isTDO || isTDP
+
+        //             const key = i.itemCode || ''
+
+        //             if (isMainType) {
+        //                 if (!map.has(key)) {
+        //                     map.set(key, {
+        //                         ...i,
+        //                         type: '',
+        //                         STD: null,
+        //                         TDO: null,
+        //                         TDP: null,
+        //                         qty: 0,
+        //                     })
+        //                 }
+
+        //                 const row = map.get(key)!
+
+        //                 if (isSTD) row.STD = (row.STD || 0) + i.qty
+        //                 if (isTDO) row.TDO = (row.TDO || 0) + i.qty
+        //                 if (isTDP) row.TDP = (row.TDP || 0) + i.qty
+
+        //                 row.qty =
+        //                     (row.STD || 0) +
+        //                     (row.TDO || 0) +
+        //                     (row.TDP || 0)
+        //             } else {
+        //                 // FOC / TDL / others
+        //                 rows.push({
+        //                     ...i,
+        //                     type: i.type,
+        //                     STD: null,
+        //                     TDO: null,
+        //                     TDP: null,
+        //                     qty: i.qty,
+        //                 })
+        //             }
+        //         })
+
+        //     rows.push(...map.values())
+
+        //     // sort by seq ascending
+        //     rows.sort((a, b) => {
+        //         const aSeq = a.seq || 0
+        //         const bSeq = b.seq || 0
+
+        //         if (aSeq !== bSeq) return aSeq - bSeq
+
+        //         // same item → main row first
+        //         if (!a.type && b.type) return -1
+        //         if (a.type && !b.type) return 1
+
+        //         return 0
+        //     })
+
+        //     return rows
+        // })()}
         />
 
         <ProForm
@@ -107,7 +180,7 @@ export default ({ data }: { data?: SoDetail; }) => {
                     <ProFormField
                         // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
                         render={(_, r) => {
-                            return numeral(r['value']).format('$ 0,0.000000');
+                            return numeral(r['value']).format('$ 0,0.00');
                         }}
                         label="Sub Total"
                         name="subTotal"
@@ -122,7 +195,7 @@ export default ({ data }: { data?: SoDetail; }) => {
                     <ProFormField
                         // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
                         render={(_, r) => {
-                            return numeral(r['value']).format('$ 0,0.000000');
+                            return numeral(r['value']).format('$ 0,0.00');
                         }}
                         label="VAT Amount"
                         name="vatAmount"
@@ -131,7 +204,7 @@ export default ({ data }: { data?: SoDetail; }) => {
                     <ProFormField
                         // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
                         render={(_, r) => {
-                            return numeral(r['value']).format('$ 0,0.000000');
+                            return numeral(r['value']).format('$ 0,0.00');
                         }}
                         label="Total Amount"
                         name="totalAmount"

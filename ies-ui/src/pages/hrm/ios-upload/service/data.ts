@@ -32,5 +32,6 @@ export type IOSEmployeeSearchParams = {
   searchValue?: string;
   buIds?: number[];
   depIds?: number[];
+  subDepIds?: number[];
 }
 

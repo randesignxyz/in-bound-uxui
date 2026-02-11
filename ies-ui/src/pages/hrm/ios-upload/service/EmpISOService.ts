@@ -23,7 +23,6 @@ export const IEmpISOService = {
   })
 };
 
-
 export const EmpISOServiceAPI = (requestActions?: RequestActions) => ({
   ListAll: (params: TableViewSearchParams<IOSEmployeeSearchParams>) =>
     singleRequest<EmpISOData>(

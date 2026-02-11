@@ -2,8 +2,8 @@ import ProForm, { ProFormSelect } from "@ant-design/pro-form";
 import { Drawer, DrawerProps } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import { simpleRequestActions } from "@/services/model";
-import { MultiRequest } from "@/services/apiGateway";
-import { BU, Department } from "../../hrm/data";
+import { MultiRequest } from '@/services/apiGateway';
+import { BU, Department, SubDepartment } from '../../hrm/data';
 import { useEffect, useState } from "react";
 import { EmployeeServices } from "../../hrm/services";
 import { IOSEmployeeSearchParams } from '@/pages/hrm/ios-upload/service/data';
@@ -26,9 +26,11 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
   const [data, setData] = useState<{
     buList: BU[];
     departmentList: Department[];
+    subDepartmentList: SubDepartment[];
   }>({
     buList: [],
     departmentList: [],
+    subDepartmentList: [],
   });
 
   useEffect(() => {
@@ -45,15 +47,19 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
     const rs = await MultiRequest<{
       buList: BU[];
       deptList: Department[];
+      subDeptList: SubDepartment[]; // ✅ match responseKey
     }>([
       EmployeeServices.listBu.queryParams,
       EmployeeServices.listDepartment.queryParams,
+      EmployeeServices.listSubDepartment.queryParams,
     ])(requestActions);
 
     setData({
-      buList: rs.buList,
-      departmentList: rs.deptList,
+      buList: rs.buList ?? [],
+      departmentList: rs.deptList ?? [],
+      subDepartmentList: rs.subDeptList ?? [], // ✅ map correctly
     });
+
   };
 
   return (
@@ -95,6 +101,18 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
           showSearch
           placeholder="Select functions"
           options={data.departmentList.map((it) => ({
+            label: it.name,
+            value: it.id,
+          }))}
+        />
+        <ProFormSelect
+          label="Sub-Function"
+          name="subDepIds"
+          placeholder="Select Sub-functions"
+          mode="multiple"
+          allowClear
+          showSearch
+          options={data.subDepartmentList.map((it) => ({
             label: it.name,
             value: it.id,
           }))}

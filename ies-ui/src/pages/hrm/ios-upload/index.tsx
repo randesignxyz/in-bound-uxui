@@ -18,10 +18,8 @@ import { DataResponse, ImportDataItem } from '@/services/shared/data';
 import UploadData from '@/pages/hrm/ios-upload/upload-data';
 import { ActionType } from '@ant-design/pro-components';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
-import { ExportOutlined } from '@ant-design/icons';
 import AdvanceSearchDrawer from '@/pages/hrm/ios-upload/AdvanceSearchEmpIOS';
-import Profile from '@/pages/profile';
-import moment, { Moment } from 'moment';
+import moment from 'moment';
 
 const Index = () => {
   const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
@@ -33,6 +31,7 @@ const Index = () => {
         searchValue: undefined,
         buIds: [],
         depIds: [],
+        subDeptIds: [],
         status: "ALL",
       },
     },
@@ -48,7 +47,8 @@ const Index = () => {
     const adv = filter.criteria?.advanceSearch;
     return (
       (adv?.buIds?.length ?? 0) > 0 ||
-      (adv?.depIds?.length ?? 0) > 0
+      (adv?.depIds?.length ?? 0) > 0 ||
+      (adv?.subDepIds?.length ?? 0) > 0
     );
   };
   const advanceSearchIcon = useMemo(() => {
@@ -151,19 +151,6 @@ const Index = () => {
                 render(_, entity, index) {
                   return <Flex gap={3} align="center">
                     <span>{index + 1}</span>
-                    {/*<Button*/}
-                    {/*  size="small"*/}
-                    {/*  type="link"*/}
-                    {/*  title="Open in new tab"*/}
-                    {/*  icon={<ExportOutlined />}*/}
-                    {/*  onClick={() => {*/}
-                    {/*    window*/}
-                    {/*      .open(*/}
-                    {/*        `/profile/2/${entity.empNo}`,*/}
-                    {/*      )*/}
-                    {/*      ?.focus();*/}
-                    {/*  }}*/}
-                    {/*/>*/}
                   </Flex>
                 },
               },
@@ -172,18 +159,6 @@ const Index = () => {
                 dataIndex: 'empNo',
                 sorter: 'employeeCode',
                 width: 115,
-                // actionProps: (item) => ({
-                //   type: 'view',
-                //   label: item.empNo,
-                // }),
-                // render: (_, entity) => (
-                //
-                //   <Flex gap={5} align="center">
-                //     <span style={{ color: "#1677ff", cursor: "pointer" }}>
-                //   {entity.empNo}
-                //   </span>
-                //   </Flex>
-                // ),
               },
               { title: "Employee Name", dataIndex: "empName" , width:120},
               { title: "Company", dataIndex: "buName" },
@@ -259,6 +234,7 @@ const Index = () => {
               advanceSearch: {
                 buIds: [],
                 depIds: [],
+                subDeptIds: []
               },
             },
             pagination: { ...prev.pagination, current: 1 },

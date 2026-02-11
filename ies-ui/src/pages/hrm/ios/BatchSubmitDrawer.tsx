@@ -3,16 +3,15 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import Status from "@/components/Status";
 import { DrawerForm, DrawerFormProps, ModalForm, ProFormSegmented, ProFormTextArea, ProTable } from "@ant-design/pro-components";
 import { useQuery } from "@umijs/max";
-import { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { IOSService } from "./service";
-import { simpleRequestActions } from "@/services/model";
-import { Segmented } from "antd";
-
+import { Button, Row, Segmented, Space } from 'antd';
+import { FilterOutlined, SelectOutlined } from '@ant-design/icons';
+import BatchSumitAdvanceSearch from '@/pages/hrm/ios/BatchSumitAdvanceSearch';
 
 interface Props extends DrawerFormProps {
     onSubmit?: (data: any) => void
 }
-
 
 const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
     const [filter, setFilter] = useState<TableViewSearchParams<any>>({});
@@ -22,6 +21,20 @@ const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
         refetchOnWindowFocus: false,
         enabled: !!props.open
     });
+  const isAdvancedFiltered = () => {
+    const adv = filter.criteria?.advanceSearch;
+    return (
+      (adv?.buIds?.length ?? 0) > 0 ||
+      (adv?.depIds?.length ?? 0) > 0 ||
+      (adv?.subDepIds?.length ?? 0) > 0
+    );
+  };
+  const advanceSearchIcon = useMemo(() => {
+    return isAdvancedFiltered()
+      ? <FilterOutlined style={{ color: "red" }} />
+      : <SelectOutlined />;
+  }, [filter.criteria?.advanceSearch]);
+  const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
     const [rowSelectionState, setRowSelectionState] = useState<number[]>([]);
     return (
         <>
@@ -59,29 +72,37 @@ const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
                             setRowSelectionState(selectedRowKeys as number[])
                         }
                     }}
-                    headerTitle={<>
+                    headerTitle={<div >
+                      <Row gutter={16}>
                         <ProFormSegmented
-                            name="action"
-                            initialValue={"SUBMITTED"}
-                            request={async () => [
-                                { label: "Submit", value: "SUBMITTED" },
-                                { label: "Endorse", value: "ENDORSED" },
-                                { label: "Approve", value: "APPROVED" },
-                                { label: "Send Back", value: "RETURN" },
-                            ]}
-                            fieldProps={{
-                                onChange: (value) => {
-                                    setFilter((o) => ({
-                                        ...o,
-                                        criteria: {
-                                            ...o.criteria,
-                                            batchRequest: value
-                                        }
-                                    }))
+                          name="action"
+                          initialValue={"SUBMITTED"}
+                          request={async () => [
+                            { label: "Submit", value: "SUBMITTED" },
+                            { label: "Endorse", value: "ENDORSED" },
+                            { label: "Approve", value: "APPROVED" },
+                            { label: "Send Back", value: "RETURN" },
+                          ]}
+
+                          fieldProps={{
+                            onChange: (value) => {
+                              setFilter((o) => ({
+                                ...o,
+                                criteria: {
+                                  ...o.criteria,
+                                  batchRequest: value
                                 }
-                            }}
+                              }))
+                            }
+                          }}
                         />
-                    </>}
+                        <Button
+                          style={{ margin: "0px 0px 0px 15px" }}
+                          onClick={() => setAdvanceSearchVisible(true)}
+                          icon={advanceSearchIcon}
+                        />
+                      </Row>
+                    </div>}
                     rowKey={"id"}
                     pagination={{
                         pageSize: 20,
@@ -135,9 +156,39 @@ const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
                         }
                     ]}
                 />
+
             </DrawerForm>
 
-
+          <BatchSumitAdvanceSearch
+            open={advanceSearchVisible}
+            onClose={() => setAdvanceSearchVisible(false)}
+            onSearch={(params) => {
+              setFilter((prev) =>
+                ({
+                  criteria:{
+                    ...prev.criteria,
+                    advanceSearch: {
+                      ...prev.criteria?.advanceSearch,
+                      ...params,
+                    }
+                  }
+                }))
+              setAdvanceSearchVisible(false);
+            }}
+            onReset={() => {
+              setFilter((prev) => ({
+                criteria: {
+                  ...prev.criteria,
+                  advanceSearch: {
+                    buIds: [],
+                    depIds: [],
+                    subDeptIds: []
+                  },
+                },
+                pagination: { ...prev.pagination, current: 1 },
+              }));
+            }}
+          />
         </>
     )
 }

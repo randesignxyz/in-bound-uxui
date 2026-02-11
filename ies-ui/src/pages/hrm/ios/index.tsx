@@ -122,7 +122,7 @@ export default () => {
                           onDataResponse={data => {
                             setImportData(data)
                           }}
-                          key={"IMPORT_OBJECTIVE_IOS"}
+                          key={"IMPORT_IOS_EMP_DETAIL_LIST"}
                           onHandleChange={(status) => {
                             if (status === 'done') {
                               message.info('Data uploaded.');
@@ -221,7 +221,6 @@ export default () => {
                     name="comment"
                     placeholder={"Comments"}
                 />
-
             </ModalForm>
             <BatchSubmitDrawer
                 open={batchSubmitState?.visible?.open}

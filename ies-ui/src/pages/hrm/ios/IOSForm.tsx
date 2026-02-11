@@ -335,7 +335,6 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                         comment: param.comment,
                         payload: {
                             ...submitState?.visible?.entry?.payload,
-                            comment: param.comment
                         }
                     })(requestAction);
                     if (res.id == 0 || res.id == undefined) {

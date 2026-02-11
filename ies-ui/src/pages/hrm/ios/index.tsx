@@ -215,6 +215,8 @@ export default () => {
                         comment: param?.comment
                     })(requestAction);
                     setConfirmSubmitState({ visible: undefined })
+                    setBatchSubmitState({ visible: undefined })
+                    refetch()
                 }}
             >
                 <ProFormTextArea

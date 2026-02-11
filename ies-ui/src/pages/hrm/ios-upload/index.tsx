@@ -31,7 +31,6 @@ const Index = () => {
         searchValue: undefined,
         buIds: [],
         depIds: [],
-        subDeptIds: [],
         status: "ALL",
       },
     },
@@ -244,5 +243,4 @@ const Index = () => {
     </>
   );
 };
-
 export default Index;

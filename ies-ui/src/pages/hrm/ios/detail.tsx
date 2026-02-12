@@ -150,6 +150,7 @@ const IPODetail: React.FC<Props> = ({ id }) => {
         iosData && sections1(iosData.section1);
         iosData && sections2(iosData.section2);
         iosData && sections3(iosData.section3);
+        console.log(iosData?.section1)
     }, [iosData]);
 
 

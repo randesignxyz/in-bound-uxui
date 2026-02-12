@@ -43,7 +43,11 @@ export type NewStaffDetailItem = {
 
 export type SearchParams = {
     keyword?: string,
-    status?: string,
+    status?: "ALL"|"PENDING"|"COMPLETED"|"REJECTED",
+    buIds?: number[],
+    depIds?: number[],
+  startDate?: string,
+  endDate?: string,
 }
 
 export type SaveItem = {

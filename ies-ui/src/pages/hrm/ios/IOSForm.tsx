@@ -70,11 +70,24 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
 
     const onSave = async (type: string) => {
         const dataForm = await form.validateFields();
-
-        await section1Ref.current?.validateFields();
-        await section2Ref.current?.validateFields();
-        await section3Ref.current?.validateFields();
-
+        try{
+             await section1Ref.current?.validateFields();
+        }catch{
+            message.warning('SECTION I: "WHAT" PART (RESULTS) is required.')
+            return;
+        }
+        try{
+             await section2Ref.current?.validateFields();
+        }catch{
+            message.warning('SECTION II: "HOW" PART (APPROACH/BEHAVIORS) is required.')
+            return;
+        }
+         try{
+              await section3Ref.current?.validateFields();
+        }catch{
+            message.warning('SECTION III: PERFORMANCE SUMMARY is required.')
+            return;
+        }
         const totalWeightSec1 = section1State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
         const totalWeightSec2 = section2State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
 
@@ -285,7 +298,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                             }}
                         />
                         <Section2Form
-                            dataSource={section2State?.map(p => ({ ...p, initial: objective?.some(o => o.id == p.objId) ?? false })) ?? []}
+                            dataSource={section2State}
                             objective={objective}
                             actionPlan={actionPlan}
                             editableFormRef={section2Ref}

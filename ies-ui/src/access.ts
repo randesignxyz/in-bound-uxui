@@ -836,7 +836,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_DF360_SUPPORT',
           'ROLE_HR_JOB_VIEW',
           'ROLE_HR_IOS_ADMIN',
-          'ROLE_HR_IOS_REQUESTER',
+          'ROLE_HR_IOS_MENU',
         ].some((it) => it === item),
       ) || false,
     canAccessHrEmployeeMenuItem:

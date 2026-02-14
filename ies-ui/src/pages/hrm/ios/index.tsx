@@ -1,6 +1,6 @@
 import PageWrapper from "@/components/PageWrapper";
 import IOSForm from "./IOSForm";
-import { useQuery } from "@umijs/max";
+import { useAccess, useQuery } from "@umijs/max";
 import { IOSService } from "./service";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { useRef, useState } from 'react';
@@ -17,8 +17,9 @@ import UploadData from '@/pages/hrm/ios/upload-data';
 
 
 export default () => {
+    const access = useAccess();
     const requestAction = simpleRequestActions();
-  const actionRef = useRef<ActionType>();
+    const actionRef = useRef<ActionType>();
     const [filter, setFilter] = useState<TableViewSearchParams<any>>({});
     const [advanceSearchState, setAdvanceSearchState] = useState<{ visible?: { open: boolean, payload?: any } }>();
     const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
@@ -114,21 +115,23 @@ export default () => {
 
                     actionButtons: [
                       <Space>
-                        <Button icon={<DiffOutlined />} type="link"
+                        <Button icon={<DiffOutlined />} type="link" hidden={!access.can('HRM_IOS_REQUEST_LIST','BTN_BATCH_SUBMIT')}
                                 onClick={() => setBatchSubmitState({ visible: { open: true, ids: [] } })}
                         >Batch Submit</Button>
-                        <ImportFileButton<ImportDataItem>
-                          importedKey="IMPORT_OBJECTIVE_IOS"
-                          onDataResponse={data => {
-                            setImportData(data)
-                          }}
-                          key={"IMPORT_IOS_EMP_DETAIL_LIST"}
-                          onHandleChange={(status) => {
-                            if (status === 'done') {
-                              message.info('Data uploaded.');
-                            }
-                          }}
-                        />
+                        <Space hidden={!access.can('HRM_IOS_REQUEST_LIST','BTN_IMPORT')}>
+                            <ImportFileButton<ImportDataItem> 
+                            importedKey="IMPORT_OBJECTIVE_IOS"
+                            onDataResponse={data => {
+                                setImportData(data)
+                            }}
+                            key={"IMPORT_IOS_EMP_DETAIL_LIST"}
+                            onHandleChange={(status) => {
+                                if (status === 'done') {
+                                message.info('Data uploaded.');
+                                }
+                            }}
+                            />
+                        </Space>
                       </Space>
                     ],
                     props: {

@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { DrawerForm, ProFormText, ProFormTextArea, ProFormSelect, ProFormSwitch, DrawerFormProps } from '@ant-design/pro-components';
-import { Form, message } from 'antd';
-import { generate3LetterCode, generateFullCode } from './treeUtils';
-import numeral from 'numeral';
+import { Form } from 'antd';
+import { generate3LetterCode } from './treeUtils';
 import { DataSetupService } from './service';
 import { simpleRequestActions } from '@/services/model';
 // import { ProEditor } from '@ant-design/pro-editor';

@@ -91,12 +91,12 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
         const totalWeightSec1 = section1State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
         const totalWeightSec2 = section2State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
 
-        if (type == "SUBMITTED" && totalWeightSec1 !== 100) {
+        if ( ["SUBMITTED","ENDORSED"].some(it=> it==type) && totalWeightSec1 !== 100) {
             message.error("Total weight of section 1 must be 100")
             return;
         }
 
-        if (type == "SUBMITTED" && totalWeightSec2 !== 100) {
+        if ( ["SUBMITTED","ENDORSED"].some(it=> it==type) && totalWeightSec2 !== 100) {
             message.error("Total weight of section 2 must be 100")
             return;
         }

@@ -199,7 +199,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
             return {
                 key: (index + 1).toString(),
                 ...(item || {}),
-                dueDate:  item?.startedDate ?? moment().endOf('year'),
+                dueDate:  item?.dueDate ?? moment().endOf('year'),
                 startedDate: item?.startedDate ?? moment().startOf('year'),
                 weight: (item?.weight == 0) ? undefined : item?.weight
             };
@@ -211,7 +211,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
         const filledSection2: IosSection2Params[] = section2.map((o, index) => (
             {
                 ...o,
-                dueDate:  o?.startedDate ?? moment().endOf('year'),
+                dueDate:  o?.dueDate ?? moment().endOf('year'),
                 startedDate:  o?.startedDate ?? moment().startOf('year'),
                 key: (index + 1).toString(),
                 weight: (o.weight == 0) ? undefined : o.weight

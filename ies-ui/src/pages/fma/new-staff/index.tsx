@@ -14,6 +14,7 @@ import { createService } from "./services";
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import Form from '@/pages/process-flow/form';
 import AdvanceEmployeeSearch from '@/pages/fma/new-staff/AdvanceSearchParams';
+import moment from "moment";
 
 export default () => {
     const requestActions = simpleRequestActions();
@@ -22,12 +23,12 @@ export default () => {
   const [filter, setFilter] = useState<TableViewSearchParams<SearchParams>>({
     criteria: {
       advanceSearch: {
-        searchValue: undefined,
+        keyword: undefined,
         buIds: [],
         depIds: [],
         status: "ALL",
-        startDate: undefined,
-        endDate: undefined,
+        fromDate: undefined,
+        toDate: undefined,
       },
     },
     pagination: { current: 1, pageSize: 20 },
@@ -45,8 +46,8 @@ export default () => {
     return (
       (adv?.buIds?.length ?? 0) > 0 ||
       (adv?.depIds?.length ?? 0) > 0 ||
-      !!adv?.startDate ||
-      !!adv?.endDate
+      !!adv?.fromDate ||
+      !!adv?.toDate
     );
   };
   const advanceSearchIcon = useMemo(() => {
@@ -69,7 +70,7 @@ export default () => {
               )},
             {
               action: "view",
-              tabLabel: item?.formNo | item?.empName,
+              tabLabel: item?.formNo,
               tabIcon: <PlusOutlined/>,
               panel: (props)=> <Form openInTab formKey="fma_new_staff_request" id={item?.processInstId}/>
             }
@@ -111,7 +112,7 @@ export default () => {
                 ...p,
                 criteria: {
                   ...p.criteria,
-                  searchValue: params?.searchValue,
+                  searchValue: params?.keyword,
                   ...params,
                   advanceSearch: {
                     ...p.criteria?.advanceSearch,
@@ -188,6 +189,13 @@ export default () => {
                 { title: 'COMPANY', dataIndex: "bu" },
                 { title: 'Function', dataIndex: "department", sorter: 'dept' },
                 { title: 'Job Title', dataIndex: "jobTitle", sorter: 'jobTitle' },
+                { title: 'Approval', dataIndex: 'HOD' },
+                { title: "Start Date", dataIndex: "startingDate",
+                      render: (_ , entity) =>
+                        entity.startingDate
+                          ? moment(entity.startingDate).format("YYYY-MM-DD")
+                          : "-",
+                },
                 { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} />, sorter: 'status' },
               ]
             }
@@ -203,6 +211,10 @@ export default () => {
                 ...prev.criteria,
                 advanceSearch: {
                   ...prev.criteria?.advanceSearch,
+                  buIds: params.buIds,
+                  depIds: params.depIds,
+                  fromDate: params.fromDate,
+                  toDate: params.toDate,
                   ...params,
                 },
               },

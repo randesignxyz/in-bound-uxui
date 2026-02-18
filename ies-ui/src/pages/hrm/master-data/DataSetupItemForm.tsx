@@ -5,6 +5,7 @@ import { generate3LetterCode, generateFullCode } from './treeUtils';
 import numeral from 'numeral';
 import { DataSetupService } from './service';
 import { simpleRequestActions } from '@/services/model';
+// import { ProEditor } from '@ant-design/pro-editor';
 
 interface DataSetupItemFormProps extends DrawerFormProps {
     record?: any;
@@ -64,6 +65,12 @@ const DataSetupItemForm: React.FC<DataSetupItemFormProps> = ({ record, parent, l
                     rows: 8
                 }}
             />
+            {/* <ProEditorProvider>
+                <Editor
+                    defaultValue="<p>English Description</p>"
+                    style={{ height: 300 }}
+                />
+            </ProEditorProvider> */}
 
             <ProFormTextArea
                 name="descriptionKm"

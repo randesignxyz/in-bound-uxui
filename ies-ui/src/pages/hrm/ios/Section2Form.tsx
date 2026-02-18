@@ -81,6 +81,11 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
+            render: (text) => (
+                <div style={{ whiteSpace: 'pre-line' }}>
+                    {text}
+                </div>
+            ),
             // editable: (_, record) => !(record.id == 0),
 
             renderFormItem: (item, { record, ...rest }, form) => {

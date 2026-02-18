@@ -82,7 +82,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
             render: (text) => (
-                <div style={{ whiteSpace: 'pre-line' }}>
+                <div style={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
                     {text}
                 </div>
             ),

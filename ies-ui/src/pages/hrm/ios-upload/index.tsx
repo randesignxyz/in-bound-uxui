@@ -33,8 +33,8 @@ const Index = () => {
         depIds: [],
         status: "ALL",
       },
+      pagination: { current: 1, pageSize: 20 },
     },
-    pagination: { current: 1, pageSize: 20 },
   })
   const { data, isLoading, refetch } = useQuery(
     ["fetch_ios_emp_master_page", filter],
@@ -93,7 +93,7 @@ const Index = () => {
         ]}
         listView={{
           type: "Table",
-          title: "IOS List",
+          title: "IOS Employee Profile",
           advanceSearchButton: (
             <Button
               onClick={() => setAdvanceSearchVisible(true)}
@@ -118,14 +118,16 @@ const Index = () => {
           ],
           onRefresh: refetch,
           onFilter: (params: any) => {
-            setFilter((p) => ({
+            setFilter((p,) => ({
               ...p,
+              ...filter.pagination,
               criteria: {
                 ...p.criteria,
                 searchValue: params?.searchValue,
                 advanceSearch: {
                   ...p.criteria?.advanceSearch,
                   status: params?.status || p.criteria?.advanceSearch?.status,
+                  ...params
                 },
               },
             }));
@@ -139,7 +141,12 @@ const Index = () => {
             pagination: {
               total: data?.total,
               current: filter.pagination?.current,
-              pageSize: filter.pagination?.pageSize
+              pageSize: filter.pagination?.pageSize,
+              onChange: (current, pageSize) =>
+                setFilter((p) => ({
+                  ...p,
+                  pagination: { current, pageSize },
+                })),
             },
             columns: [
               {

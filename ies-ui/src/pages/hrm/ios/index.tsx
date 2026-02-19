@@ -14,6 +14,7 @@ import BatchSubmitDrawer from "./BatchSubmitDrawer";
 import ImportFileButton from '@/components/ImportFileButton';
 import { DataResponse, ImportDataItem } from '@/services/shared/data';
 import UploadData from '@/pages/hrm/ios/upload-data';
+import Export from "./export-data/Export";
 
 
 export default () => {
@@ -132,6 +133,7 @@ export default () => {
                             }}
                             />
                         </Space>
+                        <Space hidden={!access.can('HRM_IOS_REQUEST_LIST','BTN_EXPORT')}> <Export/></Space>                        
                       </Space>
                     ],
                     props: {

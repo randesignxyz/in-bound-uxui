@@ -3,7 +3,7 @@ import {
   ModalForm,
   ProFormSelect,
 } from '@ant-design/pro-components';
-import { Button, message } from 'antd';
+import {Button, Form, Input, message} from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import { useForm } from 'antd/es/form/Form';
 import moment from 'moment';
@@ -14,10 +14,12 @@ import { BU, Department } from '@/pages/hrm/data';
 import { EmployeeServices } from '@/pages/hrm/services';
 import { getUrlReporting } from '@/pages/ReportUrl';
 
+
 type FormData = {
   buIds?: number[];
   departmentIds?: number[];
   subFunctionIds?: number[];
+  employeeId?: string;
   status?: string[];
 };
 
@@ -92,8 +94,9 @@ const Export: React.FC = () => {
               value: it,
             })),
             {key:'startWithRole', value: 'ROLE_HR_IOS'},
-            {key:'empNo',value:'002330,003015'}
+            {key:'empNo',value:dataForm.employeeId}
           ],
+
         },
       });
 
@@ -138,7 +141,14 @@ const Export: React.FC = () => {
         ],
       }}
     >
-      {/* Company */}
+
+
+      <Form.Item
+        label="Employee Id"
+        name="employeeId"
+      >
+        <Input placeholder="Please enter one or more separated by( , )  e.g. 000001, 000002" />
+      </Form.Item>
       <ProFormSelect
         label="Company"
         name="buIds"

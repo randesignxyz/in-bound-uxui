@@ -3,7 +3,7 @@ import {
   ModalForm,
   ProFormSelect,
 } from '@ant-design/pro-components';
-import { Button, message } from 'antd';
+import {Button, Form, Input, message} from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import { useForm } from 'antd/es/form/Form';
 import moment from 'moment';
@@ -14,10 +14,12 @@ import { BU, Department } from '@/pages/hrm/data';
 import { EmployeeServices } from '@/pages/hrm/services';
 import { getUrlReporting } from '@/pages/ReportUrl';
 
+
 type FormData = {
   buIds?: number[];
   departmentIds?: number[];
   subFunctionIds?: number[];
+  employeeId?: string;
   status?: string[];
 };
 
@@ -61,7 +63,7 @@ const Export: React.FC = () => {
       const dataForm = await form.validateFields();
       setLoading(true);
 
-      const reportName = 'IOS Performance Review Report';
+      const reportName = 'IOS Performance Review Detail List';
 
       await downloadGenericReport(requestActions)({
         fileName: `${reportName}-${moment().format(
@@ -70,7 +72,7 @@ const Export: React.FC = () => {
         type: 'EXCEL',
         data: {
           reportName: 'hr_ios_emp_detail_list', // your jasper name
-          reportPath: getUrlReporting('hrm'),
+          reportPath: getUrlReporting('hrm/ios'),
           data: [
             ...(dataForm.status || []).map((it) => ({
               key: 'status',
@@ -91,7 +93,10 @@ const Export: React.FC = () => {
               key: 'subDeptIds',
               value: it,
             })),
+            {key:'startWithRole', value: 'ROLE_HR_IOS'},
+            {key:'empNo',value:dataForm.employeeId}
           ],
+
         },
       });
 
@@ -136,7 +141,14 @@ const Export: React.FC = () => {
         ],
       }}
     >
-      {/* Company */}
+
+
+      <Form.Item
+        label="Employee Id"
+        name="employeeId"
+      >
+        <Input placeholder="Please enter one or more separated by( , )  e.g. 000001, 000002" />
+      </Form.Item>
       <ProFormSelect
         label="Company"
         name="buIds"

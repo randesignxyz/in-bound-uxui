@@ -44,13 +44,15 @@ export type NewStaffDetailItem = {
 
 
 export type SearchParams = {
-  status?: "ALL"|"PENDING"|"COMPLETED"|"REJECTED",
+  status?: "ALL" | "PENDING" | "COMPLETED" | "REJECTED";
   keyword?: string;
   buIds?: number[];
   depIds?: number[];
-  fromDate?: moment.Moment,
-  toDate?: moment.Moment,
+  startDate?: string;   // ✅ use string (YYYY-MM-DD)
+  endDate?: string;     // ✅ use string (YYYY-MM-DD)
 }
+
+
 
 export type SaveItem = {
     itemId: number;

@@ -30,8 +30,8 @@ export default () => {
         fromDate: undefined,
         toDate: undefined,
       },
+      pagination: { current: 1, pageSize: 20 },
     },
-    pagination: { current: 1, pageSize: 20 },
   });
 
   const actionRef = useRef<ActionType>();
@@ -46,8 +46,8 @@ export default () => {
     return (
       (adv?.buIds?.length ?? 0) > 0 ||
       (adv?.depIds?.length ?? 0) > 0 ||
-      !!adv?.fromDate ||
-      !!adv?.toDate
+      !!adv?.startDate ||
+      !!adv?.endDate
     );
   };
   const advanceSearchIcon = useMemo(() => {
@@ -126,9 +126,14 @@ export default () => {
               actionRef: actionRef,
               loading: isLoading,
               pagination: {
-                  total: data?.total,
-                  current: filter.pagination?.current,
-                  pageSize: filter.pagination?.pageSize
+                total: data?.total,
+                current: filter.pagination?.current,
+                pageSize: filter.pagination?.pageSize,
+                onChange: (current, pageSize) =>
+                  setFilter((p) => ({
+                    ...p,
+                    pagination: { current, pageSize },
+                  })),
               },
               columns: [
                 {
@@ -213,17 +218,12 @@ export default () => {
                   ...prev.criteria?.advanceSearch,
                   buIds: params.buIds,
                   depIds: params.depIds,
-                  fromDate: params.fromDate,
-                  toDate: params.toDate,
+                  startDate: params.startDate,
+                  endDate: params.endDate,
                   ...params,
                 },
               },
-              pagination: {
-                ...prev.pagination,
-                current: 1, // reset to first page when searching
-              },
             }));
-
             setAdvanceSearchVisible(false);
           }}
           onReset={() => {
@@ -238,10 +238,6 @@ export default () => {
                   startDate: undefined,
                   endDate: undefined,
                 },
-              },
-              pagination: {
-                ...prev.pagination,
-                current: 1,
               },
             }));
           }}

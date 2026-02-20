@@ -21,11 +21,13 @@ interface Props {
   onSyncSuccess?: () => void
 }
 
-const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, soNum,docEntry, soStatus, onSyncSuccess }) => {
+const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, soNum, docEntry, soStatus, onSyncSuccess }) => {
   const [itemList, setItemList] = useState<DeliverySoItemEntry[]>([]);
   const { actions, modals } = Model();
   const requestActions = simpleRequestActions();
   const [syncLoading, setSyncLoading] = useState(false);
+  const [onSuccess, setOnSuccess] = useState(false)
+
   useEffect(() => {
     const items =
       deliveries?.flatMap((dlv) =>
@@ -65,6 +67,51 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
     setItemList(sortedItems);
   }, [deliveries]);
 
+  const syncSAP = async () => {
+  try {
+    setSyncLoading(true);
+
+    const data = deliveries?.map(d => ({
+      deliveryId: d.id,
+      shipDate: d.deliveryDate
+    }));
+
+    await actions.syncSOFromSAP(soNum, data);
+    await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
+
+    setOnSuccess(true); // trigger effect
+  } catch (e) {
+    const error = e as { error: string; message: string };
+    message.error(error.message);
+  } finally {
+    setSyncLoading(false);
+  }
+};
+
+  useEffect(() => {
+     if (!onSuccess) return;
+    const sync = async () => {
+      try {
+        setSyncLoading(true);
+        const data = deliveries?.map(d => ({
+          deliveryId: d.id,
+          shipDate: d.deliveryDate
+        }));
+        await actions.syncSOFromSAP(soNum, data)
+        await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry])
+        onSyncSuccess?.()
+        message.success('Sync Success')
+      } catch (e) {
+        const error = e as { error: string; message: string };
+        message.error(error.message);
+      } finally {
+        setSyncLoading(false);
+      }
+    };
+    sync()
+    setOnSuccess(false)
+  }, [onSuccess])
+  
   // useEffect(() => {
   //   if (!deliveries) {
   //     setItemList([]);
@@ -187,24 +234,7 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
               key="sync"
               loading={syncLoading}
               onClick={async () => {
-                try {
-                  setSyncLoading(true);
-                  const data = deliveries?.map(d => ({
-                    deliveryId: d.id,
-                    shipDate: d.deliveryDate
-                  }));
-                  await actions.syncSOFromSAP(soNum, data)
-                  await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry])
-                  console.log('prepared data', data);
-                  console.log('deliveries', deliveries)
-                  onSyncSuccess?.()
-                  message.success('Sync Success');
-                } catch (e) {
-                  const error = e as { error: string; message: string };
-                  message.error(error.message);
-                } finally {
-                  setSyncLoading(false);
-                }
+                syncSAP()
               }}
             >
               Sync Plan from SAP

@@ -23,14 +23,12 @@ export const IEmpISOService = {
   })
 };
 
-
 export const EmpISOServiceAPI = (requestActions?: RequestActions) => ({
   ListAll: (params: TableViewSearchParams<IOSEmployeeSearchParams>) =>
     singleRequest<EmpISOData>(
       IEmpISOService.List(params))(requestActions) as Promise<Paging<EmpISOData>>,
 
   DeleteEmployeeIOS: (id: number | string)=> singleRequest(IEmpISOService.DeleteEmpIOS(id))(requestActions)
-
 });
 
 

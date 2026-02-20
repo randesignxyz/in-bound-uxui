@@ -26,7 +26,8 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
   const [data, setData] = useState<{
     buList: BU[];
     departmentList: Department[];
-    subDepartmentList: SubDepartment[];
+    // subDepartmentList: SubDepartment[];
+    subDepartmentList: string[];
   }>({
     buList: [],
     departmentList: [],
@@ -54,10 +55,11 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
       EmployeeServices.listSubDepartment.queryParams,
     ])(requestActions);
 
+    const subDeptList = rs.subDeptList.map(it => it.name)
     setData({
       buList: rs.buList ?? [],
       departmentList: rs.deptList ?? [],
-      subDepartmentList: rs.subDeptList ?? [], // ✅ map correctly
+      subDepartmentList: subDeptList.filter((item,index)=> subDeptList.indexOf(item)===index)?? [], // ✅ map correctly
     });
 
   };
@@ -113,8 +115,8 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
           allowClear
           showSearch
           options={data.subDepartmentList.map((it) => ({
-            label: it.name,
-            value: it.id,
+            label: it,
+            value: it,
           }))}
         />
       </ProForm>

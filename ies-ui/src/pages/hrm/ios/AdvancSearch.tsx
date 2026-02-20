@@ -1,21 +1,26 @@
 
 import { MultiRequest } from "@/services/apiGateway";
-import { DrawerForm, DrawerFormProps, ProFormSelect } from "@ant-design/pro-components"
+
 import { useQuery } from "@umijs/max";
 import { useForm } from "antd/es/form/Form"
 import { EmployeeServices } from "../services";
 import { simpleRequestActions } from "@/services/model";
 import { BU, Department, SubDepartment } from "../data";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Drawer, DrawerProps } from "antd";
+import ProForm, { ProFormSelect } from "@ant-design/pro-form";
 
-interface Props extends DrawerFormProps {
-    onCancel: () => void;
-    param: any
+interface Props extends DrawerProps {
+    // onClose: () => void;
+    param: any;
+    onSearch: (params: any) => void;
+    onReset: () => void;
 }
 
-const AdvancSearch: React.FC<Props> = ({ onCancel, param, ...props }) => {
+const AdvancSearch: React.FC<Props> = ({onReset,onSearch, param, ...props }) => {
     const requestAction = simpleRequestActions();
-    const [form] = useForm();
+    const [form] = useForm<any>();
+    const [subDepartmentList, setSubDepartmentList] = useState<string[]>([]);
     const { data, isFetching, refetch } = useQuery({
         queryKey: ["company"],
         queryFn: () => MultiRequest<{
@@ -34,24 +39,28 @@ const AdvancSearch: React.FC<Props> = ({ onCancel, param, ...props }) => {
     useEffect(() => {
         props.open && form.resetFields()
         param && form.setFieldsValue(param)
+        const subDeptList = data?.subDeptList.map(it => it.name)||[]
+        setSubDepartmentList(subDeptList.filter((item,index)=> subDeptList.indexOf(item)===index)?? [])
     }, [props.open]);
-    return (
-        <DrawerForm
-            {...props}
-            form={form}
-            title={"Advance Search"}
-            drawerProps={{
-                onClose: onCancel,
-                width: 500
-            }}
-
-            submitter={{
-                searchConfig: {
-                    submitText: "Search",
-                    resetText: "Reset",
-                },
-            }}
-        >
+    return (<Drawer {...props} title="Advanced Search" >
+     
+            <ProForm
+                    form={form}
+                    onReset={() => {
+                      form.resetFields();
+                      onReset();
+                    }}
+                    submitter={{
+                      searchConfig: {
+                        submitText: "Search",
+                        resetText: "Reset",
+                      },
+                      onSubmit: async () => {
+                        const values = await form.validateFields();
+                        onSearch(values);
+                      },
+                    }}
+                  >
 
             <ProFormSelect
                 name={"buIds"}
@@ -82,14 +91,15 @@ const AdvancSearch: React.FC<Props> = ({ onCancel, param, ...props }) => {
                 mode="multiple"
                 allowClear
                 showSearch
-                options={data?.subDeptList.map((it) => ({
-                    label: it.name,
-                    value: it.id,
+                options={subDepartmentList.filter((item,index)=> subDepartmentList.indexOf(item)===index).map((it) => ({
+                    label: it,
+                    value: it,
                 }))}
             />
+            
+        </ProForm>
 
-
-        </DrawerForm>
+        </Drawer>
     )
 }
 

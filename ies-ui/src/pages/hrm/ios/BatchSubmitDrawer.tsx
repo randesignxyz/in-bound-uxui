@@ -14,7 +14,7 @@ interface Props extends DrawerFormProps {
 }
 
 const BatchSubmitDrawer: React.FC<Props> = ({ onSubmit, ...props }) => {
-    const [filter, setFilter] = useState<TableViewSearchParams<any>>({});
+    const [filter, setFilter] = useState<TableViewSearchParams<any>>({ criteria: {batchRequest: 'SUBMITTED'}});
     const { data, isFetching: iosFetching, isError } = useQuery({
         queryKey: ["ios-data", filter],
         queryFn: () => IOSService.page4Batch(filter),

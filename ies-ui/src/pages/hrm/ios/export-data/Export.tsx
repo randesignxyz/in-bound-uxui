@@ -30,7 +30,7 @@ const Export: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [buList, setBuList] = useState<BU[]>([]);
   const [departmentList, setDepartmentList] = useState<Department[]>([]);
-  const [subdepartmentList, setSubdepartmentList] = useState<Department[]>([]);
+  const [subdepartmentList, setSubdepartmentList] = useState<string[]>([]);
 
   // ================= INIT DATA =================
   useEffect(() => {
@@ -48,10 +48,10 @@ const Export: React.FC = () => {
         EmployeeServices.listDepartment.queryParams,
         EmployeeServices.listSubDepartment.queryParams,
       ])(requestActions);
-
+      const subDeptList = rs.subDeptList.map(it => it.name)
+      setSubdepartmentList(subDeptList.filter((item,index)=> subDeptList.indexOf(item)===index)?? [])
       setBuList(rs.buList);
       setDepartmentList(rs.deptList);
-      setSubdepartmentList(rs.subDeptList);
     } catch (err: any) {
       message.error(err.message || 'Failed to load filter data');
     }
@@ -181,9 +181,9 @@ const Export: React.FC = () => {
         mode="multiple"
         allowClear
         showSearch
-        options={subdepartmentList.map((it) => ({
-          label: it.name,
-          value: it.id,
+        options={subdepartmentList.filter((item,index)=> subdepartmentList.indexOf(item)===index).map((it) => ({
+          label: it,
+          value: it,
         }))}
       />
 

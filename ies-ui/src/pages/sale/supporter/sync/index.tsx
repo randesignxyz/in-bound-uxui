@@ -9,35 +9,27 @@ export default () => {
     const saleServices = SaleServiceAPI(requestActions);
     const actionRef = useRef<ActionType>();
     const [data, setData] = useState([])
-    // const initilizeData = async () => {
-
-    //     try {
-    //         const result = await saleServices.listSyncSo();
-    //         setData(result)
-    //         console.log('result', result)
-
-    //     } catch (error) {
-    //         return;
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     initilizeData()
-    // }, [])
+    const [loading, setLoading] = useState(false)
     const syncSOFromSAP = async () => {
         try {
+            setLoading(true)
             await saleServices.syncAllSOFromSAP({});
             actionRef.current?.reload()
         } catch (error) {
             return;
+        } finally {
+            setLoading(false)
         }
     };
     const updateToSAP = async () => {
         try {
+            setLoading(true)
             await saleServices.updateAllSAPSaleplan({ data: data });
             actionRef.current?.reload()
         } catch (error) {
             return;
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -58,6 +50,7 @@ export default () => {
             <ProTable
                 options={false}
                 // dataSource={data}
+                loading={loading}
                 search={false}
                 actionRef={actionRef}
                 request={async () => {
@@ -99,7 +92,7 @@ export default () => {
                     {
                         title: "Shipping Addrress",
                         dataIndex: "shipping_address"
-                    },
+                    }
                 ]}
             />
         </PageContainer>

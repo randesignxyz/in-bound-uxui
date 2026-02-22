@@ -27,6 +27,7 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
   const requestActions = simpleRequestActions();
   const [syncLoading, setSyncLoading] = useState(false);
   const [onSuccess, setOnSuccess] = useState(false)
+  const [syncPhase, setSyncPhase] = useState<'idle' | 'waitingRefresh'>('idle');
 
   useEffect(() => {
     const items =
@@ -68,50 +69,62 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
   }, [deliveries]);
 
   const syncSAP = async () => {
-  try {
-    setSyncLoading(true);
+    try {
+      setSyncLoading(true);
 
-    const data = deliveries?.map(d => ({
-      deliveryId: d.id,
-      shipDate: d.deliveryDate
-    }));
+      const data = deliveries?.map(d => ({
+        deliveryId: d.id,
+        shipDate: d.deliveryDate
+      }));
 
-    await actions.syncSOFromSAP(soNum, data);
-    await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
+      // FIRST RUN (old data)
+      await actions.syncSOFromSAP(soNum, data);
+      await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
 
-    setOnSuccess(true); // trigger effect
-  } catch (e) {
-    const error = e as { error: string; message: string };
-    message.error(error.message);
-  } finally {
-    setSyncLoading(false);
-  }
-};
+      // now wait for refreshed data
+      setSyncPhase('waitingRefresh');
+
+      // parent reload deliveries
+      onSyncSuccess?.();
+
+    } catch (e) {
+      const error = e as { error: string; message: string };
+      message.error(error.message);
+    } finally {
+      setSyncLoading(false);
+    }
+  };
 
   useEffect(() => {
-     if (!onSuccess) return;
-    const sync = async () => {
+    if (syncPhase !== 'waitingRefresh') return;
+    if (!deliveries) return;
+
+    const secondSync = async () => {
       try {
         setSyncLoading(true);
-        const data = deliveries?.map(d => ({
+
+        const data = deliveries.map(d => ({
           deliveryId: d.id,
           shipDate: d.deliveryDate
         }));
-        await actions.syncSOFromSAP(soNum, data)
-        await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry])
-        onSyncSuccess?.()
+
+        // SECOND RUN (new refreshed data)
+        await actions.syncSOFromSAP(soNum, data);
+        await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
+
         message.success('Sync Success')
       } catch (e) {
         const error = e as { error: string; message: string };
         message.error(error.message);
       } finally {
         setSyncLoading(false);
+        setSyncPhase('idle'); // reset
       }
     };
-    sync()
-    setOnSuccess(false)
-  }, [onSuccess])
-  
+
+    secondSync();
+  }, [deliveries, syncPhase]);
+
   // useEffect(() => {
   //   if (!deliveries) {
   //     setItemList([]);

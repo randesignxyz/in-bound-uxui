@@ -258,6 +258,17 @@ export default ({ onAdd, onEdit }: Props) => {
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
+          setFilter((prev) =>
+            ({
+              criteria:{
+                ...prev.criteria,
+                advanceSearch: {
+                  ...prev.criteria?.advanceSearch,
+                  bu: [],
+                  department: []
+                }
+              }
+            }))
           actionRef.current?.reloadAndRest?.();
         }}
       />

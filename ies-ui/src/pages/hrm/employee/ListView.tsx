@@ -105,6 +105,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 panel: () => (
                   <Profile
                     id={item?.id}
+                    is_admin={access.canAccessHrESSAddEditProfile ? 2 : 0}
                   />
                 ),
               },

@@ -739,6 +739,13 @@ export default [
     hideInMenu: 'true',
     component: './sale/supporter/invoice',
   },
+  {
+    path: '/sale/supporter/sync/list',
+    name: 'Sync SO',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    component: './sale/supporter/sync',
+  },
   /******************* MPU *******************/
 
   /******************* Retailer *******************/

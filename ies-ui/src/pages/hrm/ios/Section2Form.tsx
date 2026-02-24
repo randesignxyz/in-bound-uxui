@@ -50,6 +50,7 @@ interface Props {
 const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective, kpi, actionPlan, onValueChange, weighTage, editableFormRef, formSetting }) => {
 
     const defualtList = dataSource?.filter(o => o.initial).map(o => o.key) ?? []
+    console.log(dataSource)
 
     const totalRecords = useMemo(() => {
         return (dataSource ?? []).length;
@@ -73,12 +74,18 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             dataIndex: 'obj',
             key: 'obj',
             width: 300,
-            editable: (_, r) => !defualtList.includes(r.key),
+            editable: (_, r) => !r.initial,
+            // editable: (_, r) => !defualtList.includes(r.key),
             onCell: () => ({ style: { verticalAlign: 'center' } }),
             valueType: "textarea",
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
+            render: (text) => (
+                <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {text}
+                </div>
+            ),
             // editable: (_, record) => !(record.id == 0),
 
             renderFormItem: (item, { record, ...rest }, form) => {
@@ -87,10 +94,10 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={objective?.map(item => ({
-                            value: item.descriptionEn?.replace(/\\n/g, '\n'),
+                            value: item.descriptionEn,
                             label: (
                                 <div style={{
-                                    whiteSpace: 'pre-line',
+                                    whiteSpace: 'pre-wrap',
                                     wordBreak: 'break-word',
                                     borderBottom: "1px solid #f0f0f0",
                                     paddingBottom: 5,
@@ -407,7 +414,8 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         editableKeys: readOnly ? [] : dataSource?.map(l => l.key),
                         actionRender: (row, config, defaultDom) => {
 
-                            const disable = defualtList.includes(row.key);
+                            // const disable = defualtList.includes(row.key);
+                            const disable = row.initial
 
                             return [<Space size={0}>
                                 <Button

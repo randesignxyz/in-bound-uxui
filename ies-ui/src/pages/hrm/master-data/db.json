@@ -40,20 +40,6 @@
     ],
     "items": [
         {
-            "id": 1769134360858.5847,
-            "mdTypeId": 1768967348517,
-            "code": "",
-            "nameEn": "",
-            "status": "ACTIVE"
-        },
-        {
-            "id": 1769134337326.8577,
-            "mdTypeId": 1768967348517,
-            "code": "",
-            "nameEn": "",
-            "status": "ACTIVE"
-        },
-        {
             "id": 1768967622539.54,
             "mdTypeId": 1768967348517,
             "code": "COMMUNICATION (HORENSO)",
@@ -88,87 +74,6 @@
             "status": "ACTIVE",
             "index": 3,
             "nameKm": "ដឹកនាំក្រុម ដើម្បីជំរុញផលិតភាពក្រុម និងលទ្ធផលការងារស្របតាមមុខងារ និងគោលដៅរបស់ក្រុមហ៊ុន។"
-        },
-        {
-            "id": 1769072998653.646,
-            "mdTypeId": 1769063501214,
-            "code": "KPI5",
-            "nameEn": "\"# of Initiatives/Improvements: 02 # of Daily update: 01\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "\"# of Initiatives/Improvements: 02 # of Daily update: 01\""
-        },
-        {
-            "id": 1769072939730.5,
-            "mdTypeId": 1769063501214,
-            "code": "KPI",
-            "nameEn": "\"# of Problems Identified: 05 # of Solutions Executed: 03\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "\"# of Problems Identified: 05 # of Solutions Executed: 03\""
-        },
-        {
-            "id": 1769072926665.94,
-            "mdTypeId": 1769063501214,
-            "code": "KPI",
-            "nameEn": "\"# of Weekly update: 01 # of Initiatives/Improvements: 02\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "\"# of Weekly update: 01 # of Initiatives/Improvements: 02\""
-        },
-        {
-            "id": 1769072913396.7356,
-            "mdTypeId": 1769063501214,
-            "code": "KPI",
-            "nameEn": "\"% of Tasks delivered on deadlines: 100% % of High Quality Task: 100%\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "\"% of Tasks delivered on deadlines: 100% % of High Quality Task: 100%\""
-        },
-        {
-            "id": 1769072899367.9856,
-            "mdTypeId": 1769063501214,
-            "code": "KPI",
-            "nameEn": "\"# of Monthly Team Meeting: 12 # of Quarterly 1:1 Feedback Session # of Quarterly 1:1 Coaching Session # of Successor: 01\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "\"# of Monthly Team Meeting: 12 # of Quarterly 1:1 Feedback Session # of Quarterly 1:1 Coaching Session # of Successor: 01\""
-        },
-        {
-            "id": 1769073085331.2341,
-            "mdTypeId": 1769073037890,
-            "code": "ACTION_PLAN",
-            "nameEn": "\".Conduct effective monthly meeting with team members .Provide 1:1 Performance Feedback with each employee quarterly .Provide 1:1 Coaching session with each employee quarterly .Develop and mentor at least 1 high-potential member in team\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "\".Conduct effective monthly meeting with team members .Provide 1:1 Performance Feedback with each employee quarterly .Provide 1:1 Coaching session with each employee quarterly .Develop and mentor at least 1 high-potential member in team\""
-        },
-        {
-            "id": 1769073065169.7898,
-            "mdTypeId": 1769073037890,
-            "code": "ACTION_PLAN",
-            "nameEn": "\".Ability to identify root causes of problem effectively .Ability to come up with effective solutions  .Proactively work on agreed solutions until it produce results and impact\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "\".Ability to identify root causes of problem effectively .Ability to come up with effective solutions  .Proactively work on agreed solutions until it produce results and impact\""
-        },
-        {
-            "id": 1769073054269.3406,
-            "mdTypeId": 1769073037890,
-            "code": "ACTION_PLAN",
-            "nameEn": "\".Actively update, inform and report work progress to line managers and team daily  .Take initiatives to improve work process by consulting with line managers and stakeholders\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "\".Actively update, inform and report work progress to line managers and team daily  .Take initiatives to improve work process by consulting with line managers and stakeholders\""
-        },
-        {
-            "id": 1769073039343.1765,
-            "mdTypeId": 1769073037890,
-            "code": "ACACTION_PLANL",
-            "nameEn": "\".Deliver task or work on agreed deadlines .Commit and deliver high-quality results\"",
-            "status": "ACTIVE",
-            "index": 0,
-            "nameKm": "\".Deliver task or work on agreed deadlines .Commit and deliver high-quality results\""
         },
         {
             "id": 1768967724163.3955,
@@ -215,13 +120,6 @@
             "nameKm": "ល្អប្រសើរ",
             "abbreviationEn": "OUT",
             "abbreviationKm": "ល្អ"
-        },
-        {
-            "id": 1769134888780.8076,
-            "mdTypeId": 2,
-            "code": "",
-            "nameEn": "",
-            "status": "ACTIVE"
         }
     ]
 }

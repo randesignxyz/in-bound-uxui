@@ -459,7 +459,7 @@ export default({
             />}
             {type=='EDIT' && <ProFormSelect
              label={<div>
-                {`Price & Trade Offer - ${data?.paymentTermName}`}  <PopconfirmMe title="Payment Term" 
+                {`Payment Term - ${data?.paymentTermName}`}  <PopconfirmMe title="Payment Term" 
                   icon={<FilterOutlined />}
                   placement="left"               
                   description={

@@ -62,6 +62,7 @@ import type {
   StockDetailLess,
   StockStoreDetail,
   StockStoreLess,
+  SyncSO,
   TeamWorkDto,
   TeamWorkLess,
   TopupLess,
@@ -182,6 +183,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     SaleService('list-area'),
     actions,
   ),
+  listSyncSo: findAllService<{ searchValue?: string; sort?: Record<string, SortOrder> }, SyncSO>(
+    SaleService('list-sync-so'),
+    actions,
+  ),
   listSoDelivery: findPagingService<
     { searchValue?: string; sort?: Record<string, SortOrder> },
     SoDeliveryDetail
@@ -280,6 +285,14 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
   ),
   syncSOFromSAP: execService<{docNum: string,data:any}, { data: string, message: string }>(
     SaleService('sync-so-from-sap')
+    , actions
+  ),
+  syncAllSOFromSAP: execService<{}, { data: string, message: string }>(
+    SaleService('sync-all-so-from-sap')
+    , actions
+  ),
+  updateAllSAPSaleplan: execService<{data:any}, { data: string, message: string }>(
+    SaleService('update-all-sap-saleplan')
     , actions
   ),
   cancelSo: execService<{ soId: number; remarks: string }, { data: string; message: string }>(

@@ -9,7 +9,7 @@ import { simpleRequestActions } from '@/services/model';
 import Section1Form from './Section1Form';
 import Section2Form from './Section2Form';
 import Section3Form from './Section3Form';
-import { ProForm, FooterToolbar, EditableFormInstance, PageContainer } from '@ant-design/pro-components';
+import { ProForm, FooterToolbar, EditableFormInstance, PageContainer, ProFormTextArea, ModalForm } from '@ant-design/pro-components';
 import { Props } from 'ahooks/lib/useControllableValue';
 import StepActionActivity from './employee/StepActionActivity';
 import { useForm } from 'antd/es/form/Form';
@@ -26,132 +26,214 @@ import { ArrowLeftOutlined } from '@ant-design/icons';
 const IPODetail: React.FC<Props> = ({ id }) => {
     const [form] = useForm<IosRequestPayload>();
     const [detail, setDetail] = useState<EmployeeMasterIOS>();
+    const [forceKey, setForceKey] = useState(0);
     const requestAction = simpleRequestActions();
     const section1Ref = useRef<EditableFormInstance<IosSection1Params>>();
     const section2Ref = useRef<EditableFormInstance<IosSection2Params>>();
     const section3Ref = useRef<EditableFormInstance<IosSection3Params>>();
     const { ids } = useParams();
 
-    const [section1State, setSection1State] = useState<IosSection1Params[]>(Array.from({ length: 3 }).map((_, i) => ({
-        key: (i + 1).toString(),
-        id: i + 1,
-        iosEmpRequestId: null,
-        obj: null,
-        actionPlan: null,
-        weight: null,
-        startedDate: moment() ?? undefined,
-        dueDate: moment() ?? undefined,
-        initail: false,
-    })));
-    const [section2State, setSection2State] = useState<IosSection2Params[]>([]);
-    const [section3State, setSection3State] = useState<IosSection3Params[]>(Array.from({ length: 1 }).map((_, i) => ({
-        key: (i + 1).toString(),
-        id: i + 1,
-        iosEmpRequestId: null,
-        achieve: '',
-        strength: '',
-        develop: '',
-    })));
-
-    const { data: lookup } = useQuery({
-        queryKey: ["master-data"],
-        queryFn: () => DataSetupService.listDataSetup({ criteria: { advanceSearch: { code: ["OBJECTIVES", "ACTION-PLAN", "KPI"] } } }).query(requestAction),
-        refetchOnWindowFocus: false
-    });
-
-    const { data: iosData, isFetching: iosFetching, isError } = useQuery({
-        queryKey: ["ios-data", id],
-        queryFn: () => IOSService.detail({ id: id ?? ids }).query(requestAction),
-        refetchOnWindowFocus: false,
-    });
-
-    const onSave = async (type: string) => {
-        const dataForm = await form.validateFields();
-
-        // if (type !== "DRAFTED") {
-        await section1Ref.current?.validateFields();
-        await section2Ref.current?.validateFields();
-        await section3Ref.current?.validateFields();
-        // }
-
-        Modal.confirm({
-            title: "Confirmation",
-            content: `Are you sure you want to ${type} this record?`,
-            onOk: async () => {
-
-                const entry: IosRequestPayload = {
-                    ...dataForm,
-                    iosMasterListId: detail?.id,
-                    iosEmpRequestId: id ?? ids,
-                    action: type,
-                    payload: {
-                        section1: section1State.filter(p => p.obj != null).map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
-                        section2: section2State.map(i => ({ ...i, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
-                        section3: section3State
-                    }
-                }
-                const res = await IOSService.update(entry)(requestAction);
-                if (res.id == 0 || res.id == undefined) {
-                    message.error(res.message)
-                    return;
-                }
-                message.success(`${type} successfully`)
-                onCancel?.()
-            }
-        })
-    }
-
-    const actionPlan = lookup?.find(i => i.code === "ACTION-PLAN")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
-    const objective = lookup?.find(i => i.code === "OBJECTIVES")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
-    const kpi = lookup?.find(i => i.code === "KPI")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
-
-    const weightageSection1 = section1State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
-    const weightageSection2 = section2State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
-
-    const readOnly = iosData?.iosWorkFlow?.actions?.some(action => ["DRAFTED", "SUBMITTED", "ENDORSED"].includes(action.code))
-
-    const sections1 = (section1: any[]) => {
-        const filledSection1: IosSection2Params[] = Array.from({ length: readOnly ? 5 : section1?.length }, (_, index) => {
-            const item = section1?.[index];
-            return {
-                key: (index + 1).toString(),
-                ...(item || {}),
-                dueDate: moment(item?.dueDate ?? moment()).endOf('year'),
-                startedDate: moment(item?.startedDate ?? moment()).startOf('year'),
-                weight: (item?.weight == 0) ? undefined : item?.weight
-            };
+     const [submitState, setSubmitState] = useState<{ visible?: { actionType: string, open: boolean, entry: any } }>();
+    
+        const [section1State, setSection1State] = useState<IosSection1Params[]>([]);
+        const [section2State, setSection2State] = useState<IosSection2Params[]>([]);
+        const [section3State, setSection3State] = useState<IosSection3Params[]>(Array.from({ length: 1 }).map((_, i) => ({
+            key: (i + 1).toString(),
+            id: i + 1,
+            iosEmpRequestId: null,
+            achieve: '',
+            strength: '',
+            develop: '',
+        })));
+    
+        const { data: lookup } = useQuery({
+            queryKey: ["master-data"],
+            queryFn: () => DataSetupService.listDataSetup({ criteria: { advanceSearch: { code: ["OBJECTIVES", "ACTION-PLAN", "KPI", "WEIGHT"] } } }).query(requestAction),
+            refetchOnWindowFocus: false
         });
-        setSection1State(filledSection1);
-    }
-    const sections2 = (section2: any[]) => {
-        const filledSection2: IosSection2Params[] = section2.map((o, index) => (
-            {
-                ...o,
-                dueDate: moment(o.dueDate ?? moment()).endOf('year'),
-                startedDate: moment(o.startedDate ?? moment()).startOf('year'),
-                key: (index + 1).toString(),
-                weight: (o.weight == 0) ? undefined : o.weight
+    
+        const { data: iosData, isFetching: iosFetching, isError, refetch } = useQuery({
+            queryKey: ["ios-data", id],
+            queryFn: async () => {
+                const iosData = await IOSService.detail({ id: id??ids }).query(requestAction);
+                iosData && setDetail({ ...iosData.iosEmpRequest as unknown as EmployeeMasterIOS });
+                iosData && sections1(iosData.section1, iosData.iosWorkFlow?.actions?.length ?? 0);
+                iosData && sections2(iosData.section2);
+                iosData && sections3(iosData.section3);
+                iosData && form.setFieldValue("comment", iosData?.iosEmpRequest?.comment)
+                setForceKey(prev => prev + 1);
+                return iosData;
+            },
+            refetchOnWindowFocus: false,
+        });
+    
+        const total1Weight = section1State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
+        const total2Weight = section2State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
+    
+        const onSave = async (type: string) => {
+            const dataForm = await form.validateFields();
+            try{
+                 await section1Ref.current?.validateFields();
+            }catch{
+                message.warning('SECTION I: "WHAT" PART (RESULTS) is required.')
+                return;
             }
-        ));
-        setSection2State(filledSection2);
-    }
-    const sections3 = (section3: any[]) => {
-        const filledSection3: IosSection3Params[] = section3.map((o, index) => (
-            {
-                ...o,
-                key: (index + 1).toString(),
+            try{
+                 await section2Ref.current?.validateFields();
+            }catch{
+                message.warning('SECTION II: "HOW" PART (APPROACH/BEHAVIORS) is required.')
+                return;
             }
-        ));
-        setSection3State(filledSection3);
-    }
-
-    useEffect(() => {
-        iosData && setDetail({ ...iosData.iosEmpRequest as unknown as EmployeeMasterIOS });
-        iosData && sections1(iosData.section1);
-        iosData && sections2(iosData.section2);
-        iosData && sections3(iosData.section3);
-    }, [iosData]);
-
+             try{
+                  await section3Ref.current?.validateFields();
+            }catch{
+                message.warning('SECTION III: PERFORMANCE SUMMARY is required.')
+                return;
+            }
+            const totalWeightSec1 = section1State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
+            const totalWeightSec2 = section2State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
+    
+            if ( ["SUBMITTED","ENDORSED"].some(it=> it==type) && totalWeightSec1 !== 100) {
+                message.error("Total weight of section 1 must be 100")
+                return;
+            }
+    
+            if (["SUBMITTED","ENDORSED"].some(it=> it==type) && totalWeightSec2 !== 100) {
+                message.error("Total weight of section 2 must be 100")
+                return;
+            }
+    
+            const entry: IosRequestPayload = {
+                ...dataForm,
+                iosMasterListId: detail?.id,
+                iosEmpRequestId: detail?.id,
+                action: type,
+                payload: {
+                    ...dataForm,
+                    section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+                    section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+                    section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
+                }
+            }
+            if (type !== "DRAFTED") {
+                setSubmitState({ visible: { actionType: type, open: true, entry: entry } })
+            } else {
+                Modal.confirm({
+                    title: "Confirmation",
+                    content: `Are you sure you want to ${type} this record?`,
+                    onOk: async () => {
+                        const entry: IosRequestPayload = {
+                            ...dataForm,
+                            iosMasterListId: detail?.id,
+                            iosEmpRequestId: detail?.id,
+                            action: type,
+                            payload: {
+                                ...dataForm,
+                                section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+                                section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+                                section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
+                            }
+                        }
+                        const res = await IOSService.update(entry)(requestAction);
+                        if (res.id == 0 || res.id == undefined) {
+                            message.error(res.message)
+                            return;
+                        }
+                        message.success(`${type} successfully`)
+                        refetch()
+                        // onCancel?.()
+                    }
+                })
+            }
+    
+    
+            // const entry: IosRequestPayload = {
+            //     ...dataForm,
+            //     iosMasterListId: detail?.id,
+            //     iosEmpRequestId: id,
+            //     action: type,
+            //     payload: {
+            //         ...dataForm,
+            //         section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+            //         section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+            //         section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
+            //     }
+            // }
+    
+    
+            // Modal.confirm({
+            //     title: "Confirmation",
+            //     content: `Are you sure you want to ${type} this record?`,
+            //     onOk: async () => {
+            //         const entry: IosRequestPayload = {
+            //             ...dataForm,
+            //             iosMasterListId: detail?.id,
+            //             iosEmpRequestId: id,
+            //             action: type,
+            //             payload: {
+            //                 ...dataForm,
+            //                 section1: section1State.filter(p => p.obj != null).map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate) })),
+            //                 section2: section2State.map((i, index) => ({ ...i, sort: index + 1, startedDate: moment(i.startedDate), dueDate: moment(i.dueDate), objTitle: i.obj })),
+            //                 section3: section3State.map((i, index) => ({ ...i, sort: index + 1 }))
+            //             }
+            //         }
+            //         const res = await IOSService.update(entry)(requestAction);
+            //         if (res.id == 0 || res.id == undefined) {
+            //             message.error(res.message)
+            //             return;
+            //         }
+            //         message.success(`${type} successfully`)
+            //         onCancel?.()
+            //     }
+            // })
+        }
+    
+        const actionPlan = lookup?.find(i => i.code === "ACTION-PLAN")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
+        const objective = lookup?.find(i => i.code === "OBJECTIVES")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
+        const kpi = lookup?.find(i => i.code === "KPI")?.items?.filter(i => i.access?.some(access => access.trim().toLowerCase() === detail?.jobLevel?.trim().toLowerCase() || access.trim().toLowerCase() === "all"));
+    
+    
+        const readOnly = iosData?.iosWorkFlow?.actions?.some(action => ["DRAFTED", "SUBMITTED", "ENDORSED"].includes(action.code))
+    
+        const sections1 = (section1: any[], action: number) => {
+    
+            const filledSection1: IosSection2Params[] = Array.from({ length: ((action == 0) || iosData?.iosWorkFlow?.actions?.some(action => ["APPROVED", "RETURNED"].includes(action.code))) ? section1.length : 5 }, (_, index) => {
+                const item = section1?.[index];
+                return {
+                    key: (index + 1).toString(),
+                    ...(item || {}),
+                    dueDate:  item?.dueDate ?? moment().endOf('year'),
+                    startedDate: item?.startedDate ?? moment().startOf('year'),
+                    weight: (item?.weight == 0) ? undefined : item?.weight
+                };
+            });
+    
+            setSection1State(filledSection1);
+        }
+        const sections2 = (section2: any[]) => {
+            const filledSection2: IosSection2Params[] = section2.map((o, index) => (
+                {
+                    ...o,
+                    dueDate:  o?.dueDate ?? moment().endOf('year'),
+                    startedDate:  o?.startedDate ?? moment().startOf('year'),
+                    key: (index + 1).toString(),
+                    weight: (o.weight == 0) ? undefined : o.weight
+                }
+            ));
+            setSection2State(filledSection2);
+        }
+        const sections3 = (section3: any[]) => {
+            const filledSection3: IosSection3Params[] = section3.map((o, index) => (
+                {
+                    ...o,
+                    key: (index + 1).toString(),
+                }
+            ));
+            setSection3State(filledSection3);
+        }
+    
+        const weightageSection1 = section1State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
+        const weightageSection2 = section2State?.reduce((acc, item) => acc + (item.weight ?? 0), 0);
 
     return (
         <>
@@ -171,7 +253,7 @@ const IPODetail: React.FC<Props> = ({ id }) => {
                                             <FooterToolbar portalDom={readOnly}>
 
                                                 <Space>
-                                                    {readOnly && <Button key="cancel" type="default" danger onClick={() => onCancel?.()}>Cancel</Button>}
+                                                    {/* {readOnly && <Button key="cancel" type="default" danger onClick={() => onCancel?.()}>Cancel</Button>} */}
                                                     {
                                                         iosData?.iosWorkFlow?.actions?.map(action => {
                                                             return (
@@ -259,6 +341,42 @@ const IPODetail: React.FC<Props> = ({ id }) => {
                     }
                 </Spin>
             </PageContainer>
+            <ModalForm
+                open={submitState?.visible?.open}
+                title="Submit Confirmation"
+                width={500}
+                modalProps={{
+                    onCancel: () => {
+                        setSubmitState({ visible: undefined })
+                    },
+                    okText: "Submit",
+                    cancelText: "Cancel"
+                }}
+                onFinish={async (param) => {
+                    const res = await IOSService.update({
+                        ...submitState?.visible?.entry,
+                        comment: param.comment,
+                        payload: {
+                            ...submitState?.visible?.entry?.payload,
+                        }
+                    })(requestAction);
+                    if (res.id == 0 || res.id == undefined) {
+                        message.error(res.message)
+                        return;
+                    }
+                    message.success(`Successfully`)
+                    setSubmitState({ visible: undefined })
+                    refetch()
+                    // onCancel?.()
+
+                }}
+            >
+                <ProFormTextArea
+                    name="comment"
+                    placeholder={"Comments"}
+                />
+
+            </ModalForm>
         </>
     )
 };

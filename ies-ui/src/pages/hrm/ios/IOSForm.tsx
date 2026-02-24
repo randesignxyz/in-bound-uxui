@@ -70,20 +70,33 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
 
     const onSave = async (type: string) => {
         const dataForm = await form.validateFields();
-
-        await section1Ref.current?.validateFields();
-        await section2Ref.current?.validateFields();
-        await section3Ref.current?.validateFields();
-
+        try{
+             await section1Ref.current?.validateFields();
+        }catch{
+            message.warning('SECTION I: "WHAT" PART (RESULTS) is required.')
+            return;
+        }
+        try{
+             await section2Ref.current?.validateFields();
+        }catch{
+            message.warning('SECTION II: "HOW" PART (APPROACH/BEHAVIORS) is required.')
+            return;
+        }
+         try{
+              await section3Ref.current?.validateFields();
+        }catch{
+            message.warning('SECTION III: PERFORMANCE SUMMARY is required.')
+            return;
+        }
         const totalWeightSec1 = section1State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
         const totalWeightSec2 = section2State.reduce((acc, item) => acc + (item.weight ?? 0), 0)
 
-        if (type == "SUBMITTED" && totalWeightSec1 !== 100) {
+        if ( ["SUBMITTED","ENDORSED"].some(it=> it==type) && totalWeightSec1 !== 100) {
             message.error("Total weight of section 1 must be 100")
             return;
         }
 
-        if (type == "SUBMITTED" && totalWeightSec2 !== 100) {
+        if ( ["SUBMITTED","ENDORSED"].some(it=> it==type) && totalWeightSec2 !== 100) {
             message.error("Total weight of section 2 must be 100")
             return;
         }
@@ -186,8 +199,8 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
             return {
                 key: (index + 1).toString(),
                 ...(item || {}),
-                dueDate: moment(item?.dueDate ?? moment()).endOf('year'),
-                startedDate: moment(item?.startedDate ?? moment()).startOf('year'),
+                dueDate:  item?.dueDate ?? moment().endOf('year'),
+                startedDate: item?.startedDate ?? moment().startOf('year'),
                 weight: (item?.weight == 0) ? undefined : item?.weight
             };
         });
@@ -198,8 +211,8 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
         const filledSection2: IosSection2Params[] = section2.map((o, index) => (
             {
                 ...o,
-                dueDate: moment(o.dueDate ?? moment()).endOf('year'),
-                startedDate: moment(o.startedDate ?? moment()).startOf('year'),
+                dueDate:  o?.dueDate ?? moment().endOf('year'),
+                startedDate:  o?.startedDate ?? moment().startOf('year'),
                 key: (index + 1).toString(),
                 weight: (o.weight == 0) ? undefined : o.weight
             }
@@ -285,7 +298,7 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                             }}
                         />
                         <Section2Form
-                            dataSource={section2State?.map(p => ({ ...p, initial: objective?.some(o => o.id == p.objId) ?? false })) ?? []}
+                            dataSource={section2State}
                             objective={objective}
                             actionPlan={actionPlan}
                             editableFormRef={section2Ref}
@@ -335,7 +348,6 @@ const IOSForm: React.FC<Props> = ({ id, onCancel, }) => {
                         comment: param.comment,
                         payload: {
                             ...submitState?.visible?.entry?.payload,
-                            comment: param.comment
                         }
                     })(requestAction);
                     if (res.id == 0 || res.id == undefined) {

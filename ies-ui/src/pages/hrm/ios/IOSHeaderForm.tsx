@@ -12,11 +12,16 @@ interface Props {
 const IPOHeaderForm: React.FC<Props> = ({ basiceInfo, jobLevel }) => {
 
     const ratingScaleData = [
-        { rating: 5, label: "Outstanding", description: "Consistently delivers all objectives and action plans with high-quality results and a positive impact." },
-        { rating: 4, label: "Exceed Expectations", description: "Exceeds in delivering all objectives and action plans required and expected for the job, demonstrating exceptional results." },
-        { rating: 3, label: "Meet Expectations", description: "Consistently meets expectations in delivering objectives and action plans while following the standards and requirements for the role." },
-        { rating: 2, label: "Need Improvements", description: "Delivers some objectives and action plans, but improvement is required." },
-        { rating: 1, label: "Unsatisfactory", description: "Fails to meet the minimum objectives and action plans required for the role." },
+        // { rating: 5, label: "Outstanding", description: "Consistently delivers all objectives and action plans with high-quality results and a positive impact." },
+        // { rating: 4, label: "Exceed Expectations", description: "Exceeds in delivering all objectives and action plans required and expected for the job, demonstrating exceptional results." },
+        // { rating: 3, label: "Meet Expectations", description: "Consistently meets expectations in delivering objectives and action plans while following the standards and requirements for the role." },
+        // { rating: 2, label: "Need Improvements", description: "Delivers some objectives and action plans, but improvement is required." },
+        // { rating: 1, label: "Unsatisfactory", description: "Fails to meet the minimum objectives and action plans required for the role." },
+        { rating: 5, label: "Outstanding", description: " Delivered all objectives and action plans efficiently and consistently, and always created exceptional organization-level impact." },
+        { rating: 4, label: "Exceed Expectations", description: "Did more than the job required by consistently delivering all objectives and action plans, and continually exceeded role expectations within the job." },
+        { rating: 3, label: "Meet Expectations", description: " Did the job well by consistently delivering planned objectives and action plans to the required standard for the job." },
+        { rating: 2, label: "Need Improvements", description: " Partially did the job; delivered some objectives and action plans only; did not perform the job to the standard required." },
+        { rating: 1, label: "Unsatisfactory", description: "Did not meet minimum requirements; failed to deliver the minimum objectives and action plans required for the job and did not perform the job with acceptable quality." },
     ];
     const columnLevel = [
         { title: "Employee ID", dataIndex: "empNo" },

@@ -30,7 +30,6 @@ export default () => {
         startDate: undefined,
         endDate: undefined,
       },
-      pagination: { current: 1, pageSize: 20 },
     },
   });
 
@@ -214,14 +213,12 @@ export default () => {
               ...prev,
               criteria: {
                 ...prev.criteria,
-                advanceSearch: {
                   ...prev.criteria?.advanceSearch,
                   buIds: params.buIds,
                   depIds: params.depIds,
                   startDate: params.startDate,
                   endDate: params.endDate,
                   ...params,
-                },
               },
             }));
             setAdvanceSearchVisible(false);
@@ -231,14 +228,13 @@ export default () => {
               ...prev,
               criteria: {
                 ...prev.criteria,
-                advanceSearch: {
-                  buIds: [],
-                  depIds: [],
-                  status: "ALL",
-                  startDate: undefined,
-                  endDate: undefined,
-                },
+                ...prev.criteria?.advanceSearch,
+                buIds: [],
+                depIds: [],
+                startDate: undefined,
+                endDate: undefined,
               },
+              pagination: { ...prev.pagination, current: 1 },
             }));
           }}
         />

@@ -9,7 +9,7 @@ declare namespace  FormModal {
         onReset: () => void;
         onCancel: () => void;
     }
-    
+
 }
 
 export interface PagingQuery<T> {
@@ -50,8 +50,8 @@ export interface LookupData {
 }
 
 export interface SearchResult<T> {
-    content: T, 
-    totalElements: number, 
+    content: T,
+    totalElements: number,
     pageable: {
         pageNumber: number ,
         pageSize: number
@@ -61,7 +61,7 @@ export interface SearchResult<T> {
 
 export type ActionCompProps = {
     formKey: string;
-    visisble?: true
+    visible?: true
     onClose?: ()=> void
     cb?: () => void
 }

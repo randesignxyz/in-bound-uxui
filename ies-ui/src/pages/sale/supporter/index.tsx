@@ -103,6 +103,7 @@ const Supporter: React.FC<Props> = () => {
   const SalePaths = {
     po: "/sale/supporter/po/list",
     invoice: "/sale/supporter/invoice/list",
+    sync: "/sale/supporter/sync/list",
   };
 
   const listItems: ListMenuItem[] = useMemo(
@@ -116,13 +117,12 @@ const Supporter: React.FC<Props> = () => {
           link: SalePaths.po,
         },
 
-        // access.can("SALE_SUPPORTER", "INVOICE_CORRECTION") && {
-        //   id: "SaleInvoice",
-        //   name: "Invoice Correction",
-        //   description: "Update or correct sale invoice data.",
-        //   menu: actionMenuInvoice, // ✅ FIXED
-        //   link: SalePaths.invoice,
-        // },
+        access.can("SALE_SUPPORTER", "SYNC_SO") && {
+          id: "SyncSO",
+          name: "Sync SO",
+          description: "Sync Direct SO from SAP",
+          link: SalePaths.sync,
+        },
       ].filter(Boolean) as ListMenuItem[],
     [access, actionMenuPO]
   );

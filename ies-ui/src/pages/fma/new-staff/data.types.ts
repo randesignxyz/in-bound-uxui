@@ -14,6 +14,7 @@ export type NewStaffListItem = {
     department: string;
     subDepartment?: string;
     reportTo?: string;
+    startingDate: moment.Moment;
     status: string;
 }
 
@@ -41,10 +42,17 @@ export type NewStaffDetailItem = {
     category: string;
 }
 
+
 export type SearchParams = {
-    keyword?: string,
-    status?: string,
+  status?: "ALL" | "PENDING" | "COMPLETED" | "REJECTED";
+  keyword?: string;
+  buIds?: number[];
+  depIds?: number[];
+  startDate?: string;   // ✅ use string (YYYY-MM-DD)
+  endDate?: string;     // ✅ use string (YYYY-MM-DD)
 }
+
+
 
 export type SaveItem = {
     itemId: number;

@@ -19,7 +19,7 @@ import AdvanceSearch from './advanceSearchDrawer';
 import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
 import moment from 'moment';
-import { ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
+import { ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormSelect, ProFormTreeSelect } from '@ant-design/pro-components';
 import ForceColseModal from './ForceCloseModal';
 import { TbMap2 } from "react-icons/tb";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -78,7 +78,7 @@ export default () => {
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
     status: 'pending',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, zone?: [] }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, zone?: [], delivery_method_id?: string }>({
     status: 'posted',
     dnStatus: 'open',
     sap_delivery_date: 'as_of_now',
@@ -138,7 +138,29 @@ export default () => {
   const [exportModel, setExportModal] = useState<{ visible: boolean }>({
     visible: false,
   });
+  const [routeValue, setRouteValue] = useState<string[]>([]);
   const [excelLoading, setExcelLoading] = useState(false)
+  const allProvinceValues = provinceOptions.map(p => p.value);
+  const allRouteValues = routeOptions.map(r => r.value);
+
+  const copyText = (text: string) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      document.execCommand('copy');
+      message.success('Copied SO number');
+    } catch {
+      message.error('Copy failed');
+    }
+
+    document.body.removeChild(textarea);
+  };
+
   useEffect(() => {
     if (state?.selectedRows) {
       setSelectedRowKeys(prev => {
@@ -573,7 +595,12 @@ export default () => {
           ? data.commune_id.join(',')
           : '',
         type: 'string',
-      }
+      },
+      {
+        key: 'delivery_method_id',
+        value: data.delivery_method_id,
+        type: 'string',
+      },
 
     ]
     console.log(result)
@@ -816,6 +843,30 @@ export default () => {
 
     return { sortBy, sortOrders };
   };
+  const handleRouteChange = (vals: string[] = []) => {
+    setRouteValue(vals);
+
+    const districtIds = vals
+      .flatMap(v => v.split(','))
+      .map(Number)
+      .filter(Number.isFinite);
+
+    const routeIds = routeOptions
+      .filter(opt => vals.includes(opt.value))
+      .map(opt => opt.id);
+
+    setRouteId(routeIds);
+
+    setDnSearch(v => ({
+      ...v,
+      district_id: districtIds,
+      route: routeIds
+    }));
+
+    actionRef.current?.reloadAndRest?.();
+  };
+
+
 
   const onRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
@@ -827,10 +878,6 @@ export default () => {
         criteria: {
           ...dnSearch,
           ...params.criteria,
-          sap_delivery_date:
-            dnSearch.sap_from_date && dnSearch.sap_to_date
-              ? null
-              : dnSearch.sap_delivery_date,
           filterPass: 'Unclaimed',
           sortBy,
           sortOrders,
@@ -1018,7 +1065,7 @@ export default () => {
             >
               <Typography.Link
                 strong
-                copyable
+                // copyable
                 onClick={() =>
                   setDrawerTypeOpen({ visible: true, data: value })
                 }
@@ -1029,6 +1076,11 @@ export default () => {
 
             {/* SECOND ROW */}
             <Space size={8} style={{ marginTop: 4 }}>
+              <Typography.Link
+                onClick={() => copyText(value.so_no)}
+              >
+                <CopyOutlined />
+              </Typography.Link>
               <Typography.Link
                 onClick={() =>
                   window
@@ -1058,6 +1110,37 @@ export default () => {
 
       ),
     },
+    // {
+    //   title: 'Reserve No',
+    //   dataIndex: 'reserve_num',
+    //   key: 'reserve_num',
+    //   width: 300,
+    //   render: (_, value) => (
+    //     <>
+    //       <div style={{ display: 'flex', flexDirection: 'column' }}>
+
+    //         <Space
+    //           align="center"
+    //           size={6}
+    //           style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}
+    //         >
+    //           {value.reserve_num ?
+    //             <Typography.Link
+    //               strong
+    //               copyable
+    //             // onClick={() =>
+    //             //   setDrawerTypeOpen({ visible: true, data: value })
+    //             // }
+    //             >
+    //               {value.reserve_num}
+    //             </Typography.Link>
+    //             : <>-</>}
+    //         </Space>
+    //       </div>
+    //     </>
+
+    //   ),
+    // },
     {
       title: 'DO No',
       dataIndex: 'id',
@@ -1086,16 +1169,30 @@ export default () => {
     {
       title: 'DOP',
       dataIndex: 'deliveryDate',
-      width: '6%',
+      width: '8%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY hh:mm'),
+        r.deliveryDate && r.eta
+          ? `${dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY')} ${r.eta}`
+          : '-',
     },
     {
       title: 'DOD',
       dataIndex: 'dod_date',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.dod_date).format('DD-MMM-YYYY hh:mm'),
+        r.dod_date && r.eta
+          ? `${dayjs.utc(r.dod_date).format('DD-MMM-YYYY')} ${r.eta}`
+          : '-',
+    },
+    {
+      title: 'Posted Date',
+      dataIndex: 'posted_date',
+      width: '5%',
+    },
+    {
+      title: 'Posted Time',
+      dataIndex: 'posted_time',
+      width: '5%',
     },
     {
       title: 'Customer Code', dataIndex: 'customer_code', width: 150, render: (_, value) => (
@@ -1124,7 +1221,7 @@ export default () => {
             }
           }}
         >
-          {value.shippingAddress}
+          <Typography.Link strong copyable >{value.shippingAddress?.replace('-', ' - ')}</Typography.Link>
         </a>
       ),
     },
@@ -1966,13 +2063,29 @@ export default () => {
                             // { value: 'today', label: 'Today' },
                             { value: 'unplan', label: 'DOP Pending' },
                             { value: 'TBA', label: 'TBA' },
-                            { value: 'walk-in', label: 'Self Pickup' },
                             { value: 'hold', label: 'On Hold' },
                           ]}
                           width={150}
                           showSearch
                         />
                         <ProFormSelect
+                          name="delivery_method_id"
+                          placeholder="Delivery Type"
+                          onChange={(val: string) => {
+                            setDnSearch((v) => ({ ...v, delivery_method_id: val }))
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                          options={[
+                            { value: '1', label: 'SLA' },
+                            // { value: 'today', label: 'Today' },
+                            { value: '2', label: 'Schedule' },
+                            { value: '3', label: 'Urgent' },
+                            { value: '5', label: 'Self Pickup' },
+                          ]}
+                          width={150}
+                          showSearch
+                        />
+                        {/* <ProFormSelect
                           placeholder="Route"
                           name="route"
                           mode="multiple"
@@ -1999,7 +2112,55 @@ export default () => {
                             setDnSearch(v => ({ ...v, district_id: districtIds, route: routeIds }));
                             actionRef.current?.reloadAndRest?.();
                           }}
+                        /> */}
+                        <ProFormTreeSelect
+                          name="route"
+                          placeholder="Route"
+                          width={200}
+                          fieldProps={{
+                            treeCheckable: true,
+                            showCheckedStrategy: 'SHOW_CHILD',
+                            value: routeValue,
+
+                            treeData: routeOptions.map(r => ({
+                              title: r.label,
+                              value: r.value,
+                              key: r.value,
+                            })),
+
+                            maxTagCount: 'responsive',
+
+                            dropdownRender: (menu) => (
+                              <>
+                                <div style={{ padding: '8px 12px' }}>
+                                  <Checkbox
+                                    checked={routeValue?.length === allRouteValues.length}
+                                    indeterminate={
+                                      routeValue?.length > 0 &&
+                                      routeValue?.length < allRouteValues.length
+                                    }
+                                    onChange={(e) => {
+                                      const checked = e.target.checked;
+                                      const newVals = checked ? allRouteValues : [];
+
+                                      handleRouteChange(newVals)
+                                    }}
+                                  >
+                                    Select All
+                                  </Checkbox>
+                                </div>
+
+                                <Divider style={{ margin: 0 }} />
+                                {menu}
+                              </>
+                            ),
+
+                            onChange: (vals: string[]) => {
+                              handleRouteChange(vals);
+                            },
+                          }}
                         />
+
 
                         <ProFormSelect
                           placeholder="Zone"
@@ -2064,7 +2225,7 @@ export default () => {
                             }
                           }}
                         />
-                        <ProFormSelect
+                        {/* <ProFormSelect
                           placeholder="Province"
                           name="province_id_dn"
                           onChange={(val: string) => {
@@ -2077,6 +2238,61 @@ export default () => {
                           allowClear
                           showSearch
                           mode="multiple"
+                        /> */}
+                        <ProFormTreeSelect
+                          name="province_id_dn"
+                          placeholder="Province"
+                          width={200}
+                          fieldProps={{
+                            showSearch: true,
+                            filterTreeNode: (input, node) =>
+                              (node.title as string).toLowerCase().includes(input.toLowerCase()),
+                            treeCheckable: true,
+                            showCheckedStrategy: 'SHOW_CHILD',
+                            treeData: provinceOptions.map(p => ({
+                              title: p.label,
+                              value: p.value,
+                              key: p.value,
+                            })),
+
+                            maxTagCount: 1,
+
+                            value: provinceId,
+
+                            dropdownRender: (menu) => (
+                              <>
+                                <div style={{ padding: '8px 12px' }}>
+                                  <Checkbox
+                                    checked={provinceId?.length === allProvinceValues.length}
+                                    indeterminate={
+                                      provinceId?.length > 0 &&
+                                      provinceId?.length < allProvinceValues.length
+                                    }
+                                    onChange={(e) => {
+                                      const checked = e.target.checked;
+                                      const newValue = checked ? allProvinceValues : [];
+
+                                      setProvinceId(newValue);
+                                      setDnSearch(v => ({ ...v, province_id: newValue }));
+                                      actionRef.current?.reloadAndRest?.();
+                                    }}
+                                  >
+                                    Select All
+                                  </Checkbox>
+                                </div>
+
+                                <Divider style={{ margin: 0 }} />
+
+                                {menu}
+                              </>
+                            ),
+
+                            onChange: (val: string[]) => {
+                              setProvinceId(val);
+                              setDnSearch(v => ({ ...v, province_id: val }));
+                              actionRef.current?.reloadAndRest?.();
+                            },
+                          }}
                         />
 
                         <ProFormSelect
@@ -2233,6 +2449,7 @@ export default () => {
                     criteria: {
                       ...criteria,
                       ...dnSearch,
+                      searchValue: criteria?.searchValue ?? '',
                       sort
                     },
                     pagination,    // ✅ PASS pagination

@@ -17,6 +17,7 @@ export default ({ ...rest }: ActionDataFormProps) => {
     }>()
 
     const onSearchHandler = async (keywords?: string) => {
+        console.log('rest',rest)
         return (await AccountServiceAPIs.findAvailableCandidate(rest.formKey, keywords).query(requestActions)).map(it => ({ label: it.name, value: it.id }))
     }
     return <ActionFormWrapper {...rest}

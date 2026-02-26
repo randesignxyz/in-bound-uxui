@@ -81,6 +81,7 @@ export default ({ onAdd, onEdit }: Props) => {
       onOk: async () => {
         try {
           await EmployeeServices.EmployeeUpdate(data)(requestActions);
+          message.success('Employee profile updated successfully.');
           if (modalVisible?.type === 'EDIT') hideModal();
           actionRef.current?.reloadAndRest?.();
         } catch (error: any) {
@@ -105,6 +106,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 panel: () => (
                   <Profile
                     id={item?.id}
+                    is_admin={access.canAccessHrESSAddEditProfile ? 2 : 0}
                   />
                 ),
               },
@@ -257,6 +259,17 @@ export default ({ onAdd, onEdit }: Props) => {
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
+          setFilter((prev) =>
+            ({
+              criteria:{
+                ...prev.criteria,
+                advanceSearch: {
+                  ...prev.criteria?.advanceSearch,
+                  bu: [],
+                  department: []
+                }
+              }
+            }))
           actionRef.current?.reloadAndRest?.();
         }}
       />

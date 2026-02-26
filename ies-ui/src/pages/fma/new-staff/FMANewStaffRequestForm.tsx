@@ -9,8 +9,10 @@ import { simpleRequestActions } from '@/services/model';
 import {
   EditableFormInstance,
   EditableProTable,
+  FooterToolbar,
   ModalForm,
   ProCard,
+  ProForm,
   ProFormDatePicker,
   ProFormGroup,
   ProFormSelect,
@@ -56,7 +58,7 @@ type ItemType = {
   checked: boolean;
 };
 
-export default ({ visisble, onClose, cb }: ActionCompProps) => {
+export default ({ visible, onClose, cb }: ActionCompProps) => {
   const [uploadFiles, setUploadFiles] = useState<string[]>([]);
   const [form] = useForm<DataFormType>();
   const [forceClearUpload, setForceClearUpload] = useState(0);
@@ -202,7 +204,7 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
           itemCategory: it.type,
         })),
       system: sources
-        .filter((it) => it.type == 'FMA_SYSTEM')
+        .filter((it) => it.type === 'FMA_SYSTEM')
         .map((it) => ({
           itemId: it.id,
           itemName: it.name,
@@ -211,7 +213,7 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
           itemCategory: it.type,
         })),
       access: sources
-        .filter((it) => it.type == 'FMA_ACCESS')
+        .filter((it) => it.type === 'FMA_ACCESS')
         .map((it) => ({
           itemId: it.id,
           itemName: it.name,
@@ -225,41 +227,10 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
   };
 
   return (
-    <ModalForm<DataFormType>
+    <ProForm<DataFormType>
       form={form}
-      title="FMA - New Staff Support Request Form"
-      width={1000}
-      open={visisble}
-
-      onOpenChange={(visible) => !visible && onClose?.()}
       onFinish={onRequestHandler}
-      submitter={{
-        searchConfig: {
-          submitText: 'Submit',
-        },
-        render(props, defaultDoms) {
-          if (defaultDoms.length > 1) {
-            return [
-              defaultDoms[0],
-              <Button
-                key={'reset-bt'}
-                onClick={() => {
-                  const key = uniqueId('request-item');
-                  // setDataSource([{ key:key , id: 0, categoryId: null } as any])
-                  props.form?.resetFields();
-                  // initDataSource(lookupList)
-                  setForceClearUpload((v) => v + 1);
-                  setUploadFiles([]);
-                  form.setFieldsValue({});
-                }}
-              >
-                Reset
-              </Button>,
-              defaultDoms[1],
-            ];
-          } else return defaultDoms;
-        },
-      }}
+      submitter={false}   // ✅ disable default buttons
     >
       <Space direction="vertical" style={{ width: '100%' }}>
         <Requestor form={form} />
@@ -323,7 +294,7 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
               label="Base Location"
               name={'workplaceId'}
               options={lookupList
-                ?.filter((it) => it.type == 'WORK_PLACE')
+                ?.filter((it) => it.type === 'WORK_PLACE')
                 .map((it) => ({ label: it.name, value: it.id }))}
               fieldProps={{
                 popupMatchSelectWidth: 300,
@@ -347,7 +318,7 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
               const newData = values.map((it) => ({
                 ...it,
                 qty: it.qty || 1,
-                checked: itemTaken.some((i) => i == it.itemId),
+                checked: itemTaken.some((i) => i === it.itemId),
               }));
               setData((v) => ({ ...v, workplace: newData }));
             }}
@@ -361,12 +332,12 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
                       onChange={(e) => {
                         if (
                           e.target.checked &&
-                          !itemTaken.some((it) => it == config.record?.itemId)
+                          !itemTaken.some((it) => it === config.record?.itemId)
                         ) {
                           setItemTaken((v) => [...v, config.record?.itemId || 0]);
                         }
                         if (!e.target.checked) {
-                          setItemTaken((v) => v.filter((it) => it != config.record?.itemId));
+                          setItemTaken((v) => v.filter((it) => it !== config.record?.itemId));
                         }
 
                         form.setFieldValue(config.record?.itemId || '', {
@@ -415,7 +386,7 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
               const newData = values.map((it) => ({
                 ...it,
                 qty: it.qty || 1,
-                checked: itemTaken.some((i) => i == it.itemId),
+                checked: itemTaken.some((i) => i === it.itemId),
               }));
               setData((v) => ({ ...v, uniform: newData }));
             }}
@@ -429,12 +400,12 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
                       onChange={(e) => {
                         if (
                           e.target.checked &&
-                          !itemTaken.some((it) => it == config.record?.itemId)
+                          !itemTaken.some((it) => it === config.record?.itemId)
                         ) {
                           setItemTaken((v) => [...v, config.record?.itemId || 0]);
                         }
                         if (!e.target.checked) {
-                          setItemTaken((v) => v.filter((it) => it != config.record?.itemId));
+                          setItemTaken((v) => v.filter((it) => it !== config.record?.itemId));
                         }
 
                         form.setFieldValue(config.record?.itemId || '', {
@@ -498,7 +469,7 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
               const newData = values.map((it) => ({
                 ...it,
                 qty: it.qty || 1,
-                checked: itemTaken.some((i) => i == it.itemId),
+                checked: itemTaken.some((i) => i === it.itemId),
               }));
               setData((v) => ({ ...v, accessories: newData }));
             }}
@@ -512,12 +483,12 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
                       onChange={(e) => {
                         if (
                           e.target.checked &&
-                          !itemTaken.some((it) => it == config.record?.itemId)
+                          !itemTaken.some((it) => it === config.record?.itemId)
                         ) {
                           setItemTaken((v) => [...v, config.record?.itemId || 0]);
                         }
                         if (!e.target.checked) {
-                          setItemTaken((v) => v.filter((it) => it != config.record?.itemId));
+                          setItemTaken((v) => v.filter((it) => it !== config.record?.itemId));
                         }
 
                         form.setFieldValue(config.record?.itemId || '', {
@@ -583,7 +554,7 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
               const newData = values.map((it) => ({
                 ...it,
                 qty: it.qty || 1,
-                checked: itemTaken.some((i) => i == it.itemId),
+                checked: itemTaken.some((i) => i === it.itemId),
               }));
               setData((v) => ({ ...v, access: newData }));
             }}
@@ -597,12 +568,12 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
                       onChange={(e) => {
                         if (
                           e.target.checked &&
-                          !itemTaken.some((it) => it == config.record?.itemId)
+                          !itemTaken.some((it) => it === config.record?.itemId)
                         ) {
                           setItemTaken((v) => [...v, config.record?.itemId || 0]);
                         }
                         if (!e.target.checked) {
-                          setItemTaken((v) => v.filter((it) => it != config.record?.itemId));
+                          setItemTaken((v) => v.filter((it) => it !== config.record?.itemId));
                         }
 
                         form.setFieldValue(config.record?.itemId || '', {
@@ -631,7 +602,7 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
               type: 'multiple',
             }}
           />
-          {data.access.some(it => it.checked && it.itemId == 2242) && <ProCard >
+          {data.access.some(it => it.checked && it.itemId === 2242) && <ProCard >
             <ProFormGroup >
               <ProFormText width={170} rules={[{ required: true }]} name={"carModal"} label="Car Model" />
               <ProFormText width={120} rules={[{ required: true }]} name={"carColor"} label="Color" />
@@ -644,13 +615,33 @@ export default ({ visisble, onClose, cb }: ActionCompProps) => {
         <FileUploader
           key={forceClearUpload}
           multiple
-          required={data.access.some(it => it.checked && it.itemId == 2241)}
+          required={data.access.some(it => it.checked && it.itemId === 2241)}
           service="FILE"
           onSetFiles={(files) => {
             setUploadFiles(files.map((it) => it.response));
           }}
         />
       </Space>
-    </ModalForm>
+      <FooterToolbar>
+        <Button
+          onClick={() => {
+            form.resetFields();
+            setUploadFiles([]);
+            setForceClearUpload((v) => v + 1);
+            setItemTaken([]);
+            initDataSource(lookupList, data.buList, data.departmentList);
+          }}
+        >
+          Reset
+        </Button>
+
+        <Button
+          type="primary"
+          onClick={() => form.submit()}   // ✅ triggers onFinish
+        >
+          Submit
+        </Button>
+      </FooterToolbar>
+    </ProForm>
   );
 };

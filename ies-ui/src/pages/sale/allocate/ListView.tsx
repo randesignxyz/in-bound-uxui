@@ -144,6 +144,25 @@ export default () => {
   const allProvinceValues = provinceOptions.map(p => p.value);
   const allRouteValues = routeOptions.map(r => r.value);
 
+  const copyText = (text: string) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      document.execCommand('copy');
+      message.success('Copied SO number');
+    } catch {
+      message.error('Copy failed');
+    }
+
+    document.body.removeChild(textarea);
+  };
+
+
   useEffect(() => {
     if (state?.selectedRows) {
       setSelectedRowKeys(prev => {
@@ -768,10 +787,6 @@ export default () => {
         criteria: {
           ...dnSearch,
           ...params.criteria,
-          // sap_delivery_date:
-          //   dnSearch.sap_from_date && dnSearch.sap_to_date
-          //     ? null
-          //     : dnSearch.sap_delivery_date,
           filterPass: 'Unclaimed',
           sortBy,
           sortOrders,
@@ -1057,10 +1072,11 @@ export default () => {
             {/* SECOND ROW */}
             <Space size={8} style={{ marginTop: 4 }}>
               <Typography.Link
-                onClick={() => {
-                  navigator.clipboard.writeText(value.so_no);
-                  message.success('Copied SO number');
-                }}
+                // onClick={() => {
+                //   navigator.clipboard.writeText(value.so_no);
+                //   message.success('Copied SO number');
+                // }}
+                onClick={() => copyText(value.so_no)}
               >
                 <CopyOutlined />
               </Typography.Link>
@@ -1093,37 +1109,37 @@ export default () => {
 
       ),
     },
-    {
-      title: 'Reserve No',
-      dataIndex: 'reserve_num',
-      key: 'reserve_num',
-      width: 300,
-      render: (_, value) => (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+    // {
+    //   title: 'Reserve No',
+    //   dataIndex: 'reserve_num',
+    //   key: 'reserve_num',
+    //   width: 300,
+    //   render: (_, value) => (
+    //     <>
+    //       <div style={{ display: 'flex', flexDirection: 'column' }}>
 
-            <Space
-              align="center"
-              size={6}
-              style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}
-            >
-              {value.reserve_num ?
-                <Typography.Link
-                  strong
-                  copyable
-                // onClick={() =>
-                //   setDrawerTypeOpen({ visible: true, data: value })
-                // }
-                >
-                  {value.reserve_num}
-                </Typography.Link>
-                : <>-</>}
-            </Space>
-          </div>
-        </>
+    //         <Space
+    //           align="center"
+    //           size={6}
+    //           style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}
+    //         >
+    //           {value.reserve_num ?
+    //             <Typography.Link
+    //               strong
+    //               copyable
+    //             // onClick={() =>
+    //             //   setDrawerTypeOpen({ visible: true, data: value })
+    //             // }
+    //             >
+    //               {value.reserve_num}
+    //             </Typography.Link>
+    //             : <>-</>}
+    //         </Space>
+    //       </div>
+    //     </>
 
-      ),
-    },
+    //   ),
+    // },
     {
       title: 'DO No',
       dataIndex: 'id',
@@ -1185,7 +1201,7 @@ export default () => {
             }
           }}
         >
-          {value.shippingAddress?.replace('-', ' - ')}
+          <Typography.Link strong copyable >{value.shippingAddress?.replace('-', ' - ')}</Typography.Link>
         </a>
       ),
     },
@@ -2130,6 +2146,9 @@ export default () => {
                           placeholder="Province"
                           width={200}
                           fieldProps={{
+                            showSearch: true,
+                            filterTreeNode: (input, node) =>
+                              (node.title as string).toLowerCase().includes(input.toLowerCase()),
                             treeCheckable: true,
                             showCheckedStrategy: 'SHOW_CHILD',
                             treeData: provinceOptions.map(p => ({
@@ -2355,6 +2374,7 @@ export default () => {
                     criteria: {
                       ...criteria,
                       ...dnSearch,
+                      searchValue: criteria?.searchValue ?? '',
                       sort
                     },
                     pagination,    // ✅ PASS pagination

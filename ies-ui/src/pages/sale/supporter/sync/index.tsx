@@ -54,12 +54,23 @@ export default () => {
                 search={false}
                 actionRef={actionRef}
                 request={async () => {
-                    const result = await saleServices.listSyncSo();
-                    setData(result)
-                    return {
-                        data: result,
-                        success: true,
-                    };
+                    setLoading(true);
+                    try {
+                        const result = await saleServices.listSyncSo();
+                        setData(result);
+
+                        return {
+                            data: result,
+                            success: true,
+                        };
+                    } catch (error) {
+                        return {
+                            data: [],
+                            success: false,
+                        };
+                    } finally {
+                        setLoading(false);
+                    }
                 }}
                 // search={false}
                 // rowSelection={{

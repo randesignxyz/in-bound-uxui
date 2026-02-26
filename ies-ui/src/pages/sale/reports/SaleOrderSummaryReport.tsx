@@ -77,9 +77,10 @@ const SaleOrderSummaryReport: React.FC<FormModalProps> = ({ ...props }) => {
         try {
             // const dataForm = await form.validateFields()
             const reportName = 'so-compatibility-summary-report';
+            // console.log(`so-report-${moment().format('YYYY-MM-DD HH:mm:ss')}.xlsx`)
             // setLoading(true)
             await downloadGenericReport(requestActions)({
-                fileName: `${reportName}-${moment().format()}.xlsx`,
+                fileName: `${reportName}-${moment().format('YYYY-MM-DD HH:mm:ss')}.xlsx`,
                 type: 'EXCEL',
                 data: {
                     reportName: reportName,
@@ -126,6 +127,26 @@ const SaleOrderSummaryReport: React.FC<FormModalProps> = ({ ...props }) => {
                     name={"dates"}
                     label="Date Range (Month)"
                     style={{ width: "100%" }}
+                    fieldProps={{
+                        onCalendarChange: (dates) => {
+                            if (!dates || dates.length !== 2) return;
+                            const [start, end] = dates;
+                            if (start && end) {
+                                const diff = end.diff(start, 'month', true);
+                                if (diff > 1) {
+                                    message.warning('Date range cannot exceed 1 month');
+                                }
+                            }
+                        },
+                        disabledDate: (current, { from }) => {
+                            if (!from) return false;
+
+                            const min = from.clone().subtract(1, 'month');
+                            const max = from.clone().add(1, 'month');
+
+                            return current.isBefore(min) || current.isAfter(max);
+                        }
+                    }}
                 />
                 <ProFormSelect
                     mode="multiple"

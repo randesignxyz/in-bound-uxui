@@ -20,7 +20,7 @@ const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
 
   const displayItems: (DescriptionDisplayDataItem | undefined)[] = [
     { label: 'So #', value: soDetail?.soNo },
-    { label: 'PO Posted Date', value: formatDateTime(soDetail?.orderedDate) },
+    { label: 'PO Created Date', value: formatDateTime(soDetail?.orderedDate) },
     {
       label: 'Customer',
       onClick: () => {
@@ -45,7 +45,7 @@ const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
     { label: 'Payment Term', value: soDetail?.associatedTo?.paymentTerm?.code },
     { label: 'Status', value: soDetail?.status },
     { label: 'Created By', value: soDetail?.createdBy },
-    { label: 'PO Created Date', value: formatDateTime(soDetail?.createdDate) },
+    { label: 'PO Posted Date', value: formatDateTime(soDetail?.createdDate) },
     { label: 'PO Posted By', value: soDetail?.postedBy },
     { label: 'SO Created Date', value: formatDateTime(soDetail?.postedDate) },
     { label: 'Last Modified By', value: soDetail?.lastModifiedBy },

@@ -116,8 +116,8 @@ const SaleOrderReport: React.FC<FormModalProps> = ({ ...props }) => {
       const reportName= 'so-report'
       // console.log(`${reportName}-${moment().format('YYYY-MM-DD HH-mm-ss')}.xlsx`)
       await saleService.downloadSoReport({
-        fileName: 'so-report',
-        reportName: `${reportName}-${moment().format('YYYY-MM-DD HH:mm:ss')}.xlsx`,
+        fileName: `${reportName}-${moment().format('YYYY-MM-DD HH:mm:ss')}`,
+        reportName: 'so-report',
         type: 'EXCEL',
         data: {
           reportType: dataForm.reportType,

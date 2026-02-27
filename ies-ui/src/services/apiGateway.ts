@@ -374,7 +374,7 @@ const doDownloadReport = async <T>(params: DownloadData<T>): Promise<void> => {
 
   if (params.target) element.target = '_blank';
   if (!params.target)
-    element.download = `${params.fileName}-${moment().format()}.${params.type === 'EXCEL' ? 'xls' : 'pdf'
+    element.download = `${params.fileName}-${moment().format("YYYY-MM-DD HH:mm:ss")}.${params.type === 'EXCEL' ? 'xls' : 'pdf'
       }`;
   document.body.appendChild(element);
   element.click();

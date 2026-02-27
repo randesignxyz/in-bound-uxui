@@ -7,15 +7,15 @@ import { useEffect, useState } from 'react';
 import ContactModal from './modal/ContactModal';
 import { ContactData, ProfileData, SaveContract } from './data';
 import { ProfileServices } from './service';
-import { useAccess } from '@umijs/max'; 
+import { useAccess } from '@umijs/max';
 
 interface Props {
   profile: ProfileData;
   step: any;
-  is_admin:number;
+  is_admin: number;
 }
 
-export default ({ profile,step,is_admin}: Props) => {
+export default ({ profile, step, is_admin }: Props) => {
   const requestActions = simpleRequestActions();
   const [modalVisible, setModalVisible] = useState<
     { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: ContactData }
@@ -23,8 +23,8 @@ export default ({ profile,step,is_admin}: Props) => {
   const [cardActionProps] = useState<'actions' | 'extra'>('extra');
   const [lookupDataList, setLookupDataList] = useState<LookupDataItem2[]>([]);
   const [contactList, setContactList] = useState<ContactData[]>([]);
-  
-  const access = useAccess();  
+
+  const access = useAccess();
 
   useEffect(() => {
     initData();
@@ -51,17 +51,17 @@ export default ({ profile,step,is_admin}: Props) => {
       subTitle: item.isMain && <StarTwoTone />,
       actions: [
         // admin
-        <a style={{display: access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}} key="edit" onClick={() => onEditHandler(item)} >
+        <a style={{ display: access.canAccessHrESSAddEditProfile == true && is_admin == 2 ? '' : 'none' }} key="edit" onClick={() => onEditHandler(item)} >
           <EditOutlined />
         </a>,
-        <a style={{display: access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
+        <a style={{ display: access.canAccessHrESSAddEditProfile == true && is_admin == 2 ? '' : 'none' }} key="delete" onClick={() => deleteContractHandler(item)}>
           <DeleteOutlined />
         </a>,
         // employee
-        <a key="edit" onClick={() => onEditHandler(item)} style={{display: [7,5,4].find((element) => element == step)?'':'none'}}>
+        <a key="edit" onClick={() => onEditHandler(item)} style={{ display: [7, 5, 4].find((element) => element == step) ? '' : 'none' }}>
           <EditOutlined />
         </a>,
-        <a style={{display: [7,5,4].find((element) => element == step)?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
+        <a style={{ display: [7, 5, 4].find((element) => element == step) ? '' : 'none' }} key="delete" onClick={() => deleteContractHandler(item)}>
           <DeleteOutlined />
         </a>,
       ],
@@ -118,8 +118,8 @@ export default ({ profile,step,is_admin}: Props) => {
       content: 'Are you sure?',
       onOk: async () => {
         try {
-          data.type = modalVisible?.type||''; 
-          await ProfileServices.saveContact(data,is_admin)(requestActions); 
+          data.type = modalVisible?.type || '';
+          await ProfileServices.saveContact(data, is_admin)(requestActions);
 
 
           const list = await ProfileServices.listContact(data.empId).query(requestActions);
@@ -137,8 +137,8 @@ export default ({ profile,step,is_admin}: Props) => {
     <div>
       <ProList<any>
         toolBarRender={() => {
-          return [ 
-            <Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
+          return [
+            <Button style={{ display: ([7, 5, 2].find((element) => element == step)) && is_admin == 0 ? '' : 'none' }}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "
@@ -146,14 +146,14 @@ export default ({ profile,step,is_admin}: Props) => {
             >
               Add
             </Button>,
-            access.canAccessHrESSAddEditProfile==true?<Button style={{display: is_admin==2?'':'none'}}
+            access.canAccessHrESSAddEditProfile == true ? <Button style={{ display: is_admin == 2 ? '' : 'none' }}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "
               type="primary"
             >
               Add
-            </Button>:'',
+            </Button> : '',
           ];
         }}
         showActions="hover"

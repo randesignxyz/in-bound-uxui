@@ -5,7 +5,7 @@ import { useQuery } from "@umijs/max";
 import { useForm } from "antd/es/form/Form"
 import { EmployeeServices } from "../services";
 import { simpleRequestActions } from "@/services/model";
-import { BU, Department } from "../data";
+import { BU, Department, SubDepartment } from "../data";
 import { useEffect } from "react";
 
 interface Props extends DrawerFormProps {
@@ -21,9 +21,11 @@ const AdvancSearch: React.FC<Props> = ({ onCancel, param, ...props }) => {
         queryFn: () => MultiRequest<{
             buList: BU[];
             deptList: Department[];
+            subDeptList: SubDepartment[];
         }>([
             EmployeeServices.listBu.queryParams,
             EmployeeServices.listDepartment.queryParams,
+            EmployeeServices.listSubDepartment.queryParams,
         ])(requestAction),
         enabled: props.open,
         cacheTime: 1,
@@ -69,6 +71,18 @@ const AdvancSearch: React.FC<Props> = ({ onCancel, param, ...props }) => {
                 mode="multiple"
                 allowClear
                 options={data?.deptList.map((it) => ({
+                    label: it.name,
+                    value: it.id,
+                }))}
+            />
+             <ProFormSelect
+                label="Sub-Function"
+                name="subDepIds"
+                placeholder="Select Sub-functions"
+                mode="multiple"
+                allowClear
+                showSearch
+                options={data?.subDeptList.map((it) => ({
                     label: it.name,
                     value: it.id,
                 }))}

@@ -13,6 +13,7 @@ interface Props extends ModalFormProps<EmployeeListItem> {
 
 export default ({ dataItem, ...rest }: Props) => {
   // const [requistionDetail, setRequistionDetail] = useState<StaffRequisitionRequest>();
+  const [jobOptions, setJobOptions] = useState<{label:string,value:number}[]>([]);
   const requestActions = simpleRequestActions();
   const [data, setData] = useState<{
     buList: BU[];
@@ -39,19 +40,29 @@ export default ({ dataItem, ...rest }: Props) => {
       departmentList: rs.deptList,
       subDepartmentList: rs.subDeptList,
     });
-    //
+
     form.resetFields();
-    if(!!dataItem){
+
+    if (dataItem) {
+
+      // 🔥 preload selected job title
+      setJobOptions([
+        {
+          label: dataItem.jobTitle,
+          value: dataItem.job_id,
+        },
+      ]);
+
       form.setFieldsValue({
-        emp_no: dataItem?.employeeCode,
-        sap_id: dataItem?.sapId,
-        local_name: dataItem?.employeeLocalName,
-        first_name: dataItem?.firstName,
-        last_name: dataItem?.lastName,
-        job_title_id: dataItem?.jobTitle,
-        department_id: dataItem?.department_id,
-        bu_id: dataItem?.bu_id,
-        status:dataItem?.status
+        emp_no: dataItem.employeeCode,
+        sap_id: dataItem.sapId,
+        local_name: dataItem.employeeLocalName,
+        first_name: dataItem.firstName,
+        last_name: dataItem.lastName,
+        job_title_id: dataItem.job_id,
+        department_id: dataItem.department_id,
+        bu_id: dataItem.bu_id,
+        status: dataItem.status,
       });
     }
   };
@@ -74,26 +85,26 @@ export default ({ dataItem, ...rest }: Props) => {
     <ProFormText label="Local Name" name={'local_name'} />
     <ProFormText label="First name" name={'first_name'} />
     <ProFormText label="Last name" name={'last_name'} />
-    <ProFormSelect label="Job Title" name={'job_title_id'}
-                   showSearch
-                   allowClear
-      // convertValue={(value) => `${dataItem?.job_id}`}
-                   request={async ({ keyWords }) => {
-                     const its =  (await EmployeeServices.listPageJobTitle(keyWords).query(requestActions)
-                     ).items.map((it) => ({ label: it.name, value: it.id }));
-                     if (dataItem&&
-                       !its.some((it) => it.value == dataItem?.job_id)
-                     ){
-                       return [
-                         {
-                           label: dataItem?.jobTitle,
-                           value: dataItem?.job_id,
-                         },
-                         ...its,
-                       ];
-                     }
-                     return its;
-                   }}
+    <ProFormSelect
+      label="Job Title"
+      name="job_title_id"
+      showSearch
+      allowClear
+      options={jobOptions}
+      request={async ({ keyWords }) => {
+        const response = await EmployeeServices
+          .listPageJobTitle(keyWords)
+          .query(requestActions);
+
+        const options = response.items.map((it) => ({
+          label: it.name,
+          value: it.id,
+        }));
+
+        setJobOptions(options);
+
+        return options;
+      }}
     />
     <ProFormSelect label="Department" name={'department_id'} showSearch
                    options={data?.departmentList?.map((it) => ({ label: it.name, value: it.id }))}

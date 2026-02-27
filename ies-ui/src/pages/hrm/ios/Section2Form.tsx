@@ -81,6 +81,7 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
+<<<<<<< HEAD
             // render: (text) => (
             //     <div style={{ whiteSpace: 'pre-line' }}>
             //         {text}
@@ -99,6 +100,13 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                     </div>
                 );
             },
+=======
+            render: (text) => (
+                <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {text}
+                </div>
+            ),
+>>>>>>> ef7b8936f9801a77c27da0ab666f818b85e15ae3
             // editable: (_, record) => !(record.id == 0),
 
             renderFormItem: (item, { record, ...rest }, form) => {
@@ -107,10 +115,10 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
                         allowClear
                         style={{ width: '100%', height: "100%" }}
                         options={objective?.map(item => ({
-                            value: item.descriptionEn?.replace(/\\n/g, '\n'),
+                            value: item.descriptionEn,
                             label: (
                                 <div style={{
-                                    whiteSpace: 'pre-line',
+                                    whiteSpace: 'pre-wrap',
                                     wordBreak: 'break-word',
                                     borderBottom: "1px solid #f0f0f0",
                                     paddingBottom: 5,

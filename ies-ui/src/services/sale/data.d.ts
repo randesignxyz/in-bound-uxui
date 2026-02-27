@@ -113,7 +113,10 @@ export type SaleServiceName =
   | 'list-rsm-request-mpu-item'
   | 'sync-so-from-sfa'
   | 'list-area'
-  | 'sync-so-from-sap';
+  | 'sync-so-from-sap'
+  | 'list-sync-so'
+  | 'sync-all-so-from-sap'
+  | 'update-all-sap-saleplan';
 
 /** Stock */
 // export interface StockControl {
@@ -773,7 +776,12 @@ export interface So {
   distributorId?: number;
   attachments?: { id: number; imageId: string; status: string }[];
 }
-
+export interface SyncSO {
+    doc_entry_num: string
+    so_no: string
+    customer_code: string
+    shipping_address: string
+}
 export interface EditSo {
   deliveryId: number,
   shipDate?: string

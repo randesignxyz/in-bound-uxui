@@ -28,7 +28,7 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
                 endpoint: 'HR',
                 payload: params,
               pagination:{
-                  page: params.pagination?.current,
+                  current: params.pagination?.current,
                   pageSize: params.pagination?.pageSize
               },
             }).query(request)

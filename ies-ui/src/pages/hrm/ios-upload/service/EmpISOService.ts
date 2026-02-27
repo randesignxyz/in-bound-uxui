@@ -29,7 +29,6 @@ export const EmpISOServiceAPI = (requestActions?: RequestActions) => ({
       IEmpISOService.List(params))(requestActions) as Promise<Paging<EmpISOData>>,
 
   DeleteEmployeeIOS: (id: number | string)=> singleRequest(IEmpISOService.DeleteEmpIOS(id))(requestActions)
-
 });
 
 

@@ -81,32 +81,11 @@ const Section2Form: React.FC<Props> = ({ dataSource, readOnly = false, objective
             formItemProps: {
                 rules: [{ required: true, message: 'Please enter objectives' }]
             },
-<<<<<<< HEAD
-            // render: (text) => (
-            //     <div style={{ whiteSpace: 'pre-line' }}>
-            //         {text}
-            //     </div>
-            // ),
-            render: (text) => {
-                if (!text) return null;
-
-                const [title, ...rest] = text.split(':');
-                const description = rest.join(':'); // in case text contains more than one :
-
-                return (
-                    <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                        <strong>{title}:</strong>
-                        {description}
-                    </div>
-                );
-            },
-=======
             render: (text) => (
                 <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     {text}
                 </div>
             ),
->>>>>>> ef7b8936f9801a77c27da0ab666f818b85e15ae3
             // editable: (_, record) => !(record.id == 0),
 
             renderFormItem: (item, { record, ...rest }, form) => {

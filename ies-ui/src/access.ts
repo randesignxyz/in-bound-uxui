@@ -722,6 +722,16 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ].some((it) => it === item),
       ) || false,
 
+    canAccessSparePartRequestMenuItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_PROD_ADMIN',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_SPARE_PART_USER',
+        ].some((it) => it === item),
+      ) || false,
+
 
     /*****Queque */
     canAccesSqueueMenu:

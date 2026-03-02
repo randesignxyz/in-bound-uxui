@@ -1,6 +1,7 @@
 import transferIcon from '@/assets/transfer.png';
 import warehouseTransferIcon from '@/assets/warehouse_transfer.png';
 import dailyWaterTreatmentIcon from '@/assets/task-list.png';
+import vehicleToolIcon from '@/assets/vehicle-tools.png';
 import ListMenuComp from '@/components/ListMenu';
 import { PageContainer } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
@@ -12,6 +13,7 @@ export const ProdPaths = {
   dailyPreWaterTreatment: '/prod/daily-pre-water-treatment',
   dailyHACCPMonitoringtOzone: '/prod/daily-haccp-monitoring-ozone',
   dailyHACCPMonitoring: '/prod/daily-haccp-monitoring',
+  sparePartRequest: '/prod/spare-parts',
 };
 
 export default () => {
@@ -65,6 +67,14 @@ export default () => {
       icon: dailyWaterTreatmentIcon,
       link: `${ProdPaths.dailyHACCPMonitoringtOzone}/list`,
       visible: access.canAccessDailyHACCPMonitoringOzoneMenuItem,
+    },
+    {
+      id: 'sparePartRequest',
+      name: 'Spare Part Request',
+      description: 'Spare Part Request List',
+      icon: vehicleToolIcon,
+      link: `${ProdPaths.sparePartRequest}/list`,
+      visible: access.canAccessSparePartRequestMenuItem,
     },
   ];
 

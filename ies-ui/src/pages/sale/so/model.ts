@@ -49,7 +49,7 @@ export const Model = () => {
         { actionName: 'sale', responseKey: 'salespersons', payload: {} },
       ];
 
-      loadSoSummary([0]);
+      // loadSoSummary([0]);
 
       const rs = await crmServices.initVisitScheduleData(params);
       const result = await saleServices.initSoData(initParams);
@@ -191,9 +191,9 @@ export const Model = () => {
         ...it,
         parentKey: parent?.key,
         // seq: (parent?.id || it.seq) + index,
-         seq: parent
-      ? parent.baseSeq + index + 1   // child just after parent
-      : it.baseSeq,
+        seq: parent
+          ? parent.baseSeq + index + 1   // child just after parent
+          : it.baseSeq,
       };
     });
 
@@ -487,8 +487,8 @@ export const Model = () => {
   const syncFromSFA = async () => {
     return await saleServices.syncFromSFA({});
   };
-  const syncSOFromSAP = async (docNum: string,data:any) => {
-    return await saleServices.syncSOFromSAP({docNum,data});
+  const syncSOFromSAP = async (docNum: string, data: any) => {
+    return await saleServices.syncSOFromSAP({ docNum, data });
   };
 
   const cancelSo = async (soId: number, remarks: string) => {

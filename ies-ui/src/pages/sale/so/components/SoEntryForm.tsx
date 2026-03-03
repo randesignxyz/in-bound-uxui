@@ -22,6 +22,8 @@ type Props = {
   type: 'new' | 'edit';
   onBack?: (id?: number) => void;
   id?: number;
+  target?: 'PO' | 'GO';
+  onMarkTabAsModified?: (modified: boolean) => void;
 };
 
 const layout = {
@@ -48,7 +50,7 @@ export interface DeliveryInfo {
   status?: string
 }
 
-const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
+const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack, target, onMarkTabAsModified }) => {
   const { state, actions, modals } = Model();
   const { data } = state;
   const [form] = Form.useForm<So>();
@@ -64,6 +66,9 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
   useEffect(() => {
     actions.initData();
   }, []);
+
+  console.log(target);
+
 
   //Loading so for edit
   useEffect(() => {
@@ -143,6 +148,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
   }, [state.data?.initData]);
 
   const initialFormData = () => {
+    onMarkTabAsModified?.(false);
     const deliveryMothod = head(state.data?.initData?.deliveryMethodList);
     form.setFieldsValue({
       orderDate: moment(),
@@ -211,8 +217,12 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
             });
             if (isNew) {
               console.log(so);
+              onMarkTabAsModified?.(false);
               onBack?.(so.id);
-            } else onBack?.();
+            } else {
+              onMarkTabAsModified?.(false);
+              onBack?.();
+            }
           } catch (error: any) {
             if (error.message.indexOf('Direct MC') !== -1) message.error(error.message);
             else message.error('Failed to save.');
@@ -223,7 +233,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
       message.error('Invalied Data');
     }
   };
-  
+
   const onEdit = async () => {
     try {
       Modal.confirm({
@@ -258,6 +268,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
 
 
   const onFormvalueChanged = (changedValues: any, values: So) => {
+    onMarkTabAsModified?.(true);
     const { customerId, shippingAddressId, deliveryMethodId, deliveryDate } = changedValues;
 
     if (customerId && 'customerId' in changedValues) {
@@ -393,7 +404,10 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
                     actions.findProductItem(item.id, customerId, auto);
                   }
                 },
-                onRemove: actions.removeSoItem,
+                onRemove: (data) => {
+                  onMarkTabAsModified?.(true);
+                  actions.removeSoItem(data);
+                },
                 onEdit: (data, auto) => {
                   setSelectedItem(data);
 
@@ -467,9 +481,11 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
               }}
               actionHandlers={{
                 onSave: (delivery: DeliveryEntry) => {
+                  onMarkTabAsModified?.(true);
                   actions.saveShipping(delivery, defaultDelivery?.deliveryMethod);
                 },
                 delete: (key: string) => {
+                  onMarkTabAsModified?.(true);
                   actions.deleteShipping(key, defaultDelivery?.deliveryMethod);
                 },
               }}
@@ -492,8 +508,14 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
                 // onAddFile: (file) => {
                 //   files[1]((v) => [...v, file]);
                 // },
-                onAddFile: actions.saveAttachment,
-                onRemoveFile: actions.deleteAttachment,
+                onAddFile: (file) => {
+                  onMarkTabAsModified?.(true);
+                  actions.saveAttachment(file);
+                },
+                onRemoveFile: (file) => {
+                  onMarkTabAsModified?.(true);
+                  actions.deleteAttachment(file);
+                },
                 // onRemoveFile: (file) => {
                 //   files[1]((v) => v.filter((it) => it.uid !== file.uid));
                 // },
@@ -533,6 +555,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
               });
           },
           onAddSoItem: (data) => {
+            onMarkTabAsModified?.(true);
             actions.saveSoItems(data);
             modals.hideModal('item-entry');
           },
@@ -557,6 +580,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
         }}
         actionHandlers={{
           onAddItem: (data) => {
+            onMarkTabAsModified?.(true);
             actions.saveSoItem(data);
             setSelectedItem(undefined);
             modals.hideModal('item-entry');

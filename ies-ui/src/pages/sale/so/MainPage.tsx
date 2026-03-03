@@ -3,7 +3,7 @@ import '@/pages/index.less'
 import { Badge, Button, Card, Flex, Form, Space, Spin, Tag, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
-import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
+import { ExportOutlined, EyeOutlined, FileAddOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, PlusOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
@@ -18,6 +18,7 @@ import AdvanceSearch from './components/List/AdvanceSearch'
 import { simpleRequestActions } from '@/services/model'
 import ExcelSaleAreaFilter from './components/ExcelFilterSelect'
 import moment from 'moment'
+import PageWrapperV1 from '@/components/PageWrapperV1'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -70,32 +71,58 @@ export default () => {
 
 
     return <Spin spinning={false}>
-        <PageWrapper<SoItemLess, FilterType, {}>
-            onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
+        <PageWrapperV1<SoItemLess, FilterType, {}>
+            // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
+
+            addOptionsMode='inline'
+            addOptionsPosition='left'
             tabRender={item => access.canCreateEditSo ? [
-                { action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New PO' },
+                { action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' />, tabLabel: 'New PO', focusTab: true },
+                { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', focusTab: true },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
-                    tabLabel: item?.poNo
+                    tabLabel: item?.poNo,
                 },
                 {
                     action: 'action1', value: `${item?.customerCode} - ${item?.customerName}`,
                     panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
                     tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
-                }
+                },
+                // {
+                //     action: 'GO', value: `${item?.customerCode} - ${item?.customerName}`,
+                //     panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
+                //     tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
+                // }
             ] : [
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
                     tabLabel: item?.poNo
                 },
-                {
-                    action: 'action1', value: `${item?.customerCode} - ${item?.customerName}`,
-                    panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
-                    tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
-                }
+
+
             ]}
+            defaultTabClosable={false}
+
+            addOptions={[
+                {
+                    action: "PO",
+                    label: <Space><span>PO</span><PlusOutlined /></Space>,
+                    // icon: <FileAddOutlined />,
+                    tabLabel: 'New PO',
+                    focusTab: false
+                },
+                {
+                    action: "GO",
+                    label: <Space><span>GO</span><PlusOutlined /></Space>,
+                    // icon: <FileAddOutlined />,
+                    tabLabel: 'New GO',
+                    focusTab: false
+                },
+
+            ]}
+
             listView={{
                 type: 'Table',
                 title: 'PO List',
@@ -252,6 +279,7 @@ export default () => {
                     dataSource: data?.items,
                     loading: isFetching,
                     actionRef: actionRef,
+
                     pagination: {
                         total: data?.total
                     },

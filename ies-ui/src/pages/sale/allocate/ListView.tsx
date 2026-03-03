@@ -1166,7 +1166,7 @@ export default () => {
     //   },
     // },
     {
-      title: 'DOP',
+      title: 'DOD',
       dataIndex: 'deliveryDate',
       width: '8%',
       render: (_, r) =>
@@ -1175,7 +1175,7 @@ export default () => {
           : '-',
     },
     {
-      title: 'DOD',
+      title: 'DOP',
       dataIndex: 'dod_date',
       width: '6%',
       render: (_, r) =>

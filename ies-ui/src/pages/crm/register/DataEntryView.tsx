@@ -338,12 +338,11 @@ export default({
         const outletType = state1.initData?.outletTypeList?.find(
           it => it.id == changedValues.outletTypeId
         )
-        const channel = state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_MAIN_CHANNEL' && it?.actived=='Y').find(
-          it => it.name == outletType?.mainChannel        )
-        const subChannel = state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_SUB_CHANNEL' && it?.actived=='Y').find(
-          it => it.name == outletType?.subChannel
+        const channel = state1.initData?.lookupDataList?.find(
+          it => it.id == outletType?.mainChannelId )
+        const subChannel = state1.initData?.lookupDataList?.find(
+          it => it.id == outletType?.subChannelId
         ) 
-        console.log('outletTypeId', outletType)
         form.setFieldValue('channelId', channel?.id)
         form.setFieldValue('subChannelId', subChannel?.id)
       }}
@@ -414,6 +413,7 @@ export default({
               label="Price & Trade Offer"
               name={'priceTradeOfferId'}
               placeholder={'Price & Trade Offer'}
+              showSearch
               rules={[{ required: true }]}
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -431,6 +431,7 @@ export default({
                       <ProFormSelect
                         name={'priceTradeOfferId'}
                         placeholder={'Price & Trade Offer'}
+                        showSearch
                         rules={[{ required: true }]}
                         options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST' && it?.actived=='Y')?.map((it) => ({
                           label: it.name,
@@ -453,6 +454,7 @@ export default({
                 </div>}
               name={'sapPriceTradeOfferId'}
               placeholder={'Price & Trade Offer'}
+              showSearch
               rules={[{ required: true }]}
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST_SAP' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -464,6 +466,7 @@ export default({
               label={`Payment Term `}
               name={'paymentTermId'}
               placeholder={'Payment Term'}
+              showSearch
               rules={[{ required: true }]}
                options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -481,6 +484,7 @@ export default({
                       <ProFormSelect
                         name={'paymentTermId'}
                         placeholder={'Payment Term'}
+                        showSearch
                         rules={[{ required: true }]}
                         options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM' && it?.actived=='Y')?.map((it) => ({
                           label: it.name,
@@ -503,6 +507,7 @@ export default({
                 </div>}
               name={'sapPaymentTermId'}
               placeholder={'Payment Term'}
+              showSearch
               rules={[{ required: true }]}
                options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM_SAP' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -544,6 +549,7 @@ export default({
               label="Region"
               name={'regionId'}
               placeholder={'Region'}
+              showSearch
               rules={[{ required: true }]}
               options={state1.initData?.regionList?.map((it) => ({
                 label: it.name,
@@ -554,6 +560,7 @@ export default({
               <ProFormSelect
               label="Division"
               name={'divisionId'}
+              showSearch
               rules={[{ required: true }]}
               placeholder={'Division'}
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'CUSTOMER_DIVISION' && it?.actived=='Y')?.map((it) => ({
@@ -739,6 +746,7 @@ export default({
               label="Frequency of Purchase"
               name={'frequencyPurchase'}
               rules={[{required:true}]}
+              showSearch
               placeholder={'Payment Term'}
               options={[
                 {

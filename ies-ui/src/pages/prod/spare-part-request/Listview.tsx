@@ -3,6 +3,8 @@ import { ProdPaths } from '..';
 import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Tabs } from 'antd';
 import SparePartListingview from './SparePartListingview';
+import MySparePartRequests from './MySparePartRequest';
+import MyReceivedRequests from './MyReceivedRequest';
 
 export default function ListView() {
     const routes =[
@@ -26,11 +28,16 @@ export default function ListView() {
             key: '1',
             children: <SparePartListingview />
         },
-        // {
-        //     label: 'Spare Part Request',
-        //     key: '2',
-        //     children: <TableView<TableViewSearchParams> endpoint={ProdPaths.sparePartRequest} />
-        // }
+        {
+            label: 'My Request',
+            key: '2',
+            children: <MySparePartRequests />,
+        },
+        {
+            label: 'My Received Request',
+            key: '3',
+            children: <MyReceivedRequests />,
+        }
     ]}
     />
   </>

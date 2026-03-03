@@ -124,3 +124,22 @@ ol {
   background-color: #eaeaea;
   border-radius: 6px;
 }
+
+/* Responsive Radio Group */
+.radio-group-desktop {
+  display: inline-block;
+}
+
+.radio-group-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .radio-group-desktop {
+    display: none;
+  }
+  
+  .radio-group-mobile {
+    display: inline-block;
+  }
+}

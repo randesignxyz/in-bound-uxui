@@ -3,7 +3,7 @@ import { CheckCircleFilled, EyeFilled, MoreOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { Button, Checkbox, DatePicker, Dropdown, Radio, Select, Space, Tooltip } from 'antd';
 import { useRef, useState } from 'react';
-import { history } from 'umi';
+import { useNavigate } from '@umijs/max';
 
 export default function MySparePartRequests() {
   const actionRef = useRef<ActionType>();

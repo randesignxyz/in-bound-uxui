@@ -1,14 +1,20 @@
 import TableView from '@/components/DataCrud/TableView';
 import { CheckCircleFilled, EyeFilled, MoreOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
-import { Button, Checkbox, Dropdown, Radio, Select, Space, Tooltip } from 'antd';
+import { Avatar, Button, Checkbox, Dropdown, Radio, Select, Space, Tooltip } from 'antd';
 import { useRef, useState } from 'react';
-import { history } from 'umi';
+import { useNavigate } from '@umijs/max';
 
 export default function SparePartListingview() {
   const actionRef = useRef<ActionType>();
+  const navigate = useNavigate();
   const [radioValue, setRadioValue] = useState('All');
-
+  const getDataSparePart = async ()=> {
+    const response = await fetch('https://6818806f5a4b07b9d1cf68de.mockapi.io/spare-parts')
+    const data = await response.json();
+    console.log("spare-part data", data);
+    return data;
+  }
   const radioOptions = [
     { value: 'All', label: 'ALL' },
     { value: 'MRO-W', label: 'MRO-W' },
@@ -22,6 +28,15 @@ export default function SparePartListingview() {
   return (
     <>
       <TableView
+        actionHandlers={{
+          onRequest: async (criteria, pagination, sort) => {
+            const data = await getDataSparePart();
+            return {
+              items: data,
+              total: data.length,
+            };
+          },
+        }}
         // hasCriteria={Object.values(Omit(advanceSearchParams, ['business_unit'])).some((v) => v)}
         // cache
         extraFilter={
@@ -136,11 +151,21 @@ export default function SparePartListingview() {
             key: 'image',
             title: 'Image',
             dataIndex: 'image',
+            render: (image) => (
+              <Avatar src={image} size={48} shape="square" />
+            ),
           },
           {
             key: 'part_number',
             title: 'Part Number',
             dataIndex: 'part_number',
+             render: (category, r) => (
+              <a
+                onClick={() => navigate(`/prod/spare-part-request/view/${r.id}`, { state: { id: r.id } })}
+              >
+                {category}
+              </a>
+            ),
           },
           {
             key: 'spare_part_name',
@@ -153,15 +178,8 @@ export default function SparePartListingview() {
             dataIndex: 'spare_part_type',
           },
           {
-            key: 'Category',
+            key: 'category',
             title: 'Category',
-            render: (_, r) => (
-              <a
-                onClick={() => history.push(`/prod/spare-part-request/view/${r.id}`, { id: r.id })}
-              >
-                SPA-{String(r.id).padStart(6, '0')}
-              </a>
-            ),
             dataIndex: 'category',
           },
           {

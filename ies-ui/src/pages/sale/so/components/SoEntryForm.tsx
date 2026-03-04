@@ -67,9 +67,6 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack, target, onMar
     actions.initData();
   }, []);
 
-  console.log(target);
-
-
   //Loading so for edit
   useEffect(() => {
     if (!id) return;
@@ -312,7 +309,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack, target, onMar
         submitter={{
           render: () => {
             return (
-              <FooterToolbar>
+              <FooterToolbar portalDom={false}>
                 {type === 'new' && (
                   <Button
                     onClick={() => {

@@ -59,6 +59,7 @@ interface Props<
         icon?: React.ReactNode;
         tabLabel?: React.ReactNode;
         focusTab?: boolean;
+        multiple?: boolean;
         defaultOpen?: boolean;
         removable?: boolean;
         hideAddButton?: boolean;
@@ -217,8 +218,12 @@ export default function PageWrapper<
         );
     };
 
-    const createTab = (props: TabRenderProps, options?: { closable?: boolean; tabLabel?: React.ReactNode; focusTab?: boolean }) => {
-        if (options?.focusTab) {
+    const createTab = (props: TabRenderProps, options?: { closable?: boolean; tabLabel?: React.ReactNode; focusTab?: boolean; multiple?: boolean }) => {
+        const isFocusTab = options?.focusTab !== undefined ? options.focusTab : (props.focusTab !== undefined ? props.focusTab : (
+            options?.multiple !== undefined ? !options.multiple : (props.multiple !== undefined ? !props.multiple : false)
+        ));
+
+        if (isFocusTab) {
             const actionPrefix = `default-${props.action}-`;
             const existingTab = tabList.find((t) => t.key === props.tabKey || (String(t.key).startsWith(actionPrefix)));
             if (existingTab) {
@@ -246,14 +251,14 @@ export default function PageWrapper<
                 ...v,
                 {
                     tab: finalLabel,
-                    key: gKey,
+                    key: gKey as string,
                     closable: options?.closable ?? true,
                     icon: props.tabIcon || <FileAddOutlined />,
                     children: props.panel?.({
                         key: gKey,
                         currentTabKey: activeKey,
-                        onCloseTab: () => removeTab(gKey),
-                        onChangeTabLabel: (label) => changeTabLabel(label, gKey),
+                        onCloseTab: () => removeTab(gKey as string),
+                        onChangeTabLabel: (label) => changeTabLabel(label, gKey as string),
                         onAddTab: () => { },
                         onUpdateTab: () => { },
                         onMarkTabAsModified: (modified) => markTabAsModified(gKey as string, modified),
@@ -262,7 +267,7 @@ export default function PageWrapper<
             ];
         });
 
-        setActiveKey(gKey);
+        setActiveKey(gKey as string);
     };
 
     // ✅ Default List Tab
@@ -377,7 +382,7 @@ export default function PageWrapper<
                                                 (t) => t.action === opt.action
                                             );
                                             if (addTabConfig)
-                                                createTab(addTabConfig, { tabLabel: opt.tabLabel, focusTab: opt.focusTab });
+                                                createTab(addTabConfig, { tabLabel: opt.tabLabel, focusTab: opt.focusTab, multiple: opt.multiple });
                                         }}
                                     >
                                         <div className="ant-tabs-tab-btn" style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -405,7 +410,7 @@ export default function PageWrapper<
                                             (t) => t.action === e.key
                                         );
                                         const optConfig = addOptions.find((o) => o.action === e.key);
-                                        if (addTabConfig) createTab(addTabConfig, { tabLabel: optConfig?.tabLabel, focusTab: optConfig?.focusTab });
+                                        if (addTabConfig) createTab(addTabConfig, { tabLabel: optConfig?.tabLabel, focusTab: optConfig?.focusTab, multiple: optConfig?.multiple });
                                     },
                                 }}
                                 trigger={["click"]}
@@ -456,7 +461,7 @@ export default function PageWrapper<
                             const action = (key as string).replace("__add_option_", "");
                             const addTabConfig = tabRender?.().find((t) => t.action === action);
                             const optConfig = addOptions?.find((o) => o.action === action);
-                            if (addTabConfig) createTab(addTabConfig, { tabLabel: optConfig?.tabLabel, focusTab: optConfig?.focusTab });
+                            if (addTabConfig) createTab(addTabConfig, { tabLabel: optConfig?.tabLabel, focusTab: optConfig?.focusTab, multiple: optConfig?.multiple });
                             return;
                         }
                         setActiveKey(key as string);

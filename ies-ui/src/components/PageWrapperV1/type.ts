@@ -14,6 +14,8 @@ export type TabRenderProps = {
     tabLabel: React.ReactNode;
     tabIcon?: React.ReactNode;
     tabKey?: React.Key;
+    multiple?: boolean;
+    focusTab?: boolean;
     panel?: (props: {
         onCloseTab: () => void;
         key: React.Key,

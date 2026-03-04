@@ -77,8 +77,8 @@ export default () => {
             addOptionsMode='inline'
             addOptionsPosition='left'
             tabRender={item => access.canCreateEditSo ? [
-                { action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' />, tabLabel: 'New PO', focusTab: true },
-                { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', focusTab: true },
+                { action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' />, tabLabel: 'New PO', multiple: true },
+                { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', multiple: true },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
@@ -111,14 +111,15 @@ export default () => {
                     label: <Space><span>PO</span><PlusOutlined /></Space>,
                     // icon: <FileAddOutlined />,
                     tabLabel: 'New PO',
-                    focusTab: false
+                    multiple: true,
+                    defaultOpen: true
                 },
                 {
                     action: "GO",
                     label: <Space><span>GO</span><PlusOutlined /></Space>,
                     // icon: <FileAddOutlined />,
                     tabLabel: 'New GO',
-                    focusTab: false
+                    multiple: true
                 },
 
             ]}

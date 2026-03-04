@@ -2,7 +2,7 @@
 import TableView, { colLink, TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse, MenuProps, Flex } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse, MenuProps, Flex, Input } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
 import { Allocate, AllocateSOAdvanceParams, AreaList, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
@@ -392,9 +392,21 @@ export default () => {
   };
 
   const handleTBA = async (ids: number[], selectedListDn: any[]) => {
+    let remarkValue = '';
     Modal.confirm({
       title: 'TBA',
-      content: 'Are you sure?',
+      content: (
+        <div>
+          <p>Are you sure?</p>
+          <Input.TextArea
+            placeholder="Enter remark (optional)"
+            rows={3}
+            onChange={(e) => {
+              remarkValue = e.target.value;
+            }}
+          />
+        </div>
+      ),
       onOk: async () => {
         const dnList = Array.isArray(selectedListDn)
           ? selectedListDn
@@ -421,7 +433,7 @@ export default () => {
             ? a.lineNum - b.lineNum
             : a.soDocEntry.localeCompare(b.soDocEntry)
         );
-
+        console.log('remarkValue', remarkValue)
         await services.ClaimDn(
           ids,
           access.currentUser?.login ?? '',
@@ -429,7 +441,8 @@ export default () => {
           'TBA',
           null,
           del_item,
-          'TBA'
+          'TBA',
+          remarkValue,
         );
 
         actionRef.current?.reloadAndRest?.();
@@ -439,9 +452,21 @@ export default () => {
   };
 
   const handleClearTBA = async (ids: number[], selectedListDn: any[]) => {
+    let remarkValue = '';
     Modal.confirm({
       title: 'Clear TBA',
-      content: 'Are you sure?',
+      content: (
+        <div>
+          <p>Are you sure?</p>
+          <Input.TextArea
+            placeholder="Enter remark (optional)"
+            rows={3}
+            onChange={(e) => {
+              remarkValue = e.target.value;
+            }}
+          />
+        </div>
+      ),
       onOk: async () => {
         const dnList = Array.isArray(selectedListDn)
           ? selectedListDn
@@ -476,7 +501,9 @@ export default () => {
           'TBA',
           null,
           del_item,
-          'open'
+          'open',
+          null,
+          remarkValue,
         );
 
         actionRef.current?.reloadAndRest?.();
@@ -884,7 +911,7 @@ export default () => {
         },
         pagination: {
           current: params.pagination?.current ?? 1,
-          pageSize: params.pagination?.pageSize ?? 20,
+          pageSize: 200,
         }
       });
 
@@ -1167,7 +1194,7 @@ export default () => {
     //   },
     // },
     {
-      title: 'DOP',
+      title: 'DOD',
       dataIndex: 'deliveryDate',
       width: '8%',
       render: (_, r) =>
@@ -1176,7 +1203,7 @@ export default () => {
           : '-',
     },
     {
-      title: 'DOD',
+      title: 'DOP',
       dataIndex: 'dod_date',
       width: '6%',
       render: (_, r) =>
@@ -1286,7 +1313,7 @@ export default () => {
       children: skuColumns,
     },
     {
-      title: 'SAL Remark',
+      title: dnSearch.sap_delivery_date === 'TBA' ? 'Remark' : 'SAL Remark',
       dataIndex: 'remarks',
       width: 500, // keep reasonable width
       render: (_, record) => (
@@ -1296,7 +1323,7 @@ export default () => {
             wordBreak: 'break-word',  // ✅ break long words
           }}
         >
-          {record.remarks || '-'}
+          {dnSearch.sap_delivery_date === 'TBA' ? record.dop_remark || '-' : record.remarks || '-'}
         </div>
       ),
     },
@@ -2035,6 +2062,11 @@ export default () => {
             <TableView<DNList, { searchValue?: string }>
               displayOnly
               scroll={{ y: 55 * 5 }}
+              pagination={{
+    pageSize: 200,          // 👈 show 200 rows per page
+    defaultPageSize: 200,
+    showSizeChanger: false, // optional
+  }}
               tableProps={{
                 actionRef: actionRef,
                 options: {

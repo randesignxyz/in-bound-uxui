@@ -1,5 +1,5 @@
 import { CloseIndirectSoParams } from '@/services/sale/data';
-import { CheckOutlined, CloudUploadOutlined, EditOutlined, FileDoneOutlined, StopOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloudUploadOutlined, EditOutlined, FileDoneOutlined, PrinterOutlined, StopOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { Button, Modal, Spin, message } from 'antd';
 import React, { useEffect } from 'react';
@@ -143,7 +143,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
   const buttons = [
     <Button
       type="link"
-      icon={<FileDoneOutlined />}
+      icon={<PrinterOutlined />}
       hidden={(state.data?.soDetail?.associatedTo.customer.typeId !== 102)}
       key="invoice"
       onClick={() => onDowloadReportHandler(state.data?.soDetail?.id?.toString(), state.data?.soDetail?.docEntryNum)}

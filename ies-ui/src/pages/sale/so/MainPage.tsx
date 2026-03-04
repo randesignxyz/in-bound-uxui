@@ -73,7 +73,6 @@ export default () => {
     return <Spin spinning={false}>
         <PageWrapperV1<SoItemLess, FilterType, {}>
             // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
-
             addOptionsMode='inline'
             addOptionsPosition='left'
             tabRender={item => access.canCreateEditSo ? [
@@ -95,11 +94,8 @@ export default () => {
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
                     tabLabel: item?.poNo
                 },
-
-
             ]}
             defaultTabClosable={false}
-
             addOptions={[
                 {
                     action: "PO",

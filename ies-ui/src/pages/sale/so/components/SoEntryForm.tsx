@@ -22,7 +22,7 @@ type Props = {
   type: 'new' | 'edit';
   onBack?: (id?: number) => void;
   id?: number;
-  target?: 'PO' | 'GO';
+  target?: 'PO' | 'GO' | string;
   onMarkTabAsModified?: (modified: boolean) => void;
 };
 
@@ -211,6 +211,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack, target, onMar
               budgetCode: dataFrom.budgetCode,
               distributorId: dataFrom.distributorId,
               attachments: state.data?.attachments,
+              target: target,
             });
             if (isNew) {
               console.log(so);

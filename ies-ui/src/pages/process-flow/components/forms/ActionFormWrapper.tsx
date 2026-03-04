@@ -26,6 +26,7 @@ interface Props<T> {
     onCompleted?: () => void;
     onReset?: () => void;
   };
+  okText?: string;
 }
 
 const ActionFormWrapper = <T extends {}>(props: Props<T>) => {
@@ -38,6 +39,7 @@ const ActionFormWrapper = <T extends {}>(props: Props<T>) => {
   }
   return (
     <FormModalComp
+      okText={props.okText}
       open={visible}
       width={width}
       onCancel={actionHandlers?.onCancel}

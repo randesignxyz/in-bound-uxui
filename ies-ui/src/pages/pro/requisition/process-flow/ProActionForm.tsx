@@ -7,6 +7,7 @@ import { Modal } from 'antd';
 import { ProCard } from '@ant-design/pro-components';
 import { ActionDataFormProps } from '@/pages/process-flow/data';
 import ActionFormWrapper from '@/pages/process-flow/components/forms/ActionFormWrapper';
+import pro from '../..';
 
 export default (props: ActionDataFormProps) => {
 
@@ -23,6 +24,7 @@ export default (props: ActionDataFormProps) => {
       title={props.activityData?.activity}
       instanceData={props.ProcessInstanceData}
       {...props}
+      okText= {props.action =='send'?'Send Back':'Submit'}
       actionHandlers={{
         ...props.actionHandlers,
         onReset: () => {

@@ -9,6 +9,7 @@ import ViewForm from './ViewForm';
 import ProCommentForm from './ProActionForm';
 import ProActionForm from './ProActionForm';
 import DefaultSubtask from '@/pages/process-flow/components/forms/DefaultSubtask';
+import DefaultClarifyTask from '@/pages/process-flow/components/forms/DefaultClarifyTask';
 
 export const AcquisitionFormNames = {
   processDefKey: 'requisition_request_process',
@@ -148,9 +149,9 @@ export const AcquisitionForm: DataForm[] = [
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) =>{
-        // if(props.action == 'SUB_TASK')  { 
-        //     return <DefaultSubtask {...props} />    
-        // }
+        if(props.action == 'CLARIFY_TASK')  { 
+            return <DefaultClarifyTask {...props} />    
+        }
        return <ProActionForm {...props} />
       },
   },

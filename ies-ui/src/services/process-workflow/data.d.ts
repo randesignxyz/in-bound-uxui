@@ -351,6 +351,7 @@ export interface UserTask {
   assigneeInfo?: UserResult;
   createSubTask: boolean;
   subTask: boolean;
+  subTaskName?: string;
   subTasks?: { id: string, assignee?: string, created: Moment }[];
   instanceInfo: {
     processName: string;

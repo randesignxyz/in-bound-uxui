@@ -89,11 +89,6 @@ export default () => {
                     panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
                     tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
                 },
-                // {
-                //     action: 'GO', value: `${item?.customerCode} - ${item?.customerName}`,
-                //     panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
-                //     tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
-                // }
             ] : [
                 {
                     action: 'view', value: item?.poNo,
@@ -111,8 +106,7 @@ export default () => {
                     label: <Space><span>PO</span><PlusOutlined /></Space>,
                     // icon: <FileAddOutlined />,
                     tabLabel: 'New PO',
-                    multiple: true,
-                    defaultOpen: true
+                    multiple: true
                 },
                 {
                     action: "GO",
@@ -121,7 +115,6 @@ export default () => {
                     tabLabel: 'New GO',
                     multiple: true
                 },
-
             ]}
 
             listView={{

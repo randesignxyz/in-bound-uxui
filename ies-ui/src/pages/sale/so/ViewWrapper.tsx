@@ -4,11 +4,13 @@ import SoDetailView from "./components/Detail"
 import Edit from "./components/Edit";
 import Create from "./components/Create";
 
-export default ({ id, addNew, tabKey, openInTab, actionHandlers }: {
+export default ({ id, addNew, tabKey, openInTab, actionHandlers, target, onMarkTabAsModified }: {
     addNew?: true;
     tabKey?: string;
     openInTab?: true;
     id?: number;
+    target?: 'PO' | 'GO';
+    onMarkTabAsModified?: (modified: boolean) => void;
     actionHandlers?: {
         onBack?: () => void;
     };
@@ -23,19 +25,22 @@ export default ({ id, addNew, tabKey, openInTab, actionHandlers }: {
             onEdit: () => setViewType('edit')
         }} /> : <></>}
 
-        {viewType == 'edit' && soId ? <Edit openInTab={openInTab} id={soId} 
-        actionHandlers={{ onBack: () => setViewType('detail') }} 
-        /> 
-        : <></>
+        {viewType == 'edit' && soId ? <Edit openInTab={openInTab} id={soId}
+            actionHandlers={{ onBack: () => setViewType('detail') }}
+        />
+            : <></>
         }
 
-        {viewType == 'create' && tabKey ? <Create openInTab={openInTab} key={tabKey} actionHandlers={{
-            onBack: (newId) => {
-                setId(() => newId)
-                setViewType(() => 'detail')
+        {viewType == 'create' && tabKey ? <Create openInTab={openInTab} key={tabKey}
+            target={target}
+            onMarkTabAsModified={onMarkTabAsModified}
+            actionHandlers={{
+                onBack: (newId) => {
+                    setId(() => newId)
+                    setViewType(() => 'detail')
+                }
             }
-        }
-        } /> : <></>}
+            } /> : <></>}
 
     </>
 

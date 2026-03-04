@@ -775,12 +775,13 @@ export interface So {
   budgetCode?: string;
   distributorId?: number;
   attachments?: { id: number; imageId: string; status: string }[];
+  target?: string
 }
 export interface SyncSO {
-    doc_entry_num: string
-    so_no: string
-    customer_code: string
-    shipping_address: string
+  doc_entry_num: string
+  so_no: string
+  customer_code: string
+  shipping_address: string
 }
 export interface EditSo {
   deliveryId: number,
@@ -789,7 +790,7 @@ export interface EditSo {
 export interface SoDetail {
   id: number;
   soNo?: string;
-  docEntry?:string
+  docEntry?: string
   amount: number;
   discountAmount: number;
   vatAmount?: number;
@@ -905,8 +906,8 @@ export interface SoItem {
   categoryId?: number;
   type?: string;
   STD?: number | null;
-  TDO?: number| null;
-  TDP?: number| null;
+  TDO?: number | null;
+  TDP?: number | null;
   budgetCode?: string;
   subItems?: SoItem[];
   associatedTo?: {
@@ -1011,8 +1012,8 @@ export interface SoItemDetail {
   budgetCode?: string;
   index?: number;
   STD?: number | null;
-  TDO?: number| null;
-  TDP?: number| null;
+  TDO?: number | null;
+  TDP?: number | null;
 }
 
 export interface Distributor {

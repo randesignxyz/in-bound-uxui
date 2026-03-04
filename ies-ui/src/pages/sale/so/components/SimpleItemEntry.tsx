@@ -65,29 +65,29 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
 
     const dataForm = data.soLineItem
       ? {
-          id: data.soLineItem.itemId,
-          itemName: [data.soLineItem.itemCode, data.soLineItem.description].join('-'),
-          uomId: data.soLineItem.uomId,
-          qty: data.soLineItem.qty,
-          price: data.soLineItem.price,
-          type: data.soLineItem.type,
-          amount: data.soLineItem.amount,
-          remarks: data.soLineItem.remarks,
-          categoryId: data.soLineItem.categoryId,
-          budgetCode: data.soLineItem.budgetCode,
-          discountPercent: data.soLineItem.discountPercent,
-        }
+        id: data.soLineItem.itemId,
+        itemName: [data.soLineItem.itemCode, data.soLineItem.description].join('-'),
+        uomId: data.soLineItem.uomId,
+        qty: data.soLineItem.qty,
+        price: data.soLineItem.price,
+        type: data.soLineItem.type,
+        amount: data.soLineItem.amount,
+        remarks: data.soLineItem.remarks,
+        categoryId: data.soLineItem.categoryId,
+        budgetCode: data.soLineItem.budgetCode,
+        discountPercent: data.soLineItem.discountPercent,
+      }
       : {
-          id: data.productItem?.id,
-          uomId: data.productItem?.uomId,
-          qty: 1,
-          price: data.productItem?.priceAfterDiscount || data.productItem?.price,
-          type: data.defaultSaleType?.code,
-          itemName: [data.productItem?.code, data.productItem?.name].join('-'),
-          amount: data.productItem?.priceAfterDiscount || data.productItem?.price,
-          categoryId: data.productItem?.itemCategoryId,
-          discountPercent: data.productItem?.discountPercent,
-        };
+        id: data.productItem?.id,
+        uomId: data.productItem?.uomId,
+        qty: 1,
+        price: data.productItem?.priceAfterDiscount || data.productItem?.price,
+        type: data.defaultSaleType?.code,
+        itemName: [data.productItem?.code, data.productItem?.name].join('-'),
+        amount: data.productItem?.priceAfterDiscount || data.productItem?.price,
+        categoryId: data.productItem?.itemCategoryId,
+        discountPercent: data.productItem?.discountPercent,
+      };
     form.setFieldsValue(dataForm);
   };
   const onValuesChange = (changedValues: any, values: SoLineItemEntry) => {
@@ -164,6 +164,30 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
     actionHandlers.onAddItem?.(soItem);
   };
 
+  const groupedSaleTypes = () => {
+    const list = data.saleTypes
+      ?.filter(it => it.sequence !== null)
+      ?.slice()
+      ?.sort((a, b) => (a.sequence ?? 999) - (b.sequence ?? 999));
+
+    const groups: any = {};
+
+    list?.forEach(it => {
+      const g = it.groupType || "OTHER";
+
+      if (!groups[g]) {
+        groups[g] = { label: g, options: [] };
+      }
+
+      groups[g].options.push({
+        label: it.code!,
+        value: it.code!,
+      });
+    });
+
+    return Object.values(groups);
+  };
+
   return (
     <FormModalComp
       {...props}
@@ -185,8 +209,22 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
               rules={[{ required: true }]}
               name="type"
               allowClear={false}
+              showSearch
               label="Type"
-              options={data.saleTypes?.map((it) => ({ label: it.code!, value: it.code! }))}
+              options={groupedSaleTypes?.() || []}
+            // options={data.saleTypes?.filter(it => it.sequence !== null)?.slice()?.sort((a, b) => {
+            //   // If both null → keep original order
+            //   if (a.sequence == null && b.sequence == null) return 0;
+
+            //   // If a is null → push to bottom
+            //   if (a.sequence == null) return 1;
+
+            //   // If b is null → push to bottom
+            //   if (b.sequence == null) return -1;
+
+            //   // Normal numeric sort
+            //   return a.sequence - b.sequence;
+            // })?.map((it) => ({ label: it.code!, value: it.code! }))}
             />
             {/* <ProFormSelect
                 name='id'

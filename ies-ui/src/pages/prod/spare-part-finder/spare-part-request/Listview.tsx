@@ -6,7 +6,7 @@ import type { ActionType } from '@ant-design/pro-components';
 import { useRef, useState } from 'react';
 import { Button, Card, Input, Select, Space, Tabs, Tag, Typography, message } from 'antd';
 import type { SortOrder } from 'antd/es/table/interface';
-import { ProdPaths } from '..';
+import { ProdPaths } from '../..';
 import { SparePartRequestServiceAPI } from './service';
 import { sparePartRequestMockData } from './MockData/itemList';
 import type {
@@ -16,6 +16,7 @@ import type {
   SparePartTab,
   SparePartType,
 } from './data';
+import RequestItemModal from './requestItem';
 
 const typeOptions: { label: string; value: 'ALL' | SparePartType }[] = [
   { label: 'All', value: 'ALL' },
@@ -32,6 +33,8 @@ export default () => {
   const [searchValue, setSearchValue] = useState<string>();
   const [activeTab, setActiveTab] = useState<SparePartTab>('spare-list');
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [requestItems, setRequestItems] = useState<SparePartRequestItem[]>([]);
   const [filters, setFilters] = useState<{
     type: 'ALL' | SparePartType;
     category?: string;
@@ -182,7 +185,13 @@ export default () => {
               <Button
                 type="primary"
                 disabled={selectedRowKeys.length === 0}
-                onClick={() => message.success(`Requested ${selectedRowKeys.length} item(s).`)}
+                onClick={() => {
+                  const items = sparePartRequestMockData.filter((it) =>
+                    selectedRowKeys.includes(it.id),
+                  );
+                  setRequestItems(items);
+                  setRequestModalOpen(true);
+                }}
               >
                 Request
               </Button>
@@ -191,9 +200,19 @@ export default () => {
           columns={[
             {
               title: 'Image',
+              dataIndex: 'image',
               width: 80,
               align: 'center',
-              render: () => <Typography.Text type="secondary">-</Typography.Text>,
+              render: (_, r) =>
+                r.image ? (
+                  <img
+                    src={r.image}
+                    alt={r.partName}
+                    style={{ width: 48, height: 48, objectFit: 'contain' }}
+                  />
+                ) : (
+                  <Typography.Text type="secondary">-</Typography.Text>
+                ),
             },
             {
               title: 'Product ID',
@@ -242,6 +261,22 @@ export default () => {
           request={async (params, sort) => requestData(params, sort)}
         />
       </Card>
+
+      <RequestItemModal
+        open={requestModalOpen}
+        selectedItems={requestItems}
+        onCancel={() => setRequestModalOpen(false)}
+        onSubmit={(payload) => {
+          console.log('Submit payload:', payload);
+          message.success(`Submitted ${payload.items.length} item(s) with priority: ${payload.priority}`);
+          setRequestModalOpen(false);
+          setSelectedRowKeys([]);
+        }}
+        onAddMore={() => {
+          setRequestModalOpen(false);
+          message.info('Select more items from the list, then click Request again.');
+        }}
+      />
     </>
   );
 };

@@ -3,6 +3,7 @@ import type { SparePartRequestItem } from '../data';
 export const sparePartRequestMockData: SparePartRequestItem[] = [
   {
     id: 1,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'MCH-BRG-0001',
     partName: 'Deep Groove Bearing 6204',
     description: 'Standard radial bearing for medium-speed rotating assemblies.',
@@ -18,6 +19,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 2,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'MCH-BLT-0002',
     partName: 'V-Belt A-42',
     description: 'Drive transmission belt for conveyor and mixer line.',
@@ -33,6 +35,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 3,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'MCH-CPL-0003',
     partName: 'Gear Coupling Assembly',
     description: 'Flexible coupling set for motor and gearbox connection.',
@@ -48,6 +51,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 4,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'ELE-SNS-0004',
     partName: 'Inductive Proximity Sensor',
     description: 'Metal target detection sensor for machine safety interlock.',
@@ -63,6 +67,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 5,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'ELE-MCB-0005',
     partName: 'Miniature Circuit Breaker (MCB)',
     description: 'Overcurrent protection breaker for control panel branch.',
@@ -78,6 +83,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 6,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'ELE-MTR-0006',
     partName: 'AC Motor 3 Phase',
     description: 'General-purpose induction motor, 3-phase power input.',
@@ -93,6 +99,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 7,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'HYD-PMP-0007',
     partName: 'Hydraulic Pump Unit',
     description: 'Hydraulic pressure generation unit for pressing station.',
@@ -108,6 +115,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 8,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'HYD-VLV-0008',
     partName: 'Pneumatic Solenoid Valve',
     description: 'Air-flow control valve for actuator manifold.',
@@ -123,6 +131,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 9,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'CON-FLT-0009',
     partName: 'Industrial Air Filter',
     description: 'Dust and particle filter for compressed-air intake.',
@@ -138,6 +147,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 10,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'MCH-VAL-0010',
     partName: 'Ball Valve 1/2"',
     description: 'Shut-off valve for utility piping and maintenance work.',
@@ -153,6 +163,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 11,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'ELE-CBL-0011',
     partName: 'Control Cable 4C',
     description: '4-core control cable for panel-to-device wiring.',
@@ -168,6 +179,7 @@ export const sparePartRequestMockData: SparePartRequestItem[] = [
   },
   {
     id: 12,
+    image: '/images/spare-parts/electronic-fuel-metre.png',
     productId: 'MCH-NUT-0012',
     partName: 'Hex Nut M16',
     description: 'M16 fastening nut for maintenance and replacement.',

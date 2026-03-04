@@ -1533,7 +1533,7 @@ export default [
     name: 'sparePartRequest',
     hideInMenu: 'true',
     access: 'canAccessItem',
-    component: './prod/spare-part-request/',
+    component: './prod/spare-part-finder/spare-part-request/',
   },
 
   {

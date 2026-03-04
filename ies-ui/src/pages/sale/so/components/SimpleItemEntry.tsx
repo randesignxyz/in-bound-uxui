@@ -164,6 +164,30 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
     actionHandlers.onAddItem?.(soItem);
   };
 
+  const groupedSaleTypes = () => {
+    const list = data.saleTypes
+      ?.filter(it => it.sequence !== null)
+      ?.slice()
+      ?.sort((a, b) => (a.sequence ?? 999) - (b.sequence ?? 999));
+
+    const groups: any = {};
+
+    list?.forEach(it => {
+      const g = it.groupType || "OTHER";
+
+      if (!groups[g]) {
+        groups[g] = { label: g, options: [] };
+      }
+
+      groups[g].options.push({
+        label: it.code!,
+        value: it.code!,
+      });
+    });
+
+    return Object.values(groups);
+  };
+
   return (
     <FormModalComp
       {...props}
@@ -187,19 +211,20 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
               allowClear={false}
               showSearch
               label="Type"
-              options={data.saleTypes?.filter(it => it.sequence !== null)?.slice()?.sort((a, b) => {
-                // If both null → keep original order
-                if (a.sequence == null && b.sequence == null) return 0;
+              options={groupedSaleTypes?.() || []}
+            // options={data.saleTypes?.filter(it => it.sequence !== null)?.slice()?.sort((a, b) => {
+            //   // If both null → keep original order
+            //   if (a.sequence == null && b.sequence == null) return 0;
 
-                // If a is null → push to bottom
-                if (a.sequence == null) return 1;
+            //   // If a is null → push to bottom
+            //   if (a.sequence == null) return 1;
 
-                // If b is null → push to bottom
-                if (b.sequence == null) return -1;
+            //   // If b is null → push to bottom
+            //   if (b.sequence == null) return -1;
 
-                // Normal numeric sort
-                return a.sequence - b.sequence;
-              })?.map((it) => ({ label: it.code!, value: it.code! }))}
+            //   // Normal numeric sort
+            //   return a.sequence - b.sequence;
+            // })?.map((it) => ({ label: it.code!, value: it.code! }))}
             />
             {/* <ProFormSelect
                 name='id'

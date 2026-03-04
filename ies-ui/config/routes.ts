@@ -1528,6 +1528,13 @@ export default [
     access: 'canAccessInventoryTranferMenuItem',
     component: './prod/inventory-transfer/',
   },
+  {
+    path: '/prod/spare-part-request/:view/*',
+    name: 'sparePartRequest',
+    hideInMenu: 'true',
+    access: 'canAccessItem',
+    component: './prod/spare-part-request/',
+  },
 
   {
     path: '/prod/daily-water-treatment/:view/*',

@@ -8,6 +8,7 @@ export const ProdPaths = {
   prod: '/prod',
   transferRequest: '/prod/inventory-transfer-request',
   inventoryTransfer: '/prod/inventory-transfer',
+  sparePartRequest: '/prod/spare-part-request',
   dailyWaterTreatment: '/prod/daily-water-treatment',
   dailyPreWaterTreatment: '/prod/daily-pre-water-treatment',
   dailyHACCPMonitoringtOzone: '/prod/daily-haccp-monitoring-ozone',
@@ -33,6 +34,14 @@ export default () => {
       icon: warehouseTransferIcon,
       link: `${ProdPaths.inventoryTransfer}/list`,
       visible: access.canAccessInventoryTranferMenuItem,
+    },
+    {
+      id: 'sparePartRequest',
+      name: 'Spare Part Request',
+      description: 'Spare Part Request List',
+      icon: warehouseTransferIcon,
+      link: `${ProdPaths.sparePartRequest}/list`,
+      visible: access.canAccessItem,
     },
     // {
     //   id: 'dailyWaterTreatment',

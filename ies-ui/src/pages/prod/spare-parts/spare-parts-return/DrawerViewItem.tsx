@@ -264,7 +264,78 @@ export default function DrawerViewItem({
           </div>
         </Card>
       </div>
+       {/* Activity Log */}
+      <div style={{ padding: '0 24px 24px', backgroundColor: '#fff' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+          <SettingOutlined style={{ fontSize: 18, marginRight: 8, color: '#595959' }} />
+          <Text strong style={{ fontSize: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Activity Log
+          </Text>
+        </div>
 
+        <Card 
+          style={{ 
+            backgroundColor: '#fafafa', 
+            border: '1px solid #f0f0f0',
+            borderRadius: 8
+          }}
+          bodyStyle={{ padding: 0 }}
+        >
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '1px solid #f0f0f0'
+          }}>
+            <Text style={{ color: '#8c8c8c' }}>Request ID</Text>
+            <Text>{data?.request_id || "REQ-001"}</Text>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '1px solid #f0f0f0'
+          }}>
+            <Text style={{ color: '#8c8c8c' }}>Requested Date</Text>
+            <Text>{data?.requested_date || "2024-01-15"}</Text>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '1px solid #f0f0f0'
+          }}>
+            <Text style={{ color: '#8c8c8c' }}>Requested By</Text>
+            <Text>{data?.requested_by || "John Doe"}</Text>
+          </div>
+             <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '1px solid #f0f0f0'
+          }}>
+            <Text style={{ color: '#8c8c8c' }}>Picked By</Text>
+            <Text>{data?.picked_by || "John Doe"}</Text>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '1px solid #f0f0f0'
+          }}>
+            <Text style={{ color: '#8c8c8c' }}>Date Picked</Text>
+            <Text>{data?.date_picked || "2024-01-15"}</Text>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            padding: '16px 20px'
+          }}>
+            <Text style={{ color: '#8c8c8c' }}>Approved by</Text>
+            <Text>{data?.approved_by || "Jane Smith"}</Text>
+          </div>
+        </Card>
+      </div>
       {/* Additional Info */}
       <div style={{ padding: '0 24px 100px', backgroundColor: '#fff' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>

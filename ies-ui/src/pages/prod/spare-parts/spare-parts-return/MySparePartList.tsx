@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from '@umijs/max';
 import { Background } from 'reactflow';
 import FormModalSelectItems from './FormModalSelectItems';
+import DrawerViewItem from './DrawerViewItem';
 
 export default function MySparePartList() {
   const actionRef = useRef<ActionType>();
@@ -27,7 +28,9 @@ export default function MySparePartList() {
     { value: 'MRO-G', label: 'MRO-G' },
   ];
 
-  const onDetailhandler = async (data: any) => {
+  const onDetailhandler = (data: any) => {
+    setDrawerOpen(true);
+    setSelectedItem(data);
     console.log(data);
   };
 
@@ -67,6 +70,11 @@ export default function MySparePartList() {
   const handleModalCancel = () => {
     setModalOpen(prev => ({ ...prev, visible: false }));
   };
+
+  // drawer state and handlers
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+
   return (
     <>
       <TableView
@@ -249,6 +257,11 @@ export default function MySparePartList() {
         onCancel={handleModalCancel}
         onSubmit={handleModalSubmit}
         data={modalOpen.data}
+      />
+      <DrawerViewItem
+        open={drawerOpen}
+        data={selectedItem}
+        onClose={() => setDrawerOpen(false)}
       />
     </>
   );

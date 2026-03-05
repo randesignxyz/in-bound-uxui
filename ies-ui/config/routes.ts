@@ -1532,7 +1532,7 @@ export default [
     path: '/prod/spare-part-request/:view/*',
     name: 'sparePartRequest',
     hideInMenu: 'true',
-    access: 'canAccessItem',
+    access: 'canAccessSparePartFinder',
     component: './prod/spare-part-finder/spare-part-request/',
   },
 

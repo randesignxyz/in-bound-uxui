@@ -1,161 +1,99 @@
 import type { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import type { Paging } from '@/services/API';
-import { singleRequest } from '@/services/apiGateway';
-import type { RequestActions, ServiceApiType } from '@/services/apiGateway';
-import type { MyRequestItem, MyRequestSearch, RequestPriority, SparePartRequestItem, SparePartRequestSearch } from './data';
-import { sparePartRequestMockData } from './MockData/itemList';
-import { myRequestMockData } from './MockData/myRequestList';
+import type { RequestActions } from '@/services/apiGateway';
+import { createSparePartRequestApiService } from './service.api';
+import { createSparePartRequestMockService } from './service.mock';
+import type {
+  MyRequestItem,
+  MyRequestSearch,
+  RequestPriority,
+  SparePartRequestItem,
+  SparePartRequestSearch,
+} from './data';
 
-/** Runtime store – starts with mock seed, new requests get prepended */
-let myRequestStore: MyRequestItem[] = [...myRequestMockData];
+export interface CreateSparePartRequestPayload {
+  items: { item: SparePartRequestItem; quantity: number; purpose: string }[];
+  remark: string;
+  priority: RequestPriority;
+  dueDate?: string;
+}
 
-const SparePartRequestAction = {
-  page: (
-    params: TableViewSearchParams<SparePartRequestSearch>,
-  ): ServiceApiType<{ searchValue?: string }> => ({
-    type: 'PAGING_QUERY',
-    endpoint: 'PROD',
-    actionName: 'fetch-paging-spare-part-request',
-    payload: { ...params.criteria },
-    pagination: {
-      pageSize: params.pagination?.pageSize,
-      page: params.pagination?.current,
-    },
-  }),
-};
+export interface ChangeSparePartRequestStatusPayload {
+  id: number;
+  remark?: string;
+}
 
-export const SparePartRequestServiceAPI = (requestAction: RequestActions) => {
-  const normalize = (value?: string) =>
-    (value || '')
-      .toLowerCase()
-      .replace(/-/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+export interface ProvideSparePartRequestPayload {
+  id: number;
+  providedItems: number;
+  remark?: string;
+}
 
-  const pageFromMock = async (
-    params: TableViewSearchParams<SparePartRequestSearch>,
-  ): Promise<Paging<SparePartRequestItem>> => {
-    const searchValue = normalize(params.criteria?.searchValue);
-    const tokens = searchValue ? searchValue.split(' ') : [];
-    const filter = params.criteria?.advanceSearch || {};
-    const current = params.pagination?.current || 1;
-    const pageSize = params.pagination?.pageSize || 20;
+export interface RequestSparePartExtensionPayload {
+  id: number;
+  extensionDueDate: string;
+  reason: string;
+}
 
-    const filtered = sparePartRequestMockData.filter((item) => {
-      const searchable = normalize(
-        [
-          item.productId,
-          item.partName,
-          item.category,
-          item.type,
-          item.status,
-          item.status === 'no-stock' ? 'no stock' : item.status,
-          item.businessUnit,
-          item.tags?.join(' '),
-          item.description,
-        ]
-          .filter(Boolean)
-          .join(' '),
-      );
-      const matchedSearch = tokens.length === 0 || tokens.every((tk) => searchable.includes(tk));
+export interface CreateSparePartReturnPayload {
+  requestPk: number;
+  items: { item: SparePartRequestItem; quantity: number; purpose: string }[];
+  remark: string;
+  priority: RequestPriority;
+  dueDate?: string;
+}
 
-      const matchedTab = !filter.tab || item.tab === filter.tab;
-      const matchedType = !filter.type || filter.type === 'ALL' || item.type === filter.type;
-      const matchedWarehouse = !filter.warehouse || item.warehouse === filter.warehouse;
-      const matchedCategory = !filter.category || item.category === filter.category;
-      const matchedStatus = !filter.status || filter.status === 'ALL' || item.status === filter.status;
+export interface SparePartRequestServiceContract {
+  page(params: TableViewSearchParams<SparePartRequestSearch>): Promise<Paging<SparePartRequestItem>>;
+  myRequestsPage(params: TableViewSearchParams<MyRequestSearch>): Promise<Paging<MyRequestItem>>;
+  createRequest(payload: CreateSparePartRequestPayload): Promise<MyRequestItem>;
+  createReturn(payload: CreateSparePartReturnPayload): Promise<MyRequestItem>;
+  approveRequest(payload: ChangeSparePartRequestStatusPayload): Promise<MyRequestItem>;
+  rejectRequest(payload: ChangeSparePartRequestStatusPayload): Promise<MyRequestItem>;
+  provideRequest(payload: ProvideSparePartRequestPayload): Promise<MyRequestItem>;
+  limitRequest(payload: ProvideSparePartRequestPayload): Promise<MyRequestItem>;
+  requestExtension(payload: RequestSparePartExtensionPayload): Promise<MyRequestItem>;
+  approveExtension(payload: ChangeSparePartRequestStatusPayload): Promise<MyRequestItem>;
+  rejectExtension(payload: ChangeSparePartRequestStatusPayload): Promise<MyRequestItem>;
+}
 
-      return (
-        matchedSearch &&
-        matchedTab &&
-        matchedType &&
-        matchedWarehouse &&
-        matchedCategory &&
-        matchedStatus
-      );
-    });
+export const SparePartRequestServiceAPI = (requestAction: RequestActions): SparePartRequestServiceContract => {
+  const api = createSparePartRequestApiService(requestAction);
+  const mock = createSparePartRequestMockService();
 
-    const start = (current - 1) * pageSize;
-    return {
-      items: filtered.slice(start, start + pageSize),
-      total: filtered.length,
-      pageSize,
-    };
+  const withFallback = async <T>(fn: () => Promise<T>, fallback: () => Promise<T>, label: string): Promise<T> => {
+    try {
+      return await fn();
+    } catch (err) {
+      // Fallback mode for local/dev resilience.
+      console.warn(`[SPF] ${label} failed. Falling back to mock data.`, err);
+      return fallback();
+    }
   };
 
   return {
-    page: async (params: TableViewSearchParams<SparePartRequestSearch>) => {
-      try {
-        return (await singleRequest<SparePartRequestItem>(SparePartRequestAction.page(params))(
-          requestAction,
-        )) as Paging<SparePartRequestItem>;
-      } catch (error) {
-        return pageFromMock(params);
-      }
-    },
-
-    myRequestsPage: async (
-      params: TableViewSearchParams<MyRequestSearch>,
-    ): Promise<Paging<MyRequestItem>> => {
-      const searchValue = normalize(params.criteria?.searchValue);
-      const tokens = searchValue ? searchValue.split(' ') : [];
-      const filter = params.criteria?.advanceSearch || ({} as MyRequestSearch);
-      const current = params.pagination?.current || 1;
-      const pageSize = params.pagination?.pageSize || 10;
-
-      const filtered = myRequestStore.filter((item) => {
-        const searchable = normalize(
-          [item.requestId, item.remark, item.priority, item.requestStatus].filter(Boolean).join(' '),
-        );
-        const matchedSearch = tokens.length === 0 || tokens.every((tk) => searchable.includes(tk));
-
-        const matchedPriority =
-          !filter.priority || filter.priority === 'ALL' || item.priority === filter.priority;
-        const matchedStatus =
-          !filter.status || filter.status === 'ALL' || item.requestStatus === filter.status;
-        const matchedType = !filter.type || filter.type === 'ALL' || item.type === filter.type;
-
-        let matchedDate = true;
-        if (filter.dateRange && filter.dateRange[0] && filter.dateRange[1]) {
-          const itemDate = new Date(item.requestDate).getTime();
-          const from = new Date(filter.dateRange[0]).getTime();
-          const to = new Date(filter.dateRange[1]).getTime();
-          matchedDate = itemDate >= from && itemDate <= to;
-        }
-
-        return matchedSearch && matchedPriority && matchedStatus && matchedType && matchedDate;
-      });
-
-      const start = (current - 1) * pageSize;
-      return {
-        items: filtered.slice(start, start + pageSize),
-        total: filtered.length,
-        pageSize,
-      };
-    },
-
-    createRequest: async (payload: {
-      items: { item: SparePartRequestItem; quantity: number; purpose: string }[];
-      remark: string;
-      priority: RequestPriority;
-    }): Promise<MyRequestItem> => {
-      const nextId = myRequestStore.reduce((max, it) => Math.max(max, it.id), 0) + 1;
-      const seqNum = String(nextId).padStart(4, '0');
-
-      const newRequest: MyRequestItem = {
-        id: nextId,
-        requestId: `Re-${seqNum}`,
-        priority: payload.priority,
-        requestDate: new Date().toISOString(),
-        totalItems: payload.items.reduce((sum, it) => sum + it.quantity, 0),
-        receivedItems: 0,
-        requestStatus: 'pending',
-        remark: payload.remark || payload.items.map((it) => it.purpose).join('; '),
-      };
-
-      myRequestStore = [newRequest, ...myRequestStore];
-      return newRequest;
-    },
+    ...api,
+    page: (params) => withFallback(() => api.page(params), () => mock.page(params), 'page'),
+    myRequestsPage: (params) =>
+      withFallback(() => api.myRequestsPage(params), () => mock.myRequestsPage(params), 'myRequestsPage'),
+    createRequest: (payload) =>
+      withFallback(() => api.createRequest(payload), () => mock.createRequest(payload), 'createRequest'),
+    createReturn: (payload) =>
+      withFallback(() => api.createReturn(payload), () => mock.createReturn(payload), 'createReturn'),
+    approveRequest: (payload) =>
+      withFallback(() => api.approveRequest(payload), () => mock.approveRequest(payload), 'approveRequest'),
+    rejectRequest: (payload) =>
+      withFallback(() => api.rejectRequest(payload), () => mock.rejectRequest(payload), 'rejectRequest'),
+    provideRequest: (payload) =>
+      withFallback(() => api.provideRequest(payload), () => mock.provideRequest(payload), 'provideRequest'),
+    limitRequest: (payload) =>
+      withFallback(() => api.limitRequest(payload), () => mock.limitRequest(payload), 'limitRequest'),
+    requestExtension: (payload) =>
+      withFallback(() => api.requestExtension(payload), () => mock.requestExtension(payload), 'requestExtension'),
+    approveExtension: (payload) =>
+      withFallback(() => api.approveExtension(payload), () => mock.approveExtension(payload), 'approveExtension'),
+    rejectExtension: (payload) =>
+      withFallback(() => api.rejectExtension(payload), () => mock.rejectExtension(payload), 'rejectExtension'),
   };
 };
 

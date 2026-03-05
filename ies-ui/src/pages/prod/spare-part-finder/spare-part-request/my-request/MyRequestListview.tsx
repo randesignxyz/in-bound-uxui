@@ -1,8 +1,9 @@
 import { EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { useRef, useState } from 'react';
-import { Button, Card, DatePicker, Input, Select, Space, Tag, Tooltip } from 'antd';
+import { Button, Card, DatePicker, Input, Select, Space, Tag, Tooltip, Typography } from 'antd';
 import type { SortOrder } from 'antd/es/table/interface';
 import dayjs from 'dayjs';
 import type {
@@ -49,6 +50,7 @@ const statusColorMap: Record<RequestStatus, string> = {
   approved: 'warning',
   rejected: 'error',
   'in-progress': 'processing',
+  partial: 'gold',
 };
 
 const statusLabelMap: Record<RequestStatus, string> = {
@@ -56,6 +58,7 @@ const statusLabelMap: Record<RequestStatus, string> = {
   approved: 'Approved',
   rejected: 'Rejected',
   'in-progress': 'In Progress',
+  partial: 'Partial',
 };
 
 interface MyRequestListviewProps {
@@ -63,6 +66,7 @@ interface MyRequestListviewProps {
 }
 
 const MyRequestListview: React.FC<MyRequestListviewProps> = ({ services }) => {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
 
   const [searchValue, setSearchValue] = useState<string>();
@@ -109,6 +113,14 @@ const MyRequestListview: React.FC<MyRequestListviewProps> = ({ services }) => {
 
   return (
     <>
+      {!access.canSpfRequester && !access.canSpfApprover ? (
+        <Card>
+          <Typography.Text type="danger">
+            You do not have permission to access My Requests.
+          </Typography.Text>
+        </Card>
+      ) : (
+        <>
       <Card size="small" style={{ marginBottom: 10 }}>
         <Space wrap size="middle">
           <Input.Search
@@ -256,6 +268,8 @@ const MyRequestListview: React.FC<MyRequestListviewProps> = ({ services }) => {
           request={async (params, sort) => requestData(params, sort)}
         />
       </Card>
+        </>
+      )}
     </>
   );
 };

@@ -3,12 +3,12 @@ import { simpleRequestActions } from '@/services/model';
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { useRef, useState } from 'react';
 import { Button, Card, Input, Select, Space, Tabs, Tag, Typography, message } from 'antd';
 import type { SortOrder } from 'antd/es/table/interface';
 import { ProdPaths } from '../..';
 import { SparePartRequestServiceAPI } from './service';
-import { sparePartRequestMockData } from './MockData/itemList';
 import type {
   SparePartRequestItem,
   SparePartRequestSearch,
@@ -27,6 +27,7 @@ const typeOptions: { label: string; value: 'ALL' | SparePartType }[] = [
 ];
 
 export default () => {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
   const requestActions = simpleRequestActions();
   const services = SparePartRequestServiceAPI(requestActions);
@@ -36,6 +37,8 @@ export default () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestItems, setRequestItems] = useState<SparePartRequestItem[]>([]);
+  const [currentRows, setCurrentRows] = useState<SparePartRequestItem[]>([]);
+  const [knownCategories, setKnownCategories] = useState<string[]>([]);
   const [filters, setFilters] = useState<{
     type: 'ALL' | SparePartType;
     category?: string;
@@ -49,10 +52,7 @@ export default () => {
     { path: '', label: 'Spare Part Request' },
   ];
 
-  const categoryOptions = [...new Set(sparePartRequestMockData.map((it) => it.category))].map((it) => ({
-    label: it,
-    value: it,
-  }));
+  const categoryOptions = knownCategories.map((it) => ({ label: it, value: it }));
 
   const requestData = async (
     pagination: { current?: number; pageSize?: number },
@@ -74,8 +74,14 @@ export default () => {
     };
 
     const rs = await services.page(params);
+    const rows = rs.items || [];
+    setCurrentRows(rows);
+    setKnownCategories((prev) => {
+      const merged = new Set([...prev, ...rows.map((r) => r.category).filter(Boolean)]);
+      return Array.from(merged).sort();
+    });
     return {
-      data: rs.items || [],
+      data: rows,
       total: rs.total || 0,
       success: true,
     };
@@ -84,6 +90,15 @@ export default () => {
   return (
     <>
       <BreadCrumbCom separator=">" routes={routes} />
+
+      {!access.canAccessSparePartFinder ? (
+        <Card>
+          <Typography.Text type="danger">
+            You do not have permission to access Spare Part Finder.
+          </Typography.Text>
+        </Card>
+      ) : (
+        <>
 
       <Tabs
         style={{ marginBottom: 12 }}
@@ -95,8 +110,10 @@ export default () => {
         }}
         items={[
           { key: 'spare-list', label: 'Spare Part List' },
-          { key: 'my-requests', label: 'My Requests' },
-          { key: 'my-received', label: 'My Received' },
+          ...(access.canSpfRequester || access.canSpfApprover
+            ? [{ key: 'my-requests', label: 'My Requests' }]
+            : []),
+          ...(access.canSpfWarehouseStaff ? [{ key: 'my-received', label: 'My Received' }] : []),
         ]}
       />
 
@@ -187,19 +204,19 @@ export default () => {
               <Button onClick={() => message.info('Import Excel action is not wired yet.')}>
                 Import Excel
               </Button>
-              <Button
-                type="primary"
-                disabled={selectedRowKeys.length === 0}
-                onClick={() => {
-                  const items = sparePartRequestMockData.filter((it) =>
-                    selectedRowKeys.includes(it.id),
-                  );
-                  setRequestItems(items);
-                  setRequestModalOpen(true);
-                }}
-              >
-                Request
-              </Button>
+              {(access.canSpfRequester || access.canSpfApprover) && (
+                <Button
+                  type="primary"
+                  disabled={selectedRowKeys.length === 0}
+                  onClick={() => {
+                    const items = currentRows.filter((it) => selectedRowKeys.includes(it.id));
+                    setRequestItems(items);
+                    setRequestModalOpen(true);
+                  }}
+                >
+                  Request
+                </Button>
+              )}
             </Space>,
           ]}
           columns={[
@@ -272,6 +289,10 @@ export default () => {
         selectedItems={requestItems}
         onCancel={() => setRequestModalOpen(false)}
         onSubmit={async (payload) => {
+          if (!(access.canSpfRequester || access.canSpfApprover)) {
+            message.error('You are not allowed to submit spare part requests.');
+            return;
+          }
           try {
             const created = await services.createRequest(payload);
             message.success(
@@ -290,6 +311,8 @@ export default () => {
         }}
       />
         </>
+      )}
+      </>
       )}
     </>
   );

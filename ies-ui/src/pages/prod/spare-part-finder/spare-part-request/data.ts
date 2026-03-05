@@ -4,6 +4,9 @@ export type SparePartTab = 'spare-list' | 'my-requests' | 'my-received';
 export type SparePartType = 'MRO-W' | 'MRO-S' | 'MRO-G';
 export type SparePartStockStatus = 'available' | 'low' | 'no-stock';
 
+export type RequestPriority = 'urgent' | 'high' | 'normal' | 'low';
+export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'in-progress';
+
 export interface SparePartRequestSearch {
   searchValue?: string;
   tab?: SparePartTab;
@@ -11,6 +14,15 @@ export interface SparePartRequestSearch {
   warehouse?: string;
   category?: string;
   status?: 'ALL' | SparePartStockStatus;
+  sort?: Record<string, SortOrder>;
+}
+
+export interface MyRequestSearch {
+  searchValue?: string;
+  priority?: 'ALL' | RequestPriority;
+  status?: 'ALL' | RequestStatus;
+  type?: 'ALL' | SparePartType;
+  dateRange?: [string, string];
   sort?: Record<string, SortOrder>;
 }
 
@@ -29,4 +41,16 @@ export interface SparePartRequestItem {
   warehouse: string;
   tab: SparePartTab;
   createdDate?: string;
+}
+
+export interface MyRequestItem {
+  id: number;
+  requestId: string;
+  priority: RequestPriority;
+  requestDate: string;
+  totalItems: number;
+  receivedItems: number;
+  requestStatus: RequestStatus;
+  remark: string;
+  type?: SparePartType;
 }

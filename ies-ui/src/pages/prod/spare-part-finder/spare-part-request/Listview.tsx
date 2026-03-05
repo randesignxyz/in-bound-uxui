@@ -16,6 +16,7 @@ import type {
   SparePartTab,
   SparePartType,
 } from './data';
+import { MyRequestListview } from './my-request';
 import RequestItemModal from './requestItem';
 
 const typeOptions: { label: string; value: 'ALL' | SparePartType }[] = [
@@ -99,6 +100,10 @@ export default () => {
         ]}
       />
 
+      {activeTab === 'my-requests' ? (
+        <MyRequestListview services={services} />
+      ) : (
+        <>
       <Card size="small" style={{ marginBottom: 10 }}>
         <Space wrap size="middle">
           <Input.Search
@@ -266,17 +271,26 @@ export default () => {
         open={requestModalOpen}
         selectedItems={requestItems}
         onCancel={() => setRequestModalOpen(false)}
-        onSubmit={(payload) => {
-          console.log('Submit payload:', payload);
-          message.success(`Submitted ${payload.items.length} item(s) with priority: ${payload.priority}`);
-          setRequestModalOpen(false);
-          setSelectedRowKeys([]);
+        onSubmit={async (payload) => {
+          try {
+            const created = await services.createRequest(payload);
+            message.success(
+              `Request ${created.requestId} submitted (${payload.items.length} item(s), priority: ${payload.priority})`,
+            );
+            setRequestModalOpen(false);
+            setSelectedRowKeys([]);
+            setActiveTab('my-requests');
+          } catch (err) {
+            message.error('Failed to submit request.');
+          }
         }}
         onAddMore={() => {
           setRequestModalOpen(false);
           message.info('Select more items from the list, then click Request again.');
         }}
       />
+        </>
+      )}
     </>
   );
 };

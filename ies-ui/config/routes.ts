@@ -1559,11 +1559,18 @@ export default [
     component: './prod/daily-haccp-monitoring-ozone/',
   },
   {
-    path: '/prod/spare-parts/:view/*',
-    name: 'sparePartRequest',
+    path: '/prod/spare-parts-request/:view/*',
+    name: 'spare-parts',
     hideInMenu: 'true',
     access: 'canAccessSparePartRequestMenuItem',
-    component: './prod/spare-part-request',
+    component: './prod/spare-parts/spare-parts-request',
+  },
+  {
+    path: '/prod/spare-parts-return/:view/*',
+    name: 'spare-parts',
+    hideInMenu: 'true',
+    access: 'canAccessSparePartReturnMenuItem',
+    component: './prod/spare-parts/spare-parts-return',
   },
 
   //  ================= END Prod =================

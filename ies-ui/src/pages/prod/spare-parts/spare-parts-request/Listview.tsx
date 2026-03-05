@@ -1,10 +1,10 @@
 import BreadCrumbCom from '@/pages/fleet/components/BreadCrumbCom';
-import { ProdPaths } from '..';
 import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Tabs } from 'antd';
 import SparePartListingview from './SparePartListingview';
 import MySparePartRequests from './MySparePartRequest';
 import MyReceivedRequests from './MyReceivedRequest';
+import { ProdPaths } from '../..';
 
 export default function ListView() {
     const routes =[

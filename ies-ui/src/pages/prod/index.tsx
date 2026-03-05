@@ -13,7 +13,8 @@ export const ProdPaths = {
   dailyPreWaterTreatment: '/prod/daily-pre-water-treatment',
   dailyHACCPMonitoringtOzone: '/prod/daily-haccp-monitoring-ozone',
   dailyHACCPMonitoring: '/prod/daily-haccp-monitoring',
-  sparePartRequest: '/prod/spare-parts',
+  sparePartRequest: '/prod/spare-parts-request',
+  sparePartReturn: '/prod/spare-parts-return',
 };
 
 export default () => {
@@ -75,6 +76,14 @@ export default () => {
       icon: vehicleToolIcon,
       link: `${ProdPaths.sparePartRequest}/list`,
       visible: access.canAccessSparePartRequestMenuItem,
+    },
+     {
+      id: 'sparePartReturn',
+      name: 'Spare Part Return',
+      description: 'Spare Part Return List',
+      icon: vehicleToolIcon,
+      link: `${ProdPaths.sparePartReturn}/list`,
+      visible: access.canAccessSparePartReturnMenuItem,
     },
   ];
 

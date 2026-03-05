@@ -1,6 +1,6 @@
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
-import { ProdPaths } from '..';
 import ListView from './Listview';
+import { ProdPaths } from '../..';
 
 export default () => {
   return (

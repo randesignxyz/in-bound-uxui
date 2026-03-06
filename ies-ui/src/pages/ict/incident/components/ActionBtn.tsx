@@ -88,7 +88,7 @@ export const ActionBtn: React.FC<{
             icon={item?.claimed ? <StopOutlined /> : <CheckCircleOutlined />}
           >
 
-            {item?.claimed ? "Unclaim" : "Claim"}
+            {item?.claimed ? "Unclaim" : "Claim១"}
 
           </Button>
         )}

@@ -92,15 +92,15 @@ const TaskActionButtons: React.FC<{
   actionHandler: (key: string, item?: UserTask) => void;
 }> = ({ item, taskActions, actionHandler }) => (
   <>
-    {item && taskActions && !item.completed && !item.subTask && (
+    {item && taskActions && !item.completed && (
       <Button size="middle" onClick={() => actionHandler(item.claimed ? 'unclaimed' : 'claimed', item)}>
         {item.claimed ? (
           <>
-            <StopOutlined /> Unclaim2
+            <StopOutlined /> Unclaim
           </>
         ) : (
           <>
-            <CheckCircleOutlined /> Claim2
+            <CheckCircleOutlined /> Claim
           </>
         )}
       </Button>

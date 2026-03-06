@@ -164,11 +164,20 @@ export const AcquisitionForm: DataForm[] = [
       AcquisitionOmcFormNames.budgetControoler
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <BudgetControlForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) => {
+      if(props.action == 'CLARIFY_TASK')  { 
+            return <DefaultClarifyTask {...props} />    
+        }
+      return <BudgetControlForm {...props} />
+    }
   },
   {
     formKey: [AcquisitionFormNames.pro, AcquisitionNvcFormNames.pro],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <ProReviewForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) =>{
+      if(props.action == 'CLARIFY_TASK')  { 
+            return <DefaultClarifyTask {...props} />    
+      }
+      return <ProReviewForm {...props} />}
   },
 ];

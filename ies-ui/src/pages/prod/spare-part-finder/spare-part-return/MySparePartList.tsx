@@ -1,35 +1,25 @@
-import { EyeFilled, MoreOutlined, ReloadOutlined } from '@ant-design/icons';
+import { EyeFilled, EyeOutlined, MoreOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProTable } from '@ant-design/pro-components';
-import { Avatar, Button, Card, DatePicker, Dropdown, Radio, Select, Space, Tooltip } from 'antd';
+import { Avatar, Button, Card, DatePicker, Dropdown, Input, Radio, Select, Space, Tooltip } from 'antd';
 import { useRef, useState } from 'react';
 import { useNavigate } from '@umijs/max';
 import FormModalSelectItems from './FormModalSelectItems';
 import DrawerViewItem from './DrawerViewItem';
+import type { SparePartReturnListItem } from './data';
+import { SPARE_PART_CATEGORY_OPTIONS, SPARE_PART_RETURN_RADIO_OPTIONS } from './data';
+import { getSparePartReturnMockPage } from './service';
 
 export default function MySparePartList() {
   const actionRef = useRef<ActionType>();
   const navigate = useNavigate();
   const [radioValue, setRadioValue] = useState('All');
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
-  const [modalOpen, setModalOpen] = useState<{ visible: boolean; data?: any[] }>({ visible: false });
+  const [selectedItems, setSelectedItems] = useState<SparePartReturnListItem[]>([]);
+  const [modalOpen, setModalOpen] = useState<{ visible: boolean; data?: SparePartReturnListItem[] }>({ visible: false });
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-
-  const getDataSparePart = async () => {
-    const response = await fetch('https://6818806f5a4b07b9d1cf68de.mockapi.io/spare-parts');
-    const data = await response.json();
-    return data;
-  };
-
-  const radioOptions = [
-    { value: 'All', label: 'ALL' },
-    { value: 'MRO-W', label: 'MRO-W' },
-    { value: 'MRO-S', label: 'MRO-S' },
-    { value: 'MRO-G', label: 'MRO-G' },
-  ];
-
-  const onDetailhandler = (data: any) => {
+  const [selectedItem, setSelectedItem] = useState<SparePartReturnListItem | null>(null);
+  const radioOptions = SPARE_PART_RETURN_RADIO_OPTIONS;
+  const onDetailhandler = (data: SparePartReturnListItem) => {
     setDrawerOpen(true);
     setSelectedItem(data);
   };
@@ -40,14 +30,14 @@ export default function MySparePartList() {
     }
   };
 
-  const handleModalSubmit = (items: any[]) => {
+  const handleModalSubmit = (items: SparePartReturnListItem[]) => {
     console.log('Submitting return for items:', items);
     setModalOpen({ visible: false });
     setSelectedItems([]);
     setSelectedRowKeys([]);
   };
 
-  const handleAddMore = (items: any[]) => {
+  const handleAddMore = (items: SparePartReturnListItem[]) => {
     setSelectedItems(items);
     setModalOpen({ visible: false });
   };
@@ -58,8 +48,18 @@ export default function MySparePartList() {
 
   return (
     <>
-      <Card size="small" style={{ marginBottom: 10 }}>
+      <Card size="small" style={{ marginBottom: 10 }}
+      >
         <Space wrap size="middle">
+        <Input.Search
+          placeholder="Search spare parts..."
+          allowClear
+          onSearch={(value: string) => {
+            console.log('Searching for:', value);
+            actionRef.current?.reload();
+          }}
+          style={{ width: 250 }}
+        />
           {/* Desktop: Radio Group */}
           <div className="radio-group-desktop">
             <Radio.Group
@@ -106,13 +106,7 @@ export default function MySparePartList() {
           <Select
             defaultValue="category"
             style={{ width: 125 }}
-            options={[
-              { value: 'category', label: 'Categories' },
-              { value: 'Mechanical', label: 'Mechanical' },
-              { value: 'Electrical', label: 'Electrical' },
-              { value: 'Hydraulic', label: 'Hydraulic' },
-              { value: 'Tools', label: 'Tools' },
-            ]}
+            options={[...SPARE_PART_CATEGORY_OPTIONS]}
             onChange={() => {
               setSelectedRowKeys([]);
               setSelectedItems([]);
@@ -136,9 +130,16 @@ export default function MySparePartList() {
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50],
           }}
-          request={async () => {
-            const data = await getDataSparePart();
-            return { data, success: true, total: data.length };
+          request={async (params) => {
+            const result = await getSparePartReturnMockPage({
+              current: params.current,
+              pageSize: params.pageSize,
+            });
+            return {
+              data: result.items,
+              success: true,
+              total: result.total ?? result.items.length,
+            };
           }}
           rowSelection={{
             selectedRowKeys,
@@ -169,8 +170,13 @@ export default function MySparePartList() {
               width: 48,
               render: (_, record) => (
                 <Space size={1}>
-                  <Tooltip title="View Details">
-                    <Button icon={<EyeFilled />} onClick={() => onDetailhandler(record)} />
+                   <Tooltip title="View Details">
+                    <Button
+                       icon={<EyeOutlined style={{ color: '#999' }} />}
+                      type="text"
+                      size="small"
+                      onClick={() => onDetailhandler(record)}
+                    />
                   </Tooltip>
                 </Space>
               ),

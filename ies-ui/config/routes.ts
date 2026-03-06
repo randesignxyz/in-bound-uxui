@@ -1530,13 +1530,6 @@ export default [
     component: './prod/inventory-transfer/',
   },
   {
-    path: '/prod/spare-part-request/:view/*',
-    name: 'sparePartRequest',
-    hideInMenu: 'true',
-    access: 'canAccessSparePartFinder',
-    component: './prod/spare-part-finder/spare-part-request/',
-  },
-  {
     path: '/prod/daily-water-treatment/:view/*',
     name: 'dailyWaterTreatment',
     hideInMenu: 'true',
@@ -1570,6 +1563,13 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessSparePartReturnMenuItem',
     component: './prod/spare-part-finder/spare-part-return',
+  },
+    {
+    path: '/prod/spare-part-request/:view/*',
+    name: 'sparePartRequest',
+    hideInMenu: 'true',
+    access: 'canAccessSparePartFinder',
+    component: './prod/spare-part-finder/spare-part-request/',
   },
 
   //  ================= END Prod =================

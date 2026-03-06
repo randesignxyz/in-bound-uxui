@@ -2,6 +2,7 @@ import FormModalComp from "@/components/FormModal";
 import { EditableProTable, ProColumns } from "@ant-design/pro-components";
 import { useState, useEffect } from "react";
 import { Avatar, Button } from "antd";
+import TextArea from "antd/es/input/TextArea";
 
 interface FormModalProps {
   open: boolean;
@@ -150,6 +151,8 @@ export default function FormModalSelectItems({ open, onCancel, onSubmit, data }:
           onChange: setEditableRowKeys,
         }}
       />
+      <label htmlFor="Remark(optional)">Remark(optional)</label>
+      <TextArea rows={4} placeholder="maxLength is 6" maxLength={6} />
     </FormModalComp>
   );
 }

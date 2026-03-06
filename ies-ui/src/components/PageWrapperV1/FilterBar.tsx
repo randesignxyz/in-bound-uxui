@@ -50,37 +50,33 @@ export default ({
         setSubStatusValue(statuses.find(it => it.option.default)?.subOptions?.find(it => it.default)?.value)
     }, [])
 
-    return <ProCard size="small">
-        <Flex >
-            <Flex>
-                <Flex >
-                    {onSearch && <Input.Search allowClear onSearch={onSearch} />}
+    return <ProCard size="small" bodyStyle={{ padding: "0 5px" }}>
+        <Flex wrap="wrap" gap={16} align="center">
+            <Flex wrap="wrap" gap={8} align="center" style={{ flex: 1 }}>
+                {onSearch && <Input.Search allowClear onSearch={onSearch} style={{ width: 200 }} />}
 
-                </Flex>
-                {(onOpenAdvanceSearch || advanceSearchButton) && <Flex>
-                    {advanceSearchButton || <Button icon={<FileSearchOutlined />} onClick={onOpenAdvanceSearch} />}
-                </Flex>}
-                <Flex style={{ marginLeft: 20 }}>
+                {(onOpenAdvanceSearch || advanceSearchButton) && (
+                    advanceSearchButton || <Button icon={<FileSearchOutlined />} onClick={onOpenAdvanceSearch} />
+                )}
 
-                    {
-                        statuses && !onStatusRender ?
-                            <Segmented defaultValue={statuses.find(it => it.option.default)?.option.value} onChange={(value) => {
-                                onStatusChanged?.(value)
-                                const sub = statuses.find(it => it.option.value == value)?.subOptions || []
-                                setSubStatusValue(sub.find(it => it.default)?.value)
-                                onSubStatusChanged?.(sub.find(it => it.default)?.value)
-                                setSubStatuses(v => sub)
-                                // subStatus2
-                                setSubStatuses2([])
-                                setSubStatusValue2(undefined)
-                                onSubStatus2Changed?.(undefined)
-                            }} options={statuses.map(it =>
-                                it.option
-                            )} /> : onStatusRender
+                {
+                    statuses && !onStatusRender ?
+                        <Segmented defaultValue={statuses.find(it => it.option.default)?.option.value} onChange={(value) => {
+                            onStatusChanged?.(value)
+                            const sub = statuses.find(it => it.option.value == value)?.subOptions || []
+                            setSubStatusValue(sub.find(it => it.default)?.value)
+                            onSubStatusChanged?.(sub.find(it => it.default)?.value)
+                            setSubStatuses(v => sub)
+                            // subStatus2
+                            setSubStatuses2([])
+                            setSubStatusValue2(undefined)
+                            onSubStatus2Changed?.(undefined)
+                        }} options={statuses.map(it =>
+                            it.option
+                        )} /> : onStatusRender
+                }
 
-                    }
-                </Flex>
-                {subStatuses.length > 0 && !onStatusRender ? <Flex style={{ marginLeft: 20 }}>
+                {subStatuses.length > 0 && !onStatusRender && (
                     <Segmented
                         options={subStatuses}
                         onChange={(value) => {
@@ -96,8 +92,9 @@ export default ({
                         value={subStatusValue}
                         defaultValue={subStatuses.find(it => it.default)?.value || subStatuses.find(it => it)?.value}
                     />
-                </Flex> : <></>}
-                {subStatuses2.length > 0 && !onStatusRender ? <Flex style={{ marginLeft: 20 }}>
+                )}
+
+                {subStatuses2.length > 0 && !onStatusRender && (
                     <Segmented
                         options={subStatuses2}
                         onChange={(value) => {
@@ -107,15 +104,14 @@ export default ({
                         value={subStatusValue2}
                         defaultValue={subStatuses2.find(it => it.default)?.value || subStatuses2.find(it => it)?.value}
                     />
-                </Flex> : <></>}
+                )}
             </Flex>
-            <Flex flex={1} justify="flex-end">
+            <Flex justify="flex-end" wrap="wrap" gap={8} align="center">
                 <ActionBar actionButtons={actionButtons}
                     onAddTab={onAddTab}
                     actions={actions || []} numOfActionOnBar={3} />
                 <Button type="link" onClick={onRefresh} icon={<ReloadOutlined />} />
             </Flex>
         </Flex>
-
     </ProCard >
 }

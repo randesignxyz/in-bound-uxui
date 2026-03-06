@@ -37,8 +37,6 @@ const ExcelSaleAreaFilter: React.FC<ExcelSaleAreaFilterProps> = ({
 }) => {
     const optionsRef = useRef<SaleAreaOption[]>([]);
     const initializedRef = useRef(false);
-    console.log(isSelectAll);
-
     /* ================================
      * External Select All controller
      * ================================ */
@@ -65,6 +63,7 @@ const ExcelSaleAreaFilter: React.FC<ExcelSaleAreaFilterProps> = ({
         <ProFormCascader
             name={name}
             width={width}
+
             placeholder={""}
             request={async () => {
                 const res = (await CrmServices.listSaleAreas().query(
@@ -115,7 +114,6 @@ const ExcelSaleAreaFilter: React.FC<ExcelSaleAreaFilterProps> = ({
             fieldProps={{
                 multiple: true,
                 maxTagCount: 'responsive',
-
                 onChange: (paths: number[][] = []) => {
                     const values = paths.map(p => p[0]);
                     const options = optionsRef.current;

@@ -5,10 +5,11 @@ import { omit } from "lodash";
 
 export default <ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType>(
-        { listView, tabRender, onAddTab }: {
+        { listView, tabRender, onAddTab, stickyOffsetHeader }: {
             listView: TableViewProps<ListDataType, FilterType, ValueType>;
             onAddTab: (item: ListDataType, props?: TabRenderProps, key?: React.Key) => void;
             tabRender?: (item: ListDataType) => TabRenderProps[];
+            stickyOffsetHeader?: number;
         }
     ) => {
     return <ProTable<ListDataType, {}, ValueType>
@@ -53,5 +54,6 @@ export default <ListDataType extends Record<string, any> & { id: number | string
         })]}
         search={false}
         options={false}
+        sticky={stickyOffsetHeader !== undefined ? { offsetHeader: stickyOffsetHeader } : undefined}
     />
 }

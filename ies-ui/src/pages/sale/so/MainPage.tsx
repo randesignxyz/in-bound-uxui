@@ -75,13 +75,18 @@ export default () => {
             // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
             addOptionsMode='inline'
             addOptionsPosition='left'
+            showFullScreenButton
+            // showNewWindowButton
+
             tabRender={item => access.canCreateEditSo ? [
-                { action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' />, tabLabel: 'New PO', multiple: true },
+                { action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' />, tabLabel: 'New PO', multiple: true, allowFloating: true },
                 { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', multiple: true },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
                     tabLabel: item?.poNo,
+                    allowFloating: true,
+
                 },
                 {
                     action: 'action1', value: `${item?.customerCode} - ${item?.customerName}`,
@@ -102,7 +107,7 @@ export default () => {
                     label: <Space><span>PO</span><PlusOutlined /></Space>,
                     // icon: <FileAddOutlined />,
                     tabLabel: 'New PO',
-                    multiple: true
+                    multiple: true,
                 },
                 {
                     action: "GO",
@@ -221,13 +226,14 @@ export default () => {
                     ))
                 },
 
-                advanceSearchButton: <Space align='baseline'>
-                    <Button style={{ marginTop: -6 }} icon={<FileSearchOutlined />}
+                advanceSearchButton: <Space align='center'>
+                    <Button style={{ marginTop: 0 }} icon={<FileSearchOutlined />}
                         onClick={() => modals.showModal('advanceSearch')}
                     />
                     <ProForm
                         form={form}
                         submitter={false}
+                        style={{ marginTop: 10 }}
                     >
                         <ExcelSaleAreaFilter
                             form={form}
@@ -308,6 +314,7 @@ export default () => {
                         {
                             title: "No",
                             width: 40,
+
                             render: (r, s, index) => (
                                 data?.page * data?.pageSize + index) + 1
                         },

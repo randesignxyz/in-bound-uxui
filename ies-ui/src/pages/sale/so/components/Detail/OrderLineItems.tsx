@@ -1,6 +1,6 @@
 import { SoDetail, SoItemDetail } from "@/services/sale/data";
 import { ProForm, ProFormField, ProTable } from "@ant-design/pro-components";
-import { Card, Col, Form, Row } from "antd";
+import { Card, Col, Form, Row, Table, Typography } from "antd";
 import numeral from 'numeral';
 import { useEffect } from "react";
 
@@ -22,12 +22,18 @@ export default ({ data }: { data?: SoDetail; }) => {
     const [formSum] = Form.useForm<SummaryAmount>();
 
     useEffect(() => {
-        console.log('datadata',data);
+        console.log('datadata', data);
 
         formSum.setFieldsValue({ subTotal: data?.amount, totalAmount: data?.totalAmount })
     }, [data])
 
     return <Card style={{ marginTop: '10px' }} size="small" title="Line Items">
+        <style>{`
+            .ant-table-summary > tr > th,
+            .ant-table-summary > tr > td {
+                border-bottom: none !important;
+            }
+        `}</style>
         <ProTable<SoItemDetail>
             size="small"
             sortDirections={['ascend']}
@@ -100,118 +106,102 @@ export default ({ data }: { data?: SoDetail; }) => {
                 reload: false,
             }}
             dataSource={data?.items}
-        // dataSource={(() => {
-        //     const rows: SoItemDetail[] = []
-        //     const map = new Map<string, SoItemDetail>()
+            // dataSource={(() => {
+            //     const rows: SoItemDetail[] = []
+            //     const map = new Map<string, SoItemDetail>()
 
-        //         ; (data?.items || []).forEach((i) => {
-        //             const isSTD = i.type === 'STD'
-        //             const isTDO = i.type === 'TDO'
-        //             const isTDP = i.type === 'TDP'
-        //             const isMainType = isSTD || isTDO || isTDP
+            //         ; (data?.items || []).forEach((i) => {
+            //             const isSTD = i.type === 'STD'
+            //             const isTDO = i.type === 'TDO'
+            //             const isTDP = i.type === 'TDP'
+            //             const isMainType = isSTD || isTDO || isTDP
 
-        //             const key = i.itemCode || ''
+            //             const key = i.itemCode || ''
 
-        //             if (isMainType) {
-        //                 if (!map.has(key)) {
-        //                     map.set(key, {
-        //                         ...i,
-        //                         type: '',
-        //                         STD: null,
-        //                         TDO: null,
-        //                         TDP: null,
-        //                         qty: 0,
-        //                     })
-        //                 }
+            //             if (isMainType) {
+            //                 if (!map.has(key)) {
+            //                     map.set(key, {
+            //                         ...i,
+            //                         type: '',
+            //                         STD: null,
+            //                         TDO: null,
+            //                         TDP: null,
+            //                         qty: 0,
+            //                     })
+            //                 }
 
-        //                 const row = map.get(key)!
+            //                 const row = map.get(key)!
 
-        //                 if (isSTD) row.STD = (row.STD || 0) + i.qty
-        //                 if (isTDO) row.TDO = (row.TDO || 0) + i.qty
-        //                 if (isTDP) row.TDP = (row.TDP || 0) + i.qty
+            //                 if (isSTD) row.STD = (row.STD || 0) + i.qty
+            //                 if (isTDO) row.TDO = (row.TDO || 0) + i.qty
+            //                 if (isTDP) row.TDP = (row.TDP || 0) + i.qty
 
-        //                 row.qty =
-        //                     (row.STD || 0) +
-        //                     (row.TDO || 0) +
-        //                     (row.TDP || 0)
-        //             } else {
-        //                 // FOC / TDL / others
-        //                 rows.push({
-        //                     ...i,
-        //                     type: i.type,
-        //                     STD: null,
-        //                     TDO: null,
-        //                     TDP: null,
-        //                     qty: i.qty,
-        //                 })
-        //             }
-        //         })
+            //                 row.qty =
+            //                     (row.STD || 0) +
+            //                     (row.TDO || 0) +
+            //                     (row.TDP || 0)
+            //             } else {
+            //                 // FOC / TDL / others
+            //                 rows.push({
+            //                     ...i,
+            //                     type: i.type,
+            //                     STD: null,
+            //                     TDO: null,
+            //                     TDP: null,
+            //                     qty: i.qty,
+            //                 })
+            //             }
+            //         })
 
-        //     rows.push(...map.values())
+            //     rows.push(...map.values())
 
-        //     // sort by seq ascending
-        //     rows.sort((a, b) => {
-        //         const aSeq = a.seq || 0
-        //         const bSeq = b.seq || 0
+            //     // sort by seq ascending
+            //     rows.sort((a, b) => {
+            //         const aSeq = a.seq || 0
+            //         const bSeq = b.seq || 0
 
-        //         if (aSeq !== bSeq) return aSeq - bSeq
+            //         if (aSeq !== bSeq) return aSeq - bSeq
 
-        //         // same item → main row first
-        //         if (!a.type && b.type) return -1
-        //         if (a.type && !b.type) return 1
+            //         // same item → main row first
+            //         if (!a.type && b.type) return -1
+            //         if (a.type && !b.type) return 1
 
-        //         return 0
-        //     })
+            //         return 0
+            //     })
 
-        //     return rows
-        // })()}
+            //     return rows
+            // })()}
+            summary={() => (
+                <Table.Summary fixed="bottom">
+                    <Table.Summary.Row>
+                        <Table.Summary.Cell index={0} colSpan={9} />
+                        <Table.Summary.Cell index={1} align="right">
+                            <Typography.Text strong>Sub Total :</Typography.Text>
+                        </Table.Summary.Cell>
+                        <Table.Summary.Cell index={2} align="right">
+                            <Typography.Text strong>{numeral(data?.amount).format('$ 0,0.00')}</Typography.Text>
+                        </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                    <Table.Summary.Row>
+                        <Table.Summary.Cell index={0} colSpan={9} />
+                        <Table.Summary.Cell index={1} align="right">
+                            <Typography.Text strong>VAT Amount :</Typography.Text>
+                        </Table.Summary.Cell>
+                        <Table.Summary.Cell index={2} align="right">
+                            <Typography.Text strong>{numeral(data?.vatAmount || 0).format('$ 0,0.00')}</Typography.Text>
+                        </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                    <Table.Summary.Row>
+                        <Table.Summary.Cell index={0} colSpan={9} />
+                        <Table.Summary.Cell index={1} align="right">
+                            <Typography.Text strong>Total Amount :</Typography.Text>
+                        </Table.Summary.Cell>
+                        <Table.Summary.Cell index={2} align="right">
+                            <Typography.Text strong>{numeral(data?.totalAmount).format('$ 0,0.00')}</Typography.Text>
+                        </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                </Table.Summary>
+            )}
         />
-
-        <ProForm
-            {...layout}
-            style={{ fontWeight: 'bolder' }}
-            submitter={false}
-            layout="horizontal"
-            form={formSum}
-        >
-            <Row>
-                <Col flex="Auto" />
-                <Col flex="350px">
-                    <ProFormField
-                        // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
-                        render={(_, r) => {
-                            return numeral(r['value']).format('$ 0,0.00');
-                        }}
-                        label="Sub Total"
-                        name="subTotal"
-                        readonly
-                    />
-                    {/* <ProFormField
-                  valueType={{ type: 'money', locale: 'en-US' }}
-                  label="Discount Amount"
-                  name="discountAmount"
-                  readonly
-                /> */}
-                    <ProFormField
-                        // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
-                        render={(_, r) => {
-                            return numeral(r['value']).format('$ 0,0.00');
-                        }}
-                        label="VAT Amount"
-                        name="vatAmount"
-                        readonly
-                    />
-                    <ProFormField
-                        // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
-                        render={(_, r) => {
-                            return numeral(r['value']).format('$ 0,0.00');
-                        }}
-                        label="Total Amount"
-                        name="totalAmount"
-                        readonly
-                    />
-                </Col>
-            </Row>
-        </ProForm>
     </Card>
 }

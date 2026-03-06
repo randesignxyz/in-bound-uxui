@@ -1,5 +1,5 @@
 import { CloseIndirectSoParams } from '@/services/sale/data';
-import { CheckOutlined, CloudUploadOutlined, EditOutlined, FileDoneOutlined, PrinterOutlined, StopOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloudUploadOutlined, EditOutlined, PrinterOutlined, StopOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { Button, Modal, Spin, message } from 'antd';
 import React, { useEffect } from 'react';
@@ -10,11 +10,9 @@ import CloseSo from './CloseSo';
 import OrderFormView from './OrderFormView';
 import SapPosting from './SapPosting';
 import SoFormView from './SoFormView';
-import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
 import { simpleRequestActions } from '@/services/model';
 import { downloadGenericReport } from '@/services/apiGateway';
 import { getUrlReporting } from '@/pages/ReportUrl';
-import moment from 'moment';
 
 interface Props {
   id?: number;

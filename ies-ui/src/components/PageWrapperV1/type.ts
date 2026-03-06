@@ -16,6 +16,9 @@ export type TabRenderProps = {
     tabKey?: React.Key;
     multiple?: boolean;
     focusTab?: boolean;
+    allowFloating?: boolean;
+    fullScreen?: boolean;
+    defaultViewMode?: 'normal' | 'half-left' | 'half-right' | 'full';
     panel?: (props: {
         onCloseTab: () => void;
         key: React.Key,

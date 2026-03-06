@@ -13,7 +13,7 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
     }))
 
 
-    return <Space size="large" style={{ marginTop: -10 }}>
+    return <Space size="large" style={{ marginTop: -5 }} >
 
         <Radio.Group
             defaultValue={'Pending'}

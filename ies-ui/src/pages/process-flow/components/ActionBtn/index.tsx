@@ -96,11 +96,11 @@ const TaskActionButtons: React.FC<{
       <Button size="middle" onClick={() => actionHandler(item.claimed ? 'unclaimed' : 'claimed', item)}>
         {item.claimed ? (
           <>
-            <StopOutlined /> Unclaim
+            <StopOutlined /> Unclaim2
           </>
         ) : (
           <>
-            <CheckCircleOutlined /> Claim
+            <CheckCircleOutlined /> Claim2
           </>
         )}
       </Button>

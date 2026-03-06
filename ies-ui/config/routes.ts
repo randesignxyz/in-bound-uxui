@@ -1536,7 +1536,6 @@ export default [
     access: 'canAccessSparePartFinder',
     component: './prod/spare-part-finder/spare-part-request/',
   },
-
   {
     path: '/prod/daily-water-treatment/:view/*',
     name: 'dailyWaterTreatment',
@@ -1566,18 +1565,11 @@ export default [
     component: './prod/daily-haccp-monitoring-ozone/',
   },
   {
-    path: '/prod/spare-parts-request/:view/*',
-    name: 'spare-parts',
-    hideInMenu: 'true',
-    access: 'canAccessSparePartRequestMenuItem',
-    component: './prod/spare-parts/spare-parts-request',
-  },
-  {
-    path: '/prod/spare-parts-return/:view/*',
+    path: '/prod/spare-part-return/:view/*',
     name: 'spare-parts',
     hideInMenu: 'true',
     access: 'canAccessSparePartReturnMenuItem',
-    component: './prod/spare-parts/spare-parts-return',
+    component: './prod/spare-part-finder/spare-part-return',
   },
 
   //  ================= END Prod =================

@@ -4,7 +4,7 @@ import { ProdPaths } from '../..';
 
 export default () => {
   return (
-    <CrudWrapper baseURL={ProdPaths.sparePartRequest}>
+    <CrudWrapper baseURL={ProdPaths.sparePartReturn}>
       {(view, id) => {
         switch (view) {
           case 'list':

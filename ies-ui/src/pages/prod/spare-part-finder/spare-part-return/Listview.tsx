@@ -1,10 +1,9 @@
 import BreadCrumbCom from '@/pages/fleet/components/BreadCrumbCom';
 import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Tabs } from 'antd';
-import SparePartListingview from './SparePartListingview';
-import MySparePartRequests from './MySparePartRequest';
-import MyReceivedRequests from './MyReceivedRequest';
 import { ProdPaths } from '../..';
+import MySparePartList from './MySparePartList';
+import MyRequestsToReturn from './MyRequestsToReturn';
 
 export default function ListView() {
     const routes =[
@@ -14,7 +13,7 @@ export default function ListView() {
         },
         { 
            path: ProdPaths.sparePartRequest,
-           label: 'Spare Part',
+           label: 'Spare Part Return',
         }
     ]
 
@@ -24,20 +23,15 @@ export default function ListView() {
     <Tabs
     items={[
         {
-            label: 'Spare Part',
+            label: 'My Spare Parts List',
             key: '1',
-            children: <SparePartListingview />
+            children: <MySparePartList />
         },
         {
-            label: 'My Request',
+            label: 'My Requests to Return',
             key: '2',
-            children: <MySparePartRequests />,
+            children: <MyRequestsToReturn/>,
         },
-        {
-            label: 'My Received Request',
-            key: '3',
-            children: <MyReceivedRequests />,
-        }
     ]}
     />
   </>

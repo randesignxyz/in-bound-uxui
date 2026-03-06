@@ -1,4 +1,5 @@
 ﻿import icons from "@/.umi/plugin-layout/icons";
+import component from "@/locales/bn-BD/component";
 import { access } from "fs";
 
 /**
@@ -1563,6 +1564,20 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessDailyHACCPMonitoringOzoneMenuItem',
     component: './prod/daily-haccp-monitoring-ozone/',
+  },
+  {
+    path: '/prod/spare-parts-request/:view/*',
+    name: 'spare-parts',
+    hideInMenu: 'true',
+    access: 'canAccessSparePartRequestMenuItem',
+    component: './prod/spare-parts/spare-parts-request',
+  },
+  {
+    path: '/prod/spare-parts-return/:view/*',
+    name: 'spare-parts',
+    hideInMenu: 'true',
+    access: 'canAccessSparePartReturnMenuItem',
+    component: './prod/spare-parts/spare-parts-return',
   },
 
   //  ================= END Prod =================

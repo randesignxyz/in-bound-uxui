@@ -85,8 +85,8 @@ export default ({ data, actionRef, actionHandlers }: Props) => {
       { key: 'detail', icon: <EyeOutlined />, onClick: () => actionHandlers?.onGogoDataView?.(item), label: 'Detail', visible: true },
       { key: 'diagram', icon: <PartitionOutlined />, onClick: () => actionHandlers?.onShowDiagram?.(item), label: 'View Diagram', visible: true },
       { key: 'destination', icon: <TeamOutlined />, onClick: () => actionHandlers?.onShowAuthorizedTasksModal?.(item), label: 'Approvers', visible: true },
-      { key: 'unclaim', icon: <StopOutlined />, onClick: () => actionHandlers?.onUnclaim?.(item), label: 'Unclaim', visible: item.claimed && !item.completed },
-      { key: 'claim', icon: <CheckCircleOutlined />, onClick: () => actionHandlers?.onClaim?.(item), label: 'Claim', visible: !item.claimed && !item.completed },
+      { key: 'unclaim', icon: <StopOutlined />, onClick: () => actionHandlers?.onUnclaim?.(item), label: 'Unclaim', visible: item.claimed && !item.completed && !item.subTask},
+      { key: 'claim', icon: <CheckCircleOutlined />, onClick: () => actionHandlers?.onClaim?.(item), label: 'Claim', visible: !item.claimed && !item.completed && !item.subTask},
       { key: 'assign', icon: <UserOutlined />, onClick: () => setAssignModal(item), label: 'Assign', visible: access.canAssignWorkflow && !item.completed },
     ]
     const actions = item.actions.map(it => ({

@@ -79,13 +79,12 @@ export default () => {
             // showNewWindowButton
 
             tabRender={item => access.canCreateEditSo ? [
-                { action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' />, tabLabel: 'New PO', multiple: true, allowFloating: true },
+                { action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' />, tabLabel: 'New PO', multiple: true, },
                 { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', multiple: true },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
                     tabLabel: item?.poNo,
-                    allowFloating: true,
 
                 },
                 {

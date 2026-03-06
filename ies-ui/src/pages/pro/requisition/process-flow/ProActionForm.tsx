@@ -24,7 +24,7 @@ export default (props: ActionDataFormProps) => {
       title={props.activityData?.activity}
       instanceData={props.ProcessInstanceData}
       {...props}
-      okText= {props.action =='send'?'Send Back':'Submit'}
+      okText= {props.action =='Sent'?'Send Back':'Submit'}
       actionHandlers={{
         ...props.actionHandlers,
         onReset: () => {

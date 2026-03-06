@@ -17,8 +17,8 @@ export default ({ ...rest }: ActionDataFormProps) => {
     }>()
 
     const onSearchHandler = async (keywords?: string) => {
-        console.log('rest',rest)
-        return (await AccountServiceAPIs.findAvailableCandidate(rest.formKey, keywords).query(requestActions)).map(it => ({ label: it.name, value: it.id }))
+        console.log(rest)
+        return (await AccountServiceAPIs.findAvailableUsersTask(rest.procInstId, keywords).query(requestActions)).map(it => ({ label: it.name, value: it.id,subChannel: it.description  }))
     }
     return <ActionFormWrapper {...rest}
         title="Clarify Task"
@@ -64,7 +64,25 @@ export default ({ ...rest }: ActionDataFormProps) => {
                 rules={[{ required: true }]} allowClear
                 showSearch label="Assign To"
                 name={"userId"}
-                request={({ keyWords }) => onSearchHandler(keyWords)} />
+                fieldProps={{
+                dropdownRender: (menu) => (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 12px', color: '#999', borderBottom: '1px solid #f0f0f0' }}>
+                      <span>Name</span>
+                      <span></span>
+                    </div>
+                    {menu}
+                  </>
+                ),
+                optionRender: (option) => (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{option.label}</span>
+                    <span style={{ color: '#999' }}>{option.data.subChannel}</span>
+                  </div>
+                ),
+              }}
+                request={({ keyWords }) => onSearchHandler(keyWords)} 
+            />
             <ProFormTextArea label="Remarks" name={"remarks"} rules={[{ required: true }]} />
         </ProForm>
 

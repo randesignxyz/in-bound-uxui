@@ -151,6 +151,7 @@ export const AcquisitionForm: DataForm[] = [
     actionDataForm: (props: ActionDataFormProps) =>{
         if(props.action == 'CLARIFY_TASK')  { 
             return <DefaultClarifyTask {...props} />    
+            
         }
        return <ProActionForm {...props} />
       },

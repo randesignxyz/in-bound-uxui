@@ -81,14 +81,14 @@ export const ActionBtn: React.FC<{
           Export
         </Button>}
 
-        {taskActions && !item?.completed && !item?.subTask && (
+        {taskActions && !item?.completed && (
           <Button
             size="middle"
             onClick={onActionClick}
             icon={item?.claimed ? <StopOutlined /> : <CheckCircleOutlined />}
           >
 
-            {item?.claimed ? "Unclaim" : "Claim១"}
+            {item?.claimed ? "Unclaim" : "Claim"}
 
           </Button>
         )}

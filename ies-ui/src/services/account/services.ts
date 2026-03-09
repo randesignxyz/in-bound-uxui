@@ -83,6 +83,15 @@ export const AccountServiceAPIs = {
     }
   }),
 
+   findAvailableUsersTask: (procInstId?: string, searchValue?: string) => fetchDataListService<SearchAccount, { procInstId?: string, searchValue?: string }>({
+    actionName: 'list-available-users-task',
+    endpoint: 'WORK_FLOW',
+    payload: {
+      procInstId,
+      searchValue
+    }
+  }),
+
   createSubtask: (taskId: String, userId: String, action: String, remarks: String, uploadedFiles: string[]) => execDataService0<{
     taskId: String, userId: String, action: String, remarks: String, uploadedFiles: string[]
   }>({

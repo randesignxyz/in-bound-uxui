@@ -85,8 +85,8 @@ export default ({ data, actionRef, actionHandlers }: Props) => {
       { key: 'detail', icon: <EyeOutlined />, onClick: () => actionHandlers?.onGogoDataView?.(item), label: 'Detail', visible: true },
       { key: 'diagram', icon: <PartitionOutlined />, onClick: () => actionHandlers?.onShowDiagram?.(item), label: 'View Diagram', visible: true },
       { key: 'destination', icon: <TeamOutlined />, onClick: () => actionHandlers?.onShowAuthorizedTasksModal?.(item), label: 'Approvers', visible: true },
-      { key: 'unclaim', icon: <StopOutlined />, onClick: () => actionHandlers?.onUnclaim?.(item), label: 'Unclaim', visible: item.claimed && !item.completed },
-      { key: 'claim', icon: <CheckCircleOutlined />, onClick: () => actionHandlers?.onClaim?.(item), label: 'Claim', visible: !item.claimed && !item.completed },
+      { key: 'unclaim', icon: <StopOutlined />, onClick: () => actionHandlers?.onUnclaim?.(item), label: 'Unclaim', visible: item.claimed && !item.completed && !item.subTask},
+      { key: 'claim', icon: <CheckCircleOutlined />, onClick: () => actionHandlers?.onClaim?.(item), label: 'Claim', visible: !item.claimed && !item.completed && !item.subTask},
       { key: 'assign', icon: <UserOutlined />, onClick: () => setAssignModal(item), label: 'Assign', visible: access.canAssignWorkflow && !item.completed },
     ]
     const actions = item.actions.map(it => ({
@@ -190,12 +190,12 @@ export default ({ data, actionRef, actionHandlers }: Props) => {
 
           ),
         },
-        subTitle: { render: (_, r) => <Space>{r.instanceInfo.processName}  {r.subTask && <Tag>Sub Task</Tag>}  {(r.subTasks?.length || 0) > 0 && <Tooltip title={`${r.subTasks?.length} sub task${(r.subTasks?.length || 0) > 0 && 's'} pending`}><StarTwoTone twoToneColor='#b49900' /></Tooltip>}</Space> },
+        subTitle: { render: (_, r) => <Space>{r.instanceInfo.processName}  {r.subTask && <Tag>{r.subTaskName}</Tag>}  {(r.subTasks?.length || 0) > 0 && <Tooltip title={`${r.subTasks?.length} ${r.subTaskName}${((r.subTasks?.length || 0) > 0) && 's'} pending`}><StarTwoTone twoToneColor='#b49900' /></Tooltip>}</Space> },
         content: { render: (_, r) => ListContent({ data: r }) },
         description: {
           render: (_, r) => <Space direction='vertical'>{getQuikview(r) || <DefaultQuickView {...r} />}
             {(r.subTasks?.length || 0) > 0 && <Descriptions>
-              <Descriptions.Item label="Sub taks"> {r.subTasks?.map(it => `${it.assignee || 'NA'} on ${formatDateTime(it.created)}`).join(", ")} </Descriptions.Item>
+              <Descriptions.Item label={r.subTaskName}> {r.subTasks?.map(it => `${it.assignee || 'NA'} on ${formatDateTime(it.created)}`).join(", ")} </Descriptions.Item>
             </Descriptions>}
           </Space>
         },

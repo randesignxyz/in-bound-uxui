@@ -3,7 +3,7 @@ import {
   ModalForm,
   ProFormSelect,
 } from '@ant-design/pro-components';
-import {Button, Form, Input, message} from 'antd';
+import {Button, Checkbox, Form, Input, message} from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import { useForm } from 'antd/es/form/Form';
 import moment from 'moment';
@@ -21,6 +21,7 @@ type FormData = {
   subFunctionIds?: number[];
   employeeId?: string;
   status?: string[];
+  section?: number[];
 };
 
 const Export: React.FC = () => {
@@ -30,7 +31,7 @@ const Export: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [buList, setBuList] = useState<BU[]>([]);
   const [departmentList, setDepartmentList] = useState<Department[]>([]);
-  const [subdepartmentList, setSubdepartmentList] = useState<Department[]>([]);
+  const [subdepartmentList, setSubdepartmentList] = useState<string[]>([]);
 
   // ================= INIT DATA =================
   useEffect(() => {
@@ -48,14 +49,18 @@ const Export: React.FC = () => {
         EmployeeServices.listDepartment.queryParams,
         EmployeeServices.listSubDepartment.queryParams,
       ])(requestActions);
-
+      const subDeptList = rs.subDeptList.map(it => it.name)
+      setSubdepartmentList(subDeptList.filter((item,index)=> subDeptList.indexOf(item)===index)?? [])
       setBuList(rs.buList);
       setDepartmentList(rs.deptList);
-      setSubdepartmentList(rs.subDeptList);
     } catch (err: any) {
       message.error(err.message || 'Failed to load filter data');
     }
   };
+    const companyOptions = [
+    { label: 'Section 1', value: 1, disabled: true },
+    { label: 'Section 2', value: 2 }
+  ];
 
   // ================= EXPORT =================
   const handleExport = async () => {
@@ -74,11 +79,7 @@ const Export: React.FC = () => {
           reportName: 'hr_ios_emp_detail_list', // your jasper name
           reportPath: getUrlReporting('hrm/ios'),
           data: [
-            ...(dataForm.status || []).map((it) => ({
-              key: 'status',
-              value: it,
-            })),
-
+             {key:'empNo',value:dataForm.employeeId},
             ...(dataForm.buIds || []).map((it) => ({
               key: 'buIds',
               value: it,
@@ -93,8 +94,12 @@ const Export: React.FC = () => {
               key: 'subDeptIds',
               value: it,
             })),
-            {key:'startWithRole', value: 'ROLE_HR_IOS'},
-            {key:'empNo',value:dataForm.employeeId}
+            {key:'startWithRole', value: 'ROLE_HR_IOS'},           
+            ...(dataForm.section || []).map((it) => ({
+              key: 'section',
+              value: it,
+            })),
+
           ],
 
         },
@@ -181,13 +186,16 @@ const Export: React.FC = () => {
         mode="multiple"
         allowClear
         showSearch
-        options={subdepartmentList.map((it) => ({
-          label: it.name,
-          value: it.id,
+        options={subdepartmentList.filter((item,index)=> subdepartmentList.indexOf(item)===index).map((it) => ({
+          label: it,
+          value: it,
         }))}
       />
+       <Form.Item initialValue={[1]} name="section" label="Sections">
+          <Checkbox.Group options={companyOptions} />
+        </Form.Item>
 
-      {/* Status */}
+      {/* Status 
       <ProFormSelect
         label="Status"
         name="status"
@@ -198,7 +206,7 @@ const Export: React.FC = () => {
           { label: 'In Progress', value: 'IN_PROGRESS' },
           { label: 'Completed', value: 'COMPLETED' },
         ]}
-      />
+      />*/}
     </ModalForm>
   );
 };

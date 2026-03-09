@@ -81,7 +81,7 @@ export const ActionBtn: React.FC<{
           Export
         </Button>}
 
-        {taskActions && !item?.completed && (
+        {taskActions && !item?.completed && !item?.subTask && (
           <Button
             size="middle"
             onClick={onActionClick}

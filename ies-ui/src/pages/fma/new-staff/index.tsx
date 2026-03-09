@@ -193,7 +193,7 @@ export default () => {
               { title: 'COMPANY', dataIndex: "bu" },
               { title: 'Function', dataIndex: "department", sorter: 'dept' },
               { title: 'Job Title', dataIndex: "jobTitle", sorter: 'jobTitle' },
-              { title: 'Approval', dataIndex: 'HOD' },
+              // { title: 'Approval', dataIndex: 'HOD' },
               { title: "Start Date", dataIndex: "startingDate",
                 render: (_ , entity) =>
                   entity.startingDate

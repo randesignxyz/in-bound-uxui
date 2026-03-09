@@ -3,11 +3,11 @@ import IOSForm from "./IOSForm";
 import { useAccess, useQuery } from "@umijs/max";
 import { IOSService } from "./service";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { simpleRequestActions } from "@/services/model";
 import AdvancSearch from "./AdvancSearch";
 import { Badge, Button, message, Radio, Segmented, Space } from 'antd';
-import { DiffOutlined, FileSearchOutlined } from '@ant-design/icons';
+import { DiffOutlined, FileSearchOutlined, FilterOutlined, SelectOutlined } from '@ant-design/icons';
 import { ActionType, ModalForm, ProFormTextArea } from '@ant-design/pro-components';
 import Status from "@/components/Status";
 import BatchSubmitDrawer from "./BatchSubmitDrawer";
@@ -22,7 +22,8 @@ export default () => {
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
     const [filter, setFilter] = useState<TableViewSearchParams<any>>({});
-    const [advanceSearchState, setAdvanceSearchState] = useState<{ visible?: { open: boolean, payload?: any } }>();
+    // const [advanceSearchState, setAdvanceSearchState] = useState<{ visible?: { open: boolean, payload?: any } }>();
+    const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);  
     const [importData, setImportData] = useState<DataResponse<ImportDataItem>>();
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['ipo-list', filter],
@@ -37,6 +38,19 @@ export default () => {
         refetchOnWindowFocus: false,
 
     })
+    const isAdvancedFiltered = () => {
+        const adv = filter.criteria?.advanceSearch;
+        return (
+        (adv?.buIds?.length ?? 0) > 0 ||
+        (adv?.depIds?.length ?? 0) > 0 ||
+        (adv?.subDepIds?.length ?? 0) > 0
+        );
+    };
+    const advanceSearchIcon = useMemo(() => {
+    return isAdvancedFiltered()
+        ? <FilterOutlined style={{ color: "red" }} />
+        : <SelectOutlined />;
+    }, [filter.criteria?.advanceSearch]);
 
 
     const [batchSubmitState, setBatchSubmitState] = useState<{ visible?: { open: boolean, ids?: number[] } }>();
@@ -110,9 +124,14 @@ export default () => {
                             pagination: page,
                         }));
                     },
-                    advanceSearchButton: <Button icon={<FileSearchOutlined style={{ color: (filter.criteria?.advanceSearch && Object.keys(filter.criteria?.advanceSearch).length > 0) ? "red" : "" }} />}
-                        onClick={() => setAdvanceSearchState({ visible: { open: true } })}
-                    />,
+                    advanceSearchButton:  <Button
+                                              style={{ margin: "0px 0px 0px 15px" }}
+                                              onClick={() => setAdvanceSearchVisible(true)}
+                                              icon={advanceSearchIcon}
+                                            />,
+                    // <Button icon={<FileSearchOutlined style={{ color: (filter.criteria?.advanceSearch && Object.keys(filter.criteria?.advanceSearch).length > 0) ? "red" : "" }} />}
+                    //     onClick={() => setAdvanceSearchState({ visible: { open: true } })}
+                    // />,
 
                     actionButtons: [
                       <Space>
@@ -190,16 +209,40 @@ export default () => {
                     }
                 }}
             />
-            <AdvancSearch {...advanceSearchState?.visible}
+            <AdvancSearch 
                 param={filter.criteria?.advanceSearch}
-                onCancel={() => setAdvanceSearchState({ visible: { open: false } })}
-                onFinish={async (param) => {
+                open={advanceSearchVisible}
+                onClose={() => setAdvanceSearchVisible(false)}
+                // onFinish={async (param) => {
+                //     setFilter((p) => ({
+                //         criteria: {
+                //             ...p.criteria,
+                //             advanceSearch: { ...param }
+                //         }
+                //     }))
+                //     setAdvanceSearchState({ visible: { open: false } })
+                // }}
+                 onSearch={(params: any) => {
                     setFilter((p) => ({
                         criteria: {
                             ...p.criteria,
-                            advanceSearch: { ...param }
+                            advanceSearch: { ...params }
                         }
                     }))
+                    setAdvanceSearchVisible(false);
+                }}
+                onReset={() => {
+                    setFilter((prev) => ({
+                        criteria: {
+                        ...prev.criteria,
+                        advanceSearch: {
+                            buIds: [],
+                            depIds: [],
+                            subDeptIds: []
+                        },
+                        },
+                        pagination: { ...prev.pagination, current: 1 },
+                    }));
                 }}
             />
 

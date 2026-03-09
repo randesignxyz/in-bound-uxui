@@ -470,7 +470,6 @@ export default () => {
             salespersons={state.data?.initData?.salespersons}
             lookDataList={state.data?.initData?.lookDataList}
             onSearch={(data) => {
-                console.log('data', data)
                 setFilter(v => ({
                     ...v,
                     criteria: {

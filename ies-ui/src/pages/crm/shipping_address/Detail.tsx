@@ -130,10 +130,10 @@ const ShippingAddressDetail: React.FC<Props> = ({ id, item }) => {
                                 { name: 'Street Name', value: data?.address?.streetName },
                                 { name: 'Street No', value: data?.address?.streetNo },
                                 { name: 'House', value: data?.address?.houseNo },
-                                { name: 'Village', value: data?.address?.village?.name },
-                                { name: 'Commune', value: data?.address?.commune?.name },
-                                { name: 'District', value: data?.address?.district?.name },
-                                { name: 'Province', value: item?.province?.name },
+                                { name: 'Village', value: data?.address?.village },
+                                { name: 'Commune', value: data?.address?.commune },
+                                { name: 'District', value: data?.address?.district },
+                                { name: 'Province', value: data?.address?.province },
                             ]
                                 .filter((it) => it.value)
                                 .map((it) => `${it.name} ${it.value}`)

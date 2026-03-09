@@ -52,6 +52,7 @@ const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
     { label: 'Last Modifiedd Date', value: formatDateTime(soDetail?.lastModifiedDate) },
     { label: 'Remarks', value: soDetail?.remarks },
     { label: 'Distributor', value: soDetail?.distributor?.name },
+    { label: 'Document Type', value: soDetail?.target ?? "OP" },
   ];
 
   return (

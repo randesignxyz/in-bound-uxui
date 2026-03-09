@@ -837,6 +837,7 @@ export interface SoDetail {
   };
   items?: SoItemDetail[];
   deliveries?: Delivery[];
+  target?: string
   distributor?: {
     id: number;
     name: string;

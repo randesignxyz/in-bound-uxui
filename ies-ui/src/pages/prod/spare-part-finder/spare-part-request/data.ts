@@ -54,3 +54,23 @@ export interface MyRequestItem {
   remark: string;
   type?: SparePartType;
 }
+
+export type ReceivedStatus = 'completed' | 'partial';
+
+export interface MyReceivedSearch {
+  searchValue?: string;
+  status?: 'ALL' | ReceivedStatus;
+  dateRange?: [string, string];
+  sort?: Record<string, SortOrder>;
+}
+
+export interface MyReceivedItem {
+  id: number;
+  requestId: string;
+  requestDate: string;
+  pickUpDate: string;
+  requestItems: number;
+  receivedItems: number;
+  remainItems: number;
+  status: ReceivedStatus;
+}

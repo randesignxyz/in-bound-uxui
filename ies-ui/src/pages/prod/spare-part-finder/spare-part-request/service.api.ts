@@ -2,7 +2,7 @@ import type { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import type { Paging } from '@/services/API';
 import { singleRequest } from '@/services/apiGateway';
 import type { RequestActions, ServiceApiType } from '@/services/apiGateway';
-import type { MyRequestItem, MyRequestSearch, SparePartRequestItem, SparePartRequestSearch } from './data';
+import type { MyRequestItem, MyRequestSearch, MyReceivedItem, MyReceivedSearch, SparePartRequestItem, SparePartRequestSearch } from './data';
 import type {
   ChangeSparePartRequestStatusPayload,
   CreateSparePartRequestPayload,
@@ -27,6 +27,16 @@ const SparePartRequestAction = {
     type: 'PAGING_QUERY',
     endpoint: 'PROD',
     actionName: 'fetch-paging-my-spare-part-request',
+    payload: { ...params.criteria },
+    pagination: {
+      pageSize: params.pagination?.pageSize,
+      page: params.pagination?.current,
+    },
+  }),
+  myReceivedPage: (params: TableViewSearchParams<MyReceivedSearch>): ServiceApiType<MyReceivedSearch> => ({
+    type: 'PAGING_QUERY',
+    endpoint: 'PROD',
+    actionName: 'fetch-paging-my-received-spare-part',
     payload: { ...params.criteria },
     pagination: {
       pageSize: params.pagination?.pageSize,
@@ -115,6 +125,11 @@ export const createSparePartRequestApiService = (
     (await singleRequest<MyRequestItem>(SparePartRequestAction.myRequestsPage(params))(
       requestAction,
     )) as Paging<MyRequestItem>,
+
+  myReceivedPage: async (params: TableViewSearchParams<MyReceivedSearch>) =>
+    (await singleRequest<MyReceivedItem>(SparePartRequestAction.myReceivedPage(params))(
+      requestAction,
+    )) as Paging<MyReceivedItem>,
 
   createRequest: async (payload: CreateSparePartRequestPayload) => {
     const rs = (await singleRequest<any>(SparePartRequestAction.createRequest(payload))(

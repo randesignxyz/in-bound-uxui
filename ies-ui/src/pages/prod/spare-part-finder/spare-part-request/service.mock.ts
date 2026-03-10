@@ -8,12 +8,29 @@ import type {
   RequestSparePartExtensionPayload,
   SparePartRequestServiceContract,
 } from './service';
-import type { MyRequestItem, MyRequestSearch, RequestStatus, SparePartRequestItem, SparePartRequestSearch } from './data';
+import type { MyRequestItem, MyRequestSearch, MyReceivedItem, MyReceivedSearch, RequestStatus, SparePartRequestItem, SparePartRequestSearch } from './data';
 import { myRequestsMockSeed } from './MockData/myRequests';
 import { sparePartItemsMockSeed } from './MockData/sparePartItems';
 
 let sparePartItemsStore: SparePartRequestItem[] = [...sparePartItemsMockSeed];
 let myRequestsStore: MyRequestItem[] = [...myRequestsMockSeed];
+
+const myReceivedMockSeed: MyReceivedItem[] = Array.from({ length: 100 }, (_, i) => {
+  const completed = i % 3 !== 1;
+  const requestItems = [12, 4, 2][i % 3];
+  const receivedItems = completed ? 2 : 2;
+  return {
+    id: 1000 + i,
+    requestId: `Re-${String(1 + Math.floor(i / 10)).padStart(4, '0')}${i % 10 === 8 ? 'f' : ''}`,
+    requestDate: '2025-Dec-' + String(1 + (i % 31)).padStart(2, '0') + ', 8:30 AM',
+    pickUpDate: '2025-Dec-' + String(1 + (i % 31)).padStart(2, '0') + ', 8:30 AM',
+    requestItems,
+    receivedItems,
+    remainItems: completed ? 0 : requestItems - receivedItems + i % 5 * 2,
+    status: completed ? 'completed' : 'partial',
+  };
+});
+let myReceivedStore: MyReceivedItem[] = [...myReceivedMockSeed];
 
 const statusFromProvided = (provided: number, total: number): RequestStatus => {
   if (provided <= 0) return 'approved';
@@ -74,6 +91,19 @@ const filterMyRequests = (params: TableViewSearchParams<MyRequestSearch>): MyReq
     .filter((it) => !advance.type || advance.type === 'ALL' || it.type === advance.type);
 };
 
+const filterMyReceived = (params: TableViewSearchParams<MyReceivedSearch>): MyReceivedItem[] => {
+  const criteria = params?.criteria || {};
+  const search = (criteria.searchValue || criteria.advanceSearch?.searchValue || '').trim().toLowerCase();
+  const advance = criteria.advanceSearch || {};
+
+  return myReceivedStore
+    .filter((it) => {
+      if (!search) return true;
+      return it.requestId.toLowerCase().includes(search);
+    })
+    .filter((it) => !advance.status || advance.status === 'ALL' || it.status === advance.status);
+};
+
 const touchRequest = (id: number, mutator: (row: MyRequestItem) => MyRequestItem): MyRequestItem => {
   const idx = myRequestsStore.findIndex((r) => r.id === id);
   if (idx < 0) throw new Error(`Mock request id=${id} not found`);
@@ -85,6 +115,7 @@ const touchRequest = (id: number, mutator: (row: MyRequestItem) => MyRequestItem
 export const createSparePartRequestMockService = (): SparePartRequestServiceContract => ({
   page: async (params) => paginate(filterItems(params), params.pagination),
   myRequestsPage: async (params) => paginate(filterMyRequests(params), params.pagination),
+  myReceivedPage: async (params) => paginate(filterMyReceived(params), params.pagination),
 
   createRequest: async (payload: CreateSparePartRequestPayload) => {
     const nextId = (myRequestsStore[0]?.id || 100) + 1;

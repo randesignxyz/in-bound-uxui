@@ -4,6 +4,8 @@ import type { RequestActions } from '@/services/apiGateway';
 import { createSparePartRequestApiService } from './service.api';
 import { createSparePartRequestMockService } from './service.mock';
 import type {
+  MyReceivedItem,
+  MyReceivedSearch,
   MyRequestItem,
   MyRequestSearch,
   RequestPriority,
@@ -46,6 +48,7 @@ export interface CreateSparePartReturnPayload {
 export interface SparePartRequestServiceContract {
   page(params: TableViewSearchParams<SparePartRequestSearch>): Promise<Paging<SparePartRequestItem>>;
   myRequestsPage(params: TableViewSearchParams<MyRequestSearch>): Promise<Paging<MyRequestItem>>;
+  myReceivedPage(params: TableViewSearchParams<MyReceivedSearch>): Promise<Paging<MyReceivedItem>>;
   createRequest(payload: CreateSparePartRequestPayload): Promise<MyRequestItem>;
   createReturn(payload: CreateSparePartReturnPayload): Promise<MyRequestItem>;
   approveRequest(payload: ChangeSparePartRequestStatusPayload): Promise<MyRequestItem>;
@@ -76,6 +79,8 @@ export const SparePartRequestServiceAPI = (requestAction: RequestActions): Spare
     page: (params) => withFallback(() => api.page(params), () => mock.page(params), 'page'),
     myRequestsPage: (params) =>
       withFallback(() => api.myRequestsPage(params), () => mock.myRequestsPage(params), 'myRequestsPage'),
+    myReceivedPage: (params) =>
+      withFallback(() => api.myReceivedPage(params), () => mock.myReceivedPage(params), 'myReceivedPage'),
     createRequest: (payload) =>
       withFallback(() => api.createRequest(payload), () => mock.createRequest(payload), 'createRequest'),
     createReturn: (payload) =>

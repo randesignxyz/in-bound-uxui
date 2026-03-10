@@ -126,7 +126,7 @@ const MyRequestListview: React.FC<MyRequestListviewProps> = ({ services }) => {
           <Input.Search
             allowClear
             style={{ width: 300 }}
-            placeholder="Search Spare Part name, SKU"
+            placeholder="Search Request by ID, type, status, remark"
             onSearch={(v) => {
               setSearchValue(v);
               actionRef.current?.reloadAndRest?.();

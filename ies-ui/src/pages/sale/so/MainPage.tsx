@@ -330,7 +330,7 @@ export default () => {
                             dataIndex: 'poNo',
                             key: 'poNo',
                             width: 120,
-                            align: "center",
+                            // align: "center", 
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.poNo || '',

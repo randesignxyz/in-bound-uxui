@@ -565,6 +565,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack, target, onMar
         open={modals.isVisible('item-entry') && !state.data?.productItem?.hasOffer}
         onCancel={() => modals.hideModal('item-entry')}
         width="500px"
+        documentType={target}
         data={{
           seq: selectedItem?.seq || ((state.data?.soItems?.length || 0) + 1) * 1000,
           productItem: state.data?.productItem,

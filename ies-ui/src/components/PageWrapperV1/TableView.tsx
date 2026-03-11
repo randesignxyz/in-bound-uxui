@@ -59,6 +59,8 @@ export default <ListDataType extends Record<string, any> & { id: number | string
                 ellipsis: col.ellipsis ?? false,
                 // Prevent header text from wrapping (e.g. "Sub-Sec.", "Order Date")
                 onHeaderCell: () => ({ style: { whiteSpace: 'nowrap' as const } }),
+                // Align all cell content to the top so text baselines match across columns
+                onCell: () => ({ style: { verticalAlign: 'top' as const } }),
                 render: col.actionProps ? (_: any, r: ListDataType) => {
                     const actionProps = col.actionProps?.(r)
                     const render = tabRender?.(r).find(it1 => it1.action == actionProps?.type)

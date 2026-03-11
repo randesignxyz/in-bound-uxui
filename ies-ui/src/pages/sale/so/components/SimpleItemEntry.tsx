@@ -32,9 +32,10 @@ interface Props extends FormModalProps {
   actionHandlers: {
     onAddItem?: (soItem: SoItemEntry) => void;
   };
+  documentType?: string;
 }
 
-const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...props }) => {
+const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, documentType, ...props }) => {
   const [form] = useForm<SoLineItemEntry>();
   // const uomList = [{ id: 1, name: 'Case' }];
   const [saleType, setSaleType] = useState<string | undefined>(data.defaultSaleType?.code);
@@ -164,29 +165,31 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
     actionHandlers.onAddItem?.(soItem);
   };
 
-  const groupedSaleTypes = () => {
-    const list = data.saleTypes
-      ?.filter(it => it.sequence !== null)
-      ?.slice()
-      ?.sort((a, b) => (a.sequence ?? 999) - (b.sequence ?? 999));
+  // const groupedSaleTypes = () => {
+  //   const list = data.saleTypes
+  //     ?.filter(it => it.sequence !== null)
+  //     ?.slice()
+  //     ?.sort((a, b) => (a.sequence ?? 999) - (b.sequence ?? 999));
 
-    const groups: any = {};
+  //   const groups: any = {};
 
-    list?.forEach(it => {
-      const g = it.groupType || "OTHER";
+  //   list?.forEach(it => {
+  //     const g = it.groupType || "OTHER";
 
-      if (!groups[g]) {
-        groups[g] = { label: g, options: [] };
-      }
+  //     if (!groups[g]) {
+  //       groups[g] = { label: g, options: [] };
+  //     }
 
-      groups[g].options.push({
-        label: it.code!,
-        value: it.code!,
-      });
-    });
+  //     groups[g].options.push({
+  //       label: it.code!,
+  //       value: it.code!,
+  //     });
+  //   });
 
-    return Object.values(groups);
-  };
+  //   return Object.values(groups);
+  // };
+
+
 
   return (
     <FormModalComp
@@ -211,7 +214,7 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
               allowClear={false}
               showSearch
               label="Type"
-              options={groupedSaleTypes?.() || []}
+              options={data.saleTypes?.filter(it => it.groupType == documentType)?.sort((a, b) => a.sequence - b.sequence)?.map(it => ({ label: it.code, value: it.code }))}
             // options={data.saleTypes?.filter(it => it.sequence !== null)?.slice()?.sort((a, b) => {
             //   // If both null → keep original order
             //   if (a.sequence == null && b.sequence == null) return 0;

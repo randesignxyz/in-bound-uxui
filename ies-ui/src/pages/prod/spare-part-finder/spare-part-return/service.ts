@@ -10,9 +10,9 @@ import type {
 import { MOCK_MY_REQUESTS_TO_RETURN, MOCK_SPARE_PART_RETURN_LIST } from "./data"
 
 const SparePartReturnAction = {
-   page: (
+   page_my_spare_list: (
     params: TableViewSearchParams<SparePartReturnItemSearch>,
-   ):ServiceApiType<{searchValue?: string }> =>({
+   ):ServiceApiType<{searchValue?: string,  }> =>({
     type:'PAGING_QUERY',
     actionName:'spare-parts-return-search',
     endpoint: 'PROD',
@@ -21,12 +21,19 @@ const SparePartReturnAction = {
     pageSize: params.pagination?.pageSize,
     page: params.pagination?.current
 },
-   }),
+}),
+ display_image: (imageId: string): ServiceApiType<{imageId: string}> => ({
+  type: 'EXEC',
+  actionName: 'file', // so endpoint should be /services/files/api/files/{imageId}
+  endpoint: 'FILE',
+  payload: { imageId },
+}),
 }
 
 const SparePartReturnAPI = (requestAction: RequestActions) =>{
  return {
-    page: (params: TableViewSearchParams<SparePartReturnItemSearch>) => singleRequest<SparePartReturnItem>(SparePartReturnAction.page(params))(requestAction) as Promise<
+    page_my_spare_list: (params: TableViewSearchParams<SparePartReturnItemSearch>) => 
+    singleRequest<SparePartReturnItem>(SparePartReturnAction.page_my_spare_list(params))(requestAction) as Promise<
     Paging<SparePartReturnItem>
  >
  }

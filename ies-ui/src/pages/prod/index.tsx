@@ -15,6 +15,7 @@ export const ProdPaths = {
   dailyHACCPMonitoringtOzone: '/prod/daily-haccp-monitoring-ozone',
   dailyHACCPMonitoring: '/prod/daily-haccp-monitoring',
   sparePartReturn: '/prod/spare-part-return',
+  sparePartRequestTest: '/prod/spare-part-request-test',
 };
 
 export default () => {
@@ -37,14 +38,14 @@ export default () => {
       link: `${ProdPaths.inventoryTransfer}/list`,
       visible: access.canAccessInventoryTranferMenuItem,
     },
-    {
-      id: 'sparePartRequest',
-      name: 'Spare Part Request',
-      description: 'Spare Part Request List',
-      icon: warehouseTransferIcon,
-      link: `${ProdPaths.sparePartRequest}/list`,
-      visible: access.canSpfRequester || access.canSpfApprover,
-    },
+    // {
+    //   id: 'sparePartRequest',
+    //   name: 'Spare Part Request',
+    //   description: 'Spare Part Request List',
+    //   icon: warehouseTransferIcon,
+    //   link: `${ProdPaths.sparePartRequest}/list`,
+    //   visible: access.canSpfRequester || access.canSpfApprover,
+    // },
     {
       id: 'sparePartRequestApproval',
       name: 'Request Approval',
@@ -54,13 +55,19 @@ export default () => {
       visible: access.canSpfApprover,
     },
     {
-      id: 'sparePartRequestWarehouse',
-      name: 'Spare Part Request List',
+      id: 'SparePartsListTest',
+      name: 'Spare Parts',
       description: 'Spare Part Request List',
-      icon: warehouseTransferIcon,
-      link: `${ProdPaths.sparePartRequest}/list`,
-      visible: access.canSpfWarehouseStaff,
-    },
+      link: `${ProdPaths.sparePartRequestTest}/list`,
+    }
+    // {
+    //   id: 'sparePartRequestWarehouse',
+    //   name: 'Spare Part Request List',
+    //   description: 'Spare Part Request List Warehouse Staff',
+    //   icon: warehouseTransferIcon,
+    //   link: `${ProdPaths.sparePartRequest}/list`,
+    //   visible: access.canSpfWarehouseStaff,
+    // },
     // {
     //   id: 'dailyWaterTreatment',
     //   name: 'Daily Water Treatment',
@@ -68,7 +75,9 @@ export default () => {
     //   icon: dailyWaterTreatmentIcon,
     //   link: `${ProdPaths.dailyWaterTreatment}/list`,
     //   visible: access.canAccessDailyWaterTreatmentMenuItem,
-    // },
+    // }
+    ,
+
     {
       id: 'dailyPreWaterTreatment',
       name: 'Daily Pre-Water Treatment',

@@ -1,6 +1,7 @@
 ﻿import icons from "@/.umi/plugin-layout/icons";
 import component from "@/locales/bn-BD/component";
 import { access } from "fs";
+import path from "path";
 
 /**
  *
@@ -1570,6 +1571,13 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessSparePartFinder',
     component: './prod/spare-part-finder/spare-part-request/',
+  },
+  {
+    path: '/prod/spare-part-request-test/:view/*',
+    name: 'sparePartRequestTest',
+    hideInMenu: 'true',
+    access: 'canAccessSparePartFinder',
+    component: './prod/spare-part-finder/spare-part-request-test',
   },
 
   //  ================= END Prod =================

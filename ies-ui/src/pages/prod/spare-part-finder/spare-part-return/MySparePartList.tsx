@@ -8,6 +8,7 @@ import DrawerViewItem from './DrawerViewItem';
 import type { SparePartReturnListItem } from './data';
 import { SPARE_PART_CATEGORY_OPTIONS, SPARE_PART_RETURN_RADIO_OPTIONS } from './data';
 import { getSparePartReturnMockPage } from './service';
+import idID from '@/locales/id-ID';
 
 export default function MySparePartList() {
   const actionRef = useRef<ActionType>();
@@ -191,8 +192,8 @@ export default function MySparePartList() {
               key: 'part_number',
               title: 'Product Number',
               dataIndex: 'part_number',
-              render: (value, r) => (
-                <a onClick={() => navigate(`/prod/spare-part-request/view/${r.id}`, { state: { id: r.id } })}>
+              render: (value, id) => (
+                <a onClick={() =>  onDetailhandler(id)}>
                   {value}
                 </a>
               ),

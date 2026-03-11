@@ -380,7 +380,8 @@ export default () => {
                             render: (_, data) => data.shippingAddress,
                         },
                         {
-                            title: 'Order Date',
+                            // title: 'Order Date',
+                            title: 'Created Date',
                             align: 'right',
                             sorter: 'orderDate',
                             dataIndex: "orderDate",
@@ -389,7 +390,8 @@ export default () => {
 
                         },
                         {
-                            title: "Order Time",
+                            // title: "Order Time",
+                            title: "Created Time",
                             width: 100,
                             render: (_, data) => moment(data.orderedDate).format('HH:mm:ss'),
                         },

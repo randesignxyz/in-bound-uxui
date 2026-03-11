@@ -101,7 +101,7 @@ const ItemByCompany: React.FC<Props> = ({ data }) => {
                                     <Row justify="end">
                                         <Col>
                                             <Space size="large">
-                                                <Typography.Text>Total for <strong>{companyKey}</strong>:</Typography.Text>
+                                                <Typography.Text>Total for:</Typography.Text>
                                                 <Typography.Title level={5} style={{ margin: 0, color: '#1890ff' }}>
                                                     {numeral(subTotal).format('$ 0,0.00')}
                                                 </Typography.Title>

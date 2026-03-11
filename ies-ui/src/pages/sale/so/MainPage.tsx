@@ -74,13 +74,20 @@ export default () => {
         <PageWrapperV1<SoItemLess, FilterType, {}>
             // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
             addOptionsMode='inline'
-            addOptionsPosition='left'
+            addOptionsPosition='right'
             showFullScreenButton
             // showNewWindowButton
 
             tabRender={item => access.canCreateEditSo ? [
-                { action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' />, tabLabel: 'New PO', multiple: true, },
-                { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', multiple: true },
+
+                {
+                    action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key, onUpdateTab }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' actionHandlers={{
+                        onBack() {
+                            onUpdateTab("view", undefined, undefined, key)
+                        },
+                    }} />, tabLabel: 'New PO', multiple: true,
+                },
+                { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key, onUpdateTab }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', multiple: true },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
@@ -103,14 +110,14 @@ export default () => {
             addOptions={[
                 {
                     action: "PO",
-                    label: <Space><span>PO</span><PlusOutlined /></Space>,
+                    label: <Space><PlusOutlined /><span>PO</span></Space>,
                     // icon: <FileAddOutlined />,
                     tabLabel: 'New PO',
                     multiple: true,
                 },
                 {
                     action: "GO",
-                    label: <Space><span>GO</span><PlusOutlined /></Space>,
+                    label: <Space><PlusOutlined /><span>GO</span></Space>,
                     // icon: <FileAddOutlined />,
                     tabLabel: 'New GO',
                     multiple: true
@@ -322,7 +329,7 @@ export default () => {
                             sorter: 'poNo',
                             dataIndex: 'poNo',
                             key: 'poNo',
-                            width: 170,
+                            width: 120,
                             align: "center",
                             actionProps: (item) => ({
                                 type: 'view',

@@ -3,6 +3,25 @@ import { TabRenderProps, TableViewProps } from "./type";
 import { Button, Flex, Space, Tooltip, Typography } from "antd";
 import { omit } from "lodash";
 
+/** Always: text on top, buttons below left-aligned */
+const ActionCell = ({
+    label,
+    firstButtons,
+    lastButtons,
+}: {
+    label: React.ReactNode;
+    firstButtons: React.ReactNode[];
+    lastButtons: React.ReactNode[];
+}) => (
+    <div>
+        <div style={{ whiteSpace: 'nowrap' }}>{label}</div>
+        <Space size={0}>
+            {firstButtons}
+            {lastButtons}
+        </Space>
+    </div>
+);
+
 export default <ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType>(
         { listView, tabRender, onAddTab, stickyOffsetHeader }: {
@@ -34,22 +53,40 @@ export default <ListDataType extends Record<string, any> & { id: number | string
                     }
                 </Space>
             }
-        } : { hideInTable: true }, ...listView.props.columns?.map(it => {
+        } : { hideInTable: true }, ...listView.props.columns?.map(col => {
             return {
-                ...it, render: it.actionProps ? (_: any, r: ListDataType) => {
-                    const actionProps = it.actionProps?.(r)
+                ...col,
+                ellipsis: col.ellipsis ?? false,
+                // Prevent header text from wrapping (e.g. "Sub-Sec.", "Order Date")
+                onHeaderCell: () => ({ style: { whiteSpace: 'nowrap' as const } }),
+                render: col.actionProps ? (_: any, r: ListDataType) => {
+                    const actionProps = col.actionProps?.(r)
                     const render = tabRender?.(r).find(it1 => it1.action == actionProps?.type)
-                    const valComp = <Typography.Link onClick={() => onAddTab(r, render,)}>{actionProps?.label}</Typography.Link>
+                    const valComp = (
+                        <Typography.Link onClick={() => onAddTab(r, render)}>
+                            {actionProps?.label}
+                        </Typography.Link>
+                    )
 
                     if ((actionProps?.actionButtons?.length || 0) > 0) {
-                        return <Space size={0}>
-                            {actionProps?.actionButtons?.filter((it) => !it.hiden && (!it.position || it.position == 'first')).map((it, index) => <Button {...it} key={`${r.id}-${it.position}-${index}`} />)}
-                            {valComp}
-                            {actionProps?.actionButtons?.filter((it) => !it.hiden && it.position == 'last').map((it, index) => <Button {...it} key={`${r.id}-${it.position}-${index}`} />)}
-                        </Space>
+                        const firstBtns = actionProps!.actionButtons!
+                            .filter(b => !b.hiden && (!b.position || b.position === 'first'))
+                            .map((b, idx) => <Button {...b} key={`${r.id}-first-${idx}`} />)
+
+                        const lastBtns = actionProps!.actionButtons!
+                            .filter(b => !b.hiden && b.position === 'last')
+                            .map((b, idx) => <Button {...b} key={`${r.id}-last-${idx}`} />)
+
+                        return (
+                            <ActionCell
+                                label={valComp}
+                                firstButtons={firstBtns}
+                                lastButtons={lastBtns}
+                            />
+                        )
                     }
                     return valComp
-                } : it.render
+                } : col.render
             }
         })]}
         search={false}

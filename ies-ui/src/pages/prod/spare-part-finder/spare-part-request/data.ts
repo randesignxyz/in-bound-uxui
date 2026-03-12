@@ -5,7 +5,7 @@ export type SparePartType = 'MRO-W' | 'MRO-S' | 'MRO-G';
 export type SparePartStockStatus = 'available' | 'low' | 'no-stock';
 
 export type RequestPriority = 'urgent' | 'high' | 'normal' | 'low';
-export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'in-progress' | 'partial';
+export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'in-progress' | 'partial'| 'ready_to_Pickup' | 'completed' | 'cancelled';
 
 export interface SparePartRequestSearch {
   searchValue?: string;

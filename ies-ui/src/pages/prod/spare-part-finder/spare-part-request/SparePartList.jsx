@@ -1,7 +1,8 @@
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Button, Card, Input, Select, Space, Tag, Typography, message } from 'antd';
+import { Button, Card, DatePicker, Input, Select, Space, Tag, Typography, message } from 'antd';
+import dayjs from 'dayjs';
 import { useRef, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import RequestItemModal from './requestItem';
@@ -27,9 +28,11 @@ export default function SparePartListView() {
   const actionRef = useRef();
   const requestActions = simpleRequestActions();
   const services = SparePartRequestAPI(requestActions);
+  const { RangePicker } = DatePicker;
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedItemsById, setSelectedItemsById] = useState({});
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestItems, setRequestItems] = useState([]);
   const [currentRows, setCurrentRows] = useState([]);
@@ -40,6 +43,7 @@ export default function SparePartListView() {
     category: undefined,
     status: 'All',
     warehouse: '',
+    createdDateRange: undefined,
   });
 
   const categoryOptions = [
@@ -51,6 +55,13 @@ export default function SparePartListView() {
     { label: 'All Warehouses', value: '' },
     ...knownWarehouses.map((wh) => ({ label: wh, value: wh })),
   ];
+
+  const reloadTable = (resetPage = false) => {
+    if (resetPage) {
+      actionRef.current?.setPageInfo?.({ current: 1 });
+    }
+    actionRef.current?.reload?.();
+  };
 
   const requestData = async (params) => {
     const response = await services.page({
@@ -67,8 +78,30 @@ export default function SparePartListView() {
       },
     });
 
-    const rows = response.items || [];
+    let rows = response.items || [];
+
+    if (filters.createdDateRange?.length === 2) {
+      const [startIso, endIso] = filters.createdDateRange;
+      const startAt = dayjs(startIso).startOf('day');
+      const endAt = dayjs(endIso).endOf('day');
+      rows = rows.filter((item) => {
+        if (!item.createdDate) return false;
+        const d = dayjs(item.createdDate);
+        return !d.isBefore(startAt) && !d.isAfter(endAt);
+      });
+    }
+
     setCurrentRows(rows);
+    setSelectedItemsById((previous) => {
+      if (!selectedRowKeys?.length) return previous;
+      const next = { ...previous };
+      rows.forEach((row) => {
+        if (selectedRowKeys.includes(row.id)) {
+          next[String(row.id)] = row;
+        }
+      });
+      return next;
+    });
     setKnownCategories((previous) => {
       const merged = new Set([...previous, ...rows.map((item) => item.category).filter(Boolean)]);
       return Array.from(merged).sort();
@@ -86,7 +119,7 @@ export default function SparePartListView() {
   };
 
   const openRequestModal = () => {
-    const items = currentRows.filter((item) => selectedRowKeys.includes(item.id));
+    const items = selectedRowKeys.map((key) => selectedItemsById[String(key)]).filter(Boolean);
     if (items.length === 0) {
       message.warning('Please select at least one item.');
       return;
@@ -109,8 +142,7 @@ export default function SparePartListView() {
             style={{ width: 320 }}
             onChange={(event) => {
               setSearchValue(event.target.value || '');
-              setSelectedRowKeys([]);
-              actionRef.current?.reloadAndRest?.();
+              reloadTable(true);
             }}
           />
 
@@ -121,8 +153,7 @@ export default function SparePartListView() {
                 type={filters.type === option.value ? 'primary' : 'default'}
                 onClick={() => {
                   setFilters((previous) => ({ ...previous, type: option.value }));
-                  setSelectedRowKeys([]);
-                  actionRef.current?.reloadAndRest?.();
+                  reloadTable(true);
                 }}
               >
                 {option.label}
@@ -136,8 +167,7 @@ export default function SparePartListView() {
             options={warehouseOptions}
             onChange={(value) => {
               setFilters((previous) => ({ ...previous, warehouse: value || '' }));
-              setSelectedRowKeys([]);
-              actionRef.current?.reloadAndRest?.();
+              reloadTable(true);
             }}
           />
 
@@ -147,8 +177,7 @@ export default function SparePartListView() {
             options={categoryOptions}
             onChange={(value) => {
               setFilters((previous) => ({ ...previous, category: value || undefined }));
-              setSelectedRowKeys([]);
-              actionRef.current?.reloadAndRest?.();
+              reloadTable(true);
             }}
           />
 
@@ -158,8 +187,24 @@ export default function SparePartListView() {
             options={statusOptions}
             onChange={(value) => {
               setFilters((previous) => ({ ...previous, status: value }));
-              setSelectedRowKeys([]);
-              actionRef.current?.reloadAndRest?.();
+              reloadTable(true);
+            }}
+          />
+
+          <RangePicker
+            allowClear
+            style={{ width: 260 }}
+            placeholder={['Created from', 'Created to']}
+            onChange={(dates) => {
+              if (dates && dates[0] && dates[1]) {
+                setFilters((previous) => ({
+                  ...previous,
+                  createdDateRange: [dates[0].toISOString(), dates[1].toISOString()],
+                }));
+              } else {
+                setFilters((previous) => ({ ...previous, createdDateRange: undefined }));
+              }
+              reloadTable(true);
             }}
           />
         </Space>
@@ -181,11 +226,32 @@ export default function SparePartListView() {
           }}
           rowSelection={{
             selectedRowKeys,
-            onChange: (keys) => setSelectedRowKeys(keys),
+            preserveSelectedRowKeys: true,
+            onChange: (keys, rows) => {
+              setSelectedRowKeys(keys);
+              setSelectedItemsById((previous) => {
+                const next = {};
+                const keySet = new Set((keys || []).map((k) => String(k)));
+
+                Object.keys(previous || {}).forEach((k) => {
+                  if (keySet.has(k)) {
+                    next[k] = previous[k];
+                  }
+                });
+
+                (rows || []).forEach((r) => {
+                  if (r?.id != null) {
+                    next[String(r.id)] = r;
+                  }
+                });
+
+                return next;
+              });
+            },
           }}
           toolBarRender={() => [
             <Space key="spr-action-bar" size="small">
-              <Button icon={<ReloadOutlined />} onClick={() => actionRef.current?.reloadAndRest?.()}>
+              <Button icon={<ReloadOutlined />} onClick={() => reloadTable(false)}>
                 Refresh
               </Button>
               <Button onClick={() => message.info('Import Excel action is not wired yet.')}>
@@ -193,7 +259,7 @@ export default function SparePartListView() {
               </Button>
               {(access.canSpfRequester || access.canSpfApprover) && (
                 <Button type="primary" disabled={selectedRowKeys.length === 0} onClick={openRequestModal}>
-                  Request
+                  Request{selectedRowKeys.length ? ` (${selectedRowKeys.length})` : ''}
                 </Button>
               )}
             </Space>,
@@ -285,7 +351,8 @@ export default function SparePartListView() {
             message.success(`Request ${created.requestId} submitted successfully.`);
             setRequestModalOpen(false);
             setSelectedRowKeys([]);
-            actionRef.current?.reloadAndRest?.();
+            setSelectedItemsById({});
+            reloadTable(true);
           } catch (error) {
             message.error('Failed to submit request.');
           }

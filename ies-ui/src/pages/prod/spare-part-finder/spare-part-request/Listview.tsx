@@ -33,11 +33,6 @@ export default function ListView() {
             key: '2',
             children: <MyRequestListview/>,
           },
-          {
-            label: 'My Received Request',
-            key: '3',
-            children: <div>My Received Request</div>,
-          },
         ]}
       />
 

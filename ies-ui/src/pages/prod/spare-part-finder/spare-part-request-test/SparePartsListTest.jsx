@@ -113,14 +113,8 @@ export default function SparePartListTest() {
           <Input.Search
             allowClear
             enterButton={<SearchOutlined />}
-            value={searchValue}
             placeholder="Search by product ID, part name, description, or tag"
             style={{ width: 320 }}
-            onChange={(event) => {
-              setSearchValue(event.target.value || '');
-              setSelectedRowKeys([]);
-              actionRef.current?.reloadAndRest?.();
-            }}
             onSearch={(value) => {
               setSearchValue(value || '');
               setSelectedRowKeys([]);
@@ -215,11 +209,6 @@ export default function SparePartListTest() {
             {
               title: 'Name',
               dataIndex: 'partName',
-            },
-            {
-              title: 'Tag',
-              dataIndex: 'tag',
-              render: (value) => value || <Typography.Text type="secondary">-</Typography.Text>,
             },
             {
               title: 'Type',

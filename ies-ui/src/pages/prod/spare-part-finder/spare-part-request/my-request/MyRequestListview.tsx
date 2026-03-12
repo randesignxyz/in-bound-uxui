@@ -6,14 +6,7 @@ import { useRef, useState } from 'react';
 import { Button, Card, DatePicker, Input, Select, Space, Tag, Tooltip, Typography } from 'antd';
 import type { SortOrder } from 'antd/es/table/interface';
 import dayjs from 'dayjs';
-import type {
-  MyRequestItem,
-  MyRequestSearch,
-  RequestPriority,
-  RequestStatus,
-  SparePartType,
-} from '../data';
-import type { SparePartRequestServiceReturn } from '../service';
+import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../data';
 
 const { RangePicker } = DatePicker;
 
@@ -61,11 +54,7 @@ const statusLabelMap: Record<RequestStatus, string> = {
   partial: 'Partial',
 };
 
-interface MyRequestListviewProps {
-  services: SparePartRequestServiceReturn;
-}
-
-const MyRequestListview: React.FC<MyRequestListviewProps> = ({ services }) => {
+export default function MyRequestListview() {
   const access = useAccess();
   const actionRef = useRef<ActionType>();
 
@@ -81,27 +70,11 @@ const MyRequestListview: React.FC<MyRequestListviewProps> = ({ services }) => {
 
   const requestData = async (
     pagination: { current?: number; pageSize?: number },
-    sort?: Record<string, SortOrder>,
+    _sort?: Record<string, SortOrder>,
   ) => {
-    const params = {
-      criteria: {
-        searchValue,
-        advanceSearch: {
-          searchValue,
-          priority: filters.priority,
-          type: filters.type,
-          dateRange: filters.dateRange,
-          sort,
-        } as MyRequestSearch,
-        sort,
-      },
-      pagination,
-    };
-
-    const rs = await services.myRequestsPage(params);
     return {
-      data: rs.items || [],
-      total: rs.total || 0,
+      data: [],
+      total: 0,
       success: true,
     };
   };
@@ -272,6 +245,4 @@ const MyRequestListview: React.FC<MyRequestListviewProps> = ({ services }) => {
       )}
     </>
   );
-};
-
-export default MyRequestListview;
+ }

@@ -80,6 +80,7 @@ const SparePartRequestTestAction = {
       pageSize: params.pagination?.pageSize,
     },
   }),
+  // createRequest: 
 };
 
 const mapStockStatus = (stock: number): SparePartStockStatus => {
@@ -95,13 +96,14 @@ const mapType = (type?: string): SparePartType => {
   return 'MRO-W';
 };
 
-const mapItem = (item: SparePartRequestListApiItem): SparePartRequestItem => {
+const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string): SparePartRequestItem => {
   const firstLocation = item.locations?.[0];
   const stock = firstLocation?.availableQty ?? item.avalailableStock ?? item.stock ?? 0;
 
   return {
     id: item.id,
     image: undefined,
+    imageId: item.imageId,
     productId: item.productId,
     partName: item.partName,
     description: item.description,
@@ -111,7 +113,7 @@ const mapItem = (item: SparePartRequestListApiItem): SparePartRequestItem => {
     stock,
     businessUnit: item.businessUnit,
     status: mapStockStatus(stock),
-    warehouse: firstLocation?.warehouseCode || '',
+    warehouse: firstLocation?.warehouseCode || fallbackWarehouse || '',
     tab: 'spare-list',
     createdDate: item.createdDate,
   };
@@ -129,7 +131,7 @@ const mapPagingResult = (
         ? response
         : [];
 
-  let items = rawItems.map(mapItem);
+  let items = rawItems.map((item) => mapItem(item, params.criteria?.warehouse));
 
   if (params.criteria?.status && params.criteria.status !== 'All') {
     items = items.filter((item) => item.status === params.criteria?.status);

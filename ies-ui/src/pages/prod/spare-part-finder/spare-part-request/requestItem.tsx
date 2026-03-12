@@ -1,7 +1,6 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   Button,
-  Image,
   Input,
   InputNumber,
   Modal,
@@ -13,6 +12,7 @@ import {
 } from 'antd';
 import React, { useEffect, useState } from 'react';
 import type { SparePartRequestItem } from './data';
+import SparePartImage from './SparePartImage';
 
 type PriorityLevel = 'normal' | 'high' | 'urgent';
 
@@ -128,19 +128,14 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       title: 'Image',
       width: 80,
       align: 'center' as const,
-      render: (_: unknown, record: RequestRowItem) =>
-        record.item.image ? (
-          <Image
-            src={record.item.image}
-            alt={record.item.partName}
-            width={48}
-            height={48}
-            style={{ objectFit: 'contain' }}
-            fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F/PQAJpAN12gMcGAAAAABJRU5ErkJggg=="
-          />
-        ) : (
-          <Typography.Text type="secondary">-</Typography.Text>
-        ),
+      render: (_: unknown, record: RequestRowItem) => (
+        <SparePartImage
+          imageId={record.item.imageId}
+          src={record.item.image}
+          alt={record.item.partName || record.item.productId}
+          size={44}
+        />
+      ),
     },
     {
       title: 'Part Name',

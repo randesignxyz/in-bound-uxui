@@ -1,11 +1,12 @@
-import { FileImageOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Avatar, Button, Card, Input, Select, Space, Tag, Typography, message } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { Button, Card, Input, Select, Space, Tag, Typography, message } from 'antd';
+import { useRef, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import RequestItemModal from './requestItem';
 import { SparePartRequestAPI } from './service.api';
+import SparePartImage from './SparePartImage';
 
 const typeOptions = [
   { label: 'All Type', value: 'All' },
@@ -20,44 +21,6 @@ const statusOptions = [
   { label: 'Low', value: 'low' },
   { label: 'No Stock', value: 'no-stock' },
 ];
- 
-  function SparePartImage({ imageId, alt }) {
-    const [imageUrl, setImageUrl] = useState();
-  
-    useEffect(() => {
-      let active = true;
-      let objectUrl;
-  
-      if (!imageId) {
-        setImageUrl(undefined);
-        return undefined;
-      }
-  
-      getUploadFileObjectUrlV2()(imageId)
-        .then((url) => {
-          if (!active) {
-            URL.revokeObjectURL(url);
-            return;
-          }
-          objectUrl = url;
-          setImageUrl(url);
-        })
-        .catch(() => setImageUrl(undefined));
-  
-      return () => {
-        active = false;
-        if (objectUrl) {
-          URL.revokeObjectURL(objectUrl);
-        }
-      };
-    }, [imageId]);
-  
-    return imageUrl ? (
-      <Avatar src={imageUrl} alt={alt} size={48} shape="square" />
-    ) : (
-      <Avatar icon={<FileImageOutlined />} size={48} shape="square" />
-    );
-  }
 
 export default function SparePartListView() {
   const access = useAccess();
@@ -71,15 +34,22 @@ export default function SparePartListView() {
   const [requestItems, setRequestItems] = useState([]);
   const [currentRows, setCurrentRows] = useState([]);
   const [knownCategories, setKnownCategories] = useState([]);
+  const [knownWarehouses, setKnownWarehouses] = useState([]);
   const [filters, setFilters] = useState({
     type: 'All',
     category: undefined,
     status: 'All',
+    warehouse: '',
   });
 
   const categoryOptions = [
     { label: 'All Categories', value: '' },
     ...knownCategories.map((item) => ({ label: item, value: item })),
+  ];
+
+  const warehouseOptions = [
+    { label: 'All Warehouses', value: '' },
+    ...knownWarehouses.map((wh) => ({ label: wh, value: wh })),
   ];
 
   const requestData = async (params) => {
@@ -89,7 +59,7 @@ export default function SparePartListView() {
         type: filters.type,
         category: filters.category || '',
         status: filters.status,
-        warehouse: '',
+        warehouse: filters.warehouse || '',
       },
       pagination: {
         current: params.current,
@@ -101,6 +71,10 @@ export default function SparePartListView() {
     setCurrentRows(rows);
     setKnownCategories((previous) => {
       const merged = new Set([...previous, ...rows.map((item) => item.category).filter(Boolean)]);
+      return Array.from(merged).sort();
+    });
+    setKnownWarehouses((previous) => {
+      const merged = new Set([...previous, ...rows.map((item) => item.warehouse).filter(Boolean)]);
       return Array.from(merged).sort();
     });
 
@@ -130,10 +104,11 @@ export default function SparePartListView() {
           <Input.Search
             allowClear
             enterButton={<SearchOutlined />}
+            value={searchValue}
             placeholder="Search by product ID or part name"
             style={{ width: 320 }}
-            onSearch={(value) => {
-              setSearchValue(value || '');
+            onChange={(event) => {
+              setSearchValue(event.target.value || '');
               setSelectedRowKeys([]);
               actionRef.current?.reloadAndRest?.();
             }}
@@ -155,6 +130,16 @@ export default function SparePartListView() {
             ))}
           </Button.Group>
          
+          <Select
+            style={{ width: 180 }}
+            value={filters.warehouse}
+            options={warehouseOptions}
+            onChange={(value) => {
+              setFilters((previous) => ({ ...previous, warehouse: value || '' }));
+              setSelectedRowKeys([]);
+              actionRef.current?.reloadAndRest?.();
+            }}
+          />
 
           <Select
             style={{ width: 180 }}
@@ -182,6 +167,7 @@ export default function SparePartListView() {
 
       <Card size="small">
         <ProTable
+           
           actionRef={actionRef}
           size="small"
           rowKey="id"
@@ -219,7 +205,12 @@ export default function SparePartListView() {
               width: 80,
               align: 'center',
               render: (_, record) => (
-                <SparePartImage imageId={record.imageId} alt={record.partName || record.productId} />
+                <SparePartImage
+                  imageId={record.imageId}
+                  src={record.image}
+                  alt={record.partName || record.productId}
+                  size={48}
+                />
               ),
             },
             {

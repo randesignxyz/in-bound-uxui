@@ -29,6 +29,7 @@ export interface MyRequestSearch {
 export interface SparePartRequestItem {
   id: number;
   image?: string;
+  imageId?: string;
   productId: string;
   partName: string;
   description?: string;

@@ -23,8 +23,8 @@ const statusFilterOptions: { label: string; value: 'ALL' | RequestStatus }[] = [
   { label: 'Rejected', value: 'rejected' },
   { label: 'In Progress', value: 'in-progress' },
   { label: 'Ready to Pickup', value: 'ready_to_Pickup' },
-  {label: 'Partial', value: 'partial'},
-  {label: 'Completed', value: 'completed'},
+  { label: 'Partial', value: 'partial' },
+  { label: 'Completed', value: 'completed' },
 ];
 
 const priorityOptions: { label: string; value: 'ALL' | RequestPriority }[] = [
@@ -65,7 +65,6 @@ const statusColorMap: Record<RequestStatus, string> = {
   partial: 'gold',
   'ready_to_Pickup': 'success',
   completed: 'success',
-  cancelled: 'default',
 };
 
 const statusLabelMap: Record<RequestStatus, string> = {
@@ -76,7 +75,6 @@ const statusLabelMap: Record<RequestStatus, string> = {
   partial: 'Partial',
   'ready_to_Pickup': 'Ready to Pickup',
   completed: 'Completed',
-  cancelled: 'Cancelled',
 };
 
 // --- Mock data generator ---
@@ -87,7 +85,15 @@ const mockRequests: MyRequestItem[] = Array.from({ length: 50 }, (_, i) => ({
   requestDate: dayjs().subtract(Math.floor(Math.random() * 30), 'day').toISOString(),
   totalItems: Math.floor(Math.random() * 10) + 1,
   receivedItems: Math.floor(Math.random() * 5),
-  requestStatus: ['pending', 'approved', 'rejected', 'in-progress', 'partial'][Math.floor(Math.random() * 5)] as RequestStatus,
+  requestStatus: [
+    'pending',
+    'approved',
+    'rejected',
+    'in-progress',
+    'partial',
+    'ready_to_Pickup',
+    'completed',
+  ][Math.floor(Math.random() * 7)] as RequestStatus,
   remark: ['Urgent order', 'Check availability', 'For maintenance', 'Regular request'][Math.floor(Math.random() * 4)],
   type: ['MRO-W', 'MRO-S', 'MRO-G'][Math.floor(Math.random() * 3)] as SparePartType,
 }));
@@ -96,7 +102,7 @@ export default function MyRequestListview() {
   const access = useAccess();
   const actionRef = useRef<ActionType>();
 
-  const [searchValue, setSearchValue] = useState<string>();
+  const [searchValue, setSearchValue] = useState<string>('');
   const [filters, setFilters] = useState<{
     status: 'ALL' | RequestStatus;
     priority: 'ALL' | RequestPriority;
@@ -107,6 +113,11 @@ export default function MyRequestListview() {
     priority: 'ALL',
     type: 'ALL',
   });
+
+  const reloadTable = () => {
+    actionRef.current?.setPageInfo?.({ current: 1 });
+    actionRef.current?.reload?.();
+  };
 
   const formatDate = (dateStr: string) => {
     const d = dayjs(dateStr);
@@ -121,8 +132,8 @@ export default function MyRequestListview() {
     let filtered = [...mockRequests];
 
     // Filter by search
-    if (searchValue) {
-      const v = searchValue.toLowerCase();
+    if (searchValue?.trim()) {
+      const v = searchValue.trim().toLowerCase();
       filtered = filtered.filter(
         (r) =>
           r.requestId.toLowerCase().includes(v) ||
@@ -185,53 +196,57 @@ export default function MyRequestListview() {
               <Input.Search
                 allowClear
                 style={{ width: 300 }}
-                placeholder="Search Spare Part name, SKU"
+                placeholder="Search Request ID or Remark"
+                value={searchValue}
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  setSearchValue(nextValue);
+                  reloadTable();
+                }}
                 onSearch={(v) => {
-                  setSearchValue(v);
-                  actionRef.current?.reloadAndRest?.();
+                  setSearchValue(v || '');
+                  reloadTable();
                 }}
                 enterButton={<SearchOutlined />}
               />
 
-              <Button.Group>
-                {statusFilterOptions.map((it) => (
-                  <Button
-                    key={it.value}
-                    type={filters.status === it.value ? 'primary' : 'default'}
-                    onClick={() => {
-                      setFilters((prev) => ({ ...prev, status: it.value }));
-                      actionRef.current?.reloadAndRest?.();
-                    }}
-                  >
-                    {it.label}
-                  </Button>
-                ))}
-              </Button.Group>
-
               <Select
-                allowClear
-                placeholder="Priority"
-                style={{ minWidth: 140 }}
-                options={priorityOptions.filter((o) => o.value !== 'ALL')}
-                onChange={(v) => {
-                  setFilters((prev) => ({ ...prev, priority: v || 'ALL' }));
-                  actionRef.current?.reloadAndRest?.();
+                style={{ minWidth: 180 }}
+                value={filters.status}
+                options={statusFilterOptions}
+                onChange={(value) => {
+                  setFilters((prev) => ({ ...prev, status: value }));
+                  reloadTable();
                 }}
               />
 
               <Select
-                allowClear
-                placeholder="Type"
+                style={{ minWidth: 140 }}
+                value={filters.priority}
+                options={priorityOptions}
+                onChange={(value) => {
+                  setFilters((prev) => ({ ...prev, priority: value }));
+                  reloadTable();
+                }}
+              />
+
+              <Select
                 style={{ minWidth: 120 }}
-                options={typeOptions.filter((o) => o.value !== 'ALL')}
-                onChange={(v) => {
-                  setFilters((prev) => ({ ...prev, type: v || 'ALL' }));
-                  actionRef.current?.reloadAndRest?.();
+                value={filters.type}
+                options={typeOptions}
+                onChange={(value) => {
+                  setFilters((prev) => ({ ...prev, type: value }));
+                  reloadTable();
                 }}
               />
 
               <RangePicker
                 placeholder={['Filter Date', 'End date']}
+                value={
+                  filters.dateRange
+                    ? [dayjs(filters.dateRange[0]), dayjs(filters.dateRange[1])]
+                    : null
+                }
                 onChange={(dates) => {
                   if (dates && dates[0] && dates[1]) {
                     setFilters((prev) => ({
@@ -241,7 +256,7 @@ export default function MyRequestListview() {
                   } else {
                     setFilters((prev) => ({ ...prev, dateRange: undefined }));
                   }
-                  actionRef.current?.reloadAndRest?.();
+                  reloadTable();
                 }}
               />
             </Space>

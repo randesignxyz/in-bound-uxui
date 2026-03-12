@@ -96,7 +96,7 @@ export default function SparePartListView() {
       if (!selectedRowKeys?.length) return previous;
       const next = { ...previous };
       rows.forEach((row) => {
-        if (selectedRowKeys.includes(row.id)) {
+        if (selectedRowKeys.includes(String(row.id))) {
           next[String(row.id)] = row;
         }
       });
@@ -113,7 +113,10 @@ export default function SparePartListView() {
 
     return {
       data: rows,
-      total: response.total || 0,
+      total:
+        filters.createdDateRange?.length === 2
+          ? rows.length
+          : response.total || 0,
       success: true,
     };
   };
@@ -212,10 +215,9 @@ export default function SparePartListView() {
 
       <Card size="small">
         <ProTable
-           
           actionRef={actionRef}
           size="small"
-          rowKey="id"
+          rowKey={(record) => String(record.id)}
           search={false}
           options={false}
           bordered
@@ -228,10 +230,12 @@ export default function SparePartListView() {
             selectedRowKeys,
             preserveSelectedRowKeys: true,
             onChange: (keys, rows) => {
-              setSelectedRowKeys(keys);
+              const normalizedKeys = (keys || []).map((k) => String(k));
+              setSelectedRowKeys(normalizedKeys);
+
               setSelectedItemsById((previous) => {
                 const next = {};
-                const keySet = new Set((keys || []).map((k) => String(k)));
+                const keySet = new Set(normalizedKeys);
 
                 Object.keys(previous || {}).forEach((k) => {
                   if (keySet.has(k)) {

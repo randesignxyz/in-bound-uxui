@@ -11,6 +11,7 @@ import {
   Space,
   message,
 } from 'antd';
+import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -157,6 +158,7 @@ export default function RequestedBatchDrawer({
   const [pickupSelection, setPickupSelection] = useState<string[]>([]);
   const [statusOverride, setStatusOverride] = useState<RequestStatus | null>(null);
   const [pickupBatches, setPickupBatches] = useState<PickupBatch[]>([]);
+  const [expandedPickupBatchNos, setExpandedPickupBatchNos] = useState<number[]>([]);
   const [activityLogs, setActivityLogs] = useState<RequestDetailActivity[]>([]);
   const lastServerStatusRef = useRef<RequestStatus | null>(null);
   const lastShipmentNoticeRef = useRef<number>(0);
@@ -248,6 +250,7 @@ export default function RequestedBatchDrawer({
     setSelectedProduct(null);
     setPickupSelection([]);
     setStatusOverride(null);
+    setExpandedPickupBatchNos([]);
 
     const prePickedCount = typeof data.receivedItems === 'number' ? data.receivedItems : 0;
     const seededPicked =
@@ -464,6 +467,7 @@ export default function RequestedBatchDrawer({
     setStatusOverride(null);
     setPickedItems([]);
     setPickupBatches([]);
+    setExpandedPickupBatchNos([]);
     setActivityLogs([]);
     lastServerStatusRef.current = null;
     lastShipmentNoticeRef.current = 0;
@@ -759,57 +763,6 @@ export default function RequestedBatchDrawer({
       </Card>
     ) : null;
 
-  const historyCard =
-    pickupBatches.length > 0 &&
-    (effectiveStatus === 'ready_to_Pickup' || effectiveStatus === 'partial' || effectiveStatus === 'completed') ? (
-      <Card size="small" style={{ marginBottom: 24 }} title="Pick up History">
-	        <Table<PickupBatch>
-	          size="small"
-	          rowKey={(r) => String(r.batchNo)}
-	          pagination={false}
-	          dataSource={pickupBatches}
-          expandable={{
-            rowExpandable: (batch) => batch.items.length > 0,
-            expandedRowRender: (batch) => (
-              <Table<RequestDetailLineItem>
-                size="small"
-                rowKey="productId"
-                pagination={false}
-                dataSource={batch.items}
-                columns={[
-                  { title: 'Product ID', dataIndex: 'productId' },
-                  { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
-                  { title: 'Qty', dataIndex: 'quantityToReturn', align: 'right' as const },
-                ]}
-              />
-            ),
-          }}
-	          columns={[
-	            { title: 'Pick up #', dataIndex: 'batchNo', width: 90 },
-	            { title: 'Picked By', dataIndex: 'pickedBy', width: 160 },
-	            {
-	              title: 'Picked Items',
-	              align: 'right',
-	              render: (_: unknown, r) => r.items.length || r.pickedItemsCount || 0,
-	            },
-            {
-              title: 'Picked Qty',
-              align: 'right',
-              render: (_: unknown, r) =>
-                r.items.length > 0
-                  ? r.items.reduce((sum, it) => sum + (Number(it.quantityToReturn) || 0), 0)
-                  : r.pickedItemsCount || 0,
-            },
-	            {
-	              title: 'Date',
-	              dataIndex: 'createdAt',
-	              render: (v: string) => formatDateTime(v),
-	            },
-	          ]}
-	        />
-	      </Card>
-	    ) : null;
-
   return (
     <>
       <Drawer
@@ -925,35 +878,85 @@ export default function RequestedBatchDrawer({
 
         {pickupCard}
         {partialWaitingCard}
-        {historyCard}
 
         <Title level={5} style={{ marginBottom: 16 }}>
           Recent Activities
         </Title>
         <Timeline
           style={{ marginBottom: 32 }}
-          items={activityLogs.map((a: RequestDetailActivity) => ({
-            color: a.dot === 'pending' ? 'gray' : 'blue',
-            children: (
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: 8,
-                }}
-              >
-	                <div>
-	                  <Text strong>{a.label}</Text>
-	                  <br />
-	                  <Text type="secondary">{a.description}</Text>
-	                  <br />
-	                  <Text type="secondary">By: {a.by || 'System'}</Text>
-	                </div>
-	                <Text type="secondary">{formatDateTime(a.date)}</Text>
-	              </div>
-	            ),
-	          }))}
+          items={activityLogs.map((a: RequestDetailActivity) => {
+            const pickupBatchNo = parsePickupBatchNo(a.label);
+            const pickupBatch =
+              typeof pickupBatchNo === 'number'
+                ? pickupBatches.find((b) => b.batchNo === pickupBatchNo)
+                : undefined;
+
+            const isExpandable = Boolean(pickupBatchNo && pickupBatch && pickupBatch.items.length > 0);
+            const isExpanded = Boolean(pickupBatchNo) && expandedPickupBatchNos.includes(Number(pickupBatchNo));
+
+            const toggleExpanded = () => {
+              if (!pickupBatchNo) return;
+              const batchNo = Number(pickupBatchNo);
+              setExpandedPickupBatchNos((prev) => {
+                if (prev.includes(batchNo)) return prev.filter((n) => n !== batchNo);
+                return [...prev, batchNo].sort((x, y) => x - y);
+              });
+            };
+
+            const pickupItemsTable =
+              isExpandable && isExpanded && pickupBatch ? (
+                <div style={{ marginTop: 8 }}>
+                  <Table<RequestDetailLineItem>
+                    size="small"
+                    rowKey="productId"
+                    pagination={false}
+                    dataSource={pickupBatch.items}
+                    columns={[
+                      { title: 'Product ID', dataIndex: 'productId' },
+                      { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
+                      { title: 'Qty', dataIndex: 'quantityToReturn', align: 'right' as const },
+                    ]}
+                  />
+                </div>
+              ) : null;
+
+            return {
+              color: a.dot === 'pending' ? 'gray' : 'blue',
+              children: (
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 8,
+                      cursor: isExpandable ? 'pointer' : undefined,
+                    }}
+                    onClick={isExpandable ? toggleExpanded : undefined}
+                    role={isExpandable ? 'button' : undefined}
+                    aria-expanded={isExpandable ? isExpanded : undefined}
+                  >
+                    <div>
+                      <Text strong>
+                        {isExpandable ? (
+                          <span style={{ marginRight: 6, color: '#8c8c8c' }}>
+                            {isExpanded ? <DownOutlined /> : <RightOutlined />}
+                          </span>
+                        ) : null}
+                        {a.label}
+                      </Text>
+                      <br />
+                      <Text type="secondary">{a.description}</Text>
+                      <br />
+                      <Text type="secondary">By: {a.by || 'System'}</Text>
+                    </div>
+                    <Text type="secondary">{formatDateTime(a.date)}</Text>
+                  </div>
+                  {pickupItemsTable}
+                </div>
+              ),
+            };
+          })}
 	        />
 
         <Title level={5} style={{ marginBottom: 8 }}>

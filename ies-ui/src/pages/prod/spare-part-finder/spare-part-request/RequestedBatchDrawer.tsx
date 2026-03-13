@@ -27,7 +27,7 @@ const formatDateTime = (iso?: string) => {
   return d.isValid() ? d.format('YYYY-MMM-DD, h:mm A') : String(iso);
 };
 
-const STATUS_STEPS = ['Requested', 'Approved', 'In Progress', 'Ready to pick up', 'Completed'] as const;
+const STATUS_STEPS = ['Requested', 'Approved', 'In Progress', 'Completed'] as const;
 
 const statusColorMap: Record<RequestStatus, string> = {
   pending: 'default',
@@ -48,11 +48,10 @@ function statusToCurrentStep(status: RequestStatus): number {
       return 1;
     case 'in-progress':
     case 'partial':
-      return 2;
     case 'ready_to_Pickup':
-      return 3;
+      return 2;
     case 'completed':
-      return 4;
+      return 3;
     default:
       return 0;
   }

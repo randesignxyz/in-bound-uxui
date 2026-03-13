@@ -114,6 +114,10 @@ const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string):
     businessUnit: item.businessUnit,
     status: mapStockStatus(stock),
     warehouse: firstLocation?.warehouseCode || fallbackWarehouse || '',
+    line: firstLocation?.zone,
+    shift: firstLocation?.shelf,
+    bin: firstLocation?.levelBin,
+    level: firstLocation?.levelBin,
     tab: 'spare-list',
     createdDate: item.createdDate,
   };

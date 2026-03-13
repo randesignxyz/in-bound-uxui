@@ -8,6 +8,7 @@ import { simpleRequestActions } from '@/services/model';
 import RequestItemModal from './requestItem';
 import { SparePartRequestAPI } from './service.api';
 import SparePartImage from './SparePartImage';
+import SpfDetails from './SpfDetails';
 
 const typeOptions = [
   { label: 'All Type', value: 'All' },
@@ -29,12 +30,15 @@ export default function SparePartListView() {
   const requestActions = simpleRequestActions();
   const services = SparePartRequestAPI(requestActions);
   const { RangePicker } = DatePicker;
+  const canSeeWarehouseLocation = access.canSpfWarehouseStaff || access.canAdmin;
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedItemsById, setSelectedItemsById] = useState({});
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestItems, setRequestItems] = useState([]);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsItem, setDetailsItem] = useState(null);
   const [currentRows, setCurrentRows] = useState([]);
   const [knownCategories, setKnownCategories] = useState([]);
   const [knownWarehouses, setKnownWarehouses] = useState([]);
@@ -132,6 +136,23 @@ export default function SparePartListView() {
     setRequestModalOpen(true);
   };
 
+  const openDetails = (item) => {
+    setDetailsItem(item || null);
+    setDetailsOpen(true);
+  };
+
+  const closeDetails = () => {
+    setDetailsOpen(false);
+    setDetailsItem(null);
+  };
+
+  const handleRequestPartsFromDetails = () => {
+    if (!detailsItem) return;
+    setRequestItems([detailsItem]);
+    setRequestModalOpen(true);
+    closeDetails();
+  };
+
 
   return (
     <>
@@ -163,16 +184,18 @@ export default function SparePartListView() {
               </Button>
             ))}
           </Button.Group>
-         
-          <Select
-            style={{ width: 180 }}
-            value={filters.warehouse}
-            options={warehouseOptions}
-            onChange={(value) => {
-              setFilters((previous) => ({ ...previous, warehouse: value || '' }));
-              reloadTable(true);
-            }}
-          />
+
+          {/* {canSeeWarehouseLocation && ( */}
+            <Select
+              style={{ width: 180 }}
+              value={filters.warehouse}
+              options={warehouseOptions}
+              onChange={(value) => {
+                setFilters((previous) => ({ ...previous, warehouse: value || '' }));
+                reloadTable(true);
+              }}
+            />
+          {/* )} */}
 
           <Select
             style={{ width: 180 }}
@@ -194,7 +217,7 @@ export default function SparePartListView() {
             }}
           />
 
-          <RangePicker
+          {/* <RangePicker
             allowClear
             style={{ width: 260 }}
             placeholder={['Created from', 'Created to']}
@@ -209,7 +232,7 @@ export default function SparePartListView() {
               }
               reloadTable(true);
             }}
-          />
+          /> */}
         </Space>
       </Card>
 
@@ -258,9 +281,11 @@ export default function SparePartListView() {
               <Button icon={<ReloadOutlined />} onClick={() => reloadTable(false)}>
                 Refresh
               </Button>
-              <Button onClick={() => message.info('Import Excel action is not wired yet.')}>
+              {(access.canSpfRequester || access.canSpfApprover) &&(
+                <Button onClick={() => message.info('Import Excel action is not wired yet.')}>
                 Import Excel
               </Button>
+              )}
               {(access.canSpfRequester || access.canSpfApprover) && (
                 <Button type="primary" disabled={selectedRowKeys.length === 0} onClick={openRequestModal}>
                   Request{selectedRowKeys.length ? ` (${selectedRowKeys.length})` : ''}
@@ -286,7 +311,16 @@ export default function SparePartListView() {
             {
               title: 'Product ID',
               dataIndex: 'productId',
-              render: (_, record) => <Typography.Link>{record.productId}</Typography.Link>,
+              render: (_, record) => (
+                <Typography.Link
+                  onClick={(event) => {
+                    event.preventDefault();
+                    openDetails(record);
+                  }}
+                >
+                  {record.productId}
+                </Typography.Link>
+              ),
             },
             {
               title: 'Part Name',
@@ -297,6 +331,40 @@ export default function SparePartListView() {
               dataIndex: 'type',
               width: 100,
             },
+            ...(canSeeWarehouseLocation
+              ? [
+                  {
+                    title: 'Warehouse',
+                    dataIndex: 'warehouse',
+                    width: 120,
+                    render: (v) => v || '—',
+                  },
+                  {
+                    title: 'Line',
+                    dataIndex: 'line',
+                    width: 120,
+                    render: (v) => v || '—',
+                  },
+                  {
+                    title: 'Shift',
+                    dataIndex: 'shift',
+                    width: 120,
+                    render: (v) => v || '—',
+                  },
+                  {
+                    title: 'Bin',
+                    dataIndex: 'bin',
+                    width: 120,
+                    render: (v) => v || '—',
+                  },
+                  // {
+                  //   title: 'Level',
+                  //   dataIndex: 'level',
+                  //   width: 120,
+                  //   render: (v) => v || '—',
+                  // },
+                ]
+              : []),
             {
               title: 'Categories',
               dataIndex: 'category',
@@ -366,6 +434,34 @@ export default function SparePartListView() {
           message.info('Select more items from the list, then click Request again.');
         }}
       />
+
+      <SpfDetails
+        open={detailsOpen}
+        data={
+          detailsItem
+            ? {
+                image: detailsItem.image,
+                imageId: detailsItem.imageId,
+                spare_part_name: detailsItem.partName,
+                part_number: detailsItem.productId,
+                description: detailsItem.description,
+                stock_quantity: detailsItem.stock,
+                receiving_from_warehouse: detailsItem.warehouse,
+                zone: detailsItem.line,
+                shelf: detailsItem.level,
+                level: detailsItem.bin,
+                company: detailsItem.company,
+                category: detailsItem.category,
+                spare_part_type: detailsItem.type,
+                business_unit: detailsItem.businessUnit,
+                requested_date: detailsItem.createdDate,
+              }
+            : undefined
+        }
+        onClose={closeDetails}
+        onRequestParts={handleRequestPartsFromDetails}
+      />
+
     </>
   );
 }

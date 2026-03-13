@@ -16,6 +16,8 @@ export const ProdPaths = {
   dailyHACCPMonitoring: '/prod/daily-haccp-monitoring',
   sparePartReturn: '/prod/spare-part-return',
   sparePartRequestTest: '/prod/spare-part-request-test',
+  sparePartWarehouse: '/prod/spare-part-warehouse',
+  sparePartApproval: '/prod/spare-part-approval',
 };
 
 export default () => {
@@ -51,7 +53,7 @@ export default () => {
       name: 'Request Approval',
       description: 'Approve Items requests',
       icon: warehouseTransferIcon,
-      link: `${ProdPaths.sparePartRequest}/list`,
+      link: `${ProdPaths.sparePartApproval}/list`,
       visible: access.canSpfApprover,
     },
     {
@@ -59,15 +61,16 @@ export default () => {
       name: 'Spare Parts',
       description: 'Spare Part Request List',
       link: `${ProdPaths.sparePartRequestTest}/list`,
-    }
-    // {
-    //   id: 'sparePartRequestWarehouse',
-    //   name: 'Spare Part Request List',
-    //   description: 'Spare Part Request List Warehouse Staff',
-    //   icon: warehouseTransferIcon,
-    //   link: `${ProdPaths.sparePartRequest}/list`,
-    //   visible: access.canSpfWarehouseStaff,
-    // },
+      visible: access.canAdmin
+    },
+    {
+      id: 'sparePartRequestWarehouse',
+      name: 'Spare Part Request List',
+      description: 'Spare Part Request List Warehouse Staff',
+      icon: warehouseTransferIcon,
+      link: `${ProdPaths.sparePartWarehouse}/list`,
+      visible: access.canSpfWarehouseStaff,
+    },
     // {
     //   id: 'dailyWaterTreatment',
     //   name: 'Daily Water Treatment',
@@ -76,7 +79,6 @@ export default () => {
     //   link: `${ProdPaths.dailyWaterTreatment}/list`,
     //   visible: access.canAccessDailyWaterTreatmentMenuItem,
     // }
-    ,
 
     {
       id: 'dailyPreWaterTreatment',
@@ -108,7 +110,7 @@ export default () => {
       description: 'Spare Part Request List',
       icon: vehicleToolIcon,
       link: `${ProdPaths.sparePartRequest}/list`,
-      visible: access.canAccessSparePartRequestMenuItem,
+      visible: access.canSpfRequester || access.canSpfApprover ,
     },
      {
       id: 'sparePartReturn',
@@ -116,7 +118,7 @@ export default () => {
       description: 'Spare Part Return List',
       icon: vehicleToolIcon,
       link: `${ProdPaths.sparePartReturn}/list`,
-      visible: access.canAccessSparePartReturnMenuItem,
+      visible: access.canSpfRequester || access.canSpfApprover,
     },
   ];
 

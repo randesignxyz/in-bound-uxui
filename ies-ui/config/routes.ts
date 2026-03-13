@@ -1562,7 +1562,7 @@ export default [
     path: '/prod/spare-part-return/:view/*',
     name: 'spare-parts',
     hideInMenu: 'true',
-    access: 'canAccessSparePartReturnMenuItem',
+    access: 'canAccessSparePartFinder',
     component: './prod/spare-part-finder/spare-part-return',
   },
     {
@@ -1578,6 +1578,20 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessSparePartFinder',
     component: './prod/spare-part-finder/spare-part-request-test',
+  },
+  {
+    path: '/prod/spare-part-warehouse/:view/*',
+    name: 'sparePartWarehouse',
+    hideInMenu: 'true',
+    access: 'canSpfWarehouseStaff',
+    component: './prod/spare-part-finder/spare-part-warehouse',
+  },
+  {
+   path: '/prod/spare-part-approval/:view/*',
+   name: 'sparePartApproval',
+   hideInMenu: 'true',
+   access:'canSpfApprover',
+   component: './prod/spare-part-finder/spare-part-approval',
   },
 
   //  ================= END Prod =================

@@ -40,6 +40,10 @@ export interface SparePartRequestItem {
   businessUnit: string;
   status: SparePartStockStatus;
   warehouse: string;
+  line?: string;
+  shift?: string;
+  bin?: string;
+  level?: string;
   tab: SparePartTab;
   createdDate?: string;
 }

@@ -1,23 +1,24 @@
 import { EyeOutlined, SearchOutlined } from '@ant-design/icons';
-import { ProTable } from '@ant-design/pro-components'; 
 import type { ActionType } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { useRef, useState } from 'react';
 import { Button, Card, DatePicker, Input, Select, Space, Tag, Tooltip, Typography } from 'antd';
 import type { SortOrder } from 'antd/es/table/interface';
 import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import { useRef, useState } from 'react';
+import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../data';
+import RequestedBatchDrawer from '../RequestedBatchDrawer';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
-import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../data';
 
 const { RangePicker } = DatePicker;
 
 // Filter options
 const statusFilterOptions: { label: string; value: 'ALL' | RequestStatus }[] = [
-  { label: 'All', value: 'ALL' },
+  { label: 'All Status', value: 'ALL' },
   { label: 'Pending', value: 'pending' },
   { label: 'Approved', value: 'approved' },
   { label: 'Rejected', value: 'rejected' },
@@ -33,13 +34,6 @@ const priorityOptions: { label: string; value: 'ALL' | RequestPriority }[] = [
   { label: 'High', value: 'high' },
   { label: 'Normal', value: 'normal' },
   { label: 'Low', value: 'low' },
-];
-
-const typeOptions: { label: string; value: 'ALL' | SparePartType }[] = [
-  { label: 'All', value: 'ALL' },
-  { label: 'MRO-W', value: 'MRO-W' },
-  { label: 'MRO-S', value: 'MRO-S' },
-  { label: 'MRO-G', value: 'MRO-G' },
 ];
 
 // Colors & labels
@@ -63,7 +57,7 @@ const statusColorMap: Record<RequestStatus, string> = {
   rejected: 'error',
   'in-progress': 'processing',
   partial: 'gold',
-  'ready_to_Pickup': 'success',
+  ready_to_Pickup: 'success',
   completed: 'success',
 };
 
@@ -73,19 +67,39 @@ const statusLabelMap: Record<RequestStatus, string> = {
   rejected: 'Rejected',
   'in-progress': 'In Progress',
   partial: 'Partial',
-  'ready_to_Pickup': 'Ready to Pickup',
+  ready_to_Pickup: 'Ready to Pickup',
   completed: 'Completed',
 };
 
+const clampNonNegativeInt = (value: unknown): number => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.floor(n));
+};
+
+const deriveDisplayStatus = (row: Pick<MyRequestItem, 'requestStatus' | 'totalItems' | 'receivedItems'>): RequestStatus => {
+  const total = clampNonNegativeInt(row.totalItems);
+  const received = clampNonNegativeInt(row.receivedItems);
+
+  if (total > 0 && received >= total) return 'completed';
+  if (row.requestStatus === 'ready_to_Pickup') return 'ready_to_Pickup';
+  if (received > 0) return 'partial';
+  return row.requestStatus;
+};
+
+const deriveDisplayReceived = (row: Pick<MyRequestItem, 'requestStatus' | 'totalItems' | 'receivedItems'>): number => {
+  const status = deriveDisplayStatus(row);
+  const total = clampNonNegativeInt(row.totalItems);
+  const received = clampNonNegativeInt(row.receivedItems);
+
+  if (status === 'partial' || status === 'ready_to_Pickup' || status === 'completed')
+    return total > 0 ? Math.min(received, total) : received;
+  return 0;
+};
+
 // --- Mock data generator ---
-const mockRequests: MyRequestItem[] = Array.from({ length: 50 }, (_, i) => ({
-  id: i + 1,
-  requestId: `REQ-${1000 + i}`,
-  priority: ['low', 'normal', 'high', 'urgent'][Math.floor(Math.random() * 4)] as RequestPriority,
-  requestDate: dayjs().subtract(Math.floor(Math.random() * 30), 'day').toISOString(),
-  totalItems: Math.floor(Math.random() * 10) + 1,
-  receivedItems: Math.floor(Math.random() * 5),
-  requestStatus: [
+const mockRequests: MyRequestItem[] = Array.from({ length: 50 }, (_, i) => {
+  const requestStatus = [
     'pending',
     'approved',
     'rejected',
@@ -93,16 +107,43 @@ const mockRequests: MyRequestItem[] = Array.from({ length: 50 }, (_, i) => ({
     'partial',
     'ready_to_Pickup',
     'completed',
-  ][Math.floor(Math.random() * 7)] as RequestStatus,
-  remark: ['Urgent order', 'Check availability', 'For maintenance', 'Regular request'][Math.floor(Math.random() * 4)],
-  type: ['MRO-W', 'MRO-S', 'MRO-G'][Math.floor(Math.random() * 3)] as SparePartType,
-}));
+  ][Math.floor(Math.random() * 7)] as RequestStatus;
+
+  const totalItems = Math.floor(Math.random() * 10) + 1;
+
+  const receivedItems =
+    requestStatus === 'completed'
+      ? totalItems
+      : requestStatus === 'partial'
+        ? Math.min(totalItems - 1, Math.floor(Math.random() * totalItems) + 1)
+        : requestStatus === 'ready_to_Pickup'
+          ? Math.min(totalItems - 1, Math.floor(Math.random() * totalItems))
+          : 0;
+
+  return {
+    id: i + 1,
+    requestId: `REQ-${1000 + i}`,
+    priority: ['low', 'normal', 'high', 'urgent'][Math.floor(Math.random() * 4)] as RequestPriority,
+    requestDate: dayjs()
+      .subtract(Math.floor(Math.random() * 30), 'day')
+      .toISOString(),
+    totalItems,
+    receivedItems,
+    requestStatus,
+    remark: ['Urgent order', 'Check availability', 'For maintenance', 'Regular request'][
+      Math.floor(Math.random() * 4)
+    ],
+    type: ['MRO-W', 'MRO-S', 'MRO-G'][Math.floor(Math.random() * 3)] as SparePartType,
+  };
+});
 
 export default function MyRequestListview() {
   const access = useAccess();
   const actionRef = useRef<ActionType>();
 
   const [searchValue, setSearchValue] = useState<string>('');
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<MyRequestItem | null>(null);
   const [filters, setFilters] = useState<{
     status: 'ALL' | RequestStatus;
     priority: 'ALL' | RequestPriority;
@@ -230,16 +271,6 @@ export default function MyRequestListview() {
                 }}
               />
 
-              <Select
-                style={{ minWidth: 120 }}
-                value={filters.type}
-                options={typeOptions}
-                onChange={(value) => {
-                  setFilters((prev) => ({ ...prev, type: value }));
-                  reloadTable();
-                }}
-              />
-
               <RangePicker
                 placeholder={['Filter Date', 'End date']}
                 value={
@@ -276,29 +307,40 @@ export default function MyRequestListview() {
                 pageSizeOptions: [10, 20, 50],
                 showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
               }}
-              columns={[
+              columns={
+                [
+                ...(access.canSpfRequester ? [
                 {
                   title: '',
                   dataIndex: 'action',
                   width: 48,
-                  align: 'center',
-                  render: (_, r) => (
+                  align: 'center' as const,
+                  render: (_: unknown,r: MyRequestItem) => (
                     <Tooltip title="View details">
                       <Button
                         type="text"
                         size="small"
                         icon={<EyeOutlined style={{ color: '#999' }} />}
                         onClick={() => {
-                          // TODO: wire detail view
+                          setSelectedRequest(r);
+                          setDetailOpen(true);
                         }}
                       />
                     </Tooltip>
                   ),
-                },
+                }
+                ]: []),
                 {
                   title: 'Request ID',
                   dataIndex: 'requestId',
                   width: 130,
+                  render: (dom, r) => (
+                    <a
+                      onClick={() => {}}
+                    >
+                      {dom}
+                    </a>
+                  ),
                 },
                 {
                   title: 'Priority',
@@ -329,6 +371,7 @@ export default function MyRequestListview() {
                   width: 130,
                   align: 'center',
                   sorter: true,
+                  render: (_: unknown, r) => deriveDisplayReceived(r),
                 },
                 {
                   title: 'Request Status',
@@ -337,10 +380,10 @@ export default function MyRequestListview() {
                   align: 'center',
                   render: (_, r) => (
                     <Tag
-                      color={statusColorMap[r.requestStatus]}
+                      color={statusColorMap[deriveDisplayStatus(r)]}
                       style={{ minWidth: 80, textAlign: 'center' }}
                     >
-                      {statusLabelMap[r.requestStatus]}
+                      {statusLabelMap[deriveDisplayStatus(r)]}
                     </Tag>
                   ),
                 },
@@ -348,13 +391,49 @@ export default function MyRequestListview() {
                   title: 'Remark',
                   dataIndex: 'remark',
                   ellipsis: true,
+                  width: 'fit-content',
                 },
-              ]}
+
+                ...(access.canSpfApprover ? [
+                  {
+                  title: 'Action',
+                  key: 'action',
+                  width: 120,
+                  render: (_: unknown, record: MyRequestItem) => (
+                    <Button
+                      size="small"
+                      style={{
+                        background: '#b59a30',
+                        borderColor: '#b59a30',
+                        color: '#fff',
+                        minWidth: 84,
+                      }}
+                      onClick={() => {
+                        setSelectedRequest(record);
+                        setDetailOpen(true);
+                      }}
+                    >
+                      View Detail
+                    </Button>
+                  ),
+                },
+                ]: []),
+              ] as import('@ant-design/pro-components').ProColumns<MyRequestItem>[]
+              }
               request={async (params, sort) => requestData(params, sort)}
             />
           </Card>
         </>
       )}
+
+      <RequestedBatchDrawer
+        open={detailOpen}
+        request={selectedRequest}
+        onClose={() => {
+          setDetailOpen(false);
+          setSelectedRequest(null);
+        }}
+      />
     </>
   );
 }

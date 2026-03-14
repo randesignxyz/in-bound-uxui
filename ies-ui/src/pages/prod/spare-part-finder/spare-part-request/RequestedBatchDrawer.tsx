@@ -235,15 +235,15 @@ export default function RequestedBatchDrawer({
   }, [data.receivedItems, data.status, data.totalItems, statusOverride]);
   const currentStep = statusToCurrentStep(effectiveStatus);
 
-	  useEffect(() => {
-	    if (!open) {
-        initKeyRef.current = '';
-        return;
-      }
+  useEffect(() => {
+    if (!open) {
+      initKeyRef.current = '';
+      return;
+    }
 
-      const initKey = `${open ? '1' : '0'}|${data.requestId}`;
-      if (initKeyRef.current === initKey) return;
-      initKeyRef.current = initKey;
+    const initKey = `${open ? '1' : '0'}|${data.requestId}`;
+    if (initKeyRef.current === initKey) return;
+    initKeyRef.current = initKey;
 
     setSpfOpen(false);
     setSelectedProduct(null);
@@ -344,32 +344,32 @@ export default function RequestedBatchDrawer({
       logs.push(normalized);
     };
 
-	    pushOnce({
-	      label: 'Requested',
-	      description: 'Requester sent request (waiting for approval)',
-	      date: data.requestDate,
-	      by: data.requestedBy ?? 'Requester',
-	      dot: 'done',
-	    });
+    pushOnce({
+      label: 'Requested',
+      description: 'Requester sent request (waiting for approval)',
+      date: data.requestDate,
+      by: data.requestedBy ?? 'Requester',
+      dot: 'done',
+    });
 
-	    if (data.status === 'rejected') {
-	      pushOnce({
-	        label: 'Rejected',
-	        description: 'Request rejected',
-	        date: data.requestDate,
-	        by: data.rejectedBy ?? data.approvedBy ?? 'Approver',
-	        dot: 'done',
-	      });
-	    } else {
-	      if (data.status !== 'pending') {
-	        pushOnce({
-	          label: 'Approved',
-	          description: 'Request approved',
-	          date: data.requestDate,
-	          by: data.approvedBy ?? 'Approver',
-	          dot: 'done',
-	        });
-	      }
+    if (data.status === 'rejected') {
+      pushOnce({
+        label: 'Rejected',
+        description: 'Request rejected',
+        date: data.requestDate,
+        by: data.rejectedBy ?? data.approvedBy ?? 'Approver',
+        dot: 'done',
+      });
+    } else {
+      if (data.status !== 'pending') {
+        pushOnce({
+          label: 'Approved',
+          description: 'Request approved',
+          date: data.requestDate,
+          by: data.approvedBy ?? 'Approver',
+          dot: 'done',
+        });
+      }
 
       if (
         data.status === 'in-progress' ||
@@ -377,55 +377,55 @@ export default function RequestedBatchDrawer({
         data.status === 'partial' ||
         data.status === 'completed'
       ) {
-	        pushOnce({
-	          label: 'In Progress',
-	          description: 'Warehouse processing request',
-	          date: data.requestDate,
-	          by: data.warehouseBy ?? 'Warehouse',
-	          dot: data.status === 'in-progress' ? 'pending' : 'done',
-	        });
-	      }
+        pushOnce({
+          label: 'In Progress',
+          description: 'Warehouse processing request',
+          date: data.requestDate,
+          by: data.warehouseBy ?? 'Warehouse',
+          dot: data.status === 'in-progress' ? 'pending' : 'done',
+        });
+      }
 
-	      if (data.status === 'ready_to_Pickup' || data.status === 'partial' || data.status === 'completed') {
-	        pushOnce({
-	          label: 'Ready to Pick up',
-	          description: 'Shipment #1 is ready for pick up',
-	          date: data.requestDate,
-	          by: data.warehouseBy ?? 'Warehouse',
-	          dot: data.status === 'ready_to_Pickup' ? 'pending' : 'done',
-	        });
-	      }
+      if (data.status === 'ready_to_Pickup' || data.status === 'partial' || data.status === 'completed') {
+        pushOnce({
+          label: 'Ready to Pick up',
+          description: 'Shipment #1 is ready for pick up',
+          date: data.requestDate,
+          by: data.warehouseBy ?? 'Warehouse',
+          dot: data.status === 'ready_to_Pickup' ? 'pending' : 'done',
+        });
+      }
 
-	      if (seededPicked.length > 0 && (data.status === 'partial' || data.status === 'ready_to_Pickup' || data.status === 'completed')) {
-	        pushOnce({
-	          label: 'Partial Pick up #1',
-	          description: `Picked ${seededPicked.length} item(s)`,
-	          date: data.requestDate,
-	          by: data.requestedBy ?? 'Requester',
-	          dot: 'done',
-	        });
+      if (seededPicked.length > 0 && (data.status === 'partial' || data.status === 'ready_to_Pickup' || data.status === 'completed')) {
+        pushOnce({
+          label: 'Partial Pick up #1',
+          description: `Picked ${seededPicked.length} item(s)`,
+          date: data.requestDate,
+          by: data.requestedBy ?? 'Requester',
+          dot: 'done',
+        });
 
-	        if (data.status === 'ready_to_Pickup') {
-	          pushOnce({
-	            label: 'Ready to Pick up',
-	            description: 'Shipment #2 is ready for pick up',
-	            date: data.requestDate,
-	            by: data.warehouseBy ?? 'Warehouse',
-	            dot: 'pending',
-	          });
-	        }
-	      }
+        if (data.status === 'ready_to_Pickup') {
+          pushOnce({
+            label: 'Ready to Pick up',
+            description: 'Shipment #2 is ready for pick up',
+            date: data.requestDate,
+            by: data.warehouseBy ?? 'Warehouse',
+            dot: 'pending',
+          });
+        }
+      }
 
-	      if (data.status === 'completed') {
-	        pushOnce({
-	          label: 'Completed',
-	          description: 'Picked up all requested items',
-	          date: data.requestDate,
-	          by: data.requestedBy ?? 'Requester',
-	          dot: 'done',
-	        });
-	      }
-	    }
+      if (data.status === 'completed') {
+        pushOnce({
+          label: 'Completed',
+          description: 'Picked up all requested items',
+          date: data.requestDate,
+          by: data.requestedBy ?? 'Requester',
+          dot: 'done',
+        });
+      }
+    }
 
     // append backend/activity logs that aren't already in our generated list
     (data.activities || []).forEach((a) => {
@@ -607,16 +607,16 @@ export default function RequestedBatchDrawer({
     setPickedItems(nextPicked);
     setPickupSelection([]);
 
-	    const nextBatchNo = pickupBatches.length + 1;
-	    setPickupBatches((prev) => [
-	      ...prev,
-	      {
-	        batchNo: nextBatchNo,
-	        createdAt: new Date().toISOString(),
-	        pickedBy: data.requestedBy ?? 'Requester',
-	        items: newlyPicked,
-	      },
-	    ]);
+    const nextBatchNo = pickupBatches.length + 1;
+    setPickupBatches((prev) => [
+      ...prev,
+      {
+        batchNo: nextBatchNo,
+        createdAt: new Date().toISOString(),
+        pickedBy: data.requestedBy ?? 'Requester',
+        items: newlyPicked,
+      },
+    ]);
 
     const nextReceivedQtyTotal = nextPicked.reduce((sum, it) => sum + (Number(it.quantityToReturn) || 0), 0);
     const hasMorePickableNow = data.items.some(
@@ -627,32 +627,32 @@ export default function RequestedBatchDrawer({
       setStatusOverride('completed');
       setActivityLogs((prev) => [
         ...prev,
-	        {
-	          label: `Pick up #${nextBatchNo}`,
-	          description: `Picked ${newlyPicked.length} item(s)`,
-	          date: new Date().toISOString(),
-	          by: data.requestedBy ?? 'Requester',
-	          dot: 'done',
-	        },
-	        {
-	          label: 'Completed',
-	          description: 'Picked up all requested items',
-	          date: new Date().toISOString(),
-	          by: data.requestedBy ?? 'Requester',
-	          dot: 'done',
-	        },
+        {
+          label: `Pick up #${nextBatchNo}`,
+          description: `Picked ${newlyPicked.length} item(s)`,
+          date: new Date().toISOString(),
+          by: data.requestedBy ?? 'Requester',
+          dot: 'done',
+        },
+        {
+          label: 'Completed',
+          description: 'Picked up all requested items',
+          date: new Date().toISOString(),
+          by: data.requestedBy ?? 'Requester',
+          dot: 'done',
+        },
       ]);
     } else {
       setStatusOverride(hasMorePickableNow ? 'ready_to_Pickup' : 'partial');
       setActivityLogs((prev) => [
         ...prev,
-	        {
-	          label: `${hasMorePickableNow ? 'Pick up' : 'Partial Pick up'} #${nextBatchNo}`,
-	          description: `Picked ${newlyPicked.length} item(s)`,
-	          date: new Date().toISOString(),
-	          by: data.requestedBy ?? 'Requester',
-	          dot: 'done',
-	        },
+        {
+          label: `${hasMorePickableNow ? 'Pick up' : 'Partial Pick up'} #${nextBatchNo}`,
+          description: `Picked ${newlyPicked.length} item(s)`,
+          date: new Date().toISOString(),
+          by: data.requestedBy ?? 'Requester',
+          dot: 'done',
+        },
       ]);
     }
   };
@@ -670,16 +670,16 @@ export default function RequestedBatchDrawer({
       if (lastShipmentNoticeRef.current !== shipmentNo) {
         lastShipmentNoticeRef.current = shipmentNo;
         message.info(`New items are ready to pick up (Shipment #${shipmentNo}).`);
-	        setActivityLogs((logs) => [
-	          ...logs,
-	          {
-	            label: 'Ready to Pick up',
-	            description: `Shipment #${shipmentNo} is ready for pick up`,
-	            date: new Date().toISOString(),
-	            by: data.warehouseBy ?? 'Warehouse',
-	            dot: 'pending',
-	          },
-	        ]);
+        setActivityLogs((logs) => [
+          ...logs,
+          {
+            label: 'Ready to Pick up',
+            description: `Shipment #${shipmentNo} is ready for pick up`,
+            date: new Date().toISOString(),
+            by: data.warehouseBy ?? 'Warehouse',
+            dot: 'pending',
+          },
+        ]);
       }
     }
   }, [data.status, open, pickupBatches.length]);
@@ -777,50 +777,50 @@ export default function RequestedBatchDrawer({
         bodyStyle={{ padding: 16, backgroundColor: '#fafafa' }}
         headerStyle={{ borderBottom: '1px solid #f0f0f0' }}
       >
-     {
-      access.canSpfApprover && effectiveStatus === 'pending' && (
-        <div style={{ marginBottom: 24, textAlign: 'right' }}>
-          <Space>
-            <Button
-              danger
-              onClick={() => {
-                setStatusOverride('rejected');
-                setActivityLogs((prev) => [
-                  ...prev,
-                  {
-                    label: 'Rejected',
-                    description: 'Request rejected',
-                    date: new Date().toISOString(),
-                    by: data.approvedBy ?? 'Approver',
-                    dot: 'done',
-                  },
-                ]);
-              }}
-            >
-              Reject
-            </Button>
-            <Button
-              type="primary"
-              onClick={() => {
-                setStatusOverride('approved');
-                setActivityLogs((prev) => [
-                  ...prev,
-                  {
-                    label: 'Approved',
-                    description: 'Request approved',
-                    date: new Date().toISOString(),
-                    by: data.approvedBy ?? 'Approver',
-                    dot: 'done',
-                  },
-                ]);
-              }}
-            >
-              Approve
-            </Button>
-          </Space>
-        </div>
-      )
-     }
+        {
+          access.canSpfApprover && effectiveStatus === 'pending' && (
+            <div style={{ marginBottom: 24, textAlign: 'right' }}>
+              <Space>
+                <Button
+                  danger
+                  onClick={() => {
+                    setStatusOverride('rejected');
+                    setActivityLogs((prev) => [
+                      ...prev,
+                      {
+                        label: 'Rejected',
+                        description: 'Request rejected',
+                        date: new Date().toISOString(),
+                        by: data.approvedBy ?? 'Approver',
+                        dot: 'done',
+                      },
+                    ]);
+                  }}
+                >
+                  Reject
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    setStatusOverride('approved');
+                    setActivityLogs((prev) => [
+                      ...prev,
+                      {
+                        label: 'Approved',
+                        description: 'Request approved',
+                        date: new Date().toISOString(),
+                        by: data.approvedBy ?? 'Approver',
+                        dot: 'done',
+                      },
+                    ]);
+                  }}
+                >
+                  Approve
+                </Button>
+              </Space>
+            </div>
+          )
+        }
         <Descriptions
           column={3}
           size="small"
@@ -956,7 +956,7 @@ export default function RequestedBatchDrawer({
               ),
             };
           })}
-	        />
+        />
 
         <Title level={5} style={{ marginBottom: 8 }}>
           Message

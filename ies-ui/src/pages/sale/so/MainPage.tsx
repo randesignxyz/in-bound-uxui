@@ -184,7 +184,7 @@ export default () => {
                             }
                         } 
                     }))
-                    actionRef.current?.reload(true)
+                    actionRef.current?.reload(true) 
                 }}
                     onStatusChanged={(value) => {
                         setIsSelectAll(value == "AllPending")

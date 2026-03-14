@@ -322,6 +322,7 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
                             <ProTable<DeliveryNoteDetail>
                                 columns={[
                                     { title: 'Del.Doc Num', dataIndex: 'docNum' },
+                                    { title: 'Company', dataIndex: 'company' },
                                     { title: 'Cust. Code', dataIndex: 'cardCode' },
                                     { title: 'Cust. Name', dataIndex: 'cardName' },
                                     { title: 'Shipped To', dataIndex: 'shipToCode' },

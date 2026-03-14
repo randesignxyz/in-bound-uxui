@@ -1999,6 +1999,7 @@ export default () => {
                           ]}
                           width={150}
                           showSearch
+                          allowClear={false}
                         />
                         <ProFormSelect
                           name="delivery_method_id"

@@ -1,6 +1,6 @@
 
 import '@/pages/index.less'
-import { Badge, Button, Card, Flex, Form, Space, Spin, Tag, Typography } from "antd"
+import { Badge, Button, Card, Flex, Form, message, Space, Spin, Tag, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
 import { ExportOutlined, EyeOutlined, FileAddOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, PlusOutlined, SyncOutlined } from "@ant-design/icons"
@@ -29,6 +29,7 @@ export default () => {
     const actionRef = useRef<ActionType>();
     const [form] = Form.useForm();
     const access = useAccess();
+    const [loading, isLoading] = useState(false)
     const [filter, setFilter] = useState<TableViewSearchParams<SoAdvanceSearchParams>>({
         criteria: {
             advanceSearch: {
@@ -70,7 +71,7 @@ export default () => {
     const [isSelectAll, setIsSelectAll] = useState(false);
 
 
-    return <Spin spinning={false}>
+    return <Spin spinning={loading}>
         <PageWrapperV1<SoItemLess, FilterType, {}>
             // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
             addOptionsMode='inline'
@@ -152,8 +153,18 @@ export default () => {
                         type: 'link',
                         disabled: !access.canCreateEditSo,
                         onClick: async () => {
-                            await actions.syncFromSFA()
-                            actionRef.current?.reload(true)
+                            try {
+                                isLoading(true)
+                                await actions.syncFromSFA()
+                                actionRef.current?.reload(true)
+                                message.success("Sync Success");
+                            } catch(error: any) {
+                                message.error(error.message);
+                            } finally {
+                                isLoading(false)
+                            }
+
+
                         }
                     }, {
                         icon: <PlusCircleOutlined />,

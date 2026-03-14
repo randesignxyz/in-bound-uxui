@@ -182,7 +182,7 @@ export default () => {
                                 ...v.criteria?.advanceSearch,
                                 customerType: value
                             }
-                        }
+                        } 
                     }))
                     actionRef.current?.reload(true)
                 }}

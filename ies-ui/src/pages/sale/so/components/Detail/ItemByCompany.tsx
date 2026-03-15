@@ -75,6 +75,15 @@ const ItemByCompany: React.FC<Props> = ({ data }) => {
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 {entries.map(([companyKey, items]) => {
                     const subTotal = items.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+                    const soNumbers = [
+                        ...new Set(
+                            (data?.deliveries ?? [])
+                                .flatMap(d => d.itemList ?? [])
+                                .filter(di => di.company === companyKey)
+                                .map(di => di.soNo)
+                                .filter(Boolean)
+                        )
+                    ].join(', ');
                     return (
                         <Card
                             key={companyKey}
@@ -83,7 +92,7 @@ const ItemByCompany: React.FC<Props> = ({ data }) => {
                             headStyle={{ backgroundColor: '#fafafa', borderBottom: '2px solid #e8e8e8' }}
                             title={
                                 <Space>
-                                    <Typography.Text strong>Company: {companyKey}</Typography.Text>
+                                    <Typography.Text strong>Company: {companyKey} - {soNumbers}</Typography.Text>
                                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                                         ({items.length} {items.length > 1 ? 'Items' : 'Item'})
                                     </Typography.Text>

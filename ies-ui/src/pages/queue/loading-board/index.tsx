@@ -294,7 +294,7 @@ export default () => {
           reportName: 'export-gate-pass',
           data: { id: instanceId }
         })
-      });
+      }); 
     } catch (error: any) {
       message.error(error.message || "Failed to generate report.")
     }

@@ -171,6 +171,12 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         htmlType="button"
         onClick={() => modals.showModal('sap-posting')}
         key="sapPosting"
+        disabled={
+          state.data?.soDetail?.status === 'Posted' ||
+          state.data?.soDetail?.status === 'Closed'||
+          state.data?.soDetail?.status === 'Canceled'
+          
+        }
       >
         <CloudUploadOutlined /> SAP Posting
       </Button>

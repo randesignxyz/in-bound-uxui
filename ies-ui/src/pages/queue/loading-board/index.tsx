@@ -294,7 +294,7 @@ export default () => {
           reportName: 'export-gate-pass',
           data: { id: instanceId }
         })
-      });
+      }); 
     } catch (error: any) {
       message.error(error.message || "Failed to generate report.")
     }
@@ -430,7 +430,7 @@ export default () => {
       { seperator: true, visible: (isLoading || claimed) && instanceId && !isLoaded },
       {
         key: 'start', label: "Start Loading", visible: isLoading && !isRequested && claimed, main: true, type: 'Primary', icon: <PlayCircleOutlined />, onClick: () => {
-
+          console.log('selected',selected)
           selected?.loadingId && onStartLoaingHandler(selected.loadingId, selected.ownedTruckLoading, () => {
             if (from == 'DETAIL') {
               onFetchAllocatedDockDetail(selected?.id)

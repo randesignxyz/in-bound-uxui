@@ -933,6 +933,7 @@ export interface Delivery {
     shippingAddress: ?AddressInfo;
   };
   line_num?: number
+  
 }
 
 export interface DeliveryItem {
@@ -948,6 +949,8 @@ export interface DeliveryItem {
     uom: LookupDataItem;
   };
   remarks?: string
+  soNo?:string
+  company?:string
 }
 
 export interface SoDeliveryDetail {

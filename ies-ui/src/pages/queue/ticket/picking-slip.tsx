@@ -89,6 +89,7 @@ const PickingSlip: React.FC<Props> = ({ data, onSave, ...props }) => {
                 <ProTable<DeliveryNoteListItem>
                     columns={[
                         { title: 'Del.Doc Num', dataIndex: 'docNum' },
+                        { title: 'Company', dataIndex: 'company' },
                         { title: 'Cust. Code', dataIndex: 'cardCode' },
                         { title: 'Cust. Name', dataIndex: 'cardName' },
                         { title: 'Shipped To', dataIndex: 'shipToCode' },

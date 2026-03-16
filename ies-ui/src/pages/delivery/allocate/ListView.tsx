@@ -1241,7 +1241,7 @@ export default () => {
       title: 'Shipping Address',
       dataIndex: 'shippingAddress',
       width: '10%',
-      render: (_, value) => (
+      render: (_, value) => ( 
         <a
           style={{
             whiteSpace: 'nowrap',

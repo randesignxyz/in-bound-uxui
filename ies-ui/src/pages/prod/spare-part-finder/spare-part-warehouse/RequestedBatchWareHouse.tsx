@@ -607,6 +607,13 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
         return d > 0 ? <Text type="warning">{d}</Text> : <Text type="secondary">0</Text>;
       },
     },
+     {
+      title: 'UoM',
+      dataIndex: 'UoM',
+      key: 'UoM',
+      ellipsis: true,
+      width: 'auto'
+    },
     {
       title: 'Select Amount',
       key: 'selectAmount',

@@ -4,7 +4,7 @@ import {
   Input,
   InputNumber,
   Modal,
-  Slider,
+  Select,
   Space,
   Table,
   Typography,
@@ -21,6 +21,7 @@ interface RequestRowItem {
   item: SparePartRequestItem;
   quantity: number;
   purpose: string;
+  Uom: string;
 }
 
 interface RequestItemModalProps {
@@ -40,6 +41,8 @@ const priorityOptions: { label: string; value: PriorityLevel; color: string; bor
   { label: 'High', value: 'high', color: '#fff7e6', borderColor: '#fa8c16' },
   { label: 'Urgent', value: 'urgent', color: '#fff1f0', borderColor: '#f5222d' },
 ];
+
+const TABLE_MIN_WIDTH = 1280;
 
 const RequestItemModal: React.FC<RequestItemModalProps> = ({
   open,
@@ -61,6 +64,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           item,
           quantity: item.stock > 0 ? 1 : 0,
           purpose: '',
+          Uom: 'pcs',
         })),
       );
       setRemark('');
@@ -112,14 +116,14 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   const columns = [
     {
       title: 'No',
-      width: 50,
+      width: 40,
       align: 'center' as const,
       render: (_: unknown, __: RequestRowItem, index: number) => index + 1,
     },
     {
       title: 'Product ID',
       dataIndex: ['item', 'productId'],
-      width: 120,
+      width: 'auto',
       render: (text: string) => (
         <Typography.Link>{text}</Typography.Link>
       ),
@@ -141,45 +145,71 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       title: 'Part Name',
       dataIndex: ['item', 'partName'],
       ellipsis: true,
+      width: 'auto',
     },
     {
       title: 'Type',
       dataIndex: ['item', 'type'],
-      width: 80,
+      width: 'auto',
       align: 'center' as const,
     },
     {
       title: 'Ware House',
       dataIndex: ['item', 'warehouse'],
-      width: 120,
+      width: 'auto',
     },
+
     {
       title: 'BU',
       dataIndex: ['item', 'businessUnit'],
-      width: 60,
+      width: 'auto',
       align: 'center' as const,
     },
+  {
+    title: 'UoM',
+    dataIndex: 'Uom',
+    width: 200,
+    render: (_: unknown, record: RequestRowItem) => (
+      <Select
+        placeholder="Please select"
+        value={record.Uom}
+        onChange={(value) => {
+          setRows((prev) =>
+            prev.map((r) =>
+              r.key === record.key ? { ...r, Uom: value } : r
+            )
+          );
+        }}
+        style={{ width: '100%' , 
+         paddingLeft: 8,
+         paddingRight: 8,
+
+        }}
+      >
+        <Select.Option value="pcs">PCS</Select.Option>
+        <Select.Option value="box">BOX</Select.Option>
+        <Select.Option value="set">SET</Select.Option>
+        <Select.Option value="pack">PACK</Select.Option>
+        <Select.Option value="ctn">CTN</Select.Option>
+        <Select.Option value="l">L</Select.Option>
+        <Select.Option value="kg">KG</Select.Option>
+        <Select.Option value="rol">ROL</Select.Option>
+      </Select>
+    ),
+  },
     {
-      title: 'Quantity to Request',
-      width: 160,
+      title: 'QTY to Request',
+      width: 200,
       render: (_: unknown, record: RequestRowItem) => {
         const max = record.item.stock > 0 ? record.item.stock : 100;
         return (
           <Space size={4}>
-            <Slider
-              min={0}
-              max={max}
-              value={record.quantity}
-              onChange={(val) => handleQuantityChange(record.key, val)}
-              style={{ width: 80 }}
-            />
             <InputNumber
               min={0}
               max={max}
-              size="small"
               value={record.quantity}
               onChange={(val) => handleQuantityChange(record.key, val ?? 0)}
-              style={{ width: 56 }}
+              style={{ width: '100%' }}
             />
           </Space>
         );
@@ -187,18 +217,23 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     },
     {
       title: 'Purpose',
-      width: 200,
+      width: 'auto',
+      height: '100%',
       render: (_: unknown, record: RequestRowItem) => (
-        <Input
+        <Input.TextArea
           placeholder="write your purpose here"
           value={record.purpose}
+          rows={1}
           onChange={(e) => handlePurposeChange(record.key, e.target.value)}
+        style={
+          { height  : 'auto'}
+        }
         />
       ),
     },
     {
       title: '',
-      width: 40,
+      width: 56,
       align: 'center' as const,
       render: (_: unknown, record: RequestRowItem) => (
         <Button
@@ -244,19 +279,30 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       open={open}
       onCancel={onCancel}
       confirmLoading={confirmLoading}
-      width="1100px"
+      width="fit-content"
+      style={{ maxWidth: 'calc(100vw - 48px)' }}
       footer={modalFooter}
       maskClosable={false}
       centered
       destroyOnClose
       styles={{
         body: {
-          backgroundColor: '#fafafa',
-          overflow: 'hidden',
+          background: '#fafafa',
+          paddingTop: 16,
         },
       }}
     >
-      <div style={{ maxHeight: '45vh', overflowY: 'auto', marginBottom: 16 }}>
+      <div
+        style={{
+          maxHeight: '45vh',
+          overflowX: 'auto',
+          overflowY: 'auto',
+          marginBottom: 16,
+          border: '1px solid #f0f0f0',
+          borderRadius: 8,
+          background: '#fff',
+        }}
+      >
         <Table<RequestRowItem>
           dataSource={rows}
           columns={columns}
@@ -264,7 +310,8 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           size="small"
           bordered
           pagination={false}
-          scroll={{ x: 1000 }}
+          scroll={{ x: 'max-content' }}
+          style={{ minWidth: TABLE_MIN_WIDTH }}
         />
       </div>
 

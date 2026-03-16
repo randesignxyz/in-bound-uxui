@@ -538,6 +538,13 @@ export default function RequestedBatchDrawer({
       dataIndex: 'itemName',
       ellipsis: true,
     },
+    {  
+       title: 'UoM',
+        dataIndex: 'UoM',
+        key: 'UoM',
+        ellipsis: true,
+        width: 'auto',
+    },
     {
       title: 'Qty Requested',
       dataIndex: 'quantityToReturn',

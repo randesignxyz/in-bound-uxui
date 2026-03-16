@@ -12,7 +12,7 @@ import { formatDate } from "@/pages/utils"
 import Form from "@/pages/process-flow/form"
 import { RegisterCustomerRequestFormNames } from "./process-flow"
 
-export default()=>{
+export default () => {
     const services = RegisterCustomerServiceAPI()
     const [filter, setFilter] = useState<TableViewSearchParams<RegisterCuistomerInfoAdvanceSearchParams>>({
         criteria: { advanceSearch: { status: 'ALL' } }
@@ -21,53 +21,54 @@ export default()=>{
         refetchOnWindowFocus: false
     })
 
-    return(<Spin spinning={isLoading}>
+    return (<Spin spinning={isLoading}>
         <PageWrapper<RegisterCustomerListItem, RegisterCuistomerInfoAdvanceSearchParams, {}>
             tabRender={item => [
                 {
                     action: "add",
                     tabIcon: <FileOutlined />,
                     tabLabel: 'New Register',
-                    panel: (props) =>  <DataEntryView type="CREATE"
-                                            onCloseTab={() => {
-                                                props?.onCloseTab?.()
-                                                refetch()
-                                            }} 
-                                            // openInTab onBack={() => { }} type="CREATE" 
-                                            />,
-                }, {
-                    action: 'view',
-                    value: item?.formNo ||item?.customerCode || "n/a",
-                    tabLabel: item?.formNo ||item?.customerCode || 'Draft',
-                    panel: (props) => ['PENDING','DRAFT'].some(it=> it==item?.status) || !item?.formNo ? <DataEntryView id={item?.id} readOnly={item?.status==='CANCELED'} type="EDIT" onCloseTab={() => {
+                    panel: (props) => <DataEntryView type="CREATE"
+                        onCloseTab={() => {
                             props?.onCloseTab?.()
                             refetch()
-                        }} />: <Form openInTab formKey={RegisterCustomerRequestFormNames.processDefKey} id={item?.processInstId} />,
+                        }}
+                    // openInTab onBack={() => { }} type="CREATE" 
+                    />,
+                }, {
+                    action: 'view',
+                    value: item?.formNo || item?.customerCode || "n/a",
+                    tabLabel: item?.formNo || item?.customerCode || 'Draft',
+                    panel: (props) => ['PENDING', 'DRAFT'].some(it => it == item?.status) || !item?.formNo ? <DataEntryView id={item?.id} readOnly={item?.status === 'CANCELED'} type="EDIT" onCloseTab={() => {
+                        props?.onCloseTab?.()
+                        refetch()
+                    }} /> : <Form openInTab formKey={RegisterCustomerRequestFormNames.processDefKey} id={item?.processInstId} />,
                 }
-            ]} 
+            ]}
             listView={{
                 // actionButtons: ,
                 type: 'Table',
                 title: "Register Customer List",
                 statuses: [
-                    { option: { label: 'All', value: 'ALL', default: true }, },   
-                    { option: { label: 'Draft', value: 'DRAFT' }, },                
+                    { option: { label: 'All', value: 'ALL', default: true }, },
+                    { option: { label: 'Draft', value: 'DRAFT' }, },
                     { option: { label: 'Pending', value: 'PENDING' }, },
                     {
                         option: { label: 'Submitted', value: 'SUBMITTED', }, subOptions: [
                             { label: 'All', value: 'ALL', default: true },
-                            { label: 'Pending', value: 'PENDING' }, 
-                            { label: 'Approved', value: 'APPROVED', subOptions:[  
+                            { label: 'Pending', value: 'PENDING' },
+                            {
+                                label: 'Approved', value: 'APPROVED', subOptions: [
                                     { label: 'All', value: 'ALL', default: true },
                                     { label: 'Posted', value: 'POSTED' },
                                     { label: 'Failed', value: 'FAILED' }
-                                ] 
+                                ]
                             },
                             { label: 'Rejected', value: 'REJECTED' },
                         ]
                     },
-                    { option: { label: 'Canceled', value: 'CANCELED' },}                  
-                
+                    { option: { label: 'Canceled', value: 'CANCELED' }, }
+
                 ],
                 onRefresh: refetch,
                 onFilter: (params, page, sort) => {
@@ -79,7 +80,7 @@ export default()=>{
                             advanceSearch: {
                                 ...v.criteria?.advanceSearch,
                                 ...params,
-                                status: params?.subStatus==='REJECTED'? 'CANCELED':params?.status || 'ALL',
+                                status: params?.subStatus === 'REJECTED' ? 'CANCELED' : params?.status || 'ALL',
                                 processStatus: params?.subStatus,
                                 postedStatus: params?.subStatus2
                             },
@@ -93,7 +94,7 @@ export default()=>{
                     pagination: { total: data?.total },
                     loading: false,
                     scroll: { x: 'max-content' },
-                    bordered: true, 
+                    bordered: true,
                     // actionButtonsColumnRender: (item) => ([
                     //     {
                     //         tooltip: 'View data in new browser tab', type: 'link',
@@ -110,11 +111,11 @@ export default()=>{
                     // ]),
                     columns: [
                         {
-                            title: 'Form No',dataIndex: 'formNo', sorter: 'formNo',
+                            title: 'Form No', dataIndex: 'formNo', sorter: 'formNo',
                             width: 100,
                             actionProps: (item) => ({ type: 'view', label: item.formNo || "n/a" })
                         }, {
-                            title: 'Customer No', 
+                            title: 'Customer No',
                             width: 130,
                             sorter: 'customerCode',
                             render: (_, r) => r.customerCode,
@@ -144,10 +145,10 @@ export default()=>{
                         {
                             title: 'Work Flow',
                             children: [{
-                                 title: 'Status',
+                                title: 'Status',
                                 dataIndex: 'processStatus',
                                 width: 100,
-                                render: (_, r) => r.status && <Status size="small" text={r.processStatus||"NA"} />,
+                                render: (_, r) => r.status && <Status size="small" text={r.processStatus || "NA"} />,
                             }]
                         },
                         {
@@ -172,14 +173,15 @@ export default()=>{
 
                                     dataIndex: 'sapStatus',
                                     hideInTable: !['SUBMITTED', 'ALL'].some((it) => it == filter.criteria?.advanceSearch?.status),
-                                    render: (_, r) => r.sapStatus && <Status size="small" text={r.sapStatus||"NA"} />,
+                                    render: (_, r) => r.sapStatus && <Status size="small" text={r.sapStatus || "NA"} />,
                                 },
                             ],
                         },
                         {
                             width: 5,
                             render: (_, r) => (<>
-                                {r.sapStatus == 'FAILED' && r.processStatus == 'APPROVED' && <Button title='Post to SAP' danger type="link" 
+                                {r.sapStatus == 'FAILED' && r.processStatus == 'APPROVED' && <Button title='Post to SAP' danger type="link"
+
                                     onClick={() => {
                                         Modal.confirm({
                                             title: 'Post to SAP',
@@ -196,8 +198,8 @@ export default()=>{
                                                 }
                                             },
                                         });
-                                    }} 
-                                    icon={<UploadOutlined />} 
+                                    }}
+                                    icon={<UploadOutlined />}
                                 />}
                             </>)
                         }

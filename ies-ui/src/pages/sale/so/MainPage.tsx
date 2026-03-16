@@ -320,7 +320,6 @@ export default () => {
                         {
                             title: "No",
                             width: 40,
-
                             render: (r, s, index) => (
                                 data?.page * data?.pageSize + index) + 1
                         },
@@ -387,7 +386,6 @@ export default () => {
                             dataIndex: "orderDate",
                             width: 110,
                             render: (_, data) => moment(data.orderedDate).format('DD-MMM-YYYY'),
-
                         },
                         {
                             // title: "Order Time",

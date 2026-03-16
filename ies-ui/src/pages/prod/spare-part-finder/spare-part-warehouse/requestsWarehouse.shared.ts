@@ -56,6 +56,8 @@ export const statusPillMap: Record<string, { background: string; color: string }
   'In Progress': { background: '#e6f4ff', color: '#1677ff' },
   Approved: { background: '#e6f4ff', color: '#1677ff' },
   Rejected: { background: '#fff1f0', color: '#f5222d' },
+  'Completed Return': { background: '#f6ffed', color: '#52c41a' },
+  'Partially Returned': { background: '#fff7e6', color: '#fa8c16' },
 };
 
 export const getStatusPill = (status: string) =>

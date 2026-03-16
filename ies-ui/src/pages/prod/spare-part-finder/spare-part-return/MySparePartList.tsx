@@ -199,6 +199,8 @@ export default function MySparePartList() {
               ),
             },
             { key: 'spare_part_name', title: 'Name', dataIndex: 'spare_part_name' },
+            {key: 'quantity', title: 'Quantity', dataIndex: 'quantity' },
+            {key: 'UoM', title: 'UoM', dataIndex: 'UoM' },
             { key: 'spare_part_type', title: 'Type', dataIndex: 'spare_part_type' },
             { key: 'category', title: 'Category', dataIndex: 'category' },
             { key: 'Warehouse', title: 'Warehouse', dataIndex: 'receiving_from_warehouse' },

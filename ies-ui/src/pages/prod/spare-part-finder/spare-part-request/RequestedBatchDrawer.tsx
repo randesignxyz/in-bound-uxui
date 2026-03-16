@@ -18,6 +18,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from './data';
 import SpfDetails from './SpfDetails';
 import { useAccess } from '@umijs/max';
+import SparePartImage from './SparePartImage';
 
 const { Title, Text } = Typography;
 
@@ -508,23 +509,13 @@ export default function RequestedBatchDrawer({
       title: 'Image',
       dataIndex: 'image',
       key: 'image',
-      width: 72,
-      render: (src?: string) => (
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            overflow: 'hidden',
-            backgroundColor: '#f0f0f0',
-          }}
-        >
-          <img
-            src={src || 'https://via.placeholder.com/40?text=No'}
-            alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        </div>
+      render: (_, record) => (
+        <SparePartImage
+          imageId={record.imageId}
+          src={record.image}
+          alt={record.itemName || record.productId}
+          size={48}
+        />
       ),
     },
     {

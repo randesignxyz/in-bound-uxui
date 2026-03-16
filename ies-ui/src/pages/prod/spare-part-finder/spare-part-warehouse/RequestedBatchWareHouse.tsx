@@ -571,11 +571,11 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
   };
 
   const columns: ColumnsType<RequestDetailLineItem> = [
-    { title: 'No', dataIndex: 'no', key: 'no', width: 56 },
+    { title: 'No', dataIndex: 'no', key: 'no', width: 40 },
     {
       title: 'Product ID',
       dataIndex: 'productId',
-      width: 160,
+      width: 'auto',
       render: (_: unknown, record) => (
         <Typography.Link
           onClick={(event) => {
@@ -589,18 +589,18 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
       ),
     },
     { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
-    { title: 'Qty Requested', dataIndex: 'quantityToReturn', width: 120, align: 'right' as const },
+    { title: 'Qty Requested', dataIndex: 'quantityToReturn', width: 'auto', align: 'right' as const },
     {
       title: 'Qty Sent',
       key: 'sent',
-      width: 90,
+      width: 'auto',
       align: 'right' as const,
       render: (_: unknown, record) => clampInt(record.warehouseSentQuantity),
     },
     {
       title: 'Draft',
       key: 'draft',
-      width: 90,
+      width: 'auto',
       align: 'right' as const,
       render: (_: unknown, record) => {
         const d = clampInt(draftByProductId[record.productId]);
@@ -610,7 +610,7 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
     {
       title: 'Select Amount',
       key: 'selectAmount',
-      width: 140,
+      width: 'auto',
       render: (_: unknown, record) => {
         const requested = clampInt(record.quantityToReturn);
         const sent = clampInt(record.warehouseSentQuantity);

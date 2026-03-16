@@ -90,13 +90,13 @@ export default function DrawerBatchReturnItems({
       ellipsis: true,
     },
     {
-      title: 'Quantity to Return',
+      title: 'QTY to Return',
       dataIndex: 'quantity_to_return',
       key: 'quantity_to_return',
       align: 'right',
     },
     {
-      title: 'Used Quantity',
+      title: 'QTY Used',
       dataIndex: 'used_quantity',
       key: 'used_quantity',
       align: 'right',

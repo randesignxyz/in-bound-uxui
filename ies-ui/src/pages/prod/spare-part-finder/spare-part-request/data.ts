@@ -59,3 +59,8 @@ export interface MyRequestItem {
   remark: string;
   type?: SparePartType;
 }
+
+// =======================================
+//                   Return
+// =======================================
+export type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'completed return' | 'partial return'

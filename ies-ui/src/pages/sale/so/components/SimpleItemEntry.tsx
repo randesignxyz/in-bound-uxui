@@ -66,29 +66,29 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, docum
 
     const dataForm = data.soLineItem
       ? {
-          id: data.soLineItem.itemId,
-          itemName: [data.soLineItem.itemCode, data.soLineItem.description].join('-'),
-          uomId: data.soLineItem.uomId,
-          qty: data.soLineItem.qty,
-          price: data.soLineItem.price,
-          type: data.soLineItem.type,
-          amount: data.soLineItem.amount,
-          remarks: data.soLineItem.remarks,
-          categoryId: data.soLineItem.categoryId,
-          budgetCode: data.soLineItem.budgetCode,
-          discountPercent: data.soLineItem.discountPercent,
-        }
+        id: data.soLineItem.itemId,
+        itemName: [data.soLineItem.itemCode, data.soLineItem.description].join('-'),
+        uomId: data.soLineItem.uomId,
+        qty: data.soLineItem.qty,
+        price: data.soLineItem.price,
+        type: data.soLineItem.type,
+        amount: data.soLineItem.amount,
+        remarks: data.soLineItem.remarks,
+        categoryId: data.soLineItem.categoryId,
+        budgetCode: data.soLineItem.budgetCode,
+        discountPercent: data.soLineItem.discountPercent,
+      }
       : {
-          id: data.productItem?.id,
-          uomId: data.productItem?.uomId,
-          qty: 1,
-          price: data.productItem?.priceAfterDiscount || data.productItem?.price,
-          type: data.defaultSaleType?.code,
-          itemName: [data.productItem?.code, data.productItem?.name].join('-'),
-          amount: data.productItem?.priceAfterDiscount || data.productItem?.price,
-          categoryId: data.productItem?.itemCategoryId,
-          discountPercent: data.productItem?.discountPercent,
-        };
+        id: data.productItem?.id,
+        uomId: data.productItem?.uomId,
+        qty: 1,
+        price: data.productItem?.priceAfterDiscount || data.productItem?.price,
+        type: data.defaultSaleType?.code,
+        itemName: [data.productItem?.code, data.productItem?.name].join('-'),
+        amount: data.productItem?.priceAfterDiscount || data.productItem?.price,
+        categoryId: data.productItem?.itemCategoryId,
+        discountPercent: data.productItem?.discountPercent,
+      };
     form.setFieldsValue(dataForm);
   };
   const onValuesChange = (changedValues: any, values: SoLineItemEntry) => {
@@ -213,7 +213,8 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, docum
               name="type"
               allowClear={false}
               label="Type"
-              options={data.saleTypes?.filter(it => it.groupType == documentType)?.sort((a, b) => a.sequence - b.sequence)?.map(it => ({ label: it.code, value: it.code }))}
+              showSearch
+              options={data.saleTypes?.filter(it => it.groupType == documentType)?.sort((a, b) => (a.sequence ?? 999) - (b.sequence ?? 999))?.map(it => ({ label: it.code, value: it.code }))}
             // options={data.saleTypes?.filter(it => it.sequence !== null)?.slice()?.sort((a, b) => {
             //   // If both null → keep original order
             //   if (a.sequence == null && b.sequence == null) return 0;

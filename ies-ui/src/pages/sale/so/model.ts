@@ -487,8 +487,8 @@ export const Model = () => {
   const syncFromSFA = async () => {
     return await saleServices.syncFromSFA({});
   };
-  const syncSOFromSAP = async (docNum: string, data: any) => {
-    return await saleServices.syncSOFromSAP({ docNum, data });
+  const syncSOFromSAP = async (items: any, data: any) => {
+    return await saleServices.syncSOFromSAP({ items, data });
   };
 
   const cancelSo = async (soId: number, remarks: string) => {

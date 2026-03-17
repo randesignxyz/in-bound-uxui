@@ -8,6 +8,7 @@ import PerformanceReport from './appraisal-request/components/PerformanceReport'
 import jobImage from '../../assets/jobsdes.png';
 import ipoImage from '../../assets/ipo.png'
 import { Divider } from 'antd/lib';
+import IOSExport from "./ios/reports/IOSExport";
 export const HrmPaths = {
     employee: '/hrm/employee',
     staffRequisition: '/hrm/staff-requisistion',
@@ -101,6 +102,15 @@ export default () => {
             visible: access.canAccessHRMIOSRequest,
             link: `${HrmPaths.ios}/list`,
             icon: ipoImage,
+            menu: {
+                items: [
+                    { label: <IOSExport trigger={<a >Export</a>} />, 
+                        key: 'exportContract', 
+                        icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+                        disabled: !access.can('HRM_IOS_REQUEST_LIST','MENU_IOS_EXPORT_REPORT')
+                    }
+                ]
+            }
         },
         {
             id: 'ios',

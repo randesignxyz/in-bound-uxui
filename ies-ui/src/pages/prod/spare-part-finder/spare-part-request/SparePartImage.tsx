@@ -1,6 +1,6 @@
 import { FileImageOutlined } from '@ant-design/icons';
 import { Avatar } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getUploadFileObjectUrlV2 } from '@/services/apiGateway';
 
 type Props = {
@@ -12,17 +12,29 @@ type Props = {
 
 export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) {
   const [imageUrl, setImageUrl] = useState<string | undefined>(src);
+  const objectUrlRef = useRef<string | undefined>();
 
-  useEffect(() => {
-    setImageUrl(src);
-  }, [src]);
+  const revokeObjectUrl = () => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = undefined;
+    }
+  };
 
   useEffect(() => {
     let active = true;
-    let objectUrl: string | undefined;
+
+    revokeObjectUrl();
+    setImageUrl(src);
 
     if (!imageId) {
-      return () => {};
+      return () => {
+        active = false;
+      };
+    }
+
+    if (!src) {
+      setImageUrl(undefined);
     }
 
     getUploadFileObjectUrlV2()(imageId)
@@ -31,16 +43,18 @@ export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) 
           URL.revokeObjectURL(url);
           return;
         }
-        objectUrl = url;
+        objectUrlRef.current = url;
         setImageUrl(url);
       })
-      .catch(() => setImageUrl(src));
+      .catch(() => {
+        if (active) {
+          setImageUrl(src);
+        }
+      });
 
     return () => {
       active = false;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
+      revokeObjectUrl();
     };
   }, [imageId, src]);
 

@@ -1,5 +1,5 @@
-import { CloseOutlined } from '@ant-design/icons';
 import {
+  Button,
   Descriptions,
   Drawer,
   Space,
@@ -12,6 +12,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import type { RequestDetailActivity, RequestDetailData, RequestDetailLineItem } from './data';
 import { MOCK_REQUEST_DETAIL } from './data';
+import { useAccess } from '@umijs/max';
 
 const { Title, Text } = Typography;
 
@@ -45,7 +46,7 @@ export default function DrawerBatchReturnItems({
 }: DrawerBatchReturnItemsProps) {
   const data = propData ?? MOCK_REQUEST_DETAIL;
   const currentStep = statusToCurrentStep(data.status);
-
+  const access = useAccess();
   const columns: ColumnsType<RequestDetailLineItem> = [
     { title: 'No', dataIndex: 'no', key: 'no', width: 56 },
     {
@@ -53,7 +54,7 @@ export default function DrawerBatchReturnItems({
       dataIndex: 'image',
       key: 'image',
       width: 72,
-      render: (src: string, record) => (
+      render: (src: string) => (
         <div
           style={{
             width: 40,
@@ -125,14 +126,41 @@ export default function DrawerBatchReturnItems({
           </Button> */}
         </div>
       }
+
       
       width="50%"
       placement="right"
       onClose={onClose}
       open={open}
-      bodyStyle={{ padding: 16, backgroundColor: '#fafafa' }}
-      headerStyle={{ borderBottom: '1px solid #f0f0f0' }}
+      styles={{
+        body: { padding: 16, backgroundColor: '#fafafa' },
+        header: { borderBottom: '1px solid #f0f0f0' },
+      }}
     >
+           {
+          access.canSpfApprover && data.status === 'Pending' && (
+            <div style={{ marginBottom: 24, textAlign: 'right' }}>
+              <Space>
+                <Button
+                  danger
+                  onClick={() => {
+                    console.log("helo")
+                  }}
+                >
+                  Reject
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    
+                  }}
+                >
+                  Approve
+                </Button>
+              </Space>
+            </div>
+          )
+        }
       <Descriptions
         column={3}
         size="small"

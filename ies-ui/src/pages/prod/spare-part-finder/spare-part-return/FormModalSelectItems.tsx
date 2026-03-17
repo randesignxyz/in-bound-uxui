@@ -1,10 +1,8 @@
 import FormModalComp from "@/components/FormModal";
 import { EditableProTable, ProColumns } from "@ant-design/pro-components";
 import { useState, useEffect } from "react";
-import { Avatar, Select } from "antd";
+import { Avatar } from "antd";
 import TextArea from "antd/es/input/TextArea";
-
-const { Option } = Select;
 
 interface FormModalProps {
   open: boolean;
@@ -21,14 +19,7 @@ export default function FormModalSelectItems({
 }: FormModalProps) {
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [dataSource, setDataSource] = useState<any[]>([]);
-
-  // Handle UOM change
-  const handleUomChange = (value: string, record: any) => {
-    const newData = dataSource.map((item) =>
-      item.id === record.id ? { ...item, UoM: value } : item
-    );
-    setDataSource(newData);
-  };
+  const [remark, setRemark] = useState<string>("");
 
   // Initialize data
   useEffect(() => {
@@ -91,38 +82,52 @@ export default function FormModalSelectItems({
       title: "QTY to Return",
       dataIndex: "return_quantity",
       width: 120,
+      valueType: "digit",
     },
     {
       title: "Used QTY",
       dataIndex: "used_quantity",
       width: 120,
+      valueType: "digit",
     },
-      {
-    title: 'UoM',
-    dataIndex: 'UoM',
-    width: 120,
-    valueType: 'select',
-    valueEnum: {
-      pcs: { text: 'PCS' },
-      box: { text: 'BOX' },
-      set: { text: 'SET' },
-      pack: { text: 'PACK' },
-      ctn: { text: 'CTN' },
-      l: { text: 'L' },
-      kg: { text: 'KG' },
-      rol: { text: 'ROL' },
-    },
-  },
     {
-      title: "Remark",
-      dataIndex: "reason",
-      valueType: "textarea",
+      title: "UoM",
+      dataIndex: "UoM",
+      width: 120,
+      valueType: "select",
+      valueEnum: {
+        pcs: { text: "PCS" },
+        box: { text: "BOX" },
+        set: { text: "SET" },
+        pack: { text: "PACK" },
+        ctn: { text: "CTN" },
+        l: { text: "L" },
+        kg: { text: "KG" },
+        rol: { text: "ROL" },
+      },
     },
+  {
+  title: "Remark",
+  dataIndex: "reason",
+  width: 200,
+  render: (_, record) => {
+    return record.reason;
+  },
+  renderFormItem: (_, { record }) => {
+    return (
+      <TextArea
+        rows={1}
+        defaultValue={record?.reason}
+        placeholder="Enter reason for return"
+      />
+    );
+  },
+},
     {
       title: "Action",
       valueType: "option",
       width: 160,
-      render: (text, record, _, action) => [
+      render: (_, record, __, action) => [
         <a key="edit" onClick={() => action?.startEditable?.(record.id)}>
           Edit
         </a>,
@@ -165,7 +170,8 @@ export default function FormModalSelectItems({
         editable={{
           type: "multiple",
           editableKeys,
-          actionRender: (row, config, defaultDoms) => [
+          onChange: setEditableRowKeys,
+          actionRender: (row, _, defaultDoms) => [
             defaultDoms.save,
             <a
               key="delete"
@@ -187,15 +193,19 @@ export default function FormModalSelectItems({
               )
             );
           },
-          onValuesChange: (record, recordList) => {
+          onValuesChange: (_, recordList) => {
             setDataSource([...recordList]);
           },
-          onChange: setEditableRowKeys,
         }}
       />
 
       <label>Remark (optional)</label>
-      <TextArea rows={4} maxLength={200} />
+      <TextArea
+        rows={4}
+        maxLength={200}
+        value={remark}
+        onChange={(e) => setRemark(e.target.value)}
+      />
     </FormModalComp>
   );
 }

@@ -112,7 +112,7 @@ export default function RequestsListWarehouse({ requests }: Props) {
             marginBottom: 12,
           }}
         >
-          <Typography.Text
+          {/* <Typography.Text
             style={{ color: viewMode === 'summary' ? '#ad8b00' : '#8c8c8c', cursor: 'pointer' }}
             onClick={() => setViewMode('summary')}
           >
@@ -123,7 +123,7 @@ export default function RequestsListWarehouse({ requests }: Props) {
             onClick={() => setViewMode('itemized')}
           >
             Itemized View
-          </Typography.Text>
+          </Typography.Text> */}
           <Button type="text" icon={<EllipsisOutlined />} />
         </div>
         <ProTable<any>

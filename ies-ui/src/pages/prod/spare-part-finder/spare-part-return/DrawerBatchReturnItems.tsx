@@ -89,6 +89,12 @@ export default function DrawerBatchReturnItems({
       key: 'item_name',
       ellipsis: true,
     },
+     {
+      title: 'UoM',
+      dataIndex: 'uom',
+      key: 'uom',
+      ellipsis: true,
+    },
     {
       title: 'QTY to Return',
       dataIndex: 'quantity_to_return',

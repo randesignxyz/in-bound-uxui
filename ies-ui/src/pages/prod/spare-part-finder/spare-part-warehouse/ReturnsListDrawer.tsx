@@ -3,8 +3,6 @@ import { ProTable } from "@ant-design/pro-components";
 import { Button, Descriptions, Drawer, InputNumber, Space, Steps, Tag, Timeline, Typography } from "antd";
 import { useMemo, useState } from "react";
 import SparePartImage from "../spare-part-request/SparePartImage";
-import { render } from "@testing-library/react";
-// Removed unused imports
 
 const { Title } = Typography;
 
@@ -149,7 +147,6 @@ interface ReturnsListDrawerProps {
   open: boolean;
   onClose: () => void;
   data: ReturnData | null;
-  onRefresh?: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -158,7 +155,6 @@ export default function ReturnsListDrawer({
   open,
   onClose,
   data,
-  onRefresh,
 }: ReturnsListDrawerProps) {
   const access = useAccess();
   const [statusOverride, setStatusOverride] = useState<ReturnStatus | null>(null);
@@ -170,6 +166,16 @@ export default function ReturnsListDrawer({
   }, [statusOverride, data?.status]);
 
   const currentStep = STATUS_STEP_MAP[effectiveStatus];
+
+  const handleSave = () => {
+    // TODO: Implement save logic
+    console.log('Save clicked');
+  };
+
+  const handleSaveAndPickUp = () => {
+    // TODO: Implement save and pick up logic
+    console.log('Save and Pick Up clicked');
+  };
 
   const columnsReturn = [
     {
@@ -300,6 +306,23 @@ export default function ReturnsListDrawer({
       open={open}
       onClose={onClose}
       styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
+       footer={
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Space>
+                    <Button
+                      onClick={handleSave}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      type="primary"
+                      onClick={handleSaveAndPickUp}
+                    >
+                      Save
+                    </Button>
+                  </Space>
+                </div>
+              }
     >
       {/* ── Approver Action Buttons (only when status = return / pending) ── */}
       {access.canSpfApprover && effectiveStatus === 'pending' && (

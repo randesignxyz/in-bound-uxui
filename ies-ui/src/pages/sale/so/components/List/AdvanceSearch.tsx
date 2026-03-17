@@ -96,6 +96,12 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
         />
         <ProFormDateRangePicker label="Posted Start - Posted End" name="postedDate" />
         <ProFormCheckbox name="hasAttachment">Has Attachment</ProFormCheckbox>
+        <ProFormSelect
+          label="Document Type"
+          name="target"
+          allowClear
+          options={[{ value: "PO", label: "PO" }, { value: "GO", label: "GO" }]}
+        />
         <ProFormDependency key={'hasAttachment'} name={['hasAttachment']}>
           {({ hasAttachment }) => {
             return (

@@ -511,7 +511,7 @@ export default function PageWrapper<
             const existingCount = v.filter((it) => (it.key as string).startsWith(actionPrefix)).length;
 
             if (existingCount > 0) {
-                finalLabel = `${finalLabel} ${existingCount + 1}`;
+                finalLabel = `${finalLabel} (${existingCount + 1})`;
             }
 
             return [

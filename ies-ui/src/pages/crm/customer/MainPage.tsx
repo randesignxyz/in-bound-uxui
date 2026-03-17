@@ -49,8 +49,29 @@ export default ({ getMenuItems }: CustomerActionController) => {
 
 
     const { state, ops, modals } = model();
+    const [syncLoading, setSyncLoading] = useState(false);
 
+    const onSync = async () => {
+        if (!access.can("CRM_CUSTOMER", "SYNC")) {
+            message.warning("Unauthorized");
+            return;
+        }
 
+        try {
+            setSyncLoading(true);
+
+            await CustomerServices
+                .syncExecStoreProcedureCustomer()(requestAction);
+
+            actionRef.current?.reload?.();
+            message.success("Success!");
+
+        } catch (err) {
+            message.error("Something went wrong!");
+        } finally {
+            setSyncLoading(false);
+        }
+    };
 
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
@@ -110,7 +131,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                             title: 'Customer #',
                             sorter: 'customerCode',
                             width: 120,
-                            dataIndex:"code",
+                            dataIndex: "code",
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.code || '',
@@ -158,6 +179,13 @@ export default ({ getMenuItems }: CustomerActionController) => {
                             onClick={() => setContentState("MAP")}
 
                         >Maps</Button>,
+                        <Button
+                            icon={<SyncOutlined />}
+                            type="link"
+                            loading={syncLoading}
+                            disabled={syncLoading}
+                            onClick={onSync}>Sync</Button>,
+
                         <ImportFileButton<ImportDataItem>
                             importedKey="INDIRECT_CUSTOMER"
                             onDataResponse={data => {
@@ -171,6 +199,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                                 }
                             }}
                         />,
+
                     ] : []
                 ,
                 actions: [
@@ -185,34 +214,10 @@ export default ({ getMenuItems }: CustomerActionController) => {
                     },
 
                     {
-                        key: "SYNC",
-                        label: "Sync",
-                        icon: <SyncOutlined />,
-                        onClick: () => {
-
-                            if (access.can("CRM_CUSTOMER", "SYNC")) {
-                                try {
-                                    CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(() => {
-                                        actionRef.current?.reload?.();
-                                        message.success("Success!")
-                                    }).catch((err) => {
-                                        message.error("Something went wrong!")
-                                    });
-                                }
-                                catch (e) {
-                                }
-                            }
-                            else {
-                                message.warning("Unauthorize")
-                            }
-                        }
-                    },
-
-                    { 
-                        key: 'TRANSFER', 
-                        label: 'Transfer SE', 
-                        onClick: () => access.can("CRM_CUSTOMER", "TRANSFER") ?modals.showModal('transfer-customers'): message.warning("Unauthorize"), 
-                        icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> 
+                        key: 'TRANSFER',
+                        label: 'Transfer SE',
+                        onClick: () => access.can("CRM_CUSTOMER", "TRANSFER") ? modals.showModal('transfer-customers') : message.warning("Unauthorize"),
+                        icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} />
                     },
 
                 ],

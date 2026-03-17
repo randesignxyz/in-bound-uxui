@@ -19,7 +19,12 @@ const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
   const firstDeliveryDate = firstDelivery ? formatDateTime(firstDelivery.deliveryDate) : null;
 
   const displayItems: (DescriptionDisplayDataItem | undefined)[] = [
-    { label: 'So #', value: soDetail?.soNo },
+    // { label: 'SO OFL', value: soDetail?.soNo },
+    { label: 'SO OFL', value: soDetail?.logSync?.find(it => it.system == "OFL")?.soNo },
+    {
+      label: 'SO OMT', value: soDetail?.logSync?.find(it => it.system == "OMT")?.soNo,
+    },
+
     { label: 'PO Created Date', value: formatDateTime(soDetail?.orderedDate) },
     {
       label: 'Customer',
@@ -52,6 +57,7 @@ const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
     { label: 'Last Modifiedd Date', value: formatDateTime(soDetail?.lastModifiedDate) },
     { label: 'Remarks', value: soDetail?.remarks },
     { label: 'Distributor', value: soDetail?.distributor?.name },
+    { label: 'Document Type', value: soDetail?.target ?? "OP" },
   ];
 
   return (

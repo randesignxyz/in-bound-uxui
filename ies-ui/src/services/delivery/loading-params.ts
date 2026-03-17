@@ -110,7 +110,8 @@ export const LoadingParams = {
     driverId?: number,
     licensePlate?: string,
     modified?: boolean,
-    ownedTruckLoading?: boolean
+    ownedTruckLoading?: boolean,
+     companies?: Record<number, string>
   ): ServiceApiType<{
     id: number;
     docDate: Moment;
@@ -123,6 +124,7 @@ export const LoadingParams = {
     licensePlate?: string;
     modified?: boolean;
     ownedTruckLoading?: boolean;
+    companies?: Record<number, string>
   }> => ({
     type: 'EXEC',
     endpoint: 'DELIVERY',
@@ -137,7 +139,8 @@ export const LoadingParams = {
       remarks: remarks,
       driverId: driverId,
       licensePlate: licensePlate, modified: modified,
-      ownedTruckLoading: ownedTruckLoading
+      ownedTruckLoading: ownedTruckLoading,
+      companies:companies
     },
   }),
 

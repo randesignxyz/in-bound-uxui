@@ -837,6 +837,7 @@ export interface SoDetail {
   };
   items?: SoItemDetail[];
   deliveries?: Delivery[];
+  target?: string
   distributor?: {
     id: number;
     name: string;
@@ -932,6 +933,7 @@ export interface Delivery {
     shippingAddress: ?AddressInfo;
   };
   line_num?: number
+  
 }
 
 export interface DeliveryItem {
@@ -947,6 +949,8 @@ export interface DeliveryItem {
     uom: LookupDataItem;
   };
   remarks?: string
+  soNo?:string
+  company?:string
 }
 
 export interface SoDeliveryDetail {

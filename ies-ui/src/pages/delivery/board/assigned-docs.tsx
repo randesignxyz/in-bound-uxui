@@ -139,6 +139,11 @@ const AssignedDocModal: React.FC<Props> = ({
       message.error("No dn found to assign")
       return
     }
+    const companyMap =
+      assigningData?.deliveryNotes?.reduce((acc: Record<number, string>, it) => {
+        acc[it.docEntry] = it.company ?? ''
+        return acc
+      }, {}) || {}
     Modal.confirm({
       title: 'Assign delivery notes and invoices',
       content: 'Are you sure?',
@@ -147,6 +152,7 @@ const AssignedDocModal: React.FC<Props> = ({
           await services.assignDocs({
             deliveryId: itemDetail?.delivery?.id || 0,
             deliveryDocEntry: dnList || [],
+            companies: companyMap,
             collectedInvoices: invoices.map((it) => ({
               docEntry: it.docEntry,
               collected: it.collected || false,
@@ -154,6 +160,7 @@ const AssignedDocModal: React.FC<Props> = ({
               remarks: it.remarks,
             })),
           });
+          console.log('assigningData', companyMap)
           if (from === 'DETAIL') {
             onRefreshDetailData()
           }
@@ -453,6 +460,7 @@ const AssignedDocModal: React.FC<Props> = ({
                 rowKey="docEntry"
                 columns={[
                   { title: 'DN Num', dataIndex: 'docNum', align: 'left' },
+                  { title: 'Company', dataIndex: 'company'},
                   { title: 'Customer Code', dataIndex: 'cardCode', align: 'left' },
                   { title: 'Ship to Code', dataIndex: 'shipToCode' },
                   { title: 'Address', dataIndex: 'address' },
@@ -490,6 +498,7 @@ const AssignedDocModal: React.FC<Props> = ({
                 dataSource={invoices}
                 columns={[
                   { title: 'Inv Num', dataIndex: 'docNum', width: 100 },
+                  { title: 'Company', dataIndex: 'company', width: 100 },
                   { title: 'Doc Date', dataIndex: 'docDate', width: 100 },
                   { title: 'Customer Code', dataIndex: 'cardCode', align: 'left' },
                   { title: 'Payment Term', dataIndex: 'paymentTerm' },

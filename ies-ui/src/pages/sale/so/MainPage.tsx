@@ -1,6 +1,6 @@
 
 import '@/pages/index.less'
-import { Badge, Button, Card, Flex, Form, Space, Spin, Tag, Typography } from "antd"
+import { Badge, Button, Card, Flex, Form, message, Space, Spin, Tag, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
 import { ExportOutlined, EyeOutlined, FileAddOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, PlusOutlined, SyncOutlined } from "@ant-design/icons"
@@ -29,6 +29,7 @@ export default () => {
     const actionRef = useRef<ActionType>();
     const [form] = Form.useForm();
     const access = useAccess();
+    const [loading, isLoading] = useState(false)
     const [filter, setFilter] = useState<TableViewSearchParams<SoAdvanceSearchParams>>({
         criteria: {
             advanceSearch: {
@@ -70,17 +71,24 @@ export default () => {
     const [isSelectAll, setIsSelectAll] = useState(false);
 
 
-    return <Spin spinning={false}>
+    return <Spin spinning={loading}>
         <PageWrapperV1<SoItemLess, FilterType, {}>
             // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
             addOptionsMode='inline'
-            addOptionsPosition='left'
+            addOptionsPosition='right'
             showFullScreenButton
             // showNewWindowButton
 
             tabRender={item => access.canCreateEditSo ? [
-                { action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' />, tabLabel: 'New PO', multiple: true, },
-                { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', multiple: true },
+
+                {
+                    action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key, onUpdateTab }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' actionHandlers={{
+                        onBack() {
+                            onUpdateTab("view", undefined, undefined, key)
+                        },
+                    }} />, tabLabel: 'New PO', multiple: true,
+                },
+                { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key, onUpdateTab }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', multiple: true },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
@@ -103,14 +111,14 @@ export default () => {
             addOptions={[
                 {
                     action: "PO",
-                    label: <Space><span>PO</span><PlusOutlined /></Space>,
+                    label: <Space><PlusOutlined /><span>PO</span></Space>,
                     // icon: <FileAddOutlined />,
                     tabLabel: 'New PO',
                     multiple: true,
                 },
                 {
                     action: "GO",
-                    label: <Space><span>GO</span><PlusOutlined /></Space>,
+                    label: <Space><PlusOutlined /><span>GO</span></Space>,
                     // icon: <FileAddOutlined />,
                     tabLabel: 'New GO',
                     multiple: true
@@ -145,8 +153,18 @@ export default () => {
                         type: 'link',
                         disabled: !access.canCreateEditSo,
                         onClick: async () => {
-                            await actions.syncFromSFA()
-                            actionRef.current?.reload(true)
+                            try {
+                                isLoading(true)
+                                await actions.syncFromSFA()
+                                actionRef.current?.reload(true)
+                                message.success("Sync Success");
+                            } catch(error: any) {
+                                message.error(error.message);
+                            } finally {
+                                isLoading(false)
+                            }
+
+
                         }
                     }, {
                         icon: <PlusCircleOutlined />,
@@ -164,9 +182,9 @@ export default () => {
                                 ...v.criteria?.advanceSearch,
                                 customerType: value
                             }
-                        }
+                        } 
                     }))
-                    actionRef.current?.reload(true)
+                    actionRef.current?.reload(true) 
                 }}
                     onStatusChanged={(value) => {
                         setIsSelectAll(value == "AllPending")
@@ -313,7 +331,6 @@ export default () => {
                         {
                             title: "No",
                             width: 40,
-
                             render: (r, s, index) => (
                                 data?.page * data?.pageSize + index) + 1
                         },
@@ -322,8 +339,8 @@ export default () => {
                             sorter: 'poNo',
                             dataIndex: 'poNo',
                             key: 'poNo',
-                            width: 170,
-                            align: "center",
+                            width: 120,
+                            // align: "center", 
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.poNo || '',
@@ -373,16 +390,17 @@ export default () => {
                             render: (_, data) => data.shippingAddress,
                         },
                         {
-                            title: 'Order Date',
+                            // title: 'Order Date',
+                            title: 'Created Date',
                             align: 'right',
                             sorter: 'orderDate',
                             dataIndex: "orderDate",
                             width: 110,
                             render: (_, data) => moment(data.orderedDate).format('DD-MMM-YYYY'),
-
                         },
                         {
-                            title: "Order Time",
+                            // title: "Order Time",
+                            title: "Created Time",
                             width: 100,
                             render: (_, data) => moment(data.orderedDate).format('HH:mm:ss'),
                         },
@@ -470,7 +488,6 @@ export default () => {
             salespersons={state.data?.initData?.salespersons}
             lookDataList={state.data?.initData?.lookDataList}
             onSearch={(data) => {
-                console.log('data', data)
                 setFilter(v => ({
                     ...v,
                     criteria: {

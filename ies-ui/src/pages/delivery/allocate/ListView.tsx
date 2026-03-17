@@ -416,9 +416,12 @@ export default () => {
           (dn.deliveryItems ?? []).map((it: any) => ({
             soDocEntry: String(dn.so_doc_entry ?? dn.soId),
             lineNum: Number(it.sap_line_num),
-            shipDate: dn.deliveryDate
+            shipDate: dn.deliveryDate,
+            company_code: dn.company_code
           }))
         );
+
+        const ids = dnList.map(dn => `${dn.id}-${dn.company_code}`);
 
         const uniqueMap = new Map<string, any>();
         rawLines.forEach((l) => {
@@ -476,7 +479,8 @@ export default () => {
           (dn.deliveryItems ?? []).map((it: any) => ({
             soDocEntry: String(dn.so_doc_entry ?? dn.soId),
             lineNum: Number(it.sap_line_num),
-            shipDate: dn.deliveryDate
+            shipDate: dn.deliveryDate,
+            company_code: dn.company_code
           }))
         );
 
@@ -485,7 +489,7 @@ export default () => {
           const key = `${l.soDocEntry}_${l.lineNum}`;
           if (!uniqueMap.has(key)) uniqueMap.set(key, l);
         });
-
+        const ids = dnList.map(dn => `${dn.id}-${dn.company_code}`);
         const del_item = Array.from(uniqueMap.values());
 
         del_item.sort((a, b) =>
@@ -512,8 +516,9 @@ export default () => {
     });
   };
 
-  const handleClaim = async (ids: number | number[]) => {
+  const handleClaim = async (ids: any | any[]) => {
     const claimed_line = await services.list_claimed_line()
+    console.log('ids', ids)
     setClaimIds(Array.isArray(ids) ? ids : [ids]);
     setClaimedLines(claimed_line);
     setClaimOpen(true);
@@ -528,13 +533,14 @@ export default () => {
           ? selectedListDn
           : [selectedListDn];
 
-        const ids = dnList.map(dn => Number(dn.id));
+        const ids = dnList.map(dn => `${dn.id}-${dn.company_code}`);
 
         const rawLines = dnList.flatMap(dn =>
           (dn.deliveryItems ?? []).map((it: any) => ({
             soDocEntry: String(dn.so_doc_entry ?? dn.soId),
             lineNum: Number(it.sap_line_num),
-            shipDate: dn.deliveryDate
+            shipDate: dn.deliveryDate,
+            company_code: dn.company_code
           }))
         );
 
@@ -911,7 +917,7 @@ export default () => {
         },
         pagination: {
           current: params.pagination?.current ?? 1,
-          pageSize: 200,
+          pageSize: 100,
         }
       });
 
@@ -952,7 +958,7 @@ export default () => {
 
         return {
           ...delivery,
-          key: delivery.id,
+          key: `${delivery.id}-${delivery.so_no}-${delivery.company_code}`,
           ...skuValues,
         };
       });
@@ -1041,25 +1047,26 @@ export default () => {
             if (record.status === 'TBA') {
               return null
             }
-
+            const key = `${record.id}-${record.company_code}`;
             return (
               <Checkbox
-                checked={selectedRowKeys.includes(record.id)}
+                checked={selectedRowKeys.includes(key)}
                 onChange={(e) => {
+
                   if (e.target.checked) {
-                    setSelectedRowKeys(prev => [...prev, record.id]);
+                    setSelectedRowKeys(prev => [...prev, key]);
                     setSelectedRows(prev => [...prev, record]);
                     setCardOpen({ visible: true });
                     setSelectedListDn(prev => [...prev, record]);
                     // setDataListDn(prev => prev.items.filter(r => r.id !== record.id));
                     setDataListDn(prev => ({
                       ...prev,
-                      items: prev?.items?.filter(r => r.id !== record.id),
+                      items: prev?.items?.filter(r => `${r.id}-${r.company_code}` !== key),
                     }));
                   } else {
-                    setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
-                    setSelectedRows(prev => prev.filter(r => r.id !== record.id));
-                    setSelectedListDn(prev => prev.filter(r => r.id !== record.id));
+                    setSelectedRowKeys(prev => prev.filter(k => k !== key));
+                    setSelectedRows(prev => prev.filter(r => `${r.id}-${r.company_code}` !== key));
+                    setSelectedListDn(prev => prev.filter(r => `${r.id}-${r.company_code}` !== key));
                     setDataListDn(prev => ({
                       ...prev,
                       items: [...prev.items, record],
@@ -1234,7 +1241,7 @@ export default () => {
       title: 'Shipping Address',
       dataIndex: 'shippingAddress',
       width: '10%',
-      render: (_, value) => (
+      render: (_, value) => ( 
         <a
           style={{
             whiteSpace: 'nowrap',
@@ -1427,8 +1434,9 @@ export default () => {
                 : <></>}
               <Button style={{ marginLeft: 10 }} type="default"
                 onClick={() => {
-                  console.log(record.data.map(v => v.so_doc_entry)),
-                    (onSyncBySO(record.data.map(v => v.so_doc_entry)))
+                  console.log(record.data.map(v => `${v.so_doc_entry}-${v.company_code}`)),
+                  console.log(record)
+                    (onSyncBySO(record.data.map(v => `${v.so_doc_entry}-${v.company_code}`)))
                 }
 
                 }
@@ -1949,6 +1957,7 @@ export default () => {
       <Spin spinning={requestActions.request?.loading || loading}>
         {advanceSearchParams.filter == 'MT' ?
           <TableView<DNList, { searchValue?: string }>
+            key={advanceSearchParams.filter}
             displayOnly
             tableProps={{
               actionRef: actionRef,
@@ -2060,15 +2069,17 @@ export default () => {
 
           : advanceSearchParams.filter == 'DN' ?
             <TableView<DNList, { searchValue?: string }>
+              rowKey={(row) => `${row.id}-${row.so_no}-${row.company_code}`}
+              key={advanceSearchParams.filter}
               displayOnly
-              scroll={{ y: 55 * 5 }}
               pagination={{
-    pageSize: 200,          // 👈 show 200 rows per page
-    defaultPageSize: 200,
-    showSizeChanger: false, // optional
-  }}
+                pageSize: 100,          // 👈 show 200 rows per page
+                defaultPageSize: 100,
+                showSizeChanger: false, // optional
+              }}
               tableProps={{
                 actionRef: actionRef,
+                tableLayout: 'fixed',
                 options: {
                   reload: false,
                   setting: false,
@@ -2099,6 +2110,7 @@ export default () => {
                           ]}
                           width={150}
                           showSearch
+                          allowClear={false}
                         />
                         <ProFormSelect
                           name="delivery_method_id"
@@ -2391,7 +2403,7 @@ export default () => {
                             <Button
                               type="primary"
                               disabled={selectedRowKeys.length === 0}
-                              onClick={() => (handleClaim(selectedRowKeys.map(k => Number(k))), console.log(selectedListDn))}
+                              onClick={() => (handleClaim(selectedRowKeys.map(k => (k))), console.log('selectedListDn', selectedListDn))}
                             >
                               Pick
                             </Button>
@@ -2475,6 +2487,10 @@ export default () => {
                 </Space>
               }
               columns={dnColumns}
+              scroll={{
+                x: 4500,
+                y: 600,
+              }}
               actionHandlers={{
                 onRequest: (criteria, pagination, sort) =>
                   onRequestDNDeatilHandler({
@@ -2521,6 +2537,7 @@ export default () => {
                             ]}
                             width={150}
                             showSearch
+                            allowClear={false}
                           />
                           <ProFormDateRangePicker
                             name="sap_delivery_range_his"
@@ -2791,13 +2808,14 @@ export default () => {
           }
 
           setClaimLoading(true);
-
+          console.log('selectedListDn', selectedListDn)
           try {
             const rawLines = selectedListDn.flatMap(dn =>
               (dn.deliveryItems ?? []).map(it => ({
                 soDocEntry: String(dn.so_doc_entry),
                 lineNum: Number(it.sap_line_num),
                 shipDate: dn.deliveryDate,
+                company_code: dn.company_code
               }))
             );
 
@@ -2821,6 +2839,12 @@ export default () => {
               useExisting ? selectedClaimedLine : null,
               del_item
             );
+            console.log(claimIds,
+              access.currentUser?.login,
+              'Pick',
+              'Pick DN',
+              useExisting ? selectedClaimedLine : null,
+              del_item)
 
             message.success('Updated successfully');
 
@@ -2865,7 +2889,7 @@ export default () => {
         loading={excelLoading}
         initValues={dnSearch}
         onCancel={() => setExportModal({ visible: false })}
-        onSave={async (customer, ordered_date, request_delivery_date) => {
+        onSave={async (customer, ordered_date, request_delivery_date, province, reportType) => {
           const result = [
             {
               key: 'customer',
@@ -2903,24 +2927,69 @@ export default () => {
               type: 'dateTime',
             },
           ]
+          const result_listing = [
+            {
+              key: 'customer',
+              value: customer ?? null,
+              type: 'string',
+            },
+
+            {
+              key: 'request_delivery_startdate',
+              value: request_delivery_date?.[0]
+                ? (request_delivery_date[0])
+                : null,
+              type: 'dateTime',
+            },
+            {
+              key: 'request_delivery_enddate',
+              value: request_delivery_date?.[1]
+                ? (request_delivery_date[1])
+                : null,
+              type: 'dateTime',
+            },
+            {
+              key: 'province',
+              value: province ? province.join(",") : "",
+              type: 'string',
+            },
+
+
+          ]
+          console.log('customer, ordered_date, request_delivery_date, province, reportType', customer, ordered_date, request_delivery_date, province, reportType)
           console.log(result)
           try {
             setExcelLoading(true)
-            await downloadGenericReport(requestActions)({
-              fileName: `dop-${moment().format()}.xls`,
-              type: 'EXCEL',
-              data: {
-                reportName: 'DOP_Delivery_Detail_V2',
-                reportPath: '/Reports/Delivery',
-                data: result,
-              },
-            }).then(() => { })
+            if (reportType == 'normal') {
+              await downloadGenericReport(requestActions)({
+                fileName: `dop-${moment().format()}.xls`,
+                type: 'EXCEL',
+                data: {
+                  reportName: 'DOP_Delivery_Detail_V2',
+                  reportPath: '/Reports/Delivery',
+                  data: result,
+                },
+              }).then(() => { })
+              setExportModal({ visible: false });
+            } else if (reportType == 'dop_listing') {
+              await downloadGenericReport(requestActions)({
+                fileName: `dop-listing${moment().format()}.xls`,
+                type: 'EXCEL',
+                data: {
+                  reportName: 'DOP_Delivery_Listing',
+                  reportPath: '/Reports/Delivery',
+                  data: result_listing,
+                },
+              }).then(() => { })
+              setExportModal({ visible: false });
+            }
+
           } catch (error) {
             message.error('Failed to download.');
           } finally {
             setExcelLoading(false)
           }
-          setExportModal({ visible: false });
+
         }}
       />
     </>

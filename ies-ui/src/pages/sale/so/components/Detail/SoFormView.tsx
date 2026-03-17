@@ -43,7 +43,7 @@ const SoFormView = ({ data, onRefreshSo }: { data?: SoDetail; onRefreshSo?: (id:
           }}
         />
       </Tabs.TabPane>
-      {/* <Tabs.TabPane
+      <Tabs.TabPane
         tab={
           <Space size={2}>
             <DollarCircleOutlined /> <span>Item By Company</span>
@@ -52,7 +52,7 @@ const SoFormView = ({ data, onRefreshSo }: { data?: SoDetail; onRefreshSo?: (id:
         key="itemByCompany"
       >
         <ItemByCompany data={data} />
-      </Tabs.TabPane> */}
+      </Tabs.TabPane>
       <Tabs.TabPane
         tab={
           <Space size={2}>

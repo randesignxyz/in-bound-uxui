@@ -158,6 +158,32 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       dataIndex: ['item', 'warehouse'],
       width: 'auto',
     },
+     {
+     title: 'To Warehouse',
+     dataIndex: ['item', 'toWarehouse'],
+     width: 'auto',
+     render: (text: string) => (
+      <Select
+        defaultValue={'WH1'}
+        options={
+          [
+            { value: 'WH1', label: 'Warehouse 1' },
+            { value: 'WH2', label: 'Warehouse 2' },
+            { value: 'WH3', label: 'Warehouse 3' },
+          ]
+        }
+      />
+     )
+     },
+     {
+     title: 'For Line',
+     dataIndex: ['item', 'productLine'],
+     width: 260,
+  
+     render: (text: string) =>(
+      <Input placeholder="machine ID" defaultValue={text} />
+      )
+    },
 
     {
       title: 'BU',
@@ -168,7 +194,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   {
     title: 'UoM',
     dataIndex: 'Uom',
-    width: 200,
+    width: 140,
     render: (_: unknown, record: RequestRowItem) => (
       <Select
         placeholder="Please select"
@@ -199,7 +225,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   },
     {
       title: 'QTY to Request',
-      width: 200,
+      width: 150,
       render: (_: unknown, record: RequestRowItem) => {
         const max = record.item.stock > 0 ? record.item.stock : 100;
         return (

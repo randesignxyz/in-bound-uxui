@@ -104,7 +104,7 @@ export default () => {
             icon: ipoImage,
             menu: {
                 items: [
-                    { label: <IOSExport trigger={<a >Export</a>} />, 
+                    { label: <IOSExport trigger={<a >Report</a>} />, 
                         key: 'exportContract', 
                         icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} />,
                         disabled: !access.can('HRM_IOS_REQUEST_LIST','MENU_IOS_EXPORT_REPORT')

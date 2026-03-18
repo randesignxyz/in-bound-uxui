@@ -22,7 +22,7 @@ export const FloatingCard = ({
         position: "fixed",
         right: 40,
         bottom: 20,
-        width: 300,
+        width: 350,
         maxHeight: "50vh",
         overflowY: collapsed ? "hidden" : "auto",
         zIndex: 1000,
@@ -44,8 +44,9 @@ export const FloatingCard = ({
         onClick={() => setCollapsed((prev) => !prev)}
       >
         <span style={{ flex: 1 }}>SKU</span>
-        <span style={{ width: 60, textAlign: "right",marginRight:25 }}>Qty</span>
+        <span style={{ width: 60, textAlign: "right", marginRight: 25 }}>Qty</span>
         <span style={{ width: 80, textAlign: "right" }}>Vol</span>
+        <span style={{ width: 80, textAlign: "right" }}>Weight</span>
         {collapsed ? <UpOutlined /> : <DownOutlined />}
       </div>
 
@@ -62,6 +63,7 @@ export const FloatingCard = ({
             category: number;
             sequence: string;
             totalVolume: number;
+            totalWeight:number
           }
         > = {};
 
@@ -84,13 +86,16 @@ export const FloatingCard = ({
               category: Number(item.category ?? 0),
               sequence: item.sequence ?? "",
               totalVolume: 0,
+              totalWeight:0
             };
           }
 
           const remaining_qty = Number(item.remaining_qty ?? 0);
           const volume = Number(item.volume ?? 0);
+          const weight = Number(item.weight ?? 0);
           grouped[key].remaining_qty += remaining_qty;
           grouped[key].totalVolume += remaining_qty * volume;
+          grouped[key].totalWeight += remaining_qty * weight;
         });
 
         // Sort
@@ -108,6 +113,11 @@ export const FloatingCard = ({
           (sum, item) => sum + Number(item.remaining_qty ?? 0) * Number(item.volume ?? 0),
           0
         );
+        const totalWeight = allItems?.reduce(
+          (sum, item) => sum + Number(item.remaining_qty ?? 0) * Number(item.weight ?? 0),
+          0
+        );
+
 
         return (
           <>
@@ -122,9 +132,12 @@ export const FloatingCard = ({
                 }}
               >
                 <span style={{ flex: 1 }}>{g.sku_name}</span>
-                <span style={{ width: 60, textAlign: "right",marginRight:35 }}>{g.remaining_qty}</span>
+                <span style={{ width: 60, textAlign: "right", marginRight: 35 }}>{g.remaining_qty}</span>
                 <span style={{ width: 80, textAlign: "right" }}>
                   {g.totalVolume.toFixed(2)} m³
+                </span>
+                <span style={{ width: 80, textAlign: "right" }}>
+                  {g.totalWeight.toFixed(2)} Kg
                 </span>
               </div>
             ))}
@@ -142,9 +155,12 @@ export const FloatingCard = ({
               }}
             >
               <span style={{ flex: 1 }}>Total</span>
-              <span style={{ width: 60, textAlign: "right",marginRight:35 }}>{totalQty}</span>
+              <span style={{ width: 60, textAlign: "right", marginRight: 35 }}>{totalQty}</span>
               <span style={{ width: 80, textAlign: "right" }}>
                 {totalVolume?.toFixed(2)} m³
+              </span>
+              <span style={{ width: 80, textAlign: "right" }}>
+                {totalWeight?.toFixed(2)} Kg
               </span>
             </div>
           </>
@@ -164,7 +180,7 @@ export const FloatingCard = ({
           }}
         >
           <span style={{ flex: 1 }}>Total</span>
-          <span style={{ width: 60, textAlign: "right",marginRight:35 }}>
+          <span style={{ width: 60, textAlign: "right", marginRight: 35 }}>
             {selectedRows
               ?.flatMap((row) => row.mergeItems)
               .reduce((sum, item) => sum + Number(item.remaining_qty ?? 0), 0)}
@@ -183,5 +199,5 @@ export const FloatingCard = ({
         </div>
       )}
     </Card>
-  ); 
+  );
 };

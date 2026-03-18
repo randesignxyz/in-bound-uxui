@@ -1175,18 +1175,18 @@ export default () => {
 
     //   ),
     // },
-    {
-      title: 'DO No',
-      dataIndex: 'id',
-      width: 200,
-      render: (_, value) => (
-        <>
-          <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
-            <Typography.Link strong copyable >{value.id}</Typography.Link>
-          </a>
-        </>
-      ),
-    },
+    // {
+    //   title: 'DO No',
+    //   dataIndex: 'id',
+    //   width: 200,
+    //   render: (_, value) => (
+    //     <>
+    //       <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
+    //         <Typography.Link strong copyable >{value.id}</Typography.Link>
+    //       </a>
+    //     </>
+    //   ),
+    // },
     // {
     //   title: 'Request Delivery Date',
     //   dataIndex: 'deliveryDate',
@@ -1304,6 +1304,21 @@ export default () => {
             }, 0);
 
             return `${total.toFixed(2)} m³`
+          }
+        },
+        {
+          title: 'Weight', width: 120,
+          render: (_: any, r: { mergeItems: any[]; }) => {
+            if (!r.mergeItems) return 0;
+
+            const total = r.mergeItems.reduce((sum, item) => {
+              const weight = Number(item.weight) || 0;
+              const remaining_qty = Number(item.remaining_qty) || 0;
+
+              return sum + weight * remaining_qty;
+            }, 0);
+
+            return `${total.toFixed(2)} Kg`
           }
         },
         {

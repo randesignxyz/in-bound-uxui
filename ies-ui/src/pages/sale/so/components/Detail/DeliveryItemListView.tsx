@@ -71,15 +71,34 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
   const syncSAP = async () => {
     try {
       setSyncLoading(true);
-
+      console.log('deliveries', deliveries)
       const data = deliveries?.map(d => ({
         deliveryId: d.id,
         shipDate: d.deliveryDate
       }));
+      const items = deliveries?.flatMap(delivery =>
+        delivery.itemList.map(item => ({
+          docNum: item.soNo,
+          company: item.company
+        }))
+      );
+
+      // remove duplicates (IMPORTANT)
+      const uniqueItems = Array.from(
+        new Map(items?.map(i => [`${i.docNum}_${i.company}`, i])).values()
+      );
+
+      const payload = {
+        items: uniqueItems
+      };
 
       // FIRST RUN (old data)
-      await actions.syncSOFromSAP(soNum, data);
-      await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
+      // await actions.syncSOFromSAP(payload, data);
+      await actions.syncSOFromSAP(
+        uniqueItems,   
+        data                      
+      );
+      // await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
 
       // now wait for refreshed data
       setSyncPhase('waitingRefresh');
@@ -107,10 +126,21 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
           deliveryId: d.id,
           shipDate: d.deliveryDate
         }));
+        const items = deliveries?.flatMap(delivery =>
+        delivery.itemList.map(item => ({
+          docNum: item.soNo,
+          company: item.company
+        }))
+      );
+
+      // remove duplicates (IMPORTANT)
+      const uniqueItems = Array.from(
+        new Map(items?.map(i => [`${i.docNum}_${i.company}`, i])).values()
+      );
 
         // SECOND RUN (new refreshed data)
-        await actions.syncSOFromSAP(soNum, data);
-        await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
+        await actions.syncSOFromSAP(uniqueItems, data);
+        // await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
 
         message.success('Sync Success')
       } catch (e) {

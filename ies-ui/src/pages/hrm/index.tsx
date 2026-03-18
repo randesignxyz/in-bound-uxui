@@ -12,7 +12,7 @@ import IOSExport from "./ios/reports/IOSExport";
 export const HrmPaths = {
     employee: '/hrm/employee',
     staffRequisition: '/hrm/staff-requisistion',
-    newStaffRequest: '/hrm/new-staff',
+    // newStaffRequest: '/hrm/new-staff',
     staffProposalRequest: '/hrm/staff-proposal',
     appraisalSubmit: '/hrm/appraisal-submit',
     appraisalRequest: '/hrm/appraisal-request',
@@ -22,6 +22,7 @@ export const HrmPaths = {
     ios: '/hrm/ios',
     masterData: '/hrm/master-data',
     iosUpload: '/hrm/ios-upload',
+    newStaffJoinerRequest: '/hrm/new-staff',
 }
 
 export default () => {
@@ -50,6 +51,14 @@ export default () => {
             description: 'Staff Proposal List',
             visible: access.canAccessHrStaffProposalMenuItem,
             link: `${HrmPaths.staffProposalRequest}/list`,
+            icon: requisitionIcon,
+        },
+         {
+            id: 'new-staff-support-request',
+            name: 'New Staff Support Request',
+            description: 'New Staff Support Request List',
+            visible: access.canAccessHRMNewStaffSupportRequest,
+            link: `${HrmPaths.newStaffJoinerRequest}/list`,
             icon: requisitionIcon,
         },
         {

@@ -1,4 +1,4 @@
-import { Delivery } from '@/services/sale/data';
+import { Delivery, LogSyncDetail } from '@/services/sale/data';
 import ProTable from '@ant-design/pro-table';
 import { uniqueId } from 'lodash';
 import { Button, Card, message } from 'antd';
@@ -19,9 +19,10 @@ interface Props {
   docEntry?: any
   soStatus?: string
   onSyncSuccess?: () => void
+  logSync?: LogSyncDetail[]
 }
 
-const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, soNum, docEntry, soStatus, onSyncSuccess }) => {
+const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, soNum, docEntry, soStatus, onSyncSuccess, logSync }) => {
   const [itemList, setItemList] = useState<DeliverySoItemEntry[]>([]);
   const { actions, modals } = Model();
   const requestActions = simpleRequestActions();
@@ -71,16 +72,20 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
   const syncSAP = async () => {
     try {
       setSyncLoading(true);
-      console.log('deliveries', deliveries)
+      console.log('logSync', logSync)
       const data = deliveries?.map(d => ({
         deliveryId: d.id,
         shipDate: d.deliveryDate
       }));
-      const items = deliveries?.flatMap(delivery =>
-        delivery.itemList.map(item => ({
-          docNum: item.soNo,
-          company: item.company
-        }))
+      const items = logSync?.flatMap(log =>
+      ({
+        docNum: log.soNo,
+        company: log.system
+      })
+        // delivery.itemList.map(item => ({
+        //   docNum: item.soNo,
+        //   company: item.company
+        // }))
       );
 
       // remove duplicates (IMPORTANT)
@@ -95,8 +100,8 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
       // FIRST RUN (old data)
       // await actions.syncSOFromSAP(payload, data);
       await actions.syncSOFromSAP(
-        uniqueItems,   
-        data                      
+        uniqueItems,
+        data
       );
       // await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
 
@@ -126,17 +131,27 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
           deliveryId: d.id,
           shipDate: d.deliveryDate
         }));
-        const items = deliveries?.flatMap(delivery =>
-        delivery.itemList.map(item => ({
-          docNum: item.soNo,
-          company: item.company
-        }))
-      );
+        // const items = deliveries?.flatMap(delivery =>
+        //   delivery.itemList.map(item => ({
+        //     docNum: item.soNo,
+        //     company: item.company
+        //   }))
+        // );
+        const items = logSync?.flatMap(log =>
+        ({
+          docNum: log.soNo,
+          company: log.system
+        })
+          // delivery.itemList.map(item => ({
+          //   docNum: item.soNo,
+          //   company: item.company
+          // }))
+        );
 
-      // remove duplicates (IMPORTANT)
-      const uniqueItems = Array.from(
-        new Map(items?.map(i => [`${i.docNum}_${i.company}`, i])).values()
-      );
+        // remove duplicates (IMPORTANT)
+        const uniqueItems = Array.from(
+          new Map(items?.map(i => [`${i.docNum}_${i.company}`, i])).values()
+        );
 
         // SECOND RUN (new refreshed data)
         await actions.syncSOFromSAP(uniqueItems, data);

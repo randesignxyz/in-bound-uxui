@@ -857,6 +857,17 @@ export interface SoDetail {
       region: string;
     };
   };
+  logSync?: LogSyncDetail[];
+}
+export interface LogSyncDetail {
+  docEntry?: string;
+  errorMessage?: string;
+  id?: string;
+  poNumber?: string;
+  soNo?: string;
+  status?: string;
+  system?: string;
+
 }
 
 export interface StatusLookup {

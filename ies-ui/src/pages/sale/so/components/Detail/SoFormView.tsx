@@ -36,6 +36,7 @@ const SoFormView = ({ data, onRefreshSo }: { data?: SoDetail; onRefreshSo?: (id:
           soNum={data?.soNo}
           docEntry={data?.docEntry}
           soStatus={data?.status}
+          logSync={data?.logSync}
           onSyncSuccess={() => {
             if (data?.id) {
               onRefreshSo?.(data.id);

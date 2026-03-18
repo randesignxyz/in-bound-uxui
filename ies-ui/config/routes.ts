@@ -1221,7 +1221,7 @@ export default [
 
   /**********<<FMA**************/
   {
-    path: '/hrm/new-staff/:view/*',
+    path: '/fma/new-staff/:view/*',
     name: 'fma-new-staff-request',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',

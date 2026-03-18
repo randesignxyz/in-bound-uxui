@@ -1,8 +1,9 @@
 import { SimpleRequestActions } from "@/services/model";
 import { NewStaffItemDetail, NewStaffListItem, SavePayLoad, SearchParams } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
-import { FetchPagingParams } from "@/components/DataCrud/TableView";
-import { execDataService, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
+import { FetchPagingParams, TableViewSearchParams } from "@/components/DataCrud/TableView";
+import { execDataService, fetchDataItemService, fetchDataListService, fetchDataPagingService, queryDataPagingService } from "@/services/apiGateway";
+import { Paging } from "@/services/API";
 
 
 export const createService = (request: SimpleRequestActions): CrudBaseServices<
@@ -12,16 +13,27 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
     SavePayLoad
 > & {
     findByInstId: (instId: string) => Promise<NewStaffItemDetail>;
-  exportToExcel: (params: {
-    fromDate?: string;
-    toDate?: string;
-    company?: string;
-    department?: string;
-    status?: string;
-    requestedBy?: string;
-  }) => Promise<Blob>;
+    page: (param: TableViewSearchParams<SearchParams>) => Promise<Paging<NewStaffListItem>>;
+    exportToExcel: (params: {
+        fromDate?: string;
+        toDate?: string;
+        company?: string;
+        department?: string;
+        status?: string;
+        requestedBy?: string;
+    }) => Promise<Blob>;
 } => {
     return {
+         page: (params: TableViewSearchParams<SearchParams>) => 
+            queryDataPagingService<NewStaffListItem>({
+                actionName: 'fetch_ios_emp_request_page',
+                endpoint: 'HR',
+                payload: params,
+                 pagination:{
+                  current: params.pagination?.current,
+                  pageSize: params.pagination?.pageSize
+              },
+            }),
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
             fetchDataPagingService<NewStaffListItem, FetchPagingParams<SearchParams>>({
                 actionName: 'fetch-paging-fma-new-staff-request',

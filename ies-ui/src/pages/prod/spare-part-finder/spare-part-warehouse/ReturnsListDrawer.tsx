@@ -287,7 +287,8 @@ export default function ReturnsListDrawer({
             width: 'auto'
           }
         ]
-      : [])
+      : []),
+
   ];
 
   return (

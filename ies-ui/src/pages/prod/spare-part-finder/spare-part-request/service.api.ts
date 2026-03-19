@@ -31,7 +31,7 @@ export interface SparePartRequestListApiItem {
   stock: number;
   status: string;
   avalailableStock?: number;
-  imageId?: string;
+  imageId?: string[];
   isActive: boolean;
   businessUnit: string;
   createdBy?: string;
@@ -43,15 +43,21 @@ export interface SparePartRequestListApiItem {
 
 interface Location {
   warehouseCode: string;
-  warehouseName: string;
-  zone: string;
-  shelf: string;
-  levelBin: string;
+  warehouseName?: string;
+  level: string;
+  shelve: string;
+  rack: string;
+  bin: string;
   onHandQty: number;
   reservedQty: number;
   availableQty: number;
   reorderLevel: number;
 }
+
+type SparePartDetailParams = {
+  id?: number;
+  productId?: string;
+};
         
 type SparePartRequestPageParams = {
   criteria?: SparePartRequestListSearch;
@@ -80,6 +86,15 @@ const SparePartRequestTestAction = {
       pageSize: params.pagination?.pageSize,
     },
   }),
+  detail: (params: SparePartDetailParams): ServiceApiType<SparePartDetailParams> => ({
+    type: 'FETCH_QUERY',
+    endpoint: 'PROD',
+    actionName: 'get-spare-part-detail',
+    payload: {
+      id: params.id,
+      productId: params.productId,
+    },
+  }),
   // createRequest: 
 };
 
@@ -103,7 +118,7 @@ const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string):
   return {
     id: item.id,
     image: undefined,
-    imageId: item.imageId,
+    imageId: item.imageId || [],
     productId: item.productId,
     partName: item.partName,
     description: item.description,
@@ -114,10 +129,7 @@ const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string):
     businessUnit: item.businessUnit,
     status: mapStockStatus(stock),
     warehouse: firstLocation?.warehouseCode || fallbackWarehouse || '',
-    line: firstLocation?.zone,
-    shift: firstLocation?.shelf,
-    bin: firstLocation?.levelBin,
-    level: firstLocation?.levelBin,
+    locations: item.locations || [],
     tab: 'spare-list',
     createdDate: item.createdDate,
   };
@@ -135,10 +147,12 @@ const mapPagingResult = (
         ? response
         : [];
 
-  let items = rawItems.map((item) => mapItem(item, params.criteria?.warehouse));
+  let items: SparePartRequestItem[] = rawItems.map((item: SparePartRequestListApiItem) =>
+    mapItem(item, params.criteria?.warehouse),
+  );
 
   if (params.criteria?.status && params.criteria.status !== 'All') {
-    items = items.filter((item) => item.status === params.criteria?.status);
+    items = items.filter((item: any) => item.status === params.criteria?.status);
   }
 
   return {
@@ -155,5 +169,11 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
       requestAction,
     );
     return mapPagingResult(response, params);
+  },
+  detail: async (params: SparePartDetailParams): Promise<SparePartRequestItem> => {
+    const response = await singleRequest<SparePartRequestListApiItem>(SparePartRequestTestAction.detail(params))(
+      requestAction,
+    );
+    return mapItem(response as SparePartRequestListApiItem);
   },
 });

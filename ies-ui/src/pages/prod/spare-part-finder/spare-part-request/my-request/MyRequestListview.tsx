@@ -38,10 +38,10 @@ const priorityOptions: { label: string; value: 'ALL' | RequestPriority }[] = [
 
 // Colors & labels
 const priorityColorMap: Record<RequestPriority, string> = {
-  urgent: '#f5222d',
-  high: '#fa8c16',
-  normal: '#52c41a',
-  low: '#1890ff',
+  urgent: 'error',
+  high: 'warning',
+  normal: 'success',
+  low: 'default',
 };
 
 const priorityLabelMap: Record<RequestPriority, string> = {
@@ -347,9 +347,9 @@ export default function MyRequestListview() {
                   dataIndex: 'priority',
                   width: 100,
                   render: (_, r) => (
-                    <span style={{ color: priorityColorMap[r.priority], fontWeight: 500 }}>
+                    <Tag color={priorityColorMap[r.priority]} style={{ fontWeight: 500 , width: '100%'}}>
                       {priorityLabelMap[r.priority]}
-                    </span>
+                    </Tag>
                   ),
                 },
                 {
@@ -381,7 +381,7 @@ export default function MyRequestListview() {
                   render: (_, r) => (
                     <Tag
                       color={statusColorMap[deriveDisplayStatus(r)]}
-                      style={{ minWidth: 80, textAlign: 'center' }}
+                      style={{ width: '100%', textAlign: 'center' }}
                     >
                       {statusLabelMap[deriveDisplayStatus(r)]}
                     </Tag>

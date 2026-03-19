@@ -3,20 +3,24 @@ import { ProTable } from '@ant-design/pro-components';
 import { Button, DatePicker, Input, Select, Space, Typography } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { buildItemizedColumns, buildItemizedData } from './RequestsListWarehouseItemized';
 import { buildSummaryColumns } from './RequestsListWarehouseSummary';
-import { mockWarehouseRequests, parseRequestDate, type WarehouseRequestRecord } from './requestsWarehouse.shared';
+import {
+  deriveWarehouseDisplayStatus,
+  mockWarehouseRequests,
+  parseRequestDate,
+  type WarehouseDisplayStatus,
+  type WarehouseRequestRecord,
+} from './requestsWarehouse.shared';
 import RequestedBatchWareHouse from './RequestedBatchWareHouse';
 
 interface Props {
   requests?: WarehouseRequestRecord[];
 }
 
-type RequestViewMode = 'summary' | 'itemized';
 
 export default function RequestsListWarehouse({ requests }: Props) {
-  const [viewMode, setViewMode] = useState<RequestViewMode>('summary');
   const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | WarehouseDisplayStatus>('All');
   const [priorityFilter, setPriorityFilter] = useState<string>('All');
   const [dateFilter, setDateFilter] = useState<Dayjs | null>(null);
 
@@ -44,26 +48,22 @@ export default function RequestsListWarehouse({ requests }: Props) {
   const filteredRequests = useMemo(
     () =>
       requestRows.filter((request) => {
-        if (request.status === 'Rejected') return false;
         const keyword = searchText.trim().toLowerCase();
         const matchesKeyword = !keyword || request.requestId.toLowerCase().includes(keyword);
+        const displayStatus = deriveWarehouseDisplayStatus(request);
         return (
           matchesKeyword &&
+          (statusFilter === 'All' || displayStatus === statusFilter) &&
           (priorityFilter === 'All' || request.priority === priorityFilter) &&
           (!dateFilter || parseRequestDate(request.requestDate).isSame(dateFilter, 'day'))
         );
       }),
-    [dateFilter, priorityFilter, requestRows, searchText],
+    [dateFilter, priorityFilter, requestRows, searchText, statusFilter],
   );
 
   const summaryColumns = useMemo(
     () => buildSummaryColumns({ onViewRequest: openDrawer }) as unknown as any[],
     [openDrawer],
-  );
-  const itemizedData = useMemo(() => buildItemizedData(filteredRequests), [filteredRequests]);
-  const itemizedColumns = useMemo(
-    () => buildItemizedColumns({ requests: filteredRequests, onViewRequest: openDrawer }) as unknown as any[],
-    [filteredRequests, openDrawer],
   );
 
   return (
@@ -85,6 +85,21 @@ export default function RequestsListWarehouse({ requests }: Props) {
             placeholder="Search Request ID"
             style={{ width: 280 }}
             onChange={(event) => setSearchText(event.target.value || '')}
+          />
+          <Select
+            placeholder="All Status"
+            value={statusFilter}
+            onChange={(value) => setStatusFilter((value as 'All' | WarehouseDisplayStatus) || 'All')}
+            style={{ width: 200 }}
+            options={[
+              { value: 'All', label: 'All Status' },
+              { value: 'Pending', label: 'Pending' },
+              { value: 'In Progress', label: 'In Progress' },
+              { value: 'Ready To Pick Up', label: 'Ready To Pick Up' },
+              { value: 'Partial', label: 'Partial' },
+              { value: 'Completed', label: 'Completed' },
+              { value: 'Rejected', label: 'Rejected' },
+            ]}
           />
           <Select
             style={{ width: 160 }}
@@ -112,24 +127,12 @@ export default function RequestsListWarehouse({ requests }: Props) {
             marginBottom: 12,
           }}
         >
-          {/* <Typography.Text
-            style={{ color: viewMode === 'summary' ? '#ad8b00' : '#8c8c8c', cursor: 'pointer' }}
-            onClick={() => setViewMode('summary')}
-          >
-            Summary View
-          </Typography.Text>
-          <Typography.Text
-            style={{ color: viewMode === 'itemized' ? '#ad8b00' : '#8c8c8c', cursor: 'pointer' }}
-            onClick={() => setViewMode('itemized')}
-          >
-            Itemized View
-          </Typography.Text> */}
           <Button type="text" icon={<EllipsisOutlined />} />
         </div>
         <ProTable<any>
           rowKey="id"
-          columns={viewMode === 'summary' ? summaryColumns : itemizedColumns}
-          dataSource={viewMode === 'summary' ? filteredRequests : itemizedData}
+          columns={summaryColumns}
+          dataSource={filteredRequests}
           tableLayout="fixed"
           pagination={{
             pageSize: 10,

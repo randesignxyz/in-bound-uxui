@@ -29,7 +29,7 @@ export interface MyRequestSearch {
 export interface SparePartRequestItem {
   id: number;
   image?: string;
-  imageId?: string;
+  imageId?: string[];
   productId: string;
   partName: string;
   description?: string;
@@ -40,10 +40,18 @@ export interface SparePartRequestItem {
   businessUnit: string;
   status: SparePartStockStatus;
   warehouse: string;
-  line?: string;
-  shift?: string;
-  bin?: string;
-  level?: string;
+  locations?: {
+    warehouseCode: string;
+    warehouseName?: string;
+    level: string;
+    shelve: string;
+    rack: string;
+    bin: string;
+    onHandQty: number;
+    reservedQty: number;
+    availableQty: number;
+    reorderLevel: number;
+  }[];
   tab: SparePartTab;
   createdDate?: string;
 }

@@ -42,7 +42,7 @@ const priorityOptions: { label: string; value: PriorityLevel; color: string; bor
   { label: 'Urgent', value: 'urgent', color: '#fff1f0', borderColor: '#f5222d' },
 ];
 
-const TABLE_MIN_WIDTH = 1280;
+const TABLE_MIN_WIDTH = '90vw';
 
 const RequestItemModal: React.FC<RequestItemModalProps> = ({
   open,
@@ -116,14 +116,14 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   const columns = [
     {
       title: 'No',
-      width: 40,
+      width: '6%',
       align: 'center' as const,
       render: (_: unknown, __: RequestRowItem, index: number) => index + 1,
     },
     {
       title: 'Product ID',
       dataIndex: ['item', 'productId'],
-      width: 'auto',
+      width: '120px',
       render: (text: string) => (
         <Typography.Link>{text}</Typography.Link>
       ),
@@ -145,25 +145,26 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       title: 'Part Name',
       dataIndex: ['item', 'partName'],
       ellipsis: true,
-      width: 'auto',
+      width: '10%',
     },
     {
       title: 'Type',
       dataIndex: ['item', 'type'],
-      width: 'auto',
+      width: '6%',
       align: 'center' as const,
     },
     {
       title: 'Ware House',
       dataIndex: ['item', 'warehouse'],
-      width: 'auto',
+      width: '7%',
     },
      {
      title: 'To Warehouse',
      dataIndex: ['item', 'toWarehouse'],
-     width: 'auto',
+     width: '4%',
      render: (text: string) => (
       <Select
+      style={{ width: '100%' }}
         defaultValue={'WH1'}
         options={
           [
@@ -178,23 +179,32 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
      {
      title: 'For Line',
      dataIndex: ['item', 'productLine'],
-     width: 260,
-  
-     render: (text: string) =>(
-      <Input placeholder="machine ID" defaultValue={text} />
-      )
+     width: '10%',
+     render: (text: string) => (
+      <Select
+      style={{ width: '100%' }}
+        defaultValue={'Line1'}
+        options={
+          [
+            { value: 'Line1', label: 'Line 1' },
+            { value: 'Line2', label: 'Line 2' },
+            { value: 'Line3', label: 'Line 3' },
+          ]
+        }
+      />
+     )
     },
 
     {
       title: 'BU',
       dataIndex: ['item', 'businessUnit'],
-      width: 'auto',
+      width: '4%',
       align: 'center' as const,
     },
   {
     title: 'UoM',
     dataIndex: 'Uom',
-    width: 140,
+    width: '6%',
     render: (_: unknown, record: RequestRowItem) => (
       <Select
         placeholder="Please select"
@@ -209,7 +219,6 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
         style={{ width: '100%' , 
          paddingLeft: 8,
          paddingRight: 8,
-
         }}
       >
         <Select.Option value="pcs">PCS</Select.Option>
@@ -225,7 +234,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   },
     {
       title: 'QTY to Request',
-      width: 150,
+      width: 120,
       render: (_: unknown, record: RequestRowItem) => {
         const max = record.item.stock > 0 ? record.item.stock : 100;
         return (
@@ -243,8 +252,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     },
     {
       title: 'Purpose',
-      width: 'auto',
-      height: '100%',
+      width: '15%',
       render: (_: unknown, record: RequestRowItem) => (
         <Input.TextArea
           placeholder="write your purpose here"
@@ -252,7 +260,8 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           rows={1}
           onChange={(e) => handlePurposeChange(record.key, e.target.value)}
         style={
-          { height  : 'auto'}
+          { height  : 'auto', width: '100%' 
+          }
         }
         />
       ),

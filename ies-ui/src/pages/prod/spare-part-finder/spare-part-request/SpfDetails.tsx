@@ -1,9 +1,10 @@
-import { Drawer, Badge, Card, Button, Space, Divider, Typography, Row, Col } from "antd";
+import { Drawer, Badge, Card, Button, Typography, Row, Col } from "antd";
 import { 
   InboxOutlined, 
   SettingOutlined, 
   FileTextOutlined
 } from "@ant-design/icons";
+import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from './SparePartImage';
 
 const { Title, Text } = Typography;
@@ -14,18 +15,47 @@ interface DrawerViewItemProps {
   onClose?: () => void;
   onRequestParts?: () => void;
   onInventoryLog?: () => void;
+  EditImage?: () => void;
 }
+
+type DetailLocation = {
+  warehouseCode?: string;
+  warehouseName?: string;
+  level?: string;
+  shelve?: string;
+  rack?: string;
+  bin?: string;
+  onHandQty?: number;
+  reservedQty?: number;
+  availableQty?: number;
+  reorderLevel?: number;
+};
 
 export default function SpfDetails({ 
   open, 
   data, 
   onClose, 
   onRequestParts,
-  onInventoryLog 
+  onInventoryLog,
+  EditImage
 }: DrawerViewItemProps) {
   
   // Determine stock status
   const isInStock = data?.stock_quantity > 0;
+  const imageIds: string[] = Array.isArray(data?.imageId) ? data.imageId.filter(Boolean) : [];
+  const locations: DetailLocation[] = Array.isArray(data?.locations) ? data.locations : [];
+  const firstLocation = locations[0];
+  const firstImageId = imageIds[0];
+  const [selectedImageId, setSelectedImageId] = useState<string | undefined>(firstImageId);
+
+  useEffect(() => {
+    setSelectedImageId(firstImageId);
+  }, [firstImageId, open]);
+
+  const mainImageId = useMemo(
+    () => selectedImageId || firstImageId,
+    [selectedImageId, firstImageId],
+  );
   
   return (
     <Drawer
@@ -46,19 +76,74 @@ export default function SpfDetails({
     >
       {/* Product Image */}
       <div style={{ 
-        backgroundColor: '#fff', 
-        padding: '24px',
+        backgroundColor: '#ffffff', 
+        padding: '0px',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: 300
       }}>
-        <SparePartImage
-          imageId={data?.imageId}
-          src={data?.image}
-          alt={data?.spare_part_name || data?.part_number}
-          size={280}
-        />
+        {imageIds.length > 0 ? (
+          <div
+            style={{
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+              alignItems: 'center',
+            }}
+          >
+            <SparePartImage
+              imageId={mainImageId}
+              alt={data?.spare_part_name || data?.part_number}
+              size={280}
+            />
+
+            {imageIds.length > 1 && (
+              <div
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  gap: 10,
+                  flexWrap: 'wrap',
+                  paddingLeft: '24px',
+                  justifyContent: 'start',
+                }}
+              >
+                {imageIds.map((id, index) => {
+                  const isActive = id === mainImageId;
+                  return (
+                    <button
+                      key={`${id}-${index}`}
+                      type="button"
+                      onClick={() => setSelectedImageId(id)}
+                      style={{
+                        border: isActive ? '2px solid #d4a574' : '1px solid #d9d9d9',
+                        borderRadius: 8,
+                        padding: 4,
+                        background: '#fff',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <SparePartImage
+                        imageId={id}
+                        alt={data?.spare_part_name || data?.part_number}
+                        size={64}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <SparePartImage
+            imageId={data?.imageId}
+            src={data?.image}
+            alt={data?.spare_part_name || data?.part_number}
+            size={280}
+          />
+        )}
       </div>
 
       {/* Product Info Section */}
@@ -154,7 +239,7 @@ export default function SpfDetails({
                 Warehouse
               </Text>
               <Text strong style={{ fontSize: 16 }}>
-                {data?.receiving_from_warehouse || data?.warehouse || '-'}
+                {firstLocation?.warehouseCode || data?.receiving_from_warehouse || data?.warehouse || '-'}
               </Text>
             </Col>
             <Col span={6}>
@@ -166,10 +251,10 @@ export default function SpfDetails({
                 display: 'block',
                 marginBottom: 4
               }}>
-                Zone
+                Rack
               </Text>
               <Text strong style={{ fontSize: 16 }}>
-                {data?.zone || '-'}
+                {firstLocation?.rack || '-'}
               </Text>
             </Col>
             <Col span={6} style={{ borderLeft: '1px solid #e8e8e8', borderRight: '1px solid #e8e8e8' }}>
@@ -180,10 +265,10 @@ export default function SpfDetails({
                 display: 'block',
                 marginBottom: 4
               }}>
-                Shelf
+                Shelve
               </Text>
               <Text strong style={{ fontSize: 16 }}>
-                {data?.shelf || '-'}
+                {firstLocation?.shelve || '-'}
               </Text>
             </Col>
             <Col span={6}>
@@ -194,10 +279,10 @@ export default function SpfDetails({
                 display: 'block',
                 marginBottom: 4
               }}>
-                Level
+                Bin
               </Text>
               <Text strong style={{ fontSize: 16 }}>
-                {data?.level || '-'}
+                {firstLocation?.bin || '-'}
               </Text>
             </Col>
           </Row>
@@ -254,7 +339,7 @@ export default function SpfDetails({
             padding: '16px 20px'
           }}>
             <Text style={{ color: '#8c8c8c' }}>Warehouse</Text>
-            <Text>{data?.receiving_from_warehouse || "MRO-W"}</Text>
+            <Text>{firstLocation?.warehouseCode || data?.receiving_from_warehouse || "MRO-W"}</Text>
           </div>
         </Card>
       </div>
@@ -318,16 +403,18 @@ export default function SpfDetails({
       }}>
         <Button 
           type="primary"
-          size="large"
           block
           style={{ 
-            backgroundColor: '#d4a574', 
-            borderColor: '#d4a574',
             flex: 2
           }}
           onClick={onRequestParts}
         >
           Request Parts
+        </Button>
+         <Button         
+          onClick={EditImage}
+        >
+          Edit
         </Button>
       </div>
     </Drawer>

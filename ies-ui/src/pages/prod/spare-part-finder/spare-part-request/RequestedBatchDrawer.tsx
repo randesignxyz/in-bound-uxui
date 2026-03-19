@@ -10,6 +10,8 @@ import {
   Button,
   Space,
   message,
+  Modal,
+  InputNumber,
 } from 'antd';
 import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -160,6 +162,11 @@ export default function RequestedBatchDrawer({
   const [pickupBatches, setPickupBatches] = useState<PickupBatch[]>([]);
   const [expandedPickupBatchNos, setExpandedPickupBatchNos] = useState<number[]>([]);
   const [activityLogs, setActivityLogs] = useState<RequestDetailActivity[]>([]);
+  const [quantityOverrides, setQuantityOverrides] = useState<Record<string, number>>({});
+  const [itemMarks, setItemMarks] = useState<Record<string, 'deleted' | 'canceled'>>({});
+  const [editedItems, setEditedItems] = useState<Record<string, boolean>>({});
+  const [editingItem, setEditingItem] = useState<RequestDetailLineItem | null>(null);
+  const [editingQuantity, setEditingQuantity] = useState<number>(1);
   const lastServerStatusRef = useRef<RequestStatus | null>(null);
   const lastShipmentNoticeRef = useRef<number>(0);
   const initKeyRef = useRef<string>('');
@@ -251,6 +258,11 @@ export default function RequestedBatchDrawer({
     setPickupSelection([]);
     setStatusOverride(null);
     setExpandedPickupBatchNos([]);
+    setQuantityOverrides({});
+    setItemMarks({});
+    setEditedItems({});
+    setEditingItem(null);
+    setEditingQuantity(1);
 
     const prePickedCount = typeof data.receivedItems === 'number' ? data.receivedItems : 0;
     const seededPicked =
@@ -469,11 +481,36 @@ export default function RequestedBatchDrawer({
     setPickupBatches([]);
     setExpandedPickupBatchNos([]);
     setActivityLogs([]);
+    setQuantityOverrides({});
+    setItemMarks({});
+    setEditedItems({});
+    setEditingItem(null);
+    setEditingQuantity(1);
     lastServerStatusRef.current = null;
     lastShipmentNoticeRef.current = 0;
     initKeyRef.current = '';
     onClose?.();
   };
+
+  const canEditOrDelete = effectiveStatus === 'pending';
+  const canCancel =
+    effectiveStatus === 'approved' ||
+    effectiveStatus === 'ready_to_Pickup' ||
+    effectiveStatus === 'partial';
+
+  const requestItems = useMemo(
+    () =>
+      data.items.map((it) => ({
+        ...it,
+        quantityToReturn: quantityOverrides[it.productId] ?? it.quantityToReturn,
+      })),
+    [data.items, quantityOverrides],
+  );
+
+  const activeRequestItems = useMemo(
+    () => requestItems.filter((it) => !itemMarks[it.productId]),
+    [itemMarks, requestItems],
+  );
 
   const availablePickupQty = (record: RequestDetailLineItem, status: RequestStatus): number => {
     if (typeof record.warehouseSentQuantity === 'number') return record.warehouseSentQuantity;
@@ -484,18 +521,18 @@ export default function RequestedBatchDrawer({
   const hasAnyPickupAvailable = useMemo(() => {
     if (effectiveStatus === 'ready_to_Pickup') return true;
     if (effectiveStatus !== 'in-progress') return false;
-    return data.items.some((it) => availablePickupQty(it, effectiveStatus) > 0);
-  }, [data.items, effectiveStatus]);
+    return activeRequestItems.some((it) => availablePickupQty(it, effectiveStatus) > 0);
+  }, [activeRequestItems, effectiveStatus]);
 
   const pickedProductIds = useMemo(() => new Set(pickedItems.map((it) => it.productId)), [pickedItems]);
   const remainingItems = useMemo(
-    () => data.items.filter((it) => !pickedProductIds.has(it.productId)),
-    [data.items, pickedProductIds],
+    () => activeRequestItems.filter((it) => !pickedProductIds.has(it.productId)),
+    [activeRequestItems, pickedProductIds],
   );
 
   const requestedQtyTotal = useMemo(
-    () => data.items.reduce((sum, it) => sum + (Number(it.quantityToReturn) || 0), 0),
-    [data.items],
+    () => activeRequestItems.reduce((sum, it) => sum + (Number(it.quantityToReturn) || 0), 0),
+    [activeRequestItems],
   );
 
   const receivedQtyTotal = useMemo(
@@ -503,56 +540,180 @@ export default function RequestedBatchDrawer({
     [pickedItems],
   );
 
+  const openEditQuantity = (record: RequestDetailLineItem) => {
+    setEditingItem(record);
+    setEditingQuantity(Math.max(1, Number(record.quantityToReturn) || 1));
+  };
+
+  const confirmEditQuantity = () => {
+    if (!editingItem) return;
+    const productId = editingItem.productId;
+    const nextQty = Math.max(1, Number(editingQuantity) || 1);
+
+    setQuantityOverrides((prev) => ({
+      ...prev,
+      [productId]: nextQty,
+    }));
+    setEditedItems((prev) => ({
+      ...prev,
+      [productId]: true,
+    }));
+    setActivityLogs((prev) => [
+      ...prev,
+      {
+        label: 'Item Edited',
+        description: `${productId} requested quantity updated to ${nextQty}`,
+        date: new Date().toISOString(),
+        by: data.requestedBy ?? 'Requester',
+        dot: 'done',
+      },
+    ]);
+    setEditingItem(null);
+    message.success(`Updated requested quantity for ${productId} to ${nextQty}.`);
+  };
+
+  const confirmDeleteItem = (record: RequestDetailLineItem) => {
+    Modal.confirm({
+      title: 'Delete this item?',
+      content: `Are you sure to delete ${record.productId}? This will mark the item as deleted.`,
+      okText: 'Yes, Delete',
+      cancelText: 'No',
+      okButtonProps: { danger: true },
+      onOk: () => {
+        markItem(record, 'deleted');
+      },
+    });
+  };
+
+  const confirmCancelItem = (record: RequestDetailLineItem) => {
+    Modal.confirm({
+      title: 'Cancel this item?',
+      content: `Are you sure to cancel ${record.productId}? This will mark the item as canceled.`,
+      okText: 'Yes, Cancel',
+      cancelText: 'No',
+      onOk: () => {
+        markItem(record, 'canceled');
+      },
+    });
+  };
+
+  const markItem = (record: RequestDetailLineItem, mark: 'deleted' | 'canceled') => {
+    if (itemMarks[record.productId]) return;
+
+    setItemMarks((prev) => ({
+      ...prev,
+      [record.productId]: mark,
+    }));
+
+    // Keep pickup selection and picked state consistent when an item is marked.
+    setPickupSelection((prev) => prev.filter((id) => id !== record.productId));
+    setPickedItems((prev) => prev.filter((it) => it.productId !== record.productId));
+
+    setActivityLogs((prev) => [
+      ...prev,
+      {
+        label: mark === 'deleted' ? 'Item Deleted' : 'Item Canceled',
+        description: `${record.productId} (${record.itemName}) was ${mark}`,
+        date: new Date().toISOString(),
+        by: data.requestedBy ?? 'Requester',
+        dot: 'done',
+      },
+    ]);
+
+    message.success(
+      mark === 'deleted'
+        ? `${record.productId} marked as deleted.`
+        : `${record.productId} marked as canceled.`,
+    );
+  };
+
   const columns: ColumnsType<RequestDetailLineItem> = [
     { title: 'No', dataIndex: 'no', key: 'no', width: 56 },
     {
       title: 'Image',
       dataIndex: 'image',
       key: 'image',
+      width: 80,
       render: (_, record) => (
         <SparePartImage
           imageId={record.imageId}
           src={record.image}
           alt={record.itemName || record.productId}
-          size={48}
         />
       ),
     },
     {
       title: 'Product ID',
       dataIndex: 'productId',
-      render: (_: unknown, record) => (
-        <Typography.Link
-          onClick={(event) => {
-            event.preventDefault();
-            setSelectedProduct(record);
-            setSpfOpen(true);
-          }}
-        >
-          {record.productId}
-        </Typography.Link>
-      ),
+      render: (_: unknown, record) => {
+        const mark = itemMarks[record.productId];
+        const isEdited = Boolean(editedItems[record.productId]);
+        const content = mark ? (
+          <Text delete={mark === 'deleted'} type={mark === 'deleted' ? 'danger' : 'secondary'}>
+            {record.productId}
+          </Text>
+        ) : (
+          <Typography.Link
+            onClick={(event) => {
+              event.preventDefault();
+              setSelectedProduct(record);
+              setSpfOpen(true);
+            }}
+          >
+            {record.productId}
+          </Typography.Link>
+        );
+
+        return (
+          <Space size={6}>
+            {content}
+            {mark ? (
+              <Tag color={mark === 'deleted' ? 'red' : 'gold'} bordered={false}>
+                {mark === 'deleted' ? 'Deleted' : 'Canceled'}
+              </Tag>
+            ) : isEdited ? (
+              <Tag color="blue" bordered={false}>
+                Edited
+              </Tag>
+            ) : null}
+          </Space>
+        );
+      },
     },
     {
       title: 'Item Name',
       dataIndex: 'itemName',
       ellipsis: true,
+      render: (_: unknown, record) => {
+        const mark = itemMarks[record.productId];
+        const isEdited = Boolean(editedItems[record.productId]);
+        return (
+          <Text
+            delete={mark === 'deleted'}
+            type={mark === 'deleted' ? 'danger' : mark === 'canceled' ? 'secondary' : isEdited ? 'warning' : undefined}
+          >
+            {record.itemName}
+          </Text>
+        );
+      },
     },
     {  
        title: 'UoM',
         dataIndex: 'UoM',
         key: 'UoM',
         ellipsis: true,
-        width: 'auto',
+        width: '10%',
     },
     {
       title: 'Qty Requested',
       dataIndex: 'quantityToReturn',
-      align: 'right',
+      align: 'center',
+      width: '10%',
     },
     {
       title: 'Qty Sent',
-      align: 'right',
+      align: 'center',
+      width: '10%',
       render: (_: unknown, record) =>
         effectiveStatus === 'ready_to_Pickup' || effectiveStatus === 'partial' || effectiveStatus === 'completed'
           ? record.warehouseSentQuantity ?? record.quantityToReturn
@@ -562,8 +723,82 @@ export default function RequestedBatchDrawer({
     },
     {
       title: 'Qty Received',
-      align: 'right',
+      align: 'center',
+      width: '10%',
       render: (_: unknown, record) => (pickedProductIds.has(record.productId) ? record.quantityToReturn : 0),
+    },
+     ...(access.canSpfApprover ? [
+          {
+            title: 'Action',
+            key: 'approver_action',
+            fixed: 'right' as const,
+            render: (_: unknown, record: RequestDetailLineItem) => {
+              const marked = itemMarks[record.productId];
+              const isPicked = pickedProductIds.has(record.productId);
+
+              if (marked) {
+                return <Text type="secondary">{marked === 'deleted' ? 'Deleted' : 'Canceled'}</Text>;
+              }
+
+              if (canEditOrDelete) {
+                return (
+                  <Space size="small">
+                    <Button type="link" onClick={() => openEditQuantity(record)}>
+                      Edit Amount
+                    </Button>
+                    <Button
+                      danger
+                      type="link"
+                      onClick={() => {
+                        confirmDeleteItem(record);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </Space>
+                );
+              }
+
+              if (canCancel) {
+                return (
+                  <Button
+                    type="link"
+                    disabled={isPicked}
+                    onClick={() => {
+                      confirmCancelItem(record);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                );
+              }
+
+              return <Text type="secondary">-</Text>;
+            },
+          }
+      ]:[])
+  ];
+
+  const displayedTotalItems = activeRequestItems.length;
+
+  const displayedReceivedItems = useMemo(
+    () => pickedItems.filter((it) => !itemMarks[it.productId]).length,
+    [itemMarks, pickedItems],
+  );
+
+  const columnsForPickupTable: ColumnsType<RequestDetailLineItem> = [
+    { title: 'Product ID', dataIndex: 'productId' },
+    { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
+    {
+      title: 'Qty Sent',
+      align: 'right' as const,
+      render: (_: unknown, record) => availablePickupQty(record, effectiveStatus),
+    },
+    {
+      title: 'Qty Received',
+      align: 'right' as const,
+      render: (_: unknown, record) =>
+        pickedProductIds.has(record.productId) ? record.quantityToReturn : 0,
     },
   ];
 
@@ -584,14 +819,14 @@ export default function RequestedBatchDrawer({
       category: selectedProduct.category,
       spare_part_type: selectedProduct.sparePartType,
       business_unit: selectedProduct.businessUnit,
-      requested_date: data.requestDate,
+      requested_date: formatDateTime(data.requestDate),
     };
   }, [data.requestDate, selectedProduct]);
 
-  const receivedItemsDisplay = useMemo(() => {
-    if (pickedItems.length > 0 || statusOverride) return `${receivedQtyTotal} / ${requestedQtyTotal}`;
-    return data.receivedItems ?? '—';
-  }, [data.receivedItems, pickedItems.length, receivedQtyTotal, requestedQtyTotal, statusOverride]);
+  // const receivedItemsDisplay = useMemo(() => {
+  //   if (pickedItems.length > 0 || statusOverride) return `${receivedQtyTotal} / ${requestedQtyTotal}`;
+  //   return formatDateTime(data.receivedItems) ?? '—';
+  // }, [data.receivedItems, pickedItems.length, receivedQtyTotal, requestedQtyTotal, statusOverride]);
 
   const confirmPickup = () => {
     if (!pickupSelection.length) return;
@@ -617,7 +852,7 @@ export default function RequestedBatchDrawer({
     ]);
 
     const nextReceivedQtyTotal = nextPicked.reduce((sum, it) => sum + (Number(it.quantityToReturn) || 0), 0);
-    const hasMorePickableNow = data.items.some(
+    const hasMorePickableNow = activeRequestItems.some(
       (it) => !nextPickedIds.has(it.productId) && availablePickupQty(it, effectiveStatus) > 0,
     );
 
@@ -694,7 +929,7 @@ export default function RequestedBatchDrawer({
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div>
             <Text type="secondary">
-              Warehouse sent items ({remainingItems.length} remaining / {data.items.length} total)
+              Warehouse sent items ({remainingItems.length} remaining / {activeRequestItems.length} total)
             </Text>
             <Table<RequestDetailLineItem>
               size="small"
@@ -707,25 +942,12 @@ export default function RequestedBatchDrawer({
                 getCheckboxProps: (record) => ({
                   disabled:
                     pickedProductIds.has(record.productId) ||
+                    Boolean(itemMarks[record.productId]) ||
                     availablePickupQty(record, effectiveStatus) <= 0,
                 }),
               }}
-              dataSource={data.items}
-              columns={[
-                { title: 'Product ID', dataIndex: 'productId' },
-                { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
-                {
-                  title: 'Qty Sent',
-                  align: 'right' as const,
-                  render: (_: unknown, record) => availablePickupQty(record, effectiveStatus),
-                },
-                {
-                  title: 'Qty Received',
-                  align: 'right' as const,
-                  render: (_: unknown, record) =>
-                    pickedProductIds.has(record.productId) ? record.quantityToReturn : 0,
-                },
-              ]}
+              dataSource={activeRequestItems}
+              columns={columnsForPickupTable}
             />
           </div>
 
@@ -768,7 +990,7 @@ export default function RequestedBatchDrawer({
             <span>Request Details</span>
           </div>
         }
-        width="50%"
+        width="80%"
         placement="right"
         onClose={handleClose}
         open={open}
@@ -829,15 +1051,17 @@ export default function RequestedBatchDrawer({
           <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
           <Descriptions.Item label="Type">{data.type ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Request Date">{data.requestDate}</Descriptions.Item>
+          <Descriptions.Item label="Request Date">{formatDateTime(data.requestDate)}</Descriptions.Item>
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Status">
-            <Tag color={statusColorMap[effectiveStatus]} bordered={false}>
+            <Tag color={statusColorMap[effectiveStatus]} bordered={false}
+            >
               {statusLabelMap[effectiveStatus]}
+              
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Total Items">{data.totalItems}</Descriptions.Item>
-          <Descriptions.Item label="Received Items">{receivedItemsDisplay}</Descriptions.Item>
+          <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
+          <Descriptions.Item label="Received Items">{displayedReceivedItems}</Descriptions.Item>
         </Descriptions>
 
         <Title level={5} style={{ marginBottom: 16 }}>
@@ -868,7 +1092,21 @@ export default function RequestedBatchDrawer({
           rowKey="no"
           pagination={false}
           columns={columns}
-          dataSource={data.items}
+          dataSource={requestItems}
+          onRow={(record) => {
+            const mark = itemMarks[record.productId];
+            const isEdited = Boolean(editedItems[record.productId]);
+            if (mark === 'deleted') {
+              return { style: { backgroundColor: '#fff1f0' } };
+            }
+            if (mark === 'canceled') {
+              return { style: { backgroundColor: '#fffbe6' } };
+            }
+            if (isEdited) {
+              return { style: { backgroundColor: '#e6f7ff' } };
+            }
+            return {};
+          }}
           scroll={{ x: 700 }}
           style={{ marginBottom: 32 }}
         />
@@ -972,6 +1210,26 @@ export default function RequestedBatchDrawer({
           setSelectedProduct(null);
         }}
       />
+
+      <Modal
+        title="Edit Requested Amount"
+        open={Boolean(editingItem)}
+        onCancel={() => setEditingItem(null)}
+        onOk={confirmEditQuantity}
+        okText="Save"
+      >
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Text>
+            Product: <Text strong>{editingItem?.productId}</Text>
+          </Text>
+          <InputNumber
+            min={1}
+            style={{ width: '100%' }}
+            value={editingQuantity}
+            onChange={(value) => setEditingQuantity(Math.max(1, Number(value) || 1))}
+          />
+        </Space>
+      </Modal>
     </>
   );
 }

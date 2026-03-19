@@ -1,4 +1,4 @@
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import Icon, { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import { Button, Card, DatePicker, Input, Select, Space, Tag, Typography, message } from 'antd';
@@ -136,8 +136,21 @@ export default function SparePartListView() {
     setRequestModalOpen(true);
   };
 
-  const openDetails = (item) => {
-    setDetailsItem(item || null);
+  const openDetails = async (item) => {
+    if (!item) {
+      setDetailsItem(null);
+      setDetailsOpen(true);
+      return;
+    }
+
+    try {
+      const detail = await services.detail({ id: item.id, productId: item.productId });
+      setDetailsItem(detail || item);
+    } catch (error) {
+      message.warning('Unable to load item details. Showing list data.');
+      setDetailsItem(item);
+    }
+
     setDetailsOpen(true);
   };
 
@@ -340,22 +353,19 @@ export default function SparePartListView() {
                     render: (v) => v || '—',
                   },
                   {
-                    title: 'Line',
-                    dataIndex: 'line',
+                    title: 'Level',
                     width: 120,
-                    render: (v) => v || '—',
+                    render: (_, record) => record.locations?.[0]?.level || '—',
                   },
                   {
-                    title: 'Shift',
-                    dataIndex: 'shift',
+                    title: 'Shelve',
                     width: 120,
-                    render: (v) => v || '—',
+                    render: (_, record) => record.locations?.[0]?.shelve || '—',
                   },
                   {
                     title: 'Bin',
-                    dataIndex: 'bin',
                     width: 120,
-                    render: (v) => v || '—',
+                    render: (_, record) => record.locations?.[0]?.bin || '—',
                   },
                   // {
                   //   title: 'Level',
@@ -398,6 +408,19 @@ export default function SparePartListView() {
                 return <Tag color="error">No Stock</Tag>;
               },
             },
+            ...(access.canSpfWarehouseStaff || access.canAdmin ?[
+              {
+              dataIndex: 'edit',
+              width: 40,
+              render: () =>(
+                <a
+                  style={{ color: '#1890ff', fontSize: 16, cursor: 'pointer' }}
+                  onClick={() => {}}>
+                  Edit
+                </a>
+              )
+            },
+            ]:[])
           ]}
           request={requestData}
         />
@@ -442,14 +465,12 @@ export default function SparePartListView() {
             ? {
                 image: detailsItem.image,
                 imageId: detailsItem.imageId,
+                locations: detailsItem.locations,
                 spare_part_name: detailsItem.partName,
                 part_number: detailsItem.productId,
                 description: detailsItem.description,
                 stock_quantity: detailsItem.stock,
                 receiving_from_warehouse: detailsItem.warehouse,
-                zone: detailsItem.line,
-                shelf: detailsItem.level,
-                level: detailsItem.bin,
                 company: detailsItem.company,
                 category: detailsItem.category,
                 spare_part_type: detailsItem.type,
@@ -458,8 +479,12 @@ export default function SparePartListView() {
               }
             : undefined
         }
-        onClose={closeDetails}
-        onRequestParts={handleRequestPartsFromDetails}
+          onClose={closeDetails}
+          onRequestParts={handleRequestPartsFromDetails}
+          onInventoryLog={() => {}}
+          EditImage={() => {
+            message.info('Edit image action is not wired yet.');
+          }}
       />
 
     </>

@@ -26,42 +26,83 @@ export interface WarehouseRequestRecord {
   requestId: string;
   requestDate: string;
   requester: string;
-  priority: 'Urgent' | 'High' | 'Normal' | 'Low';
-  status: 'Pending' | 'Approved' | 'Partial' | 'Completed' | 'Ready To Pick Up' | 'Rejected';
+  priority: 'Urgent' | 'High' | 'Normal';
+  status:
+    | 'Pending'
+    | 'Approved'
+    | 'In Progress'
+    | 'Partial'
+    | 'Completed'
+    | 'Ready To Pick Up'
+    | 'Rejected';
   items: WarehouseRequestLineItem[];
   shipments?: WarehouseRequestShipment[];
   pickupDate?: string;
   pickedUpBy?: string;
 }
 
+export type WarehouseDisplayStatus =
+  | 'Pending'
+  | 'In Progress'
+  | 'Ready To Pick Up'
+  | 'Partial'
+  | 'Completed'
+  | 'Rejected';
+
 export const parseRequestDate = (value: string) =>
   dayjs(value, ['YYYY-MM-DD HH:mm', 'YYYY-MMM-DD, h:mm A', 'YYYY-MMM-DD, hh:mm A'], true);
 
 export const priorityColorMap: Record<WarehouseRequestRecord['priority'], string> = {
-  Urgent: '#ff4d4f',
-  High: '#fa8c16',
-  Normal: '#1677ff',
-  Low: '#8c8c8c',
+  Urgent: 'error',
+  High: 'warning',
+  Normal: 'info',
 };
 
-export const getWarehouseRequestStatus = (status: WarehouseRequestRecord['status']) =>
-  status === 'Approved' ? 'Processing' : status;
+export const getWarehouseRequestStatus = (status: WarehouseRequestRecord['status']) => status;
 
-export const statusPillMap: Record<string, { background: string; color: string }> = {
-  Pending: { background: '#e6f4ff', color: '#1677ff' },
-  Partial: { background: '#fff7e6', color: '#fa8c16' },
-  Completed: { background: '#f6ffed', color: '#52c41a' },
-  'Ready To Pick Up': { background: '#fffbe6', color: '#ad8b00' },
-  Processing: { background: '#e6f4ff', color: '#1677ff' },
-  'In Progress': { background: '#e6f4ff', color: '#1677ff' },
-  Approved: { background: '#e6f4ff', color: '#1677ff' },
-  Rejected: { background: '#fff1f0', color: '#f5222d' },
-  'Completed Return': { background: '#f6ffed', color: '#52c41a' },
-  'Partially Returned': { background: '#fff7e6', color: '#fa8c16' },
+export const warehouseStatusColorMap: Record<WarehouseDisplayStatus, string> = {
+  Pending: 'default',
+  'In Progress': 'processing',
+  'Ready To Pick Up': 'success',
+  Partial: 'gold',
+  Completed: 'success',
+  Rejected: 'error',
 };
 
-export const getStatusPill = (status: string) =>
-  statusPillMap[status] ?? { background: '#f0f0f0', color: '#8c8c8c' };
+export const warehouseStatusLabelMap: Record<WarehouseDisplayStatus, string> = {
+  Pending: 'Pending',
+  'In Progress': 'In Progress',
+  'Ready To Pick Up': 'Ready To Pick Up',
+  Partial: 'Partial',
+  Completed: 'Completed',
+  Rejected: 'Rejected',
+};
+
+export const deriveWarehouseDisplayStatus = (request: WarehouseRequestRecord): WarehouseDisplayStatus => {
+  const total = request.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  const received = request.items.reduce((sum, item) => sum + (Number(item.receivedQuantity) || 0), 0);
+
+  if (request.status === 'Rejected') return 'Rejected';
+  if (total > 0 && received >= total) return 'Completed';
+  if (request.status === 'Ready To Pick Up') return 'Ready To Pick Up';
+  if (request.status === 'Partial') return 'Partial';
+  if (request.status === 'In Progress') return 'In Progress';
+  if (
+    request.status === 'Approved' ||
+    request.status === 'Pending'
+  ) {
+    // For warehouse queue, approved requests are treated as pending until warehouse confirms requester.
+    return 'Pending';
+  }
+
+  if (
+    received > 0
+  ) {
+    return 'In Progress';
+  }
+
+  return 'Pending';
+};
 
 export const calcRequestTotals = (request: WarehouseRequestRecord) => {
   const total = request.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
@@ -122,7 +163,7 @@ export const mockWarehouseRequests: WarehouseRequestRecord[] = [
     requestId: 'REQ-WH-0004',
     requestDate: dayjs().subtract(6, 'hour').format('YYYY-MMM-DD, h:mm A'),
     requester: 'Srey Pov',
-    priority: 'Low',
+    priority: 'Normal',
     status: 'Partial',
     pickupDate: dayjs().subtract(3, 'hour').format('YYYY-MMM-DD, h:mm A'),
     pickedUpBy: 'Dara Sok',

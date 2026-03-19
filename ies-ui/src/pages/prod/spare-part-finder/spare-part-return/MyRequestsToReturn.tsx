@@ -130,19 +130,28 @@ export default function MyRequestsToReturn() {
               dataIndex: 'status',
               render: (_, r) =>
               r.status === 'Pending' ? (
-                <Tag color="processing" bordered={false}>
+                <Tag color="processing" bordered={false}
+                 style={{ width: '100%'}}
+                >
                   Pending
+
                 </Tag>
               ) : r.status === 'Rejected' ? (
-                <Tag color="error" bordered={false}>
+                <Tag color="error" bordered={false}
+                 style={{ width: '100%'}}
+                >
                   Rejected
                 </Tag>
               ) : r.status === 'Completed' ? (
-                <Tag color="success" bordered={false}>
+                <Tag color="success" bordered={false}
+                 style={{ width: '100%'}}
+                >
                   Completed
                 </Tag>
               ) : r.status === 'Approved' ? (
-                <Tag color="cyan" bordered={false}>
+                <Tag color="warning" bordered={false}
+                 style={{ width: '100%'}}
+                >
                   Approved
                 </Tag>
               ) : (

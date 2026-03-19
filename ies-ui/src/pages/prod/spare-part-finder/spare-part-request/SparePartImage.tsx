@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { getUploadFileObjectUrlV2 } from '@/services/apiGateway';
 
 type Props = {
-  imageId?: string;
+  imageId?: string | string[];
   src?: string;
   alt?: string;
   size?: number;
@@ -13,6 +13,7 @@ type Props = {
 export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) {
   const [imageUrl, setImageUrl] = useState<string | undefined>(src);
   const objectUrlRef = useRef<string | undefined>();
+  const normalizedImageId = Array.isArray(imageId) ? imageId.find((id) => Boolean(id)) : imageId;
 
   const revokeObjectUrl = () => {
     if (objectUrlRef.current) {
@@ -27,7 +28,7 @@ export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) 
     revokeObjectUrl();
     setImageUrl(src);
 
-    if (!imageId) {
+    if (!normalizedImageId) {
       return () => {
         active = false;
       };
@@ -37,7 +38,7 @@ export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) 
       setImageUrl(undefined);
     }
 
-    getUploadFileObjectUrlV2()(imageId)
+    getUploadFileObjectUrlV2()(normalizedImageId)
       .then((url) => {
         if (!active) {
           URL.revokeObjectURL(url);
@@ -56,7 +57,7 @@ export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) 
       active = false;
       revokeObjectUrl();
     };
-  }, [imageId, src]);
+  }, [normalizedImageId, src]);
 
   return imageUrl ? (
     <Avatar src={imageUrl} alt={alt} size={size} shape="square" />

@@ -3,9 +3,10 @@ import type { ProColumns } from '@ant-design/pro-components';
 import { Button, Progress, Tag, Typography } from 'antd';
 import {
   calcRequestTotals,
-  getStatusPill,
-  getWarehouseRequestStatus,
+  deriveWarehouseDisplayStatus,
   priorityColorMap,
+  warehouseStatusColorMap,
+  warehouseStatusLabelMap,
   type WarehouseRequestRecord,
 } from './requestsWarehouse.shared';
 
@@ -50,7 +51,7 @@ export const buildSummaryColumns = (options: {
   {
     title: 'Fulfillment Progress',
     key: 'progress',
-    width: 200,
+    width: "15%",
     render: (_, record) => {
       const { total, received, percent } = calcRequestTotals(record);
       return (
@@ -64,7 +65,7 @@ export const buildSummaryColumns = (options: {
           <Progress
             percent={percent}
             showInfo={false}
-            size={[148, 6]}
+            size={['100%', 6]}
             strokeColor={percent === 100 ? '#52c41a' : '#b59a30'}
             trailColor="#d9dfe7"
           />
@@ -81,14 +82,13 @@ export const buildSummaryColumns = (options: {
     key: 'status',
     width: 120,
     render: (_, record) => {
-      const displayValue = getWarehouseRequestStatus(record.status);
-      const pill = getStatusPill(displayValue);
+      const status = deriveWarehouseDisplayStatus(record);
       return (
         <Tag
-          bordered={false}
-          style={{ marginInlineEnd: 0, color: pill.color, background: pill.background }}
+          color={warehouseStatusColorMap[status]}
+          style={{ width: '100%', textAlign: 'center' }}
         >
-          {displayValue}
+          {warehouseStatusLabelMap[status]}
         </Tag>
       );
     },

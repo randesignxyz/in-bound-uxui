@@ -287,6 +287,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     SaleService('sync-so-from-sap')
     , actions
   ),
+  updateBacktoSAP: execService<{data:any}, { data: string, message: string }>(
+    SaleService('update-so-back-to-sap')
+    , actions
+  ),
   syncAllSOFromSAP: execService<{}, { data: string, message: string }>(
     SaleService('sync-all-so-from-sap')
     , actions

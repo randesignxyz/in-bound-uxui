@@ -116,7 +116,8 @@ export type SaleServiceName =
   | 'sync-so-from-sap'
   | 'list-sync-so'
   | 'sync-all-so-from-sap'
-  | 'update-all-sap-saleplan';
+  | 'update-all-sap-saleplan'
+  | 'update-so-back-to-sap';
 
 /** Stock */
 // export interface StockControl {

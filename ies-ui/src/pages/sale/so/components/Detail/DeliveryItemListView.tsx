@@ -152,9 +152,9 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
         const uniqueItems = Array.from(
           new Map(items?.map(i => [`${i.docNum}_${i.company}`, i])).values()
         );
-
+        console.log('datadata',data)
         // SECOND RUN (new refreshed data)
-        await actions.syncSOFromSAP(uniqueItems, data);
+        await actions.updateBacktoSAP(data);
         // await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
 
         message.success('Sync Success')

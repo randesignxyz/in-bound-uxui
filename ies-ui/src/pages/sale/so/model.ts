@@ -490,6 +490,9 @@ export const Model = () => {
   const syncSOFromSAP = async (items: any, data: any) => {
     return await saleServices.syncSOFromSAP({ items, data });
   };
+  const updateBacktoSAP = async (data: any) => {
+    return await saleServices.updateBacktoSAP({ data });
+  };
 
   const cancelSo = async (soId: number, remarks: string) => {
     return await saleServices.cancelSo({ soId, remarks });
@@ -573,6 +576,7 @@ export const Model = () => {
       postSoNew,
       syncFromSFA,
       syncSOFromSAP,
+      updateBacktoSAP,
       cancelSo,
       closeSo,
       listTransportationOffer,

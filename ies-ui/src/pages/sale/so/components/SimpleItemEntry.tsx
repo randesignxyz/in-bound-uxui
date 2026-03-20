@@ -214,7 +214,11 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, docum
               allowClear={false}
               label="Type"
               showSearch
-              options={data.saleTypes?.filter(it => it.groupType == documentType)?.sort((a, b) => (a.sequence ?? 999) - (b.sequence ?? 999))?.map(it => ({ label: it.code, value: it.code }))}
+              // options={data.saleTypes?.filter(it => it.groupType == documentType)?.sort((a, b) => (a.sequence ?? 999) - (b.sequence ?? 999))?.map(it => ({ label: it.code, value: it.code }))}
+              options={data.saleTypes
+                ?.filter(it => !documentType || it.groupType === documentType)
+                ?.sort((a, b) => (a.sequence ?? 999) - (b.sequence ?? 999))
+                ?.map(it => ({ label: it.code, value: it.code }))}
             // options={data.saleTypes?.filter(it => it.sequence !== null)?.slice()?.sort((a, b) => {
             //   // If both null → keep original order
             //   if (a.sequence == null && b.sequence == null) return 0;

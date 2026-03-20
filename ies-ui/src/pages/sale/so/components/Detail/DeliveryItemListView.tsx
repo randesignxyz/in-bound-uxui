@@ -155,7 +155,7 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries, s
         console.log('datadata',data)
         // SECOND RUN (new refreshed data)
         await actions.updateBacktoSAP(data);
-        // await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
+        await AllocateServiceAPI(requestActions).syncAllocateBySO([docEntry]);
 
         message.success('Sync Success')
       } catch (e) {

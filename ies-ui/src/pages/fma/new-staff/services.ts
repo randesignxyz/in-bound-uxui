@@ -24,9 +24,9 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
     }) => Promise<Blob>;
 } => {
     return {
-         page: (params: TableViewSearchParams<SearchParams>) => 
+        page: (params: TableViewSearchParams<SearchParams>) => 
             queryDataPagingService<NewStaffListItem>({
-                actionName: 'fetch_ios_emp_request_page',
+                actionName: 'fetch-paging-fma-new-staff-request',
                 endpoint: 'HR',
                 payload: params,
                  pagination:{

@@ -1,3 +1,4 @@
+import { BU, Department } from "@/pages/hrm/data"
 import { Moment } from "moment"
 
 export type NewStaffListItem = {
@@ -90,6 +91,45 @@ export type SavePayLoad = {
     plateNumber?: string;
 
     uploadedFiles: string[];
+}
+export type ItemType = {
+  itemId: number;
+  itemName: string;
+  itemType?: string;
+  itemCategory: string;
+  qty: number;
+  type?: string;
+  remarks?: string;
+  checked: boolean;
+};
+export type DataFormType = {
+  requestorId: string;
+  requestorBuId: number;
+  remarks?: string;
+  empName: string;
+  localName: string;
+  empNo?: string;
+  jobId: number;
+  buId: number;
+  gender: string;
+  departmentId: number;
+  workplaceId: number;
+  startingDate: Moment;
+  phoneNo?: string;
+  email?: string
+  carModal?: string;
+  carColor?: string;
+  year?: string;
+  plateNumber?: string;
+};
+export type FMANewStaffItem = {
+    workplace: ItemType[];
+    uniform: ItemType[];
+    accessories: ItemType[];
+    system: ItemType[];
+    access: ItemType[];
+    buList: BU[];
+    departmentList: Department[];
 }
 
 

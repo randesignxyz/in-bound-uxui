@@ -56,7 +56,7 @@ export default () => {
             )},
           {
             action: "view",
-            tabLabel: item?.formNo,
+            tabLabel: `${item?.formNo} | ${item?.ref}`,
             // tabIcon: <PlusOutlined/>,
             // panel: (props)=> <Form openInTab formKey="fma_new_staff_request" id={item?.processInstId}/>
              panel: (props)=> <Detail item={item}/>
@@ -129,10 +129,10 @@ export default () => {
               },
               {
                 title: "Form #",
-                width: 160,
+                width: 190,
                 actionProps: (item) => ({
                   type: 'view',
-                  label: item.formNo,
+                  label:  `${item?.formNo} | ${item?.ref}`,
                 }),
                 // render: (_, entity) => (
                 //   <span
@@ -170,6 +170,8 @@ export default () => {
                     : "-",
               },
               { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} />, sorter: 'status' },
+              { title: 'FMA Status', render: (_, r) => <Status text={toReadable(r.fmaStatus)} />, sorter: 'status' },
+              { title: 'ICT Status', render: (_, r) => <Status text={toReadable(r.ictStatus)} />, sorter: 'status' },
             ]
            }
         }}   

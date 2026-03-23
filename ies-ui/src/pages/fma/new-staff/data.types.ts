@@ -17,6 +17,10 @@ export type NewStaffListItem = {
     reportTo?: string;
     startingDate: moment.Moment;
     status: string;
+    ref?: string;
+    ictProcessInstId?: string;
+    fmaStatus: string;
+    ictStatus: string;
 }
 
 export type NewStaffItemDetail = {

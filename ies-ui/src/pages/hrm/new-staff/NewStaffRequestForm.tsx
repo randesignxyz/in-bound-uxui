@@ -34,6 +34,7 @@ import ICTNewStaffForm from './components/ICTNewStaffForm';
 import { ICTNewStaffItem } from '@/pages/ict/new-staff/data.types';
 import { SavePayLoad as SavePayLoadICT } from '@/pages/ict/new-staff/data.types';
 import { NewStaffService } from './service';
+import { SaveNewStaffPayLoad } from './data.types';
 
 // type DataFormType = {
 //   requestorId: string;
@@ -180,7 +181,11 @@ export default ({ visible, onClose, cb}: ActionCompProps ) => {
           };
           console.log("saveDataICT",saveDataICT)
           console.log("saveData",saveData)
-          const rs = await NewStaffService.save(saveData)(requestActions)
+          const payload = {
+            fma: saveData,
+            ict: saveDataICT,            
+          } as SaveNewStaffPayLoad
+          const rs = await NewStaffService.save(payload)(requestActions)
           // const rs = await services.saveItem(saveData);
           message.success(
             `Your request is submitted. Please track the request with form no ${rs.data}`,

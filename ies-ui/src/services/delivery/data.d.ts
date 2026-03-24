@@ -715,6 +715,7 @@ export interface InvoiceItem {
   amountAfterVat: Double;
   salesperson: string;
   sameTrip?: boolean
+  company?:string
 }
 
 export interface DeliveryNoteListItem {

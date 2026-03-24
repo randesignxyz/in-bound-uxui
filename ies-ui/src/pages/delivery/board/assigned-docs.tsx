@@ -158,9 +158,10 @@ const AssignedDocModal: React.FC<Props> = ({
               collected: it.collected || false,
               included: it.included,
               remarks: it.remarks,
+              company:it.company
             })),
           });
-          console.log('assigningData', companyMap)
+          console.log('invoices', invoices)
           if (from === 'DETAIL') {
             onRefreshDetailData()
           }

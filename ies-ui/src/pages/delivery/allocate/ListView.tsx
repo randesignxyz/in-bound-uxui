@@ -2354,7 +2354,7 @@ export default () => {
                           }}
                         />
 
-                        <ProFormSelect
+                        {/* <ProFormSelect
                           placeholder="District"
                           name="district_id_dn"
                           value={districtId}
@@ -2382,7 +2382,7 @@ export default () => {
                           allowClear
                           showSearch
                           mode="multiple"
-                        />
+                        /> */}
                         <ProFormSelect
                           placeholder="Customer"
                           name="customer_dn"

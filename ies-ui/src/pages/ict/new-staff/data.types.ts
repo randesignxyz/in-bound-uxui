@@ -76,6 +76,20 @@ export type SavePayLoad = {
     items: SaveItem[];
     uploadedFiles: string[];
 }
+export type ItemType = {
+  itemId: number;
+  itemName: string;
+  itemType?: string;
+  itemCategory: string;
+  qty: number;
+  type?: string;
+  remarks?: string;
+  checked: boolean;
+};
+export type ICTNewStaffItem = {
+  fingerPrintAttendances: ItemType[];
+  fingerPrintAccessDoor: ItemType[];
+}
 
 export const ITNewStaffFormNames = {
     processDefKey: 'it_new_staff_request',

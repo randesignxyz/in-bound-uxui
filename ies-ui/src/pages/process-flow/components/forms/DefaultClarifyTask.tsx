@@ -21,7 +21,7 @@ export default ({ ...rest }: ActionDataFormProps) => {
         return (await AccountServiceAPIs.findAvailableUsersTask(rest.procInstId, keywords).query(requestActions)).map(it => ({ label: it.name, value: it.id,subChannel: it.description  }))
     }
     return <ActionFormWrapper {...rest}
-        title="Clarify Task"
+        title="Comment"
         okText="Send"
         actionHandlers={{
             onSetFiles: (files) => setUploadFiles(files.map(it => it.response)),
@@ -35,7 +35,7 @@ export default ({ ...rest }: ActionDataFormProps) => {
             onCompleted: async () => {
                 const dataForm = await form.validateFields()
                 Modal.confirm({
-                    title: "Clarify task",
+                    title: "Comment",
                     content: "Are you sure?",
                     onOk: async () => {
                         if (!rest.activityData?.taskId) {
@@ -49,10 +49,10 @@ export default ({ ...rest }: ActionDataFormProps) => {
                                 dataForm.remarks,
                                 uploadFiles
                             )(requestActions)
-                            message.success("Clarify task created successfully.")
+                            message.success("successfully.")
                             rest.actionHandlers?.onCancel?.(true)
                         } catch (error: any) {
-                            message.error(error.message || 'failed to create task.')
+                            message.error(error.message || 'failed to send.')
                         }
                     }
                 })

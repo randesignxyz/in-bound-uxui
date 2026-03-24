@@ -1415,6 +1415,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessHRMIOSRequest: canAccess("HRM_IOS_REQUEST_LIST"),
     canAccessHRMIOSObjectiveSetup: canAccess("HRM_IOS_OBJECTIVE_SETUP"),
     canAccessHRMIOSEmployeeMaster: canAccess("HRM_IOS_EMPLOYEE_MASTER"),
+    canAccessHRMNewStaffSupportRequest: canAccess("HRM_NEW_STAFF_JOINER_REQUEST"),
 
     canAccessSALE: currentUser?.authorities?.some((it: string) => it.toUpperCase().startsWith("ROLE_SALE") || it == "ROLE_ADMIN"),
     canAccess,

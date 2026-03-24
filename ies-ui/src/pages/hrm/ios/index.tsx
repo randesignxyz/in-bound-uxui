@@ -7,7 +7,7 @@ import { useMemo, useRef, useState } from 'react';
 import { simpleRequestActions } from "@/services/model";
 import AdvancSearch from "./AdvancSearch";
 import { Badge, Button, message, Radio, Segmented, Space } from 'antd';
-import { DiffOutlined, FileSearchOutlined, FilterOutlined, SelectOutlined } from '@ant-design/icons';
+import { DiffOutlined, ExportOutlined, FileSearchOutlined, FilterOutlined, SelectOutlined } from '@ant-design/icons';
 import { ActionType, ModalForm, ProFormTextArea } from '@ant-design/pro-components';
 import Status from "@/components/Status";
 import BatchSubmitDrawer from "./BatchSubmitDrawer";
@@ -15,6 +15,7 @@ import ImportFileButton from '@/components/ImportFileButton';
 import { DataResponse, ImportDataItem } from '@/services/shared/data';
 import UploadData from '@/pages/hrm/ios/upload-data';
 import Export from "./export-data/Export";
+import IOSExport from "./reports/IOSExport";
 
 
 export default () => {
@@ -152,7 +153,8 @@ export default () => {
                             }}
                             />
                         </Space>
-                        <Space hidden={!access.can('HRM_IOS_REQUEST_LIST','BTN_EXPORT')}> <Export/></Space>                        
+                        <Space hidden={!access.can('HRM_IOS_REQUEST_LIST','BTN_EXPORT')}> <Export/></Space>         
+                        <Space hidden={!access.can('HRM_IOS_REQUEST_LIST','MENU_IOS_EXPORT_REPORT')}> <IOSExport trigger={<Button type="link" icon={<ExportOutlined style={{ fontSize: '16px', color: '#08c' }} />}>Report</Button>} /></Space>                   
                       </Space>
                     ],
                     props: {

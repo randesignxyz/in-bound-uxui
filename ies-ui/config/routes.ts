@@ -477,6 +477,14 @@ export default [
     access: 'canAccessHRMIOSEmployeeMaster',
     component: './hrm/ios-upload',
   },
+  {
+    path: '/hrm/new-staff/:view',
+    name: 'hrm-new-staff-request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessHRMNewStaffSupportRequest',
+    component: './hrm/new-staff',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/
@@ -1214,7 +1222,7 @@ export default [
   /**********<<FMA**************/
   {
     path: '/fma/new-staff/:view/*',
-    name: 'fma-new-staff',
+    name: 'fma-new-staff-request',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     access: 'canAccessFMANewStaffMenuITem',

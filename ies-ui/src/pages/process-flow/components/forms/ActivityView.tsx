@@ -18,7 +18,7 @@ const ActivityView: React.FC<{
         description: {dataIndex: 'comment',
           render: (_,r )=> <Paragraph ellipsis={{ rows: 2, expandable: true, symbol: 'more' }} style={{ whiteSpace: 'pre-line' }}>{r.comment}</Paragraph>
         },
-        extra: {dataIndex: 'actionDate', render: (r:any)=>  formatDateTime(moment(r.actionDate)) }
+        extra: {dataIndex: 'actionDate', render: (_:any,r:any)=>  formatDateTime(moment(r.actionDate)) }
       }}
     />
   );

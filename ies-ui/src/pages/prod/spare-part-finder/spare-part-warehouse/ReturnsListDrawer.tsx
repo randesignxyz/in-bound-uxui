@@ -1,10 +1,29 @@
-import { useAccess } from "@umijs/max";
-import { ProTable } from "@ant-design/pro-components";
-import { Button, Descriptions, Drawer, InputNumber, Space, Steps, Tag, Timeline, Typography } from "antd";
-import { useMemo, useState } from "react";
-import SparePartImage from "../spare-part-request/SparePartImage";
+import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { ProColumns, ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
+import type { GetProp, UploadFile, UploadProps } from 'antd';
+import {
+  Button,
+  Descriptions,
+  Drawer,
+  Image,
+  Input,
+  InputNumber,
+  Popconfirm,
+  Space,
+  Steps,
+  Tag,
+  Timeline,
+  Typography,
+  Upload,
+} from 'antd';
+import { useMemo, useState } from 'react';
+import SparePartImage from '../spare-part-request/SparePartImage';
 
 const { Title } = Typography;
+const MAX_ATTACHMENTS = 3;
+const ATTACHMENT_CARD_SIZE = 56;
+type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -24,11 +43,11 @@ export type ReturnStatus =
 
 interface ReturnItem {
   id: string | number;
-  imageId?: string;      // used by SparePartImage to fetch from server
-  image?: string;        // direct URL fallback
+  imageId?: string; // used by SparePartImage to fetch from server
+  image?: string; // direct URL fallback
   productId: string;
-  partName?: string;     // canonical part name field
-  name: string;          // display name (alias)
+  partName?: string; // canonical part name field
+  name: string; // display name (alias)
   usedQty: number;
   qtyToReturn: number;
   status?: string;
@@ -62,10 +81,10 @@ const STATUS_STEPS = ['Return', 'Approved', 'In Progress', 'Completed'];
 const STATUS_STEP_MAP: Record<ReturnStatus, number> = {
   pending: 0,
   approved: 1,
-  rejected: 1,        // same step as approved, but shown as error
+  rejected: 1, // same step as approved, but shown as error
   in_progress: 2,
   completed: 3,
-  partially_returned: 3,  // same final step as completed, shown as finish
+  partially_returned: 3, // same final step as completed, shown as finish
 };
 
 const statusColorMap: Record<ReturnStatus, string> = {
@@ -92,28 +111,28 @@ interface ReturnDetailActivity {
   description?: string;
   by?: string; // who performed the action
   date: string; // ISO date string
-  dot?: 'pending' | 'done'
+  dot?: 'pending' | 'done';
 }
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const logs: ReturnDetailActivity[] = [
   {
     id: 1,
-    action: "submitted",
-    label: "Return request submitted",
-    description: "User submitted return request",
-    by: "John",
-    date: "2026-03-16T08:00:00",
-    dot: "done"
+    action: 'submitted',
+    label: 'Return request submitted',
+    description: 'User submitted return request',
+    by: 'John',
+    date: '2026-03-16T08:00:00',
+    dot: 'done',
   },
   {
     id: 2,
-    action: "approved",
-    label: "Approved",
-    description: "Manager approved the request",
-    by: "Manager",
-    date: "2026-03-16T08:20:00",
-    dot: "done"
-  }
+    action: 'approved',
+    label: 'Approved',
+    description: 'Manager approved the request',
+    by: 'Manager',
+    date: '2026-03-16T08:20:00',
+    dot: 'done',
+  },
 ];
 const formatDateTime = (date?: string) => {
   if (!date) return '—';
@@ -133,7 +152,7 @@ const formatDateTime = (date?: string) => {
 const getStepStatus = (
   effectiveStatus: ReturnStatus,
   stepIndex: number,
-  currentStep: number
+  currentStep: number,
 ): 'finish' | 'process' | 'wait' | 'error' => {
   if (effectiveStatus === 'rejected' && stepIndex === 1) return 'error';
   if (stepIndex < currentStep) return 'finish';
@@ -151,11 +170,7 @@ interface ReturnsListDrawerProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ReturnsListDrawer({
-  open,
-  onClose,
-  data,
-}: ReturnsListDrawerProps) {
+export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDrawerProps) {
   const access = useAccess();
   const [statusOverride, setStatusOverride] = useState<ReturnStatus | null>(null);
   const [activityLogs] = useState<ReturnDetailActivity[]>(logs);
@@ -166,6 +181,94 @@ export default function ReturnsListDrawer({
   }, [statusOverride, data?.status]);
 
   const currentStep = STATUS_STEP_MAP[effectiveStatus];
+  // ─── Upload State ─────────────────────────────────
+  const [attachmentMap, setAttachmentMap] = useState<Record<string, UploadFile[]>>({});
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
+
+  // Convert file to base64 (for preview)
+  const getBase64 = (file: FileType): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+
+  const enrichUploadFile = async (file: UploadFile): Promise<UploadFile> => {
+    if (file.url || file.thumbUrl || file.preview || !file.originFileObj) {
+      return file;
+    }
+
+    const preview = await getBase64(file.originFileObj as FileType);
+    return {
+      ...file,
+      preview,
+      thumbUrl: preview,
+      status: 'done',
+    };
+  };
+
+  // Preview handler
+  const handlePreview = async (file: UploadFile) => {
+    if (!file.url && !file.preview && file.originFileObj) {
+      file.preview = await getBase64(file.originFileObj as FileType);
+    }
+
+    setPreviewImage(file.url || file.thumbUrl || (file.preview as string) || '');
+    setPreviewOpen(true);
+    setPreviewTitle(file.name || '');
+  };
+
+  const handleAttachmentChange =
+    (itemId: string | number): UploadProps['onChange'] =>
+    async ({ fileList: newFileList }) => {
+      const normalizedFiles = await Promise.all(newFileList.map(enrichUploadFile));
+
+      setAttachmentMap((prev) => ({
+        ...prev,
+        [String(itemId)]: normalizedFiles.slice(0, MAX_ATTACHMENTS),
+      }));
+    };
+
+  const uploadButton = (
+    <button style={{ border: 0, background: 'none' }} type="button">
+      <PlusOutlined />
+      <div style={{ marginTop: 8 }}>Upload</div>
+    </button>
+  );
+
+  const handleReplaceAttachment = async (
+    itemId: string | number,
+    fileIndex: number,
+    nextFile: UploadFile,
+  ) => {
+    const normalizedFile = await enrichUploadFile(nextFile);
+
+    setAttachmentMap((prev) => {
+      const itemKey = String(itemId);
+      const currentFiles = prev[itemKey] ?? [];
+      const updatedFiles = [...currentFiles];
+      updatedFiles[fileIndex] = normalizedFile;
+
+      return {
+        ...prev,
+        [itemKey]: updatedFiles,
+      };
+    });
+  };
+
+  const handleRemoveAttachment = (itemId: string | number, uid: string) => {
+    setAttachmentMap((prev) => {
+      const itemKey = String(itemId);
+      return {
+        ...prev,
+        [itemKey]: (prev[itemKey] ?? []).filter((file) => file.uid !== uid),
+      };
+    });
+  };
 
   const handleSave = () => {
     // TODO: Implement save logic
@@ -177,12 +280,12 @@ export default function ReturnsListDrawer({
     console.log('Save and Pick Up clicked');
   };
 
-  const columnsReturn = [
+  const columnsReturn: ProColumns<ReturnItem>[] = [
     {
       title: 'No',
       dataIndex: 'id',
       key: 'number_id',
-      width: 40
+      width: 40,
     },
     {
       title: 'Image',
@@ -196,39 +299,38 @@ export default function ReturnsListDrawer({
           size={48}
         />
       ),
-      width: 'auto'
+      width: 80,
+      align: 'center' as const,
     },
     {
       title: 'Product ID',
       dataIndex: 'productId',
       key: 'product_id',
-      width: 'auto',
+      width: 120,
       render: (_: unknown, entity: ReturnItem) => (
-        <Typography.Link>
-          {entity.productId}
-        </Typography.Link>
-      )
+        <Typography.Link>{entity.productId}</Typography.Link>
+      ),
     },
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name_product',
       ellipsis: true,
-      width: 'auto'
+      width: 180,
     },
     {
       title: 'UoM',
       dataIndex: 'UoM',
       key: 'UoM',
       ellipsis: true,
-      width: 'auto'
+      width: 60,
     },
     {
       title: 'Used QTY',
       dataIndex: 'usedQty',
       key: 'used_key',
       align: 'center' as const,
-      width: 'auto'
+      width: 50,
     },
     {
       title: 'QTY to Return',
@@ -240,14 +342,13 @@ export default function ReturnsListDrawer({
           {record.qtyToReturn}
         </span>
       ),
-      width: 'auto'
+      width: 50,
     },
     ...(access.canSpfWarehouseStaff
       ? [
           {
             title: 'Good',
             key: 'good_amount',
-            fixed: 'right' as const,
             render: (_: unknown, record: ReturnItem) => {
               const goodQty = record.qtyToReturn - record.usedQty;
               return (
@@ -255,20 +356,20 @@ export default function ReturnsListDrawer({
                   min={0}
                   max={record.qtyToReturn}
                   defaultValue={goodQty}
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  style={{ width: '100%' }}
+                  formatter={(value) => `${value}`.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',')}
                   parser={(value: string | undefined) => {
-                    const parsed = value ? value.replace(/\$\s?|(,*)/g, '') : '';
+                    const parsed = value ? value.replace(/\\$\\s?|(,*)/g, '') : '';
                     return parsed ? Number(parsed) : 0;
                   }}
                 />
               );
             },
-            width: 'auto'
+            width: 90,
           },
           {
             title: 'Damaged',
             key: 'damaged_amount',
-            fixed: 'right' as const,
             render: (_: unknown, record: ReturnItem) => {
               const damagedQty = record.usedQty;
               return (
@@ -276,19 +377,186 @@ export default function ReturnsListDrawer({
                   min={0}
                   max={record.qtyToReturn}
                   defaultValue={damagedQty}
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  style={{ width: '100%' }}
+                  formatter={(value) => `${value}`.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',')}
                   parser={(value: string | undefined) => {
-                    const parsed = value ? value.replace(/\$\s?|(,*)/g, '') : '';
+                    const parsed = value ? value.replace(/\\$\\s?|(,*)/g, '') : '';
                     return parsed ? Number(parsed) : 0;
                   }}
                 />
               );
             },
-            width: 'auto'
-          }
+            width: 90,
+          },
+          {
+            title: 'Remarks',
+            key: 'messages',
+            render: () => (
+              <>
+                <Input.TextArea rows={1} placeholder="Enter any notes" />
+                <p>Broken because of...</p>
+              </>
+            ),
+            width: 180,
+          },
+          {
+            title: 'Attachments',
+            key: 'broken_image',
+            render: (_: unknown, record: ReturnItem) => {
+              const rowFiles = attachmentMap[String(record.id)] ?? [];
+
+              return (
+                <>
+                  <style>{`
+                    .compact-attachment-upload .ant-upload-select,
+                    .compact-attachment-upload .ant-upload-list-item-container {
+                      width: ${ATTACHMENT_CARD_SIZE}px !important;
+                      height: ${ATTACHMENT_CARD_SIZE}px !important;
+                    }
+
+                    .compact-attachment-upload .ant-upload-list-item {
+                      padding: 3px !important;
+                      border-radius: 10px !important;
+                    }
+
+                    .compact-attachment-upload .ant-upload-list-item-thumbnail img {
+                      object-fit: cover;
+                    }
+
+                    .compact-attachment-upload .ant-upload-list {
+                      display: flex;
+                      flex-wrap: wrap;
+                      gap: 8px;
+                      margin: 0;
+                    }
+
+                    .compact-attachment-upload .ant-upload-list-item-container {
+                      margin: 0 !important;
+                    }
+
+                    .compact-attachment-upload .ant-upload.ant-upload-select {
+                      border-radius: 10px !important;
+                    }
+                  `}</style>
+                  <div
+                    className="compact-attachment-upload"
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: 4,
+                    }}
+                  >
+                    <Upload
+                      accept="image/*"
+                      beforeUpload={() => false}
+                      listType="picture-card"
+                      fileList={rowFiles}
+                      maxCount={MAX_ATTACHMENTS}
+                      onPreview={handlePreview}
+                      onChange={handleAttachmentChange(record.id)}
+                      onRemove={(file) => {
+                        handleRemoveAttachment(record.id, file.uid);
+                        return false;
+                      }}
+                      itemRender={(originNode, file) => {
+                        const fileIndex = rowFiles.findIndex((item) => item.uid === file.uid);
+
+                        return (
+                          <div
+                            style={{
+                              position: 'relative',
+                              width: ATTACHMENT_CARD_SIZE,
+                              height: ATTACHMENT_CARD_SIZE,
+                              borderRadius: 8,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div style={{ width: '100%', height: '100%' }}>{originNode}</div>
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 4,
+                                right: 4,
+                                display: 'flex',
+                                gap: 4,
+                                zIndex: 1,
+                              }}
+                            >
+                              <Upload
+                                accept="image/*"
+                                beforeUpload={() => false}
+                                showUploadList={false}
+                                maxCount={1}
+                                onChange={({ file: nextFile }) => {
+                                  if (fileIndex >= 0) {
+                                    handleReplaceAttachment(record.id, fileIndex, nextFile);
+                                  }
+                                }}
+                              ></Upload>
+                              <Popconfirm
+                                title="Delete image?"
+                                okText="Delete"
+                                cancelText="Cancel"
+                                onConfirm={() => handleRemoveAttachment(record.id, file.uid)}
+                              ></Popconfirm>
+                            </div>
+                          </div>
+                        );
+                      }}
+                    >
+                      {rowFiles.length >= MAX_ATTACHMENTS ? null : uploadButton}
+                    </Upload>
+                    {/* <Button
+                      size="small"
+                      type="text"
+                      icon={<EditOutlined />}
+                      style={{
+                        color: '#fff',
+                        background: 'rgba(0, 0, 0, 0.45)',
+                        borderRadius: 999,
+                        width: 20,
+                        height: 20,
+                        minWidth: 20,
+                        padding: 0,
+                        marginLeft: 12,
+                      }}
+                    /> */}
+                  </div>
+
+                  {previewImage && (
+                    <Image
+                      preview={{
+                        visible: previewOpen,
+                        onVisibleChange: (visible) => setPreviewOpen(visible),
+                        afterOpenChange: (visible) => !visible && setPreviewImage(''),
+                      }}
+                      src={previewImage}
+                      alt={previewTitle}
+                      style={{ display: 'none' }}
+                    />
+                  )}
+                </>
+              );
+            },
+            align: 'center' as const,
+            width: 260,
+          },
+          {
+            title: 'Action',
+            key: 'action',
+            render: () => (
+              <Space>
+                <Button type="primary" size="small">
+                  Save
+                </Button>
+              </Space>
+            ),
+            width: 100,
+          },
         ]
       : []),
-
   ];
 
   return (
@@ -303,42 +571,29 @@ export default function ReturnsListDrawer({
           Return Request Details
         </span>
       }
-      width={'60%'}
+      width={'100%'}
       open={open}
       onClose={onClose}
       styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
-       footer={
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Space>
-                    <Button
-                      onClick={handleSave}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      type="primary"
-                      onClick={handleSaveAndPickUp}
-                    >
-                      Save
-                    </Button>
-                  </Space>
-                </div>
-              }
+      footer={
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Space>
+            <Button onClick={handleSave}>Edit</Button>
+            <Button type="primary" onClick={handleSaveAndPickUp}>
+              Save
+            </Button>
+          </Space>
+        </div>
+      }
     >
       {/* ── Approver Action Buttons (only when status = return / pending) ── */}
       {access.canSpfApprover && effectiveStatus === 'pending' && (
         <div style={{ textAlign: 'right', marginBottom: 16 }}>
           <Space>
-            <Button
-              danger
-              onClick={() => setStatusOverride('rejected')}
-            >
+            <Button danger onClick={() => setStatusOverride('rejected')}>
               Reject
             </Button>
-            <Button
-              type="primary"
-              onClick={() => setStatusOverride('approved')}
-            >
+            <Button type="primary" onClick={() => setStatusOverride('approved')}>
               Approve
             </Button>
           </Space>
@@ -366,25 +621,14 @@ export default function ReturnsListDrawer({
             {formatDateTime(data?.requestDate)}
           </Descriptions.Item>
           <Descriptions.Item label="Status">
-            <Tag
-              color={statusColorMap[effectiveStatus]}
-              
-            >
-              {statusLabelMap[effectiveStatus]}
-            </Tag>
+            <Tag color={statusColorMap[effectiveStatus]}>{statusLabelMap[effectiveStatus]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Total Items">
-            {data?.totalItems ?? 0}
-          </Descriptions.Item>
+          <Descriptions.Item label="Total Items">{data?.totalItems ?? 0}</Descriptions.Item>
         </Descriptions>
       </div>
 
       {/* ── Status Timeline ── */}
-      <div
-        style={{
-
-        }}
-      >
+      <div style={{}}>
         <Title level={5} style={{ marginBottom: 16 }}>
           Status Timeline
         </Title>
@@ -398,7 +642,7 @@ export default function ReturnsListDrawer({
             // For the last step (index 3), show the precise label
             const label =
               index === STATUS_STEPS.length - 1 && currentStep === index
-                ? statusLabelMap[effectiveStatus]   // "Completed" or "Partially Returned"
+                ? statusLabelMap[effectiveStatus] // "Completed" or "Partially Returned"
                 : title;
 
             // Description hint shown below each step node
@@ -406,13 +650,11 @@ export default function ReturnsListDrawer({
               index === 1 && effectiveStatus === 'rejected'
                 ? 'Rejected'
                 : index === STATUS_STEPS.length - 1 && effectiveStatus === 'partially_returned'
-                  ? 'Some items were not returned'
-                  : undefined;
+                ? 'Some items were not returned'
+                : undefined;
 
             return {
-              title: (
-                <span style={{ fontSize: 13, fontWeight: 500 }}>{label}</span>
-              ),
+              title: <span style={{ fontSize: 13, fontWeight: 500 }}>{label}</span>,
               description: description ? (
                 <span style={{ fontSize: 12, color: '#8c8c8c' }}>{description}</span>
               ) : undefined,
@@ -423,11 +665,7 @@ export default function ReturnsListDrawer({
       </div>
 
       {/* ── Items Table ── */}
-      <div
-        style={{
-
-        }}
-      >
+      <div style={{}}>
         <Title level={5} style={{ marginBottom: 16, marginTop: 24 }}>
           Return Items
         </Title>
@@ -451,41 +689,35 @@ export default function ReturnsListDrawer({
        and there are many cases: that return like 1 request : 5 items but only 3 items returned and 2 items not returned , so status will be partially returned until requester return 2 items 
        then status will be completed, so in timeline status will be in progress until all items returned then status will be completed
       - completed until all items returned  */}
-    <Title level={5} style={{ marginBottom: 16 }}>
-          Recent Activities
-    </Title>
-     <Timeline
-  style={{ marginBottom: 24 }}
-  items={activityLogs.map((log) => ({
-    color:
-      log.action === "approved"
-        ? ""
-        : log.action === "rejected"
-        ? "red"
-        : log.action === "completed"
-        ? "green"
-        : "blue",
-    children: (
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <div>
-          <Typography.Text strong>{log.label}</Typography.Text>
-          <br />
-          <Typography.Text type="secondary">
-            {log.description}
-          </Typography.Text>
-          <br />
-          <Typography.Text type="secondary">
-            By: {log.by || "System"}
-          </Typography.Text>
-        </div>
+      <Title level={5} style={{ marginBottom: 16 }}>
+        Recent Activities
+      </Title>
+      <Timeline
+        style={{ marginBottom: 24 }}
+        items={activityLogs.map((log) => ({
+          color:
+            log.action === 'approved'
+              ? ''
+              : log.action === 'rejected'
+              ? 'red'
+              : log.action === 'completed'
+              ? 'green'
+              : 'blue',
+          children: (
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                <Typography.Text strong>{log.label}</Typography.Text>
+                <br />
+                <Typography.Text type="secondary">{log.description}</Typography.Text>
+                <br />
+                <Typography.Text type="secondary">By: {log.by || 'System'}</Typography.Text>
+              </div>
 
-        <Typography.Text type="secondary">
-          {formatDateTime(log.date)}
-        </Typography.Text>
-      </div>
-    ),
-  }))}
-/>
+              <Typography.Text type="secondary">{formatDateTime(log.date)}</Typography.Text>
+            </div>
+          ),
+        }))}
+      />
     </Drawer>
   );
 }

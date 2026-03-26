@@ -15,21 +15,109 @@ export interface SparePart {
   unit_price: number;
 }
 
-/** Single return item from API (may include flattened spare part fields in list response) */
+/** ===========================
+ *  RAW API RESPONSE TYPES
+ * =========================== */
+
+export interface SparePartPickedLine {
+  itemId: string;
+  requestLineId: number;
+  fulfillmentLineId: number;
+  partName: string;
+  uom: string;
+  requestedQty: number;
+  deliveredQty: number;
+  category: string;
+}
+
+export interface SparePartShipment {
+  fulfillmentNo: string;
+  warehouseCode: string;
+  warehouseName: string;
+  readyToPickUpAt: string;
+  pickedUpAt: string;
+  pickedUpBy: string;
+  pickupLocation: string;
+  pickupMethod: string;
+  lines: SparePartPickedLine[];
+}
+
+export interface SparePartPickedRequest {
+  requestId: number;
+  requestNo: string;
+  requestedAt: string;
+  requestedBy: string;
+  approvedBy: string;
+  approvedAt: string;
+  requestedQty: number;
+  totalPickedUpAmount: number;
+  remainingQty: number;
+  shipping: SparePartShipment[];
+}
+
+/** ===========================
+ *  FLATTENED TABLE ROW TYPE
+ * =========================== */
+
+/** One row in MySparePartList table and in FormModalSelectItems / DrawerViewItem */
+export interface SparePartReturnListItem {
+  id: string;
+  // mapped to old field names to match table columns
+  part_number?: string;
+  spare_part_name?: string;
+  request_id?: string;
+  quantity?: number;
+  UoM?: string;
+  spare_part_type?: string;
+  category?: string;
+  receiving_from_warehouse?: string;
+  business_unit?: string;
+  requested_date?: string;
+  requested_pickup_date?: string;
+  image?: string;
+  // extra fields for drawer/modal
+  requestId?: number;
+  requestNo?: string;
+  requestedBy?: string;
+  approvedBy?: string;
+  fulfillmentNo?: string;
+  warehouseCode?: string;
+  warehouseName?: string;
+  pickupLocation?: string;
+  itemId?: string;
+  deliveredQty?: number;
+  // Fields for My Requests to Return
+  return_id?: string;
+  return_date?: string;
+  total_items?: number;
+  status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+  remarks?: string;
+  return_quantity?: number;
+  used_quantity?: number;
+  reason?: string;
+  stock_quantity?: number;
+}
+
+/** ===========================
+ *  LEGACY TYPES (kept for compatibility)
+ * =========================== */
+
+/** Single return item from API (legacy) */
 export interface SparePartReturnItem {
   id: number;
   spare_part_id: number;
-  requested_id?: string;
+  request_id?: string;
   requested_by?: string;
   return_quantity: number;
   used_quantity: number;
+  quantity?: number;
+  UoM?: string;
   reason?: string;
   from_warehouse?: string;
   spare_part_return_batch_id?: string;
   Requested_Date?: string | Date;
   Requested_Pickup_Date?: string | Date;
   remark?: string;
-  // Flattened from SparePart when API returns list (for table display)
   image?: string;
   part_number?: string;
   spare_part_name?: string;
@@ -42,16 +130,6 @@ export interface SparePartReturnItem {
   stock_quantity?: number;
 }
 
-/** One row in MySparePartList table and in FormModalSelectItems / DrawerViewItem */
-export type SparePartReturnListItem = Pick<SparePart, 'id' | 'image' | 'part_number' | 'spare_part_name' | 'spare_part_type' | 'category' | 'receiving_from_warehouse' | 'business_unit'> & {
-  requested_date?: string | Date;
-  requested_pickup_date?: string | Date;
-  return_quantity?: number;
-  used_quantity?: number;
-  reason?: string;
-  stock_quantity?: number;
-};
-
 export interface SparePartReturnBatch {
   id: number;
   spare_part_return_batch_number: string;
@@ -61,7 +139,7 @@ export interface SparePartReturnBatch {
   items?: SparePartReturnItem[];
 }
 
-/** Search/filter params for spare-part-return list (used by service.page) */
+/** Search/filter params for spare-part-return list */
 export interface SparePartReturnItemSearch {
   pickup_date?: string | Date;
   return_batch_number?: string;
@@ -118,7 +196,7 @@ export interface RequestDetailData {
   no: number;
   request_id: string;
   total_items: number;
-  request_date: string; // e.g. "2025-Dec-01 8:05AM"
+  request_date: string;
   status: MyRequestToReturnItem['status'];
   items: RequestDetailLineItem[];
   activities: RequestDetailActivity[];
@@ -134,7 +212,7 @@ export const MOCK_MY_REQUESTS_TO_RETURN: MyRequestToReturnItem[] = [
   { id: 5, return_id: 'RET-005', return_date: '2025-03-05', total_items: 1, status: 'Pending' },
 ];
 
-/** Mock request detail for drawer (e.g. request No 2) */
+/** Mock request detail for drawer */
 export const MOCK_REQUEST_DETAIL: RequestDetailData = {
   no: 2,
   request_id: 'PRD-0001',
@@ -172,70 +250,41 @@ export const SPARE_PART_CATEGORY_OPTIONS = [
   { value: 'Tools', label: 'Tools' },
 ] as const;
 
-/** Mock list data for spare part return (used when not calling real endpoint) */
-export const MOCK_SPARE_PART_RETURN_LIST: SparePartReturnListItem[] = [
-  {
-    id: 1,
-    part_number: 'SP-001',
-    spare_part_name: 'Bearing Assembly',
-    spare_part_type: 'Mechanical',
-    category: 'Mechanical',
-    receiving_from_warehouse: 'WH-MRO-W',
-    business_unit: 'MRO-W',
-    image: 'https://via.placeholder.com/80?text=SP-001',
-    requested_date: '2025-03-01',
-    requested_pickup_date: '2025-03-05',
-    stock_quantity: 12,
-  },
-  {
-    id: 2,
-    part_number: 'SP-002',
-    spare_part_name: 'Motor Seal Kit',
-    spare_part_type: 'Hydraulic',
-    category: 'Hydraulic',
-    receiving_from_warehouse: 'WH-MRO-S',
-    business_unit: 'MRO-S',
-    image: 'https://via.placeholder.com/80?text=SP-002',
-    requested_date: '2025-03-02',
-    requested_pickup_date: '2025-03-06',
-    stock_quantity: 5,
-  },
-  {
-    id: 3,
-    part_number: 'SP-003',
-    spare_part_name: 'Control Relay',
-    spare_part_type: 'Electrical',
-    category: 'Electrical',
-    receiving_from_warehouse: 'WH-MRO-G',
-    business_unit: 'MRO-G',
-    image: 'https://via.placeholder.com/80?text=SP-003',
-    requested_date: '2025-03-03',
-    requested_pickup_date: '2025-03-07',
-    stock_quantity: 24,
-  },
-  {
-    id: 4,
-    part_number: 'SP-004',
-    spare_part_name: 'Wrench Set',
-    spare_part_type: 'Tools',
-    category: 'Tools',
-    receiving_from_warehouse: 'WH-MRO-W',
-    business_unit: 'MRO-W',
-    requested_date: '2025-03-04',
-    requested_pickup_date: '2025-03-08',
-    stock_quantity: 8,
-  },
-  {
-    id: 5,
-    part_number: 'SP-005',
-    spare_part_name: 'Gasket Pack',
-    spare_part_type: 'Mechanical',
-    category: 'Mechanical',
-    receiving_from_warehouse: 'WH-MRO-S',
-    business_unit: 'MRO-S',
-    image: 'https://via.placeholder.com/80?text=SP-005',
-    requested_date: '2025-03-05',
-    requested_pickup_date: '2025-03-09',
-    stock_quantity: 30,
-  },
-];
+/**
+ * Maps nested API response (SparePartPickedRequest[])
+ * to flattened table rows (SparePartReturnListItem[]).
+ * Field names are kept aligned with existing table columns.
+ */
+export const mapToFlattenedRowsMySparePartList = (
+  items: SparePartPickedRequest[]
+): SparePartReturnListItem[] => {
+  return items.flatMap((request) =>
+    request.shipping.flatMap((shipment) =>
+      shipment.lines.map((line) => ({
+        // unique row key
+        id: `${request.requestId}-${shipment.fulfillmentNo}-${line.fulfillmentLineId}`,
+        // mapped to old field names to match existing table columns
+        part_number:              line.itemId,
+        spare_part_name:          line.partName,
+        request_id:               request.requestNo,
+        quantity:                 line.requestedQty,
+        UoM:                      line.uom,
+        receiving_from_warehouse: shipment.warehouseName,
+        requested_date:           request.requestedAt,
+        requested_pickup_date:    shipment.pickedUpAt,
+        // extra fields for drawer/modal
+        requestId:                request.requestId,
+        requestNo:                request.requestNo,
+        requestedBy:              request.requestedBy,
+        approvedBy:               request.approvedBy,
+        fulfillmentNo:            shipment.fulfillmentNo,
+        warehouseCode:            shipment.warehouseCode,
+        warehouseName:            shipment.warehouseName,
+        pickupLocation:           shipment.pickupLocation,
+        itemId:                   line.itemId,
+        deliveredQty:             line.deliveredQty,
+        category:                 line.category,
+      }))
+    )
+  );
+};

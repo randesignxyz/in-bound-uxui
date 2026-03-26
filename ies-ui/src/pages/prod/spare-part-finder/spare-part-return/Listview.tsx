@@ -3,7 +3,7 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import { Tabs } from 'antd';
 import { ProdPaths } from '../..';
 import MySparePartList from './MySparePartList';
-import MyRequestsToReturn from './MyRequestsToReturn';
+// import MyRequestsToReturn from './MyRequestsToReturn';
 
 export default function ListView() {
     const routes =[
@@ -30,7 +30,7 @@ export default function ListView() {
         {
             label: 'My Requests to Return',
             key: '2',
-            children: <MyRequestsToReturn/>,
+            // children: <MyRequestsToReturn/>,
         },
     ]}
     />

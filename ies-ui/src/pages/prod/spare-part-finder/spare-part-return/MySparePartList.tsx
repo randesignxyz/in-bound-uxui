@@ -1,26 +1,50 @@
-import { EyeFilled, EyeOutlined, MoreOutlined, ReloadOutlined } from '@ant-design/icons';
+import { RequestActions } from '@/services/apiGateway';
+import { EyeOutlined, MoreOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProTable } from '@ant-design/pro-components';
-import { Avatar, Button, Card, DatePicker, Dropdown, Input, Radio, Select, Space, Tooltip } from 'antd';
-import { useRef, useState } from 'react';
 import { useNavigate } from '@umijs/max';
-import FormModalSelectItems from './FormModalSelectItems';
+import {
+  Avatar,
+  Button,
+  Card,
+  DatePicker,
+  Dropdown,
+  Input,
+  Radio,
+  Select,
+  Space,
+  Tooltip,
+} from 'antd';
+import { useRef, useState } from 'react';
 import DrawerViewItem from './DrawerViewItem';
+import FormModalSelectItems from './FormModalSelectItems';
 import type { SparePartReturnListItem } from './data';
 import { SPARE_PART_CATEGORY_OPTIONS, SPARE_PART_RETURN_RADIO_OPTIONS } from './data';
-import { getSparePartReturnMockPage } from './service';
-import idID from '@/locales/id-ID';
+import { SparePartReturnAPI } from './service';
 
 export default function MySparePartList() {
   const actionRef = useRef<ActionType>();
   const navigate = useNavigate();
   const [radioValue, setRadioValue] = useState('All');
+  const [searchValue, setSearchValue] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    SPARE_PART_CATEGORY_OPTIONS[0].value,
+  );
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedItems, setSelectedItems] = useState<SparePartReturnListItem[]>([]);
-  const [modalOpen, setModalOpen] = useState<{ visible: boolean; data?: SparePartReturnListItem[] }>({ visible: false });
+  const [modalOpen, setModalOpen] = useState<{
+    visible: boolean;
+    data?: SparePartReturnListItem[];
+  }>({ visible: false });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<SparePartReturnListItem | null>(null);
   const radioOptions = SPARE_PART_RETURN_RADIO_OPTIONS;
-  const onDetailhandler = (data: SparePartReturnListItem) => {
+
+  const requestAction: RequestActions = {
+    start: (serviceName) => console.log(`Loading: ${serviceName}`),
+    end: (status, reason) => console.log(status, reason),
+  };
+
+  const onDetailHandler = (data: SparePartReturnListItem) => {
     setDrawerOpen(true);
     setSelectedItem(data);
   };
@@ -49,18 +73,18 @@ export default function MySparePartList() {
 
   return (
     <>
-      <Card size="small" style={{ marginBottom: 10 }}
-      >
+      <Card size="small" style={{ marginBottom: 10 }}>
         <Space wrap size="middle">
-        <Input.Search
-          placeholder="Search spare parts..."
-          allowClear
-          onSearch={(value: string) => {
-            console.log('Searching for:', value);
-            actionRef.current?.reload();
-          }}
-          style={{ width: 250 }}
-        />
+          <Input.Search
+            placeholder="Search spare parts..."
+            allowClear
+            onSearch={(value: string) => {
+              setSearchValue(value);
+              actionRef.current?.reloadAndRest?.();
+            }}
+            style={{ width: 250 }}
+          />
+
           {/* Desktop: Radio Group */}
           <div className="radio-group-desktop">
             <Radio.Group
@@ -105,21 +129,28 @@ export default function MySparePartList() {
           </div>
 
           <Select
-            defaultValue="category"
+            value={selectedCategory}
             style={{ width: 125 }}
             options={[...SPARE_PART_CATEGORY_OPTIONS]}
+            onChange={(value) => {
+              setSelectedCategory(value);
+              setSelectedRowKeys([]);
+              setSelectedItems([]);
+              actionRef.current?.reloadAndRest?.();
+            }}
+          />
+          <DatePicker
             onChange={() => {
               setSelectedRowKeys([]);
               setSelectedItems([]);
               actionRef.current?.reloadAndRest?.();
             }}
           />
-          <DatePicker />
         </Space>
       </Card>
 
       <Card size="small">
-        <ProTable
+        <ProTable<SparePartReturnListItem>
           actionRef={actionRef}
           rowKey="id"
           size="small"
@@ -132,9 +163,21 @@ export default function MySparePartList() {
             pageSizeOptions: [10, 20, 50],
           }}
           request={async (params) => {
-            const result = await getSparePartReturnMockPage({
-              current: params.current,
-              pageSize: params.pageSize,
+            const result = await SparePartReturnAPI(requestAction).page_my_spare_list({
+              pagination: {
+                current: params.current,
+                pageSize: params.pageSize,
+              },
+              criteria: {
+              searchValue,
+              advanceSearch: {
+                type: radioValue !== 'All' ? radioValue : undefined,
+                category:
+                  selectedCategory !== SPARE_PART_CATEGORY_OPTIONS[0].value
+                    ? selectedCategory
+                    : undefined,
+              },
+            },
             });
             return {
               data: result.items,
@@ -151,7 +194,10 @@ export default function MySparePartList() {
           }}
           toolBarRender={() => [
             <Space key="spr-return-bar" size="small">
-              <Button icon={<ReloadOutlined />} onClick={() => actionRef.current?.reloadAndRest?.()}>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => actionRef.current?.reloadAndRest?.()}
+              >
                 Refresh
               </Button>
               <Button>My Requests</Button>
@@ -171,12 +217,12 @@ export default function MySparePartList() {
               width: 48,
               render: (_, record) => (
                 <Space size={1}>
-                   <Tooltip title="View Details">
+                  <Tooltip title="View Details">
                     <Button
-                       icon={<EyeOutlined style={{ color: '#999' }} />}
+                      icon={<EyeOutlined style={{ color: '#999' }} />}
                       type="text"
                       size="small"
-                      onClick={() => onDetailhandler(record)}
+                      onClick={() => onDetailHandler(record)}
                     />
                   </Tooltip>
                 </Space>
@@ -192,21 +238,21 @@ export default function MySparePartList() {
               key: 'part_number',
               title: 'Product Number',
               dataIndex: 'part_number',
-              render: (value, id) => (
-                <a onClick={() =>  onDetailhandler(id)}>
+              render: (value, record) => (
+                <a onClick={() => console.log('Clicked part number:', value, 'with id:', record.id)}>
                   {value}
                 </a>
               ),
             },
-            { key: 'spare_part_name', title: 'Name', dataIndex: 'spare_part_name' },
-            { key: 'request_id', title: 'Request ID', dataIndex: 'request_id' },
-            {key: 'quantity', title: 'Quantity', dataIndex: 'quantity' },
-            {key: 'UoM', title: 'UoM', dataIndex: 'UoM' },
-            { key: 'spare_part_type', title: 'Type', dataIndex: 'spare_part_type' },
-            { key: 'category', title: 'Category', dataIndex: 'category' },
-            { key: 'Warehouse', title: 'Warehouse', dataIndex: 'receiving_from_warehouse' },
-            { key: 'BU', title: 'BU', dataIndex: 'business_unit' },
-            { key: 'Requested_Date', title: 'Requested Date', dataIndex: 'requested_date' },
+            { key: 'spare_part_name',  title: 'Name',                 dataIndex: 'spare_part_name' },
+            { key: 'request_id',       title: 'Request ID',           dataIndex: 'request_id' },
+            { key: 'quantity',         title: 'Quantity',             dataIndex: 'quantity' },
+            { key: 'UoM',              title: 'UoM',                  dataIndex: 'UoM' },
+            { key: 'spare_part_type',  title: 'Type',                 dataIndex: 'spare_part_type' },
+            { key: 'category',         title: 'Category',             dataIndex: 'category' },
+            { key: 'Warehouse',        title: 'Warehouse',            dataIndex: 'receiving_from_warehouse' },
+            { key: 'BU',               title: 'BU',                   dataIndex: 'business_unit' },
+            { key: 'Requested_Date',   title: 'Requested Date',       dataIndex: 'requested_date' },
             { key: 'Requested_Pickup_Date', title: 'Requested Pickup Date', dataIndex: 'requested_pickup_date' },
           ]}
         />

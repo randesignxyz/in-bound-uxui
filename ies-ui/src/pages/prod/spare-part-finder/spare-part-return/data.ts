@@ -186,6 +186,7 @@ export interface MyRequestToReturnItem {
   id: number;
   return_id: string;
   return_date: string;
+  manager_decide_date?: string;
   total_items: number;
   status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
   remarks?: string;
@@ -232,8 +233,13 @@ export interface RequestDetailData {
   remarks?: string;
 }
 export interface TableViewSearchReturnsParam{
-  searchValue?: string; // 
   status?: string;
+  approvedDateFrom?: string;
+  approvedDateTo?: string;
+  rejectedDateFrom?: string;
+  rejectedDateTo?: string;
+  returnDateFrom?: string;
+  returnDateTo?: string;
 }
 /** Mock list for My Requests to Return */
 export const MOCK_MY_REQUESTS_TO_RETURN: MyRequestToReturnItem[] = [
@@ -348,6 +354,7 @@ export const mapToMyRequestToReturn = (
   id: item.returnId,
   return_id: item.returnNo ?? `RET-${item.returnId}`,
   return_date: formatDate(item.returnDate ?? ''),
+  manager_decide_date: formatDate(item.approvedDate ?? item.rejectedDate ?? ''),
   total_items: item.totalItems ?? 0,
   status:
     item.returnStatus === 'APPROVED'

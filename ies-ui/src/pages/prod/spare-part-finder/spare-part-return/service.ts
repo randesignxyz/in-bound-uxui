@@ -59,6 +59,18 @@ const SparePartReturnAction = {
     payload: {
       searchValue: params.criteria?.searchValue ?? "",
       status: params.criteria?.advanceSearch?.status ?? "",
+      approvedDateFrom:
+        params.criteria?.advanceSearch?.approvedDateFrom ?? undefined,
+      approvedDateTo:
+        params.criteria?.advanceSearch?.approvedDateTo ?? undefined,
+      rejectedDateFrom:
+        params.criteria?.advanceSearch?.rejectedDateFrom ?? undefined,
+      rejectedDateTo:
+        params.criteria?.advanceSearch?.rejectedDateTo ?? undefined,
+      returnDateFrom:
+        params.criteria?.advanceSearch?.returnDateFrom ?? undefined,
+      returnDateTo:
+        params.criteria?.advanceSearch?.returnDateTo ?? undefined,
     },
     pagination: {
       pageSize: params.pagination?.pageSize,

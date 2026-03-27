@@ -1,24 +1,66 @@
 import { ActionType, ProTable } from '@ant-design/pro-components';
 import { EyeOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Card, Select, Space, Tag, Tooltip } from 'antd';
-import { useRef, useState } from 'react';
+import type { Dayjs } from 'dayjs';
 import { useNavigate } from '@umijs/max';
-import DrawerBatchReturnItems from './DrawerBatchReturnItems';
+import { Button, Card, DatePicker, Input, Select, Space, Tag, Tooltip } from 'antd';
+import { useRef, useState } from 'react';
 import { RequestActions } from '@/services/apiGateway';
+import DrawerBatchReturnItems from './DrawerBatchReturnItems';
+import { MY_REQUESTS_TO_RETURN_STATUS_OPTIONS } from './data';
 import type {
   MyRequestToReturnItem,
   RequestDetailData,
   TableViewSearchReturnsParam,
 } from './data';
-import { MY_REQUESTS_TO_RETURN_STATUS_OPTIONS } from './data';
 import { SparePartReturnAPI } from './service';
+
+const mapStatusToApiValue = (status: string) => {
+  if (status === 'Approved') return 'APPROVED';
+  if (status === 'Rejected') return 'REJECTED';
+  if (status === 'Completed') return 'COMPLETED';
+  if (status === 'Pending') return 'PENDING';
+  return '';
+};
+
+const buildAdvanceSearch = (
+  statusFilter: string,
+  returnDateRange?: [Dayjs, Dayjs],
+  managerDecisionDateRange?: [Dayjs, Dayjs]
+): TableViewSearchReturnsParam => {
+  const status = mapStatusToApiValue(statusFilter);
+
+  const baseSearch: TableViewSearchReturnsParam = { status };
+
+  if (returnDateRange) {
+    baseSearch.returnDateFrom = returnDateRange[0].startOf('day').toISOString();
+    baseSearch.returnDateTo = returnDateRange[1].endOf('day').toISOString();
+  }
+
+  if (managerDecisionDateRange && status === 'APPROVED') {
+    baseSearch.approvedDateFrom = managerDecisionDateRange[0].startOf('day').toISOString();
+    baseSearch.approvedDateTo = managerDecisionDateRange[1].endOf('day').toISOString();
+  }
+
+  if (managerDecisionDateRange && status === 'REJECTED') {
+    baseSearch.rejectedDateFrom = managerDecisionDateRange[0].startOf('day').toISOString();
+    baseSearch.rejectedDateTo = managerDecisionDateRange[1].endOf('day').toISOString();
+  }
+
+  return baseSearch;
+};
 
 export default function MyRequestsToReturn() {
   const actionRef = useRef<ActionType>();
   const [statusFilter, setStatusFilter] = useState<string>('Status');
+  const [searchValue, setSearchValue] = useState('');
+  const [returnDateRange, setReturnDateRange] = useState<[Dayjs, Dayjs] | undefined>();
+  const [managerDecisionDateRange, setManagerDecisionDateRange] = useState<
+    [Dayjs, Dayjs] | undefined
+  >();
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState<RequestDetailData | null>(null);
   const navigate = useNavigate();
+
   const requestAction: RequestActions = {
     start: (serviceName) => console.log(`Loading: ${serviceName}`),
     end: (status, reason) => console.log(status, reason),
@@ -46,10 +88,12 @@ export default function MyRequestsToReturn() {
         pageSize: params.pageSize,
       },
       criteria: {
-        searchValue: '',
-        advanceSearch: {
-          status: statusFilter !== 'Status' ? statusFilter : '',
-        } satisfies TableViewSearchReturnsParam,
+        searchValue,
+        advanceSearch: buildAdvanceSearch(
+          statusFilter,
+          returnDateRange,
+          managerDecisionDateRange
+        ),
       },
     });
 
@@ -64,15 +108,45 @@ export default function MyRequestsToReturn() {
     <>
       <Card size="small" style={{ marginBottom: 10 }}>
         <Space wrap size="middle">
+          <Input.Search
+            placeholder="Search return request..."
+            allowClear
+            onSearch={(value: string) => {
+              setSearchValue(value);
+              actionRef.current?.reloadAndRest?.();
+            }}
+            style={{ width: 250 }}
+          />
           <Select
             value={statusFilter}
             style={{ width: 125 }}
             onChange={(value) => {
               setStatusFilter(value);
+              if (value !== 'Approved' && value !== 'Rejected') {
+                setManagerDecisionDateRange(undefined);
+              }
               actionRef.current?.reloadAndRest?.();
             }}
             options={[...MY_REQUESTS_TO_RETURN_STATUS_OPTIONS]}
           />
+          <DatePicker.RangePicker
+            placeholder={['Return Date From', 'Return Date To']}
+            onChange={(dates) => {
+              setReturnDateRange(dates ? ([dates[0], dates[1]] as [Dayjs, Dayjs]) : undefined);
+              actionRef.current?.reloadAndRest?.();
+            }}
+          />
+          <DatePicker.RangePicker
+            placeholder={['Status(Approved/Rejected) Date From', 'Status(Approved/Rejected) Date To']}
+            onChange={(dates) => {
+              setManagerDecisionDateRange(
+                dates ? ([dates[0], dates[1]] as [Dayjs, Dayjs]) : undefined
+              );
+              actionRef.current?.reloadAndRest?.();
+            }}
+            disabled={statusFilter !== 'Approved' && statusFilter !== 'Rejected'}
+          />
+          
         </Space>
       </Card>
 
@@ -108,7 +182,7 @@ export default function MyRequestsToReturn() {
                 <Space size={1}>
                   <Tooltip title="View Details">
                     <Button
-                       icon={<EyeOutlined style={{ color: '#999' }} />}
+                      icon={<EyeOutlined style={{ color: '#999' }} />}
                       type="text"
                       size="small"
                       onClick={() => onDetailHandler(record)}
@@ -121,8 +195,14 @@ export default function MyRequestsToReturn() {
               key: 'return_id',
               title: 'Return Id',
               dataIndex: 'return_id',
-                render: (value, r) => (
-                <a onClick={() => navigate(`/prod/spare-part-request/view/${r.id}`, { state: { id: r.id } })}>
+              render: (value, record) => (
+                <a
+                  onClick={() =>
+                    navigate(`/prod/spare-part-request/view/${record.id}`, {
+                      state: { id: record.id },
+                    })
+                  }
+                >
                   {value}
                 </a>
               ),
@@ -133,6 +213,11 @@ export default function MyRequestsToReturn() {
               dataIndex: 'return_date',
             },
             {
+                key : 'manager_decide_date',
+                title: 'Manager Decide Date',
+                dataIndex: 'manager_decide_date',
+            },
+            {
               key: 'total_items',
               title: 'Total Items',
               dataIndex: 'total_items',
@@ -141,35 +226,26 @@ export default function MyRequestsToReturn() {
               key: 'status',
               title: 'Status',
               dataIndex: 'status',
-              render: (_, r) =>
-              r.status === 'Pending' ? (
-                <Tag color="processing" bordered={false}
-                 style={{ width: '100%'}}
-                >
-                  Pending
-
-                </Tag>
-              ) : r.status === 'Rejected' ? (
-                <Tag color="error" bordered={false}
-                 style={{ width: '100%'}}
-                >
-                  Rejected
-                </Tag>
-              ) : r.status === 'Completed' ? (
-                <Tag color="success" bordered={false}
-                 style={{ width: '100%'}}
-                >
-                  Completed
-                </Tag>
-              ) : r.status === 'Approved' ? (
-                <Tag color="warning" bordered={false}
-                 style={{ width: '100%'}}
-                >
-                  Approved
-                </Tag>
-              ) : (
-                ''
-              ),
+              render: (_, record) =>
+                record.status === 'Pending' ? (
+                  <Tag color="processing" bordered={false} style={{ width: '100%' }}>
+                    Pending
+                  </Tag>
+                ) : record.status === 'Rejected' ? (
+                  <Tag color="error" bordered={false} style={{ width: '100%' }}>
+                    Rejected
+                  </Tag>
+                ) : record.status === 'Completed' ? (
+                  <Tag color="success" bordered={false} style={{ width: '100%' }}>
+                    Completed
+                  </Tag>
+                ) : record.status === 'Approved' ? (
+                  <Tag color="warning" bordered={false} style={{ width: '100%' }}>
+                    Approved
+                  </Tag>
+                ) : (
+                  ''
+                ),
             },
             {
               key: 'remarks',

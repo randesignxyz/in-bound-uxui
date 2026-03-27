@@ -7,24 +7,26 @@ import {
 } from "@/services/apiGateway";
 
 import type {
+  MyRequestToReturnItem,
   SparePartPickedRequest,
+  SparePartReturnBatchResponseItem,
+  SparePartReturnAdvanceSearch,
   SparePartReturnListItem,
-  SparePartReturnItemSearch,
+  TableViewSearchReturnsParam,
 } from "./data";
 
 import {
   mapToFlattenedRowsMySparePartList,
+  mapToMyRequestToReturn,
 } from "./data";
 
-/**
- * =========================
- * ACTION DEFINITIONS
- * =========================
- */
 const SparePartReturnAction = {
   page_my_spare_list: (
-    params: TableViewSearchParams<SparePartReturnItemSearch>
-  ): ServiceApiType<{ searchValue?: string }> => ({
+    params: TableViewSearchParams<SparePartReturnAdvanceSearch>
+  ): ServiceApiType<{
+    searchValue?: string;
+    advanceSearch?: SparePartReturnAdvanceSearch;
+  }> => ({
     type: "PAGING_QUERY",
     actionName: "fetch-paging-spare-part-picked-request",
     endpoint: "PROD",
@@ -41,30 +43,63 @@ const SparePartReturnAction = {
     endpoint: "FILE",
     payload: { imageId },
   }),
+
+  submit_Return_Request: (payload: any): ServiceApiType<any> => ({
+    type: "EXEC",
+    actionName: "return-spare-part-request",
+    endpoint: "PROD",
+    payload,
+  }),
+  fetch_batch_spare_parts_return: (
+    params: TableViewSearchParams<TableViewSearchReturnsParam>
+  ): ServiceApiType<any> => ({
+    type: "PAGING_QUERY",
+    actionName: "fetch-batch-spare-parts-return",
+    endpoint: "PROD",
+    payload: {
+      searchValue: params.criteria?.searchValue ?? "",
+      status: params.criteria?.advanceSearch?.status ?? "",
+    },
+    pagination: {
+      pageSize: params.pagination?.pageSize,
+      page: params.pagination?.current,
+    },
+  }),
 };
 
-/**
- * =========================
- * API LAYER (REAL API)
- * =========================
- */
 const SparePartReturnAPI = (requestAction: RequestActions) => {
   return {
-    /**
-     * Fetch + map data for table
-     */
-  page_my_spare_list: async (
-    params: TableViewSearchParams<SparePartReturnItemSearch>
-  ): Promise<Paging<SparePartReturnListItem>> => {
-    const res = (await singleRequest<Paging<SparePartPickedRequest>>(  // ← SparePartPickedRequest
-      SparePartReturnAction.page_my_spare_list(params)
-    )(requestAction)) as Paging<SparePartPickedRequest>;                // ← SparePartPickedRequest
+    page_my_spare_list: async (
+      params: TableViewSearchParams<SparePartReturnAdvanceSearch>
+    ): Promise<Paging<SparePartReturnListItem>> => {
+      const res = (await singleRequest<Paging<SparePartPickedRequest>>(
+        SparePartReturnAction.page_my_spare_list(params)
+      )(requestAction)) as Paging<SparePartPickedRequest>;
 
-    return {
-      ...res,
-      items: mapToFlattenedRowsMySparePartList(res.items || []),
-    };
-  },
+      return {
+        ...res,
+        items: mapToFlattenedRowsMySparePartList(res.items || []),
+      };
+    },
+
+    submit_Return_Request: async (payload: any): Promise<any> => {
+      const res = (await singleRequest<any>(
+        SparePartReturnAction.submit_Return_Request(payload)
+      ))(requestAction);
+      return res;
+    },
+    fetch_batch_spare_parts_return: async (
+      params: TableViewSearchParams<TableViewSearchReturnsParam>
+    ): Promise<Paging<MyRequestToReturnItem>> => {
+      const res = (await singleRequest<Paging<SparePartReturnBatchResponseItem>>(
+        SparePartReturnAction.fetch_batch_spare_parts_return(params)
+      )(requestAction)) as Paging<SparePartReturnBatchResponseItem>;
+
+      return {
+        ...res,
+        items: (res.items || []).map(mapToMyRequestToReturn),
+      };
+    },
   };
 };
 

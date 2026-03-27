@@ -1,7 +1,7 @@
 import { RequestActions } from '@/services/apiGateway';
 import { EyeOutlined, MoreOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProTable } from '@ant-design/pro-components';
-import { useNavigate } from '@umijs/max';
+import type { Dayjs } from 'dayjs';
 import {
   Avatar,
   Button,
@@ -9,10 +9,12 @@ import {
   DatePicker,
   Dropdown,
   Input,
+  message,
   Radio,
   Select,
   Space,
   Tooltip,
+  Typography,
 } from 'antd';
 import { useRef, useState } from 'react';
 import DrawerViewItem from './DrawerViewItem';
@@ -20,15 +22,16 @@ import FormModalSelectItems from './FormModalSelectItems';
 import type { SparePartReturnListItem } from './data';
 import { SPARE_PART_CATEGORY_OPTIONS, SPARE_PART_RETURN_RADIO_OPTIONS } from './data';
 import { SparePartReturnAPI } from './service';
+import SparePartImage from '../spare-part-request/SparePartImage';
 
 export default function MySparePartList() {
   const actionRef = useRef<ActionType>();
-  const navigate = useNavigate();
   const [radioValue, setRadioValue] = useState('All');
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>(
     SPARE_PART_CATEGORY_OPTIONS[0].value,
   );
+  const [selectedDateRange, setSelectedDateRange] = useState<[Dayjs, Dayjs] | undefined>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedItems, setSelectedItems] = useState<SparePartReturnListItem[]>([]);
   const [modalOpen, setModalOpen] = useState<{
@@ -55,16 +58,45 @@ export default function MySparePartList() {
     }
   };
 
-  const handleModalSubmit = (items: SparePartReturnListItem[]) => {
-    console.log('Submitting return for items:', items);
-    setModalOpen({ visible: false });
-    setSelectedItems([]);
-    setSelectedRowKeys([]);
+  const handleModalSubmit = async (payload: {
+    remark: string;
+    items: SparePartReturnListItem[];
+  }) => {
+    const requestPayload = {
+      remark: payload.remark,
+      items: payload.items.map((item) => ({
+        productId: item.itemId ?? item.part_number,
+        originalRequestId: item.requestId,
+        originalRequestLineId: item.requestLineId,
+        fulfillmentLineId: item.fulfillmentLineId,
+        quantity: item.return_quantity ?? 0,
+        uom: item.UoM ,
+        quantityUsed: item.used_quantity ?? 0,
+        conditionOnReturn: 'USABLE',
+        remark: item.reason ?? '',
+      })),
+    };
+
+    const hideLoading = message.loading('Submitting return request...', 0);
+
+    try {
+      await SparePartReturnAPI(requestAction).submit_Return_Request(requestPayload);
+      message.success('Return request submitted successfully');
+      setModalOpen({ visible: false });
+      setSelectedItems([]);
+      setSelectedRowKeys([]);
+      actionRef.current?.reloadAndRest?.();
+    } catch (error) {
+      console.error('Failed to submit return request:', error);
+      message.error('Failed to submit return request');
+    } finally {
+      hideLoading();
+    }
   };
 
-  const handleAddMore = (items: SparePartReturnListItem[]) => {
+  const handleModalItemsChange = (items: SparePartReturnListItem[]) => {
     setSelectedItems(items);
-    setModalOpen({ visible: false });
+    setSelectedRowKeys(items.map((item) => item.id));
   };
 
   const handleModalCancel = () => {
@@ -139,8 +171,9 @@ export default function MySparePartList() {
               actionRef.current?.reloadAndRest?.();
             }}
           />
-          <DatePicker
-            onChange={() => {
+          <DatePicker.RangePicker
+            onChange={(dates) => {
+              setSelectedDateRange(dates ? ([dates[0], dates[1]] as [Dayjs, Dayjs]) : undefined);
               setSelectedRowKeys([]);
               setSelectedItems([]);
               actionRef.current?.reloadAndRest?.();
@@ -163,21 +196,31 @@ export default function MySparePartList() {
             pageSizeOptions: [10, 20, 50],
           }}
           request={async (params) => {
+            const dateRange = selectedDateRange
+              ? ([
+                  selectedDateRange[0].startOf('day').toISOString(),
+                  selectedDateRange[1].endOf('day').toISOString(),
+                ] as [string, string])
+              : undefined;
+
             const result = await SparePartReturnAPI(requestAction).page_my_spare_list({
               pagination: {
                 current: params.current,
                 pageSize: params.pageSize,
               },
               criteria: {
-              searchValue,
-              advanceSearch: {
-                type: radioValue !== 'All' ? radioValue : undefined,
-                category:
-                  selectedCategory !== SPARE_PART_CATEGORY_OPTIONS[0].value
-                    ? selectedCategory
-                    : undefined,
+                searchValue,
+                advanceSearch: {
+                  searchValue: searchValue || undefined,
+                  category:
+                    selectedCategory !== SPARE_PART_CATEGORY_OPTIONS[0].value
+                      ? selectedCategory
+                      : undefined,
+                  warehouse: radioValue !== 'All' ? radioValue : undefined,
+                  warehouseCode: radioValue !== 'All' ? radioValue : undefined,
+                  dateRange,
+                },
               },
-            },
             });
             return {
               data: result.items,
@@ -200,7 +243,6 @@ export default function MySparePartList() {
               >
                 Refresh
               </Button>
-              <Button>My Requests</Button>
               <Button>Import Excel</Button>
               <Button
                 type={selectedItems.length > 0 ? 'primary' : 'default'}
@@ -231,29 +273,55 @@ export default function MySparePartList() {
             {
               key: 'image',
               title: 'Image',
-              dataIndex: 'image',
-              render: (image) => <Avatar src={image} size={48} shape="square" />,
+              dataIndex: 'imageId',
+              render: (_, record) => (
+                <SparePartImage
+                imageId={record.imageId}
+                src={record.imageId}
+                alt={record.part_number || record.itemId}
+                size={48}
+              />
+             ),
             },
             {
               key: 'part_number',
               title: 'Product Number',
               dataIndex: 'part_number',
               render: (value, record) => (
-                <a onClick={() => console.log('Clicked part number:', value, 'with id:', record.id)}>
+                <a
+                  onClick={() => console.log('Clicked part number:', value, 'with id:', record.id)}
+                >
                   {value}
                 </a>
               ),
             },
-            { key: 'spare_part_name',  title: 'Name',                 dataIndex: 'spare_part_name' },
-            { key: 'request_id',       title: 'Request ID',           dataIndex: 'request_id' },
-            { key: 'quantity',         title: 'Quantity',             dataIndex: 'quantity' },
-            { key: 'UoM',              title: 'UoM',                  dataIndex: 'UoM' },
-            { key: 'spare_part_type',  title: 'Type',                 dataIndex: 'spare_part_type' },
-            { key: 'category',         title: 'Category',             dataIndex: 'category' },
-            { key: 'Warehouse',        title: 'Warehouse',            dataIndex: 'receiving_from_warehouse' },
-            { key: 'BU',               title: 'BU',                   dataIndex: 'business_unit' },
-            { key: 'Requested_Date',   title: 'Requested Date',       dataIndex: 'requested_date' },
-            { key: 'Requested_Pickup_Date', title: 'Requested Pickup Date', dataIndex: 'requested_pickup_date' },
+            {
+              key: 'request_id',
+              title: 'Request ID',
+              dataIndex: 'request_id',
+              render: (_, record) => (
+                <Typography.Link
+                  onClick={(event) => {
+                    event.preventDefault();
+                  }}
+                >
+                  {record.request_id}
+                </Typography.Link>
+              ),
+            },
+            { key: 'spare_part_name', title: 'Name', dataIndex: 'spare_part_name' },
+            { key: 'quantity', title: 'Quantity', dataIndex: 'quantity' },
+            { key: 'UoM', title: 'UoM', dataIndex: 'UoM' },
+            { key: 'spare_part_type', title: 'Type', dataIndex: 'type' },
+            { key: 'category', title: 'Category', dataIndex: 'category' },
+            { key: 'Warehouse', title: 'Warehouse', dataIndex: 'receiving_from_warehouse' },
+            { key: 'BU', title: 'BU', dataIndex: 'businessUnit' },
+            { key: 'Requested_Date', title: 'Requested Date', dataIndex: 'requested_date' },
+            {
+              key: 'Requested_Pickup_Date',
+              title: 'Requested Pickup Date',
+              dataIndex: 'requested_pickup_date',
+            },
           ]}
         />
       </Card>
@@ -262,13 +330,10 @@ export default function MySparePartList() {
         open={modalOpen.visible}
         onCancel={handleModalCancel}
         onSubmit={handleModalSubmit}
+        onItemsChange={handleModalItemsChange}
         data={modalOpen.data}
       />
-      <DrawerViewItem
-        open={drawerOpen}
-        data={selectedItem}
-        onClose={() => setDrawerOpen(false)}
-      />
+      <DrawerViewItem open={drawerOpen} data={selectedItem} onClose={() => setDrawerOpen(false)} />
     </>
   );
 }

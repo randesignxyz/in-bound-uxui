@@ -7,7 +7,7 @@ export interface SparePart {
   spare_part_type: string;
   category: string;
   receiving_from_warehouse: string;
-  business_unit: string;
+  businessUnit: string;
   description: string;
   unit: string;
   stock: number;
@@ -25,9 +25,13 @@ export interface SparePartPickedLine {
   fulfillmentLineId: number;
   partName: string;
   uom: string;
+  type: string;
   requestedQty: number;
   deliveredQty: number;
   category: string;
+  businessUnit: string;
+   kind: string;
+   imageId?: string;
 }
 
 export interface SparePartShipment {
@@ -55,6 +59,20 @@ export interface SparePartPickedRequest {
   shipping: SparePartShipment[];
 }
 
+export interface SparePartReturnBatchResponseItem {
+  returnId: number;
+  returnNo?: string;
+  returnDate?: string;
+  returnStatus?: string;
+  returnByUser?: string;
+  approvedByUser?: string | null;
+  approvedDate?: string | null;
+  rejectedByUser?: string | null;
+  rejectedDate?: string | null;
+  totalItems?: number;
+  remark?: string;
+}
+
 /** ===========================
  *  FLATTENED TABLE ROW TYPE
  * =========================== */
@@ -71,20 +89,24 @@ export interface SparePartReturnListItem {
   spare_part_type?: string;
   category?: string;
   receiving_from_warehouse?: string;
-  business_unit?: string;
+  businessUnit?: string;
   requested_date?: string;
   requested_pickup_date?: string;
-  image?: string;
+  imageId?: string;
   // extra fields for drawer/modal
   requestId?: number;
+  requestLineId?: number;
   requestNo?: string;
   requestedBy?: string;
   approvedBy?: string;
   fulfillmentNo?: string;
+  fulfillmentLineId?: number;
   warehouseCode?: string;
   warehouseName?: string;
   pickupLocation?: string;
   itemId?: string;
+  type?: string;
+  kind?: string;
   deliveredQty?: number;
   // Fields for My Requests to Return
   return_id?: string;
@@ -118,13 +140,13 @@ export interface SparePartReturnItem {
   Requested_Date?: string | Date;
   Requested_Pickup_Date?: string | Date;
   remark?: string;
-  image?: string;
+  imageId?: string;
   part_number?: string;
   spare_part_name?: string;
   spare_part_type?: string;
   category?: string;
   receiving_from_warehouse?: string;
-  business_unit?: string;
+  businessUnit?: string;
   requested_date?: string | Date;
   requested_pickup_date?: string | Date;
   stock_quantity?: number;
@@ -140,16 +162,23 @@ export interface SparePartReturnBatch {
 }
 
 /** Search/filter params for spare-part-return list */
-export interface SparePartReturnItemSearch {
-  pickup_date?: string | Date;
-  return_batch_number?: string;
-  part_number?: string;
-  spare_part_name?: string;
-  receiving_from_warehouse?: string;
-  business_unit?: string;
-  category?: string;
-  type?: string;
+export interface SparePartReturnAdvanceSearch {
   searchValue?: string;
+  requestedByUser?: string;
+  approvedBy?: string;
+  pickedUpBy?: string;
+  warehouse?: string;
+  warehouseCode?: string;
+  bu?: string;
+  category?: string;
+  uom?: string;
+  productNumber?: string;
+  dateRange?: [string, string];
+}
+
+export interface SparePartReturnItemSearch {
+  searchValue?: string;
+  advanceSearch?: SparePartReturnAdvanceSearch;
 }
 
 /** One row in "My Requests to Return" table */
@@ -202,7 +231,10 @@ export interface RequestDetailData {
   activities: RequestDetailActivity[];
   remarks?: string;
 }
-
+export interface TableViewSearchReturnsParam{
+  searchValue?: string; // 
+  status?: string;
+}
 /** Mock list for My Requests to Return */
 export const MOCK_MY_REQUESTS_TO_RETURN: MyRequestToReturnItem[] = [
   { id: 1, return_id: 'RET-001', return_date: '2025-03-01', total_items: 3, status: 'Pending', remarks: 'Urgent' },
@@ -255,6 +287,21 @@ export const SPARE_PART_CATEGORY_OPTIONS = [
  * to flattened table rows (SparePartReturnListItem[]).
  * Field names are kept aligned with existing table columns.
  */
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return isNaN(date.getTime())
+    ? dateStr
+    : date.toLocaleString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true, 
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+};
+
 export const mapToFlattenedRowsMySparePartList = (
   items: SparePartPickedRequest[]
 ): SparePartReturnListItem[] => {
@@ -269,22 +316,46 @@ export const mapToFlattenedRowsMySparePartList = (
         request_id:               request.requestNo,
         quantity:                 line.requestedQty,
         UoM:                      line.uom,
-        receiving_from_warehouse: shipment.warehouseName,
-        requested_date:           request.requestedAt,
-        requested_pickup_date:    shipment.pickedUpAt,
+        receiving_from_warehouseName : shipment.warehouseName,
+        receiving_from_warehouse:   shipment.warehouseCode,
+        businessUnit:             line.businessUnit,
+        requested_date:           formatDate(request.requestedAt),
+        requested_pickup_date:    formatDate(shipment.pickedUpAt),
         // extra fields for drawer/modal
         requestId:                request.requestId,
+        requestLineId:            line.requestLineId,
         requestNo:                request.requestNo,
         requestedBy:              request.requestedBy,
         approvedBy:               request.approvedBy,
         fulfillmentNo:            shipment.fulfillmentNo,
+        fulfillmentLineId:        line.fulfillmentLineId,
         warehouseCode:            shipment.warehouseCode,
         warehouseName:            shipment.warehouseName,
         pickupLocation:           shipment.pickupLocation,
         itemId:                   line.itemId,
+        imageId:                   line.imageId,
         deliveredQty:             line.deliveredQty,
         category:                 line.category,
+        type:                     line.type,
       }))
     )
   );
 };
+
+export const mapToMyRequestToReturn = (
+  item: SparePartReturnBatchResponseItem
+): MyRequestToReturnItem => ({
+  id: item.returnId,
+  return_id: item.returnNo ?? `RET-${item.returnId}`,
+  return_date: formatDate(item.returnDate ?? ''),
+  total_items: item.totalItems ?? 0,
+  status:
+    item.returnStatus === 'APPROVED'
+      ? 'Approved'
+      : item.returnStatus === 'REJECTED'
+        ? 'Rejected'
+        : item.returnStatus === 'COMPLETED'
+          ? 'Completed'
+          : 'Pending',
+  remarks: item.remark ?? '',
+});

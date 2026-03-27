@@ -3,11 +3,13 @@ import { EditableProTable, ProColumns } from "@ant-design/pro-components";
 import { useState, useEffect } from "react";
 import { Avatar } from "antd";
 import TextArea from "antd/es/input/TextArea";
+import SparePartImage from "../spare-part-request/SparePartImage";
 
 interface FormModalProps {
   open: boolean;
   onCancel: () => void;
-  onSubmit: (items: any[]) => void;
+  onSubmit: (payload: { remark: string; items: any[] }) => void;
+  onItemsChange?: (items: any[]) => void;
   data?: any[];
 }
 
@@ -15,38 +17,37 @@ export default function FormModalSelectItems({
   open,
   onCancel,
   onSubmit,
+  onItemsChange,
   data,
 }: FormModalProps) {
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [dataSource, setDataSource] = useState<any[]>([]);
   const [remark, setRemark] = useState<string>("");
 
-  // Initialize data
+  const normalizeItems = (items: any[] = []) =>
+    items.map((item) => ({
+      ...item,
+      return_quantity: item.return_quantity ?? 1,
+      used_quantity: item.used_quantity ?? 0,
+      reason: item.reason ?? "",
+      UoM: item.UoM ?? "pcs",
+    }));
+
+  // Reset table state whenever the modal is opened with selected items
   useEffect(() => {
-    if (data && data.length > 0) {
-      const existingIds = new Set(dataSource.map((item) => item.id));
-
-      const newItems = data
-        .filter((item) => !existingIds.has(item.id))
-        .map((item) => ({
-          ...item,
-          return_quantity: 1,
-          used_quantity: 0,
-          reason: "",
-          UoM: "pcs",
-        }));
-
-      if (newItems.length > 0) {
-        const merged = [...dataSource, ...newItems];
-        setDataSource(merged);
-
-        setEditableRowKeys((prev) => [
-          ...prev,
-          ...newItems.map((item) => item.id),
-        ]);
-      }
+    if (!open) {
+      return;
     }
-  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const nextItems = normalizeItems(data ?? []);
+    setDataSource(nextItems);
+    setEditableRowKeys(nextItems.map((item) => item.id));
+  }, [open, data]);
+
+  const updateItems = (items: any[]) => {
+    setDataSource(items);
+    onItemsChange?.(items);
+  };
 
   const columns: ProColumns<any>[] = [
     {
@@ -55,8 +56,13 @@ export default function FormModalSelectItems({
       editable: false,
       width: 80,
       render: (_, record) => (
-        <Avatar src={record.image} size={48} shape="square" />
-      ),
+      <SparePartImage
+          imageId={record.imageId}
+          src={record.image}
+          alt={record.partName || record.productId}
+          size={48}
+          />
+     ),
     },
     {
       title: "Product Number",
@@ -70,7 +76,7 @@ export default function FormModalSelectItems({
     },
     {
       title: "Type",
-      dataIndex: "spare_part_type",
+      dataIndex: "type",
       editable: false,
     },
     {
@@ -78,6 +84,14 @@ export default function FormModalSelectItems({
       dataIndex: "category",
       editable: false,
     },
+    {
+       title: "QTY to Pick",
+      dataIndex: "quantity",
+      width: 120,
+      valueType: "digit",
+      editable: false,
+    },
+
     {
       title: "QTY to Return",
       dataIndex: "return_quantity",
@@ -94,17 +108,7 @@ export default function FormModalSelectItems({
       title: "UoM",
       dataIndex: "UoM",
       width: 120,
-      valueType: "select",
-      valueEnum: {
-        pcs: { text: "PCS" },
-        box: { text: "BOX" },
-        set: { text: "SET" },
-        pack: { text: "PACK" },
-        ctn: { text: "CTN" },
-        l: { text: "L" },
-        kg: { text: "KG" },
-        rol: { text: "ROL" },
-      },
+      editable: false,
     },
   {
   title: "Remark",
@@ -135,7 +139,7 @@ export default function FormModalSelectItems({
           key="delete"
           onClick={() => {
             const newData = dataSource.filter((item) => item.id !== record.id);
-            setDataSource(newData);
+            updateItems(newData);
             setEditableRowKeys(newData.map((item) => item.id));
           }}
         >
@@ -150,7 +154,10 @@ export default function FormModalSelectItems({
   };
 
   const handleSubmit = () => {
-    onSubmit(dataSource);
+    onSubmit({
+      remark,
+      items: dataSource,
+    });
   };
 
   return (
@@ -165,7 +172,7 @@ export default function FormModalSelectItems({
         rowKey="id"
         columns={columns}
         value={dataSource}
-        onChange={(value) => setDataSource([...value])}
+        onChange={(value) => updateItems([...value])}
         recordCreatorProps={false}
         editable={{
           type: "multiple",
@@ -179,7 +186,7 @@ export default function FormModalSelectItems({
                 const newData = dataSource.filter(
                   (item) => item.id !== row.id
                 );
-                setDataSource(newData);
+                updateItems(newData);
                 setEditableRowKeys(newData.map((item) => item.id));
               }}
             >
@@ -187,14 +194,14 @@ export default function FormModalSelectItems({
             </a>,
           ],
           onSave: async (rowKey, data) => {
-            setDataSource((prev) =>
-              prev.map((item) =>
+            updateItems(
+              dataSource.map((item) =>
                 item.id === rowKey ? { ...item, ...data } : item
               )
             );
           },
           onValuesChange: (_, recordList) => {
-            setDataSource([...recordList]);
+            updateItems([...recordList]);
           },
         }}
       />

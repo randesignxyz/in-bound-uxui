@@ -86,6 +86,7 @@ const parsePickedItemsCount = (description?: string): number | null => {
 
 export interface RequestDetailLineItem {
   no: number;
+  requestLineId?: number;
   image?: string;
   imageId?: string;
   productId: string;
@@ -105,6 +106,7 @@ export interface RequestDetailLineItem {
   category?: string;
   sparePartType?: string;
   businessUnit?: string;
+  uom?: string;
 }
 
 export interface RequestDetailActivity {
@@ -146,6 +148,12 @@ export interface DrawerBatchReturnItemsProps {
   request?: MyRequestItem | null;
   data?: RequestDetailData | null;
   onClose?: () => void;
+  onApprove?: (payload: {
+    id: number;
+    lines: Array<{ requestLineId: number; approvedQty: number }>;
+  }) => Promise<void>;
+  onReject?: (payload: { id: number }) => Promise<void>;
+  onConfirmPickup?: (id: number) => Promise<void>;
 }
 
 export default function RequestedBatchDrawer({
@@ -153,6 +161,9 @@ export default function RequestedBatchDrawer({
   request,
   data: propData,
   onClose,
+  onApprove,
+  onReject,
+  onConfirmPickup,
 }: DrawerBatchReturnItemsProps) {
   const [spfOpen, setSpfOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<RequestDetailLineItem | null>(null);
@@ -186,36 +197,25 @@ export default function RequestedBatchDrawer({
       type: 'MRO-W',
     };
 
-    const items: RequestDetailLineItem[] = Array.from(
-      { length: Math.max(0, fallbackRequest.totalItems || 0) },
-      (_, i) => {
-        const no = i + 1;
-        const productId = `PRD-${String(fallbackRequest.id).padStart(3, '0')}-${String(no).padStart(3, '0')}`;
-        const quantityToReturn = Math.max(1, Math.floor(Math.random() * 3) + 1);
-        const usedQuantity = Math.max(0, Math.floor(Math.random() * (quantityToReturn + 1)));
-        const total = Math.max(0, quantityToReturn - usedQuantity);
-
-        return {
-          no,
-          productId,
-          requestId: fallbackRequest.requestId,
-          itemName: `Spare Part ${no}`,
-          imageId: undefined,
-          quantityToReturn,
-          usedQuantity,
-          total,
-          stockQuantity: Math.max(0, Math.floor(Math.random() * 30)),
-          warehouse: fallbackRequest.type,
-          zone: 'A-307',
-          shelf: '12',
-          level: '02',
-          company: 'Isobaric Valve Co.',
-          category: 'Hydraulic',
-          sparePartType: 'Control Valve',
-          businessUnit: 'BU-001',
-        };
-      },
-    );
+    const items: RequestDetailLineItem[] =
+      fallbackRequest.items?.map((item, index) => ({
+        no: index + 1,
+        requestLineId: item.requestLineId,
+        imageId: Array.isArray(item.imageId) ? item.imageId[0] : item.imageId,
+        productId: item.sparePartId || item.sparePartCode,
+        requestId: fallbackRequest.requestId,
+        itemName: item.sparePartName,
+        quantityToReturn: Number(item.approvedQty || item.requestedQty || 0),
+        usedQuantity: 0,
+        total: Number(item.requestedQty || 0),
+        warehouseSentQuantity: 0,
+        warehouse: item.toWarehouseCode || fallbackRequest.type,
+        sparePartType: fallbackRequest.type,
+        businessUnit: item.unit,
+        uom: item.unit,
+        description: item.remark,
+      })) ||
+      [];
 
     return {
       id: fallbackRequest.id,
@@ -227,6 +227,7 @@ export default function RequestedBatchDrawer({
       totalItems: fallbackRequest.totalItems,
       receivedItems: fallbackRequest.receivedItems,
       remark: fallbackRequest.remark,
+      requestedBy: fallbackRequest.requestedBy,
       items,
       activities: [],
     };
@@ -699,7 +700,7 @@ export default function RequestedBatchDrawer({
     },
     {  
        title: 'UoM',
-        dataIndex: 'UoM',
+        dataIndex: 'uom',
         key: 'UoM',
         ellipsis: true,
         width: '10%',
@@ -829,6 +830,31 @@ export default function RequestedBatchDrawer({
   // }, [data.receivedItems, pickedItems.length, receivedQtyTotal, requestedQtyTotal, statusOverride]);
 
   const confirmPickup = () => {
+    if (onConfirmPickup && data.id) {
+      onConfirmPickup(data.id)
+        .then(() => {
+          setStatusOverride(effectiveStatus === 'partial' ? 'partial' : 'completed');
+          setActivityLogs((prev) => [
+            ...prev,
+            {
+              label: effectiveStatus === 'partial' ? 'Partial Pick up' : 'Completed',
+              description:
+                effectiveStatus === 'partial'
+                  ? 'Pickup confirmed for the latest shipment'
+                  : 'Pickup confirmed for all issued items',
+              date: new Date().toISOString(),
+              by: data.requestedBy ?? 'Requester',
+              dot: 'done',
+            },
+          ]);
+          message.success('Pickup confirmed successfully.');
+        })
+        .catch(() => {
+          message.error('Failed to confirm pickup.');
+        });
+      return;
+    }
+
     if (!pickupSelection.length) return;
 
     const selected = new Set(pickupSelection);
@@ -1004,17 +1030,39 @@ export default function RequestedBatchDrawer({
                 <Button
                   danger
                   onClick={() => {
-                    setStatusOverride('rejected');
-                    setActivityLogs((prev) => [
-                      ...prev,
-                      {
-                        label: 'Rejected',
-                        description: 'Request rejected',
-                        date: new Date().toISOString(),
-                        by: data.approvedBy ?? 'Approver',
-                        dot: 'done',
-                      },
-                    ]);
+                    if (!onReject || !data.id) {
+                      setStatusOverride('rejected');
+                      setActivityLogs((prev) => [
+                        ...prev,
+                        {
+                          label: 'Rejected',
+                          description: 'Request rejected',
+                          date: new Date().toISOString(),
+                          by: data.approvedBy ?? 'Approver',
+                          dot: 'done',
+                        },
+                      ]);
+                      return;
+                    }
+
+                    onReject({ id: data.id })
+                      .then(() => {
+                        setStatusOverride('rejected');
+                        setActivityLogs((prev) => [
+                          ...prev,
+                          {
+                            label: 'Rejected',
+                            description: 'Request rejected',
+                            date: new Date().toISOString(),
+                            by: data.approvedBy ?? 'Approver',
+                            dot: 'done',
+                          },
+                        ]);
+                        message.success('Request rejected successfully.');
+                      })
+                      .catch(() => {
+                        message.error('Failed to reject request.');
+                      });
                   }}
                 >
                   Reject
@@ -1022,17 +1070,46 @@ export default function RequestedBatchDrawer({
                 <Button
                   type="primary"
                   onClick={() => {
-                    setStatusOverride('approved');
-                    setActivityLogs((prev) => [
-                      ...prev,
-                      {
-                        label: 'Approved',
-                        description: 'Request approved',
-                        date: new Date().toISOString(),
-                        by: data.approvedBy ?? 'Approver',
-                        dot: 'done',
-                      },
-                    ]);
+                    const lines = activeRequestItems
+                      .filter((item) => typeof item.requestLineId === 'number')
+                      .map((item) => ({
+                        requestLineId: Number(item.requestLineId),
+                        approvedQty: Number(item.quantityToReturn || 0),
+                      }));
+
+                    if (!onApprove || !data.id) {
+                      setStatusOverride('approved');
+                      setActivityLogs((prev) => [
+                        ...prev,
+                        {
+                          label: 'Approved',
+                          description: 'Request approved',
+                          date: new Date().toISOString(),
+                          by: data.approvedBy ?? 'Approver',
+                          dot: 'done',
+                        },
+                      ]);
+                      return;
+                    }
+
+                    onApprove({ id: data.id, lines })
+                      .then(() => {
+                        setStatusOverride('approved');
+                        setActivityLogs((prev) => [
+                          ...prev,
+                          {
+                            label: 'Approved',
+                            description: 'Request approved',
+                            date: new Date().toISOString(),
+                            by: data.approvedBy ?? 'Approver',
+                            dot: 'done',
+                          },
+                        ]);
+                        message.success('Request approved successfully.');
+                      })
+                      .catch(() => {
+                        message.error('Failed to approve request.');
+                      });
                   }}
                 >
                   Approve

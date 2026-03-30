@@ -21,7 +21,9 @@ interface RequestRowItem {
   item: SparePartRequestItem;
   quantity: number;
   purpose: string;
-  Uom: string;
+  uom: string;
+  toWarehouseCode: string;
+  forLine: string;
 }
 
 interface RequestItemModalProps {
@@ -29,7 +31,14 @@ interface RequestItemModalProps {
   selectedItems: SparePartRequestItem[];
   onCancel: () => void;
   onSubmit: (payload: {
-    items: { item: SparePartRequestItem; quantity: number; purpose: string }[];
+    items: {
+      item: SparePartRequestItem;
+      quantity: number;
+      purpose: string;
+      toWarehouseCode: string;
+      forLine: string;
+      uom: string;
+    }[];
     remark: string;
     priority: PriorityLevel;
   }) => void;
@@ -64,7 +73,9 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           item,
           quantity: item.stock > 0 ? 1 : 0,
           purpose: '',
-          Uom: 'pcs',
+          uom: 'pcs',
+          toWarehouseCode: item.warehouse || 'WH1',
+          forLine: 'Line1',
         })),
       );
       setRemark('');
@@ -78,6 +89,10 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
 
   const handlePurposeChange = (key: number, value: string) => {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, purpose: value } : r)));
+  };
+
+  const updateRow = (key: number, patch: Partial<RequestRowItem>) => {
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   };
 
   const handleDeleteRow = (key: number) => {
@@ -100,11 +115,28 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       message.warning('Quantity must be greater than 0 for all items.');
       return;
     }
+    const missingWarehouse = rows.some((r) => !r.toWarehouseCode.trim());
+    if (missingWarehouse) {
+      message.warning('Please select a destination warehouse for all items.');
+      return;
+    }
+    const missingLine = rows.some((r) => !r.forLine.trim());
+    if (missingLine) {
+      message.warning('Please select a line for all items.');
+      return;
+    }
 
     setConfirmLoading(true);
     try {
       onSubmit({
-        items: rows.map((r) => ({ item: r.item, quantity: r.quantity, purpose: r.purpose })),
+        items: rows.map((r) => ({
+          item: r.item,
+          quantity: r.quantity,
+          purpose: r.purpose,
+          toWarehouseCode: r.toWarehouseCode,
+          forLine: r.forLine,
+          uom: r.uom,
+        })),
         remark,
         priority,
       });
@@ -162,10 +194,11 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
      title: 'To Warehouse',
      dataIndex: ['item', 'toWarehouse'],
      width: '4%',
-     render: (text: string) => (
+     render: (_text: string, record: RequestRowItem) => (
       <Select
       style={{ width: '100%' }}
-        defaultValue={'WH1'}
+        value={record.toWarehouseCode}
+        onChange={(value) => updateRow(record.key, { toWarehouseCode: value })}
         options={
           [
             { value: 'WH1', label: 'Warehouse 1' },
@@ -180,10 +213,11 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
      title: 'For Line',
      dataIndex: ['item', 'productLine'],
      width: '10%',
-     render: (text: string) => (
+     render: (_text: string, record: RequestRowItem) => (
       <Select
       style={{ width: '100%' }}
-        defaultValue={'Line1'}
+        value={record.forLine}
+        onChange={(value) => updateRow(record.key, { forLine: value })}
         options={
           [
             { value: 'Line1', label: 'Line 1' },
@@ -203,18 +237,14 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     },
   {
     title: 'UoM',
-    dataIndex: 'Uom',
+    dataIndex: 'uom',
     width: '6%',
     render: (_: unknown, record: RequestRowItem) => (
       <Select
         placeholder="Please select"
-        value={record.Uom}
+        value={record.uom}
         onChange={(value) => {
-          setRows((prev) =>
-            prev.map((r) =>
-              r.key === record.key ? { ...r, Uom: value } : r
-            )
-          );
+          updateRow(record.key, { uom: value });
         }}
         style={{ width: '100%' , 
          paddingLeft: 8,

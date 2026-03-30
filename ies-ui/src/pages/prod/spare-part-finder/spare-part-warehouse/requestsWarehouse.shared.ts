@@ -39,6 +39,8 @@ export interface WarehouseRequestRecord {
   shipments?: WarehouseRequestShipment[];
   pickupDate?: string;
   pickedUpBy?: string;
+  rawRequestStatus?: string;
+  pickupStatus?: string;
 }
 
 export type WarehouseDisplayStatus =
@@ -79,11 +81,16 @@ export const warehouseStatusLabelMap: Record<WarehouseDisplayStatus, string> = {
 };
 
 export const deriveWarehouseDisplayStatus = (request: WarehouseRequestRecord): WarehouseDisplayStatus => {
+  const rawRequestStatus = String(request.rawRequestStatus || '').trim().toUpperCase();
+  const pickupStatus = String(request.pickupStatus || '').trim().toLowerCase();
   const total = request.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
   const received = request.items.reduce((sum, item) => sum + (Number(item.receivedQuantity) || 0), 0);
 
   if (request.status === 'Rejected') return 'Rejected';
-  if (total > 0 && received >= total) return 'Completed';
+  if (pickupStatus === 'confirmed') {
+    return rawRequestStatus === 'PARTIAL_ISSUE' ? 'Partial' : 'Completed';
+  }
+  if (rawRequestStatus === 'COMPLETE') return 'Ready To Pick Up';
   if (request.status === 'Ready To Pick Up') return 'Ready To Pick Up';
   if (request.status === 'Partial') return 'Partial';
   if (request.status === 'In Progress') return 'In Progress';

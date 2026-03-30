@@ -358,25 +358,6 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
     </button>
   );
 
-  const handleReplaceAttachment = async (
-    itemId: string | number,
-    fileIndex: number,
-    nextFile: UploadFile,
-  ) => {
-    const normalizedFile = await enrichUploadFile(nextFile);
-
-    setAttachmentMap((prev) => {
-      const itemKey = String(itemId);
-      const currentFiles = prev[itemKey] ?? [];
-      const updatedFiles = [...currentFiles];
-      updatedFiles[fileIndex] = normalizedFile;
-
-      return {
-        ...prev,
-        [itemKey]: updatedFiles,
-      };
-    });
-  };
 
   const handleRemoveAttachment = (itemId: string | number, uid: string) => {
     setAttachmentMap((prev) => {
@@ -643,145 +624,102 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             title: 'Attachments',
             key: 'broken_image',
             render: (_: unknown, record: ReturnItem) => {
-              // COMPLETED / REJECTED / PENDING / FULLY RECEIVED: show server images
-              if (checkReadOnly(record)) {
-                const imgs = record.images ?? [];
-                if (!imgs.length) return <Typography.Text type="secondary">—</Typography.Text>;
-                return (
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    {imgs.map((fileId) => (
-                      <SparePartImage
-                        key={fileId}
-                        imageId={fileId}
-                        alt={record.name}
-                        size={ATTACHMENT_CARD_SIZE}
-                      />
-                    ))}
-                  </div>
-                );
+              const alreadyReceivedImgs = record.images ?? [];
+              const isLineReadOnly = checkReadOnly(record);
+
+              if (isLineReadOnly && alreadyReceivedImgs.length === 0) {
+                return <Typography.Text type="secondary">—</Typography.Text>;
               }
 
               const rowFiles = attachmentMap[String(record.id)] ?? [];
 
               return (
-                <>
-                  <style>{`
-                    .compact-attachment-upload .ant-upload-select,
-                    .compact-attachment-upload .ant-upload-list-item-container {
-                      width: ${ATTACHMENT_CARD_SIZE}px !important;
-                      height: ${ATTACHMENT_CARD_SIZE}px !important;
-                    }
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+                  {/* Inspection History (Already Received) */}
+                  {alreadyReceivedImgs.length > 0 && (
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      {alreadyReceivedImgs.map((fileId) => (
+                        <SparePartImage
+                          key={fileId}
+                          imageId={fileId}
+                          alt={record.name}
+                          size={ATTACHMENT_CARD_SIZE}
+                        />
+                      ))}
+                    </div>
+                  )}
 
-                    .compact-attachment-upload .ant-upload-list-item {
-                      padding: 3px !important;
-                      border-radius: 10px !important;
-                    }
+                  {/* New Batch Uploader (only if not fully received) */}
+                  {!isLineReadOnly && (
+                    <>
+                      <style>{`
+                        .compact-attachment-upload .ant-upload-select,
+                        .compact-attachment-upload .ant-upload-list-item-container {
+                          width: ${ATTACHMENT_CARD_SIZE}px !important;
+                          height: ${ATTACHMENT_CARD_SIZE}px !important;
+                        }
 
-                    .compact-attachment-upload .ant-upload-list-item-thumbnail img {
-                      object-fit: cover;
-                    }
+                        .compact-attachment-upload .ant-upload-list-item {
+                          padding: 3px !important;
+                          border-radius: 10px !important;
+                        }
 
-                    .compact-attachment-upload .ant-upload-list {
-                      display: flex;
-                      flex-wrap: wrap;
-                      gap: 8px;
-                      margin: 0;
-                    }
+                        .compact-attachment-upload .ant-upload-list-item-thumbnail img {
+                          object-fit: cover;
+                        }
 
-                    .compact-attachment-upload .ant-upload-list-item-container {
-                      margin: 0 !important;
-                    }
+                        .compact-attachment-upload .ant-upload-list {
+                          display: flex;
+                          flex-wrap: wrap;
+                          gap: 8px;
+                          margin: 0;
+                        }
 
-                    .compact-attachment-upload .ant-upload.ant-upload-select {
-                      border-radius: 10px !important;
-                    }
-                  `}</style>
-                  <div
-                    className="compact-attachment-upload"
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: 4,
-                    }}
-                  >
-                    <Upload
-                      accept="image/*"
-                      beforeUpload={() => false}
-                      listType="picture-card"
-                      fileList={rowFiles}
-                      maxCount={MAX_ATTACHMENTS}
-                      onPreview={handlePreview}
-                      onChange={handleAttachmentChange(record.id)}
-                      onRemove={(file) => {
-                        handleRemoveAttachment(record.id, file.uid);
-                        return false;
-                      }}
-                      itemRender={(originNode, file) => {
-                        const fileIndex = rowFiles.findIndex((item) => item.uid === file.uid);
+                        .compact-attachment-upload .ant-upload-list-item-container {
+                          margin: 0 !important;
+                        }
 
-                        return (
-                          <div
-                            style={{
-                              position: 'relative',
-                              width: ATTACHMENT_CARD_SIZE,
-                              height: ATTACHMENT_CARD_SIZE,
-                              borderRadius: 8,
-                              overflow: 'hidden',
-                            }}
-                          >
-                            <div style={{ width: '100%', height: '100%' }}>{originNode}</div>
-                            <div
-                              style={{
-                                position: 'absolute',
-                                top: 4,
-                                right: 4,
-                                display: 'flex',
-                                gap: 4,
-                                zIndex: 1,
-                              }}
-                            >
-                              <Upload
-                                accept="image/*"
-                                beforeUpload={() => false}
-                                showUploadList={false}
-                                maxCount={1}
-                                onChange={({ file: nextFile }) => {
-                                  if (fileIndex >= 0) {
-                                    handleReplaceAttachment(record.id, fileIndex, nextFile);
-                                  }
-                                }}
-                              ></Upload>
-                              <Popconfirm
-                                title="Delete image?"
-                                okText="Delete"
-                                cancelText="Cancel"
-                                onConfirm={() => handleRemoveAttachment(record.id, file.uid)}
-                              ></Popconfirm>
+                        .compact-attachment-upload .ant-upload.ant-upload-select {
+                          border-radius: 10px !important;
+                        }
+                      `}</style>
+                      <div
+                        className="compact-attachment-upload"
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          padding: 4,
+                        }}
+                      >
+                        <Upload
+                          accept="image/*"
+                          beforeUpload={() => false}
+                          listType="picture-card"
+                          fileList={rowFiles}
+                          maxCount={MAX_ATTACHMENTS}
+                          onPreview={handlePreview}
+                          onChange={handleAttachmentChange(record.id)}
+                          showUploadList={{
+                          showPreviewIcon: true,
+                          showRemoveIcon: true,
+                        }}
+                        onRemove={(file) => {
+                            handleRemoveAttachment(record.id, file.uid);
+                           
+                          }}
+                        >
+                          {rowFiles.length < MAX_ATTACHMENTS && (
+                            <div style={{ textAlign: 'center' }}>
+                              <PlusOutlined style={{ fontSize: 16 }} />
+                              <div style={{ marginTop: 4, fontSize: 10 }}>Add</div>
                             </div>
-                          </div>
-                        );
-                      }}
-                    >
-                      {rowFiles.length >= MAX_ATTACHMENTS ? null : uploadButton}
-                    </Upload>
-                    {/* <Button
-                      size="small"
-                      type="text"
-                      icon={<EditOutlined />}
-                      style={{
-                        color: '#fff',
-                        background: 'rgba(0, 0, 0, 0.45)',
-                        borderRadius: 999,
-                        width: 20,
-                        height: 20,
-                        minWidth: 20,
-                        padding: 0,
-                        marginLeft: 12,
-                      }}
-                    /> */}
-                  </div>
+                          )}
+                        </Upload>
+                      </div>
+                    </>
+                  )}
 
                   {previewImage && (
                     <Image
@@ -795,7 +733,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                       style={{ display: 'none' }}
                     />
                   )}
-                </>
+                </div>
               );
             },
             align: 'center' as const,

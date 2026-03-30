@@ -31,6 +31,8 @@ function statusToCurrentStep(status: RequestDetailData['status']): number {
       return 1;
     case 'Completed':
       return 3;
+    case 'Receiving':
+      return 2;
     case 'Rejected':
       return 0;
     default:
@@ -83,7 +85,9 @@ export default function DrawerBatchReturnItems({
                   ? 'Rejected'
                   : item.state === 'COMPLETED'
                     ? 'Completed'
-                    : 'Pending',
+                    : item.state === 'RECEIVING'
+                      ? 'Receiving'
+                      : 'Pending',
             remarks: item.remarks ?? '',
             items: (item.items ?? []).map((i: any) => ({
               no: i.no,
@@ -95,6 +99,9 @@ export default function DrawerBatchReturnItems({
               quantity_to_return: i.quantity_to_return,
               used_quantity: i.used_quantity,
               total: i.total,
+              good_qty: i.good_qty,
+              damaged_qty: i.damaged_qty,
+              images: i.images, // file IDs from warehouse inspection
             })),
             activities: (item.activities ?? []).map((a: any) => ({
               label: a.label,
@@ -118,13 +125,15 @@ export default function DrawerBatchReturnItems({
       dataIndex: 'image',
       key: 'image',
       width: 80,
-      render: (_, record) => (
+      render: (_, record) => {
+        return (
           <SparePartImage
-          imageId={record.image}
-          src={record.item_name}
-          alt={record.product_id || record.request_id}
-      />
-      )
+            imageId={record.image}
+            src={record.item_name}
+            alt={record.product_id || record.request_id}
+          />
+        );
+      }
     },
     {
       title: 'Product ID',

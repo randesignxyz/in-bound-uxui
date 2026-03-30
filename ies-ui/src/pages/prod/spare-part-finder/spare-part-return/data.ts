@@ -359,19 +359,22 @@ export const mapToFlattenedRowsMySparePartList = (
 
 export const mapToMyRequestToReturn = (
   item: SparePartReturnBatchResponseItem
-): MyRequestToReturnItem => ({
-  id: item.returnId,
-  return_id: item.returnNo ?? `RET-${item.returnId}`,
-  return_date: formatDate(item.returnDate ?? ''),
-  manager_decide_date: formatDate(item.approvedDate ?? item.rejectedDate ?? ''),
-  total_items: item.totalItems ?? 0,
-  status:
-    item.returnStatus === 'APPROVED'
-      ? 'Approved'
-      : item.returnStatus === 'REJECTED'
-        ? 'Rejected'
-        : item.returnStatus === 'COMPLETED'
-          ? 'Completed'
-          : 'Pending',
-  remarks: item.remark ?? '',
-});
+): MyRequestToReturnItem => {
+  const s = (item.returnStatus || '').toString().trim().toUpperCase();
+  let status: MyRequestToReturnItem['status'] = 'Pending';
+  
+  if (s === 'APPROVED') status = 'Approved';
+  else if (s === 'REJECTED') status = 'Rejected';
+  else if (s === 'COMPLETE' || s === 'COMPLETED') status = 'Completed';
+  else if (s === 'RECEIVING') status = 'Receiving';
+
+  return {
+    id: item.returnId,
+    return_id: item.returnNo ?? `RET-${item.returnId}`,
+    return_date: formatDate(item.returnDate ?? ''),
+    manager_decide_date: formatDate(item.approvedDate ?? item.rejectedDate ?? ''),
+    total_items: item.totalItems ?? 0,
+    status,
+    remarks: item.remark ?? '',
+  };
+};

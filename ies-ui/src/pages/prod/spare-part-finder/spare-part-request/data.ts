@@ -5,7 +5,7 @@ export type SparePartType = 'MRO-W' | 'MRO-S' | 'MRO-G';
 export type SparePartStockStatus = 'available' | 'low' | 'no-stock';
 
 export type RequestPriority = 'urgent' | 'high' | 'normal' | 'low';
-export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'in-progress' | 'partial';
+export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'in-progress' | 'partial' | 'ready_to_Pickup' | 'completed';
 
 export interface SparePartRequestSearch {
   searchValue?: string;
@@ -29,6 +29,7 @@ export interface MyRequestSearch {
 export interface SparePartRequestItem {
   id: number;
   image?: string;
+  imageId?: string[];
   productId: string;
   partName: string;
   description?: string;
@@ -39,6 +40,18 @@ export interface SparePartRequestItem {
   businessUnit: string;
   status: SparePartStockStatus;
   warehouse: string;
+  locations?: {
+    warehouseCode: string;
+    warehouseName?: string;
+    level: string;
+    shelve: string;
+    rack: string;
+    bin: string;
+    onHandQty: number;
+    reservedQty: number;
+    availableQty: number;
+    reorderLevel: number;
+  }[];
   tab: SparePartTab;
   createdDate?: string;
 }
@@ -55,22 +68,7 @@ export interface MyRequestItem {
   type?: SparePartType;
 }
 
-export type ReceivedStatus = 'completed' | 'partial';
-
-export interface MyReceivedSearch {
-  searchValue?: string;
-  status?: 'ALL' | ReceivedStatus;
-  dateRange?: [string, string];
-  sort?: Record<string, SortOrder>;
-}
-
-export interface MyReceivedItem {
-  id: number;
-  requestId: string;
-  requestDate: string;
-  pickUpDate: string;
-  requestItems: number;
-  receivedItems: number;
-  remainItems: number;
-  status: ReceivedStatus;
-}
+// =======================================
+//                   Return
+// =======================================
+export type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'completed return' | 'partial return'

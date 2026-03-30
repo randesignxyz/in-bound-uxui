@@ -15,6 +15,9 @@ export const ProdPaths = {
   dailyHACCPMonitoringtOzone: '/prod/daily-haccp-monitoring-ozone',
   dailyHACCPMonitoring: '/prod/daily-haccp-monitoring',
   sparePartReturn: '/prod/spare-part-return',
+  sparePartRequestTest: '/prod/spare-part-request-test',
+  sparePartWarehouse: '/prod/spare-part-warehouse',
+  sparePartApproval: '/prod/spare-part-approval',
 };
 
 export default () => {
@@ -37,30 +40,15 @@ export default () => {
       link: `${ProdPaths.inventoryTransfer}/list`,
       visible: access.canAccessInventoryTranferMenuItem,
     },
-    {
-      id: 'sparePartRequest',
-      name: 'Spare Part Request',
-      description: 'Spare Part Request List',
-      icon: vehicleToolIcon,
-      link: `${ProdPaths.sparePartRequest}/list`,
-      visible: access.canSpfRequester || access.canSpfApprover,
-    },
-    {
-      id: 'sparePartRequestApproval',
-      name: 'Request Approval',
-      description: 'Approve Items requests',
-      icon: vehicleToolIcon,
-      link: `${ProdPaths.sparePartRequest}/list`,
-      visible: access.canSpfApprover,
-    },
-    {
-      id: 'sparePartRequestWarehouse',
-      name: 'Spare Part Request List',
-      description: 'Spare Part Request List',
-      icon: vehicleToolIcon,
-      link: `${ProdPaths.sparePartRequest}/list`,
-      visible: access.canSpfWarehouseStaff,
-    },
+    // {
+    //   id: 'sparePartRequest',
+    //   name: 'Spare Part Request',
+    //   description: 'Spare Part Request List',
+    //   icon: warehouseTransferIcon,
+    //   link: `${ProdPaths.sparePartRequest}/list`,
+    //   visible: access.canSpfRequester || access.canSpfApprover,
+    // },
+ 
     // {
     //   id: 'dailyWaterTreatment',
     //   name: 'Daily Water Treatment',
@@ -68,7 +56,8 @@ export default () => {
     //   icon: dailyWaterTreatmentIcon,
     //   link: `${ProdPaths.dailyWaterTreatment}/list`,
     //   visible: access.canAccessDailyWaterTreatmentMenuItem,
-    // },
+    // }
+
     {
       id: 'dailyPreWaterTreatment',
       name: 'Daily Pre-Water Treatment',
@@ -99,23 +88,7 @@ export default () => {
       description: 'Spare Part Request List',
       icon: vehicleToolIcon,
       link: `${ProdPaths.sparePartRequest}/list`,
-      visible: access.canSpfRequester || access.canSpfApprover,
-    },
-    {
-      id: 'sparePartRequestApproval',
-      name: 'Request Approval',
-      description: 'Approve Items requests',
-      icon: vehicleToolIcon,
-      link: `${ProdPaths.sparePartRequest}/list`,
-      visible: access.canSpfApprover,
-    },
-    {
-      id: 'sparePartRequestWarehouse',
-      name: 'Spare Part Request List',
-      description: 'Spare Part Request List',
-      icon: vehicleToolIcon,
-      link: `${ProdPaths.sparePartRequest}/list`,
-      visible: access.canSpfWarehouseStaff,
+      visible: access.canSpfRequester || access.canSpfApprover ,
     },
      {
       id: 'sparePartReturn',
@@ -123,7 +96,30 @@ export default () => {
       description: 'Spare Part Return List',
       icon: vehicleToolIcon,
       link: `${ProdPaths.sparePartReturn}/list`,
-      visible: access.canAccessSparePartReturnMenuItem,
+      visible: access.canSpfRequester || access.canSpfApprover,
+    },
+       {
+      id: 'sparePartRequestApproval',
+      name: 'Request Approval',
+      description: 'Approve Items requests',
+      icon: warehouseTransferIcon,
+      link: `${ProdPaths.sparePartApproval}/list`,
+      visible: access.canSpfApprover,
+    },
+    {
+      id: 'SparePartsListTest',
+      name: 'Spare Parts',
+      description: 'Spare Part Request List',
+      link: `${ProdPaths.sparePartRequestTest}/list`,
+      visible: access.canAdmin
+    },
+    {
+      id: 'sparePartRequestWarehouse',
+      name: 'Spare Part Request List',
+      description: 'Spare Part Request List Warehouse Staff',
+      icon: warehouseTransferIcon,
+      link: `${ProdPaths.sparePartWarehouse}/list`,
+      visible: access.canSpfWarehouseStaff,
     },
   ];
 

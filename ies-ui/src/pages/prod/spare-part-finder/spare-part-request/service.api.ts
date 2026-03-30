@@ -1,189 +1,179 @@
-import type { TableViewSearchParams } from '@/components/DataCrud/TableView';
-import type { Paging } from '@/services/API';
-import { singleRequest } from '@/services/apiGateway';
-import type { RequestActions, ServiceApiType } from '@/services/apiGateway';
-import type { MyRequestItem, MyRequestSearch, MyReceivedItem, MyReceivedSearch, SparePartRequestItem, SparePartRequestSearch } from './data';
-import type {
-  ChangeSparePartRequestStatusPayload,
-  CreateSparePartRequestPayload,
-  CreateSparePartReturnPayload,
-  ProvideSparePartRequestPayload,
-  RequestSparePartExtensionPayload,
-  SparePartRequestServiceContract,
-} from './service';
+import { Paging } from '@/services/API';
+import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
+import type { SparePartRequestItem, SparePartStockStatus, SparePartType } from './data';
 
-const SparePartRequestAction = {
-  page: (params: TableViewSearchParams<SparePartRequestSearch>): ServiceApiType<{ searchValue?: string }> => ({
-    type: 'PAGING_QUERY',
-    endpoint: 'PROD',
-    actionName: 'fetch-paging-spare-part-request',
-    payload: { ...params.criteria },
-    pagination: {
-      pageSize: params.pagination?.pageSize,
-      page: params.pagination?.current,
-    },
-  }),
-  myRequestsPage: (params: TableViewSearchParams<MyRequestSearch>): ServiceApiType<MyRequestSearch> => ({
-    type: 'PAGING_QUERY',
-    endpoint: 'PROD',
-    actionName: 'fetch-paging-my-spare-part-request',
-    payload: { ...params.criteria },
-    pagination: {
-      pageSize: params.pagination?.pageSize,
-      page: params.pagination?.current,
-    },
-  }),
-  myReceivedPage: (params: TableViewSearchParams<MyReceivedSearch>): ServiceApiType<MyReceivedSearch> => ({
-    type: 'PAGING_QUERY',
-    endpoint: 'PROD',
-    actionName: 'fetch-paging-my-received-spare-part',
-    payload: { ...params.criteria },
-    pagination: {
-      pageSize: params.pagination?.pageSize,
-      page: params.pagination?.current,
-    },
-  }),
-  createRequest: (payload: CreateSparePartRequestPayload): ServiceApiType<CreateSparePartRequestPayload> => ({
-    type: 'EXEC',
-    endpoint: 'PROD',
-    actionName: 'create-spare-part-request',
-    payload,
-  }),
-  createReturn: (payload: CreateSparePartReturnPayload): ServiceApiType<CreateSparePartReturnPayload> => ({
-    type: 'EXEC',
-    endpoint: 'PROD',
-    actionName: 'create-spare-part-return',
-    payload,
-  }),
-  approveRequest: (
-    payload: ChangeSparePartRequestStatusPayload,
-  ): ServiceApiType<ChangeSparePartRequestStatusPayload> => ({
-    type: 'EXEC',
-    endpoint: 'PROD',
-    actionName: 'approve-spare-part-request',
-    payload,
-  }),
-  rejectRequest: (
-    payload: ChangeSparePartRequestStatusPayload,
-  ): ServiceApiType<ChangeSparePartRequestStatusPayload> => ({
-    type: 'EXEC',
-    endpoint: 'PROD',
-    actionName: 'reject-spare-part-request',
-    payload,
-  }),
-  provideRequest: (
-    payload: ProvideSparePartRequestPayload,
-  ): ServiceApiType<ProvideSparePartRequestPayload> => ({
-    type: 'EXEC',
-    endpoint: 'PROD',
-    actionName: 'provide-spare-part-request',
-    payload,
-  }),
-  limitRequest: (
-    payload: ProvideSparePartRequestPayload,
-  ): ServiceApiType<ProvideSparePartRequestPayload> => ({
-    type: 'EXEC',
-    endpoint: 'PROD',
-    actionName: 'limit-spare-part-request',
-    payload,
-  }),
-  requestExtension: (
-    payload: RequestSparePartExtensionPayload,
-  ): ServiceApiType<RequestSparePartExtensionPayload> => ({
-    type: 'EXEC',
-    endpoint: 'PROD',
-    actionName: 'request-spare-part-extension',
-    payload,
-  }),
-  approveExtension: (
-    payload: ChangeSparePartRequestStatusPayload,
-  ): ServiceApiType<ChangeSparePartRequestStatusPayload> => ({
-    type: 'EXEC',
-    endpoint: 'PROD',
-    actionName: 'approve-spare-part-extension',
-    payload,
-  }),
-  rejectExtension: (
-    payload: ChangeSparePartRequestStatusPayload,
-  ): ServiceApiType<ChangeSparePartRequestStatusPayload> => ({
-    type: 'EXEC',
-    endpoint: 'PROD',
-    actionName: 'reject-spare-part-extension',
-    payload,
-  }),
+export interface SparePartRequestListSearch { 
+  searchValue?: string;
+  status?: string;
+  category?: string;
+  type?: string;
+  warehouse?: string;
+}
+
+interface SparePartRequestListApiSearch {
+  advanceSearch: {
+    searchValue: string;
+    warehouse: string;
+    status: string;
+    category: string;
+    type: string;
+  };
+}
+
+export interface SparePartRequestListApiItem {
+  id: number;
+  productId: string;
+  partName: string;
+  description?: string;
+  tag?: string;
+  type: string;
+  category: string;
+  stock: number;
+  status: string;
+  avalailableStock?: number;
+  imageId?: string[];
+  isActive: boolean;
+  businessUnit: string;
+  createdBy?: string;
+  createdDate?: string;
+  updatedBy?: string;
+  updatedDate?: string;
+  locations?: Location[];
+}
+
+interface Location {
+  warehouseCode: string;
+  warehouseName?: string;
+  level: string;
+  shelve: string;
+  rack: string;
+  bin: string;
+  onHandQty: number;
+  reservedQty: number;
+  availableQty: number;
+  reorderLevel: number;
+}
+
+type SparePartDetailParams = {
+  id?: number;
+  productId?: string;
+};
+        
+type SparePartRequestPageParams = {
+  criteria?: SparePartRequestListSearch;
+  pagination?: {
+    current?: number;
+    pageSize?: number;
+  };
 };
 
-export const createSparePartRequestApiService = (
-  requestAction: RequestActions,
-): SparePartRequestServiceContract => ({
-  page: async (params: TableViewSearchParams<SparePartRequestSearch>) =>
-    (await singleRequest<SparePartRequestItem>(SparePartRequestAction.page(params))(
-      requestAction,
-    )) as Paging<SparePartRequestItem>,
+const SparePartRequestTestAction = {
+  page: (params: SparePartRequestPageParams): ServiceApiType<SparePartRequestListApiSearch> => ({
+    type: 'PAGING_QUERY',
+    endpoint: 'PROD',
+    actionName: 'get-search-spare-part',
+    payload: {
+      advanceSearch: {
+        searchValue: params.criteria?.searchValue || '',
+        warehouse: params.criteria?.warehouse || '',
+        status: '',
+        category: params.criteria?.category || '',
+        type: params.criteria?.type && params.criteria.type !== 'All' ? params.criteria.type : '',
+      },
+    },
+    pagination: {
+      page: params.pagination?.current,
+      pageSize: params.pagination?.pageSize,
+    },
+  }),
+  detail: (params: SparePartDetailParams): ServiceApiType<SparePartDetailParams> => ({
+    type: 'FETCH_QUERY',
+    endpoint: 'PROD',
+    actionName: 'get-spare-part-detail',
+    payload: {
+      id: params.id,
+      productId: params.productId,
+    },
+  }),
+  // createRequest: 
+};
 
-  myRequestsPage: async (params: TableViewSearchParams<MyRequestSearch>) =>
-    (await singleRequest<MyRequestItem>(SparePartRequestAction.myRequestsPage(params))(
-      requestAction,
-    )) as Paging<MyRequestItem>,
+const mapStockStatus = (stock: number): SparePartStockStatus => {
+  if (stock <= 0) return 'no-stock';
+  if (stock <= 2) return 'low';
+  return 'available';
+};
 
-  myReceivedPage: async (params: TableViewSearchParams<MyReceivedSearch>) =>
-    (await singleRequest<MyReceivedItem>(SparePartRequestAction.myReceivedPage(params))(
-      requestAction,
-    )) as Paging<MyReceivedItem>,
+const mapType = (type?: string): SparePartType => {
+  const normalized = String(type || 'MRO_W').replace(/_/g, '-');
+  if (normalized === 'MRO-S') return 'MRO-S';
+  if (normalized === 'MRO-G') return 'MRO-G';
+  return 'MRO-W';
+};
 
-  createRequest: async (payload: CreateSparePartRequestPayload) => {
-    const rs = (await singleRequest<any>(SparePartRequestAction.createRequest(payload))(
+const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string): SparePartRequestItem => {
+  const firstLocation = item.locations?.[0];
+  const stock = firstLocation?.availableQty ?? item.avalailableStock ?? item.stock ?? 0;
+
+  return {
+    id: item.id,
+    image: undefined,
+    imageId: item.imageId || [],
+    productId: item.productId,
+    partName: item.partName,
+    description: item.description,
+    tags: item.tag ? [item.tag] : undefined,
+    type: mapType(item.type),
+    category: item.category,
+    stock,
+    businessUnit: item.businessUnit,
+    status: mapStockStatus(stock),
+    warehouse: firstLocation?.warehouseCode || fallbackWarehouse || '',
+    locations: item.locations || [],
+    tab: 'spare-list',
+    createdDate: item.createdDate,
+  };
+};
+
+const mapPagingResult = (
+  response: Paging<SparePartRequestListApiItem> | any,
+  params: SparePartRequestPageParams,
+): Paging<SparePartRequestItem> => {
+  const rawItems = Array.isArray(response?.items)
+    ? response.items
+    : Array.isArray(response?.data)
+      ? response.data
+      : Array.isArray(response)
+        ? response
+        : [];
+
+  let items: SparePartRequestItem[] = rawItems.map((item: SparePartRequestListApiItem) =>
+    mapItem(item, params.criteria?.warehouse),
+  );
+
+  if (params.criteria?.status && params.criteria.status !== 'All') {
+    items = items.filter((item: any) => item.status === params.criteria?.status);
+  }
+
+  return {
+    items,
+    total: response?.total ?? items.length,
+    pageSize: response?.pageSize ?? params.pagination?.pageSize,
+    refNo: response?.refNo,
+  };
+};
+
+export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
+  page: async (params: SparePartRequestPageParams): Promise<Paging<SparePartRequestItem>> => {
+    const response = await singleRequest<SparePartRequestListApiItem>(SparePartRequestTestAction.page(params))(
       requestAction,
-    )) as any;
-    // Backend exec APIs may return either payload directly or wrapped in { data, message }.
-    return (rs?.data ?? rs) as MyRequestItem;
+    );
+    return mapPagingResult(response, params);
   },
-  createReturn: async (payload: CreateSparePartReturnPayload) => {
-    const rs = (await singleRequest<any>(SparePartRequestAction.createReturn(payload))(
+  detail: async (params: SparePartDetailParams): Promise<SparePartRequestItem> => {
+    const response = await singleRequest<SparePartRequestListApiItem>(SparePartRequestTestAction.detail(params))(
       requestAction,
-    )) as any;
-    return (rs?.data ?? rs) as MyRequestItem;
-  },
-  approveRequest: async (payload: ChangeSparePartRequestStatusPayload) => {
-    const rs = (await singleRequest<any>(SparePartRequestAction.approveRequest(payload))(
-      requestAction,
-    )) as any;
-    return (rs?.data ?? rs) as MyRequestItem;
-  },
-  rejectRequest: async (payload: ChangeSparePartRequestStatusPayload) => {
-    const rs = (await singleRequest<any>(SparePartRequestAction.rejectRequest(payload))(
-      requestAction,
-    )) as any;
-    return (rs?.data ?? rs) as MyRequestItem;
-  },
-  provideRequest: async (payload: ProvideSparePartRequestPayload) => {
-    const rs = (await singleRequest<any>(SparePartRequestAction.provideRequest(payload))(
-      requestAction,
-    )) as any;
-    return (rs?.data ?? rs) as MyRequestItem;
-  },
-  limitRequest: async (payload: ProvideSparePartRequestPayload) => {
-    const rs = (await singleRequest<any>(SparePartRequestAction.limitRequest(payload))(
-      requestAction,
-    )) as any;
-    return (rs?.data ?? rs) as MyRequestItem;
-  },
-  requestExtension: async (payload: RequestSparePartExtensionPayload) => {
-    const rs = (await singleRequest<any>(SparePartRequestAction.requestExtension(payload))(
-      requestAction,
-    )) as any;
-    return (rs?.data ?? rs) as MyRequestItem;
-  },
-  approveExtension: async (payload: ChangeSparePartRequestStatusPayload) => {
-    const rs = (await singleRequest<any>(SparePartRequestAction.approveExtension(payload))(
-      requestAction,
-    )) as any;
-    return (rs?.data ?? rs) as MyRequestItem;
-  },
-  rejectExtension: async (payload: ChangeSparePartRequestStatusPayload) => {
-    const rs = (await singleRequest<any>(SparePartRequestAction.rejectExtension(payload))(
-      requestAction,
-    )) as any;
-    return (rs?.data ?? rs) as MyRequestItem;
+    );
+    return mapItem(response as SparePartRequestListApiItem);
   },
 });

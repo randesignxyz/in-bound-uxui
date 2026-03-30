@@ -2,10 +2,6 @@ import { Drawer, Badge, Card, Button, Space, Divider, Typography, Row, Col } fro
 import { 
   InboxOutlined, 
   SettingOutlined, 
-  CalendarOutlined,
-  ShopOutlined,
-  AppstoreOutlined,
-  BuildOutlined,
   FileTextOutlined
 } from "@ant-design/icons";
 
@@ -36,9 +32,9 @@ export default function DrawerViewItem({
       title={
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Product Details</span>
-          <Button type="link" style={{ color: '#d4a574' }}>
+          {/* <Button type="link" style={{ color: '#d4a574' }}>
             Edit Info
-          </Button>
+          </Button> */}
         </div>
       }
       placement="right"

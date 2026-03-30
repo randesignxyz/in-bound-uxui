@@ -1,103 +1,145 @@
 import FormModalComp from "@/components/FormModal";
 import { EditableProTable, ProColumns } from "@ant-design/pro-components";
 import { useState, useEffect } from "react";
-import { Avatar, Button } from "antd";
+import TextArea from "antd/es/input/TextArea";
+import SparePartImage from "../spare-part-request/SparePartImage";
 
 interface FormModalProps {
   open: boolean;
   onCancel: () => void;
-  onSubmit: (items: any[]) => void;
+  onSubmit: (payload: { remark: string; items: any[] }) => void;
+  onItemsChange?: (items: any[]) => void;
   data?: any[];
 }
 
-export default function FormModalSelectItems({ open, onCancel, onSubmit, data }: FormModalProps) {
+export default function FormModalSelectItems({
+  open,
+  onCancel,
+  onSubmit,
+  onItemsChange,
+  data,
+}: FormModalProps) {
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [dataSource, setDataSource] = useState<any[]>([]);
+  const [remark, setRemark] = useState<string>("");
 
-  // Only initialize NEW items; preserve edited values for existing ones
+  const normalizeItems = (items: any[] = []) =>
+    items.map((item) => ({
+      ...item,
+      return_quantity: item.return_quantity ?? 1,
+      used_quantity: item.used_quantity ?? 0,
+      reason: item.reason ?? "",
+      UoM: item.UoM ?? "pcs",
+    }));
+
+  // Reset table state whenever the modal is opened with selected items
   useEffect(() => {
-    if (data && data.length > 0) {
-      const existingIds = new Set(dataSource.map(item => item.id));
-      const newItems = data
-        .filter(item => !existingIds.has(item.id))
-        .map(item => ({
-          ...item,
-          return_quantity: 1,
-          used_quantity: 0,
-          reason: '',
-        }));
-      if (newItems.length > 0) {
-        const merged = [...dataSource, ...newItems];
-        setDataSource(merged);
-        // New items start in edit mode by default
-        setEditableRowKeys(prev => [...prev, ...newItems.map(item => item.id)]);
-      }
+    if (!open) {
+      return;
     }
-  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const nextItems = normalizeItems(data ?? []);
+    setDataSource(nextItems);
+    setEditableRowKeys(nextItems.map((item) => item.id));
+  }, [open, data]);
+
+  const updateItems = (items: any[]) => {
+    setDataSource(items);
+    onItemsChange?.(items);
+  };
 
   const columns: ProColumns<any>[] = [
     {
-      title: 'Image',
-      dataIndex: 'image',
+      title: "Image",
+      dataIndex: "image",
       editable: false,
       width: 80,
       render: (_, record) => (
-        <Avatar src={record.image} size={48} shape="square" />
-      ),
+      <SparePartImage
+          imageId={record.imageId}
+          src={record.image}
+          alt={record.partName || record.productId}
+          size={48}
+          />
+     ),
     },
     {
-      title: 'Product Number',
-      dataIndex: 'part_number',
+      title: "Product Number",
+      dataIndex: "part_number",
       editable: false,
     },
     {
-      title: 'Name',
-      dataIndex: 'spare_part_name',
+      title: "Name",
+      dataIndex: "spare_part_name",
       editable: false,
     },
     {
-      title: 'Type',
-      dataIndex: 'spare_part_type',
+      title: "Type",
+      dataIndex: "type",
       editable: false,
     },
     {
-      title: 'Category',
-      dataIndex: 'category',
+      title: "Category",
+      dataIndex: "category",
       editable: false,
     },
     {
-      title: 'Quantity to Return',
-      dataIndex: 'return_quantity',
+       title: "QTY to Pick",
+      dataIndex: "quantity",
+      width: 120,
+      valueType: "digit",
+      editable: false,
+    },
+
+    {
+      title: "QTY to Return",
+      dataIndex: "return_quantity",
+      width: 120,
+      valueType: "digit",
     },
     {
-      title: 'Used Quantity',
-      dataIndex: 'used_quantity',
+      title: "Used QTY",
+      dataIndex: "used_quantity",
+      width: 120,
+      valueType: "digit",
     },
     {
-      title: 'Remark',
-      dataIndex: 'reason',
-      valueType: 'textarea',
+      title: "UoM",
+      dataIndex: "UoM",
+      width: 120,
+      editable: false,
     },
+  {
+  title: "Remark",
+  dataIndex: "reason",
+  width: 200,
+  render: (_, record) => {
+    return record.reason;
+  },
+  renderFormItem: (_, { record }) => {
+    return (
+      <TextArea
+        rows={1}
+        defaultValue={record?.reason}
+        placeholder="Enter reason for return"
+      />
+    );
+  },
+},
     {
-      title: 'Action',
-      valueType: 'option',
+      title: "Action",
+      valueType: "option",
       width: 160,
-      render: (text, record, _, action) => [
+      render: (_, record) => [
         <a
-          key="edit"
-          onClick={() => action?.startEditable(record.id)}
-        >
-          Edit
-        </a>,
-        <a
-          key="delete"
+          key="remove"
           onClick={() => {
-            const newData = dataSource.filter(item => item.id !== record.id);
-            setDataSource(newData);
-            setEditableRowKeys(newData.map(item => item.id));
+            const newData = dataSource.filter((item) => item.id !== record.id);
+            updateItems(newData);
+            setEditableRowKeys(newData.map((item) => item.id));
           }}
         >
-          <span style={{ color: '#ff4d4f' }}>Delete</span>
+          <span style={{ color: "#ff4d4f" }}>Remove</span>
         </a>,
       ],
     },
@@ -108,7 +150,10 @@ export default function FormModalSelectItems({ open, onCancel, onSubmit, data }:
   };
 
   const handleSubmit = () => {
-    onSubmit(dataSource);
+    onSubmit({
+      remark,
+      items: dataSource,
+    });
   };
 
   return (
@@ -123,32 +168,45 @@ export default function FormModalSelectItems({ open, onCancel, onSubmit, data }:
         rowKey="id"
         columns={columns}
         value={dataSource}
-        onChange={(value) => setDataSource([...value])}
+        onChange={(value) => updateItems([...value])}
         recordCreatorProps={false}
         editable={{
-          type: 'multiple',
+          type: "multiple",
           editableKeys,
-          actionRender: (row, config, defaultDoms) => [
-            defaultDoms.save,
+          onChange: setEditableRowKeys,
+          actionRender: (row) => [
             <a
-              key="delete"
+              key="remove"
               onClick={() => {
-                const newData = dataSource.filter(item => item.id !== row.id);
-                setDataSource(newData);
-                setEditableRowKeys(newData.map(item => item.id));
+                const newData = dataSource.filter(
+                  (item) => item.id !== row.id
+                );
+                updateItems(newData);
+                setEditableRowKeys(newData.map((item) => item.id));
               }}
             >
-              <span style={{ color: '#ff4d4f' }}>Delete</span>
+              <span style={{ color: "#ff4d4f" }}>Remove</span>
             </a>,
           ],
           onSave: async (rowKey, data) => {
-            setDataSource(prev => prev.map(item => item.id === rowKey ? { ...item, ...data } : item));
+            updateItems(
+              dataSource.map((item) =>
+                item.id === rowKey ? { ...item, ...data } : item
+              )
+            );
           },
-          onValuesChange: (record, recordList) => {
-            setDataSource([...recordList]);
+          onValuesChange: (_, recordList) => {
+            updateItems([...recordList]);
           },
-          onChange: setEditableRowKeys,
         }}
+      />
+
+      <label>Remark (optional)</label>
+      <TextArea
+        rows={4}
+        maxLength={200}
+        value={remark}
+        onChange={(e) => setRemark(e.target.value)}
       />
     </FormModalComp>
   );

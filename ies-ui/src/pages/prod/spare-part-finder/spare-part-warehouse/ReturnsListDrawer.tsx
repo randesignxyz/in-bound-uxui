@@ -1,4 +1,4 @@
-import {  PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { ProColumns, ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
@@ -9,7 +9,6 @@ import {
   Image,
   Input,
   InputNumber,
-  Popconfirm,
   Space,
   Steps,
   Tag,
@@ -21,7 +20,7 @@ import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from '../spare-part-request/SparePartImage';
 import type { RequestDetailData, ReturnStatus } from '../spare-part-return/data';
 import { SparePartReturnAPI } from '../spare-part-return/service';
-import { RequestActions } from '@/services/apiGateway';
+import { getUploadFileObjectUrlV2, RequestActions } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { SparePartWarehouseReturnAPI } from './service.return';
 import { message } from 'antd';
@@ -68,17 +67,6 @@ interface ReturnItem {
   images?: string[];  // file IDs
 }
 
-interface ReturnData {
-  id?: string;
-  requestId?: string;
-  type?: string;
-  requestDate?: string;
-  status?: ReturnStatus;
-  totalItems?: number;
-  approvedBy?: string;
-  items?: ReturnItem[];
-}
-
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /**
@@ -122,15 +110,6 @@ const statusLabelMap: Record<ReturnStatus | string, string> = {
   Completed: 'Completed',
   'Partially Returned': 'Partially Returned',
 };
-interface ReturnDetailActivity {
-  id: string | number;
-  action?: 'submitted' | 'approved' | 'rejected' | 'receiving' | 'completed' | 'partially_returned';
-  label: string;
-  description?: string;
-  by?: string; // who performed the action
-  date: string; // ISO date string
-  dot?: 'pending' | 'done';
-}
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const formatDateTime = (date?: string) => {
@@ -174,7 +153,7 @@ interface ReturnsListDrawerProps {
 export default function ReturnsListDrawer({ open, onClose, onSuccess, data, returnId }: ReturnsListDrawerProps) {
   const access = useAccess();
   const [loading, setLoading] = useState(false);
-  const [statusOverride, setStatusOverride] = useState<ReturnStatus | null>(null);
+  const [statusOverride] = useState<ReturnStatus | null>(null);
 
   const requestAction: RequestActions = {
     start: (name) => console.log(`Loading: ${name}`),
@@ -195,6 +174,14 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   const isGlobalReadOnly = useMemo(() => {
     return ['Completed', 'Rejected', 'Pending'].includes(effectiveStatus);
   }, [effectiveStatus]);
+
+  const canEditAttachments = useMemo(() => {
+    return ['Receiving', 'Completed'].includes(effectiveStatus);
+  }, [effectiveStatus]);
+
+  const canSubmitChanges = useMemo(() => {
+    return access.canSpfWarehouseStaff && canEditAttachments;
+  }, [access.canSpfWarehouseStaff, canEditAttachments]);
 
   const checkReadOnly = (record: ReturnItem) => {
     if (isGlobalReadOnly) return true;
@@ -345,6 +332,14 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       file.preview = await getBase64(file.originFileObj as FileType);
     }
 
+    if (!file.url && !file.preview && typeof file.response === 'string') {
+      try {
+        file.url = await getUploadFileObjectUrlV2()(file.response);
+      } catch (error) {
+        console.error('Failed to preview uploaded image', error);
+      }
+    }
+
     setPreviewImage(file.url || file.thumbUrl || (file.preview as string) || '');
     setPreviewOpen(true);
     setPreviewTitle(file.name || '');
@@ -361,23 +356,36 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       }));
     };
 
-  const uploadButton = (
-    <button style={{ border: 0, background: 'none' }} type="button">
-      <PlusOutlined />
-      <div style={{ marginTop: 8 }}>Upload</div>
-    </button>
-  );
-
-
-  const handleRemoveAttachment = (itemId: string | number, uid: string) => {
+  const handleRemoveAttachment = (
+    itemId: string | number,
+    uid: string,
+    currentFiles: UploadFile[] = [],
+  ) => {
     setAttachmentMap((prev) => {
       const itemKey = String(itemId);
+      const sourceFiles = prev[itemKey] ?? currentFiles;
       return {
         ...prev,
-        [itemKey]: (prev[itemKey] ?? []).filter((file) => file.uid !== uid),
+        [itemKey]: sourceFiles.filter((file) => file.uid !== uid),
       };
     });
   };
+
+  const getInitialAttachmentFiles = (record: ReturnItem): UploadFile[] =>
+    (record.images ?? []).map((fileId, index) => ({
+      uid: `existing-${record.id}-${fileId}-${index}`,
+      name: `image-${index + 1}`,
+      status: 'done',
+      response: fileId,
+    }));
+
+  const getRowAttachmentFiles = (record: ReturnItem): UploadFile[] =>
+    attachmentMap[String(record.id)] ?? getInitialAttachmentFiles(record);
+
+  const isExistingImageFile = (file: UploadFile) => typeof file.response === 'string' && !file.originFileObj;
+
+  const areImageListsEqual = (current: string[], next: string[]) =>
+    current.length === next.length && current.every((id, index) => id === next[index]);
 
   // ─── Upload damage images to FILE microservice ───────────────────
   const uploadFilesToFileService = async (files: UploadFile[]): Promise<string[]> => {
@@ -421,10 +429,10 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       const itemsWithImages = await Promise.all(
         tableItems.map(async (item) => {
           const key = String(item.id);
-          const files = attachmentMap[key] ?? [];
-          const damageImage = files.length > 0
-            ? await uploadFilesToFileService(files)
-            : [];
+          const files = getRowAttachmentFiles(item);
+          const existingImages = item.images ?? [];
+          const damageImage = files.length > 0 ? await uploadFilesToFileService(files) : [];
+          const imageChanged = areImageListsEqual(existingImages, damageImage) === false;
 
           // Resolve defaults the same way the InputNumber columns do
           const alreadyReceived = item.receivedQty ?? 0;
@@ -432,24 +440,24 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           const goodQty    = goodQtyMap[key]    ?? remaining;
           const damagedQty = damagedQtyMap[key] ?? 0;
 
-          if (goodQty + damagedQty <= 0) return null as any; // Skip items with no additions in this batch
+          if (goodQty + damagedQty <= 0 && !imageChanged) return null as any;
 
           return {
             returnItemId: item.itemId ?? Number(item.id),
             receivedProductId: item.productId,
-            receivedQty: goodQty + damagedQty,   // always > 0 when qty > 0
+            receivedQty: goodQty + damagedQty,
             goodQty,
             damagedQty,
             remark: remarkMap[key] ?? '',
             damageMessages: damagedQty > 0 ? (remarkMap[key] ?? '') : undefined,
-            damageImage: damageImage.length > 0 ? damageImage : undefined,
+            damageImage: imageChanged || damageImage.length > 0 ? damageImage : undefined,
           };
         })
       );
 
       const itemsToConfirm = itemsWithImages.filter(i => i !== null);
       if (!itemsToConfirm.length) {
-        message.warning('No quantities entered for receipt');
+        message.warning('No quantities or image changes to save');
         setLoading(false);
         return;
       }
@@ -556,7 +564,6 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             key: 'good_amount',
             render: (_: unknown, record: ReturnItem) => {
               const key = String(record.id);
-              const isCompleted = effectiveStatus === 'Completed';
               const alreadyReceived = record.receivedQty ?? 0;
               const remaining = record.qtyToReturn - alreadyReceived;
               const defaultVal = remaining; // Default to remaining for partial receipts
@@ -586,7 +593,6 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             key: 'damaged_amount',
             render: (_: unknown, record: ReturnItem) => {
               const key = String(record.id);
-              const isCompleted = effectiveStatus === 'Completed';
               const alreadyReceived = record.receivedQty ?? 0;
               const remaining = record.qtyToReturn - alreadyReceived;
               const defaultVal = 0; // Default damaged to 0 for partial receipts
@@ -634,33 +640,16 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             title: 'Attachments',
             key: 'broken_image',
             render: (_: unknown, record: ReturnItem) => {
-              const alreadyReceivedImgs = record.images ?? [];
-              const isLineReadOnly = checkReadOnly(record);
+              const canEditLineAttachments = canEditAttachments;
+              const rowFiles = getRowAttachmentFiles(record);
 
-              if (isLineReadOnly && alreadyReceivedImgs.length === 0) {
+              if (!canEditLineAttachments && rowFiles.length === 0) {
                 return <Typography.Text type="secondary">—</Typography.Text>;
               }
 
-              const rowFiles = attachmentMap[String(record.id)] ?? [];
-
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-                  {/* Inspection History (Already Received) */}
-                  {alreadyReceivedImgs.length > 0 && (
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      {alreadyReceivedImgs.map((fileId) => (
-                        <SparePartImage
-                          key={fileId}
-                          imageId={fileId}
-                          alt={record.name}
-                          size={ATTACHMENT_CARD_SIZE}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {/* New Batch Uploader (only if not fully received) */}
-                  {!isLineReadOnly && (
+                  {canEditLineAttachments ? (
                     <>
                       <style>{`
                         .compact-attachment-upload .ant-upload-select,
@@ -711,13 +700,69 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                           maxCount={MAX_ATTACHMENTS}
                           onPreview={handlePreview}
                           onChange={handleAttachmentChange(record.id)}
-                          showUploadList={{
-                          showPreviewIcon: true,
-                          showRemoveIcon: true,
-                        }}
-                        onRemove={(file) => {
-                            handleRemoveAttachment(record.id, file.uid);
-                           
+                          itemRender={(originNode, file) => {
+                            const src = file.thumbUrl || file.url || (file.preview as string) || '';
+                            const existingFileId = isExistingImageFile(file) ? String(file.response) : undefined;
+
+                            return (
+                              <div
+                                style={{
+                                  position: 'relative',
+                                  width: ATTACHMENT_CARD_SIZE,
+                                  height: ATTACHMENT_CARD_SIZE,
+                                  borderRadius: 8,
+                                  overflow: 'hidden',
+                                  border: '1px solid #d9d9d9',
+                                  background: '#fafafa',
+                                }}
+                              >
+                                {src ? (
+                                  <img
+                                    src={src}
+                                    alt={file.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                  />
+                                ) : existingFileId ? (
+                                  <div style={{ width: '100%', height: '100%' }}>
+                                    <SparePartImage
+                                      imageId={existingFileId}
+                                      alt={record.name}
+                                      size={ATTACHMENT_CARD_SIZE}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div style={{ width: '100%', height: '100%' }}>{originNode}</div>
+                                )}
+
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    background: 'rgba(0,0,0,0.45)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 8,
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s',
+                                  }}
+                                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+                                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0')}
+                                >
+                                  <EyeOutlined
+                                    style={{ color: '#fff', fontSize: 14, cursor: 'pointer' }}
+                                    onClick={() => handlePreview(file)}
+                                  />
+                                  <DeleteOutlined
+                                    style={{ color: '#fff', fontSize: 14, cursor: 'pointer' }}
+                                    onClick={() => handleRemoveAttachment(record.id, file.uid, rowFiles)}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          }}
+                          onRemove={(file) => {
+                            handleRemoveAttachment(record.id, file.uid, rowFiles);
                           }}
                         >
                           {rowFiles.length < MAX_ATTACHMENTS && (
@@ -729,6 +774,20 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                         </Upload>
                       </div>
                     </>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      {rowFiles.map((file) => {
+                        const existingFileId = isExistingImageFile(file) ? String(file.response) : undefined;
+                        return existingFileId ? (
+                          <SparePartImage
+                            key={file.uid}
+                            imageId={existingFileId}
+                            alt={record.name}
+                            size={ATTACHMENT_CARD_SIZE}
+                          />
+                        ) : null;
+                      })}
+                    </div>
                   )}
 
                   {previewImage && (
@@ -753,7 +812,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             title: 'Action',
             key: 'action',
             render: (_: unknown, record: ReturnItem) =>
-              !checkReadOnly(record) ? (
+              (!checkReadOnly(record) || canEditAttachments) ? (
                 <Space>
                   <Button type="primary" size="small" onClick={handleSave}>
                     Save
@@ -783,7 +842,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       onClose={onClose}
       styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
       footer={
-        !isGlobalReadOnly ? (
+        canSubmitChanges ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
               <Button onClick={onClose}>Close</Button>

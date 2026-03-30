@@ -166,6 +166,7 @@ export default function ReturnsListDrawer({
         return {
           id: rowId,
           itemId: i.return_item_id,
+          imageId: i.imageId,
           image: i.image,
           productId: i.product_id,
           name: i.item_name,
@@ -253,6 +254,7 @@ export default function ReturnsListDrawer({
           items: (item.items ?? []).map((i: any) => ({
             no: i.no,
             return_item_id: i.return_item_id,
+            imageId: i.imageId ?? i.image_id,
             image: i.image ?? undefined,
             product_id: i.product_id,
             request_id: i.request_id,
@@ -317,7 +319,26 @@ export default function ReturnsListDrawer({
       return { ...prev, [key]: (prev[key] ?? []).filter((f) => f.uid !== uid) };
     });
   };
-
+  const handleApproved = () => {
+    if (!returnId) return;
+    const service = SparePartReturnAPI(requestAction);
+    service.warehouse_approve_spare_part_return(returnId, 'APPROVE').then((res: any) => {
+      if (res) {
+        message.success('Approved successfully');
+        onClose?.();
+      }
+    });
+  };
+  const handleRejected = () => {
+    if (!returnId) return;
+    const service = SparePartReturnAPI(requestAction);
+    service.warehouse_approve_spare_part_return(returnId, 'REJECT').then((res: any) => {
+      if (res) {
+        message.success('Rejected successfully');
+        onClose?.();
+      }
+    });
+  };
   const handleReplaceAttachment = async (
     itemId: string | number,
     fileIndex: number,
@@ -708,6 +729,24 @@ export default function ReturnsListDrawer({
         )
       }
     >
+      {access.canSpfApprover && effectiveStatus === 'Pending' && (
+        <div style={{ marginBottom: 24, textAlign: 'right' }}>
+          <Space>
+            <Button
+              danger
+              onClick={handleRejected}
+            >
+              Reject
+            </Button>
+            <Button
+              type="primary"
+              onClick={handleApproved}
+            >
+              Approve
+            </Button>
+          </Space>
+        </div>
+      )}
       <div style={{ marginBottom: 24 }}>
         <Descriptions
           column={3} size="small"

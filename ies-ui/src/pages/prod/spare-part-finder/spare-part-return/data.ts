@@ -209,6 +209,7 @@ export const MY_REQUESTS_TO_RETURN_STATUS_OPTIONS = [
 export interface RequestDetailLineItem {
   no: number;
   return_item_id?: number;
+  imageId?: string;
   image?: string;
   product_id: string;
   request_id: string;

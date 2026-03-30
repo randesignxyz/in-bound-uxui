@@ -346,11 +346,26 @@ export default function UpcomingInboundListview() {
   }, [poDateFilter, poSearchValue, poStatusFilter, purchaseOrders]);
 
   // Handlers (mirrors WarehouseStaffUI)
-  const handleCreateGR = (purchaseOrders: PurchaseOrder[]) => {
+  const hydratePurchaseOrder = async (po: PurchaseOrder): Promise<PurchaseOrder> => {
+    if (!po.id || po.items.length > 0) {
+      return po;
+    }
+
+    return services.detailPurchaseOrder(po.id);
+  };
+
+  const handleCreateGR = async (purchaseOrders: PurchaseOrder[]) => {
     if (!purchaseOrders.length) return;
+
     setSelectedPODetail(null);
-    setSelectedPOs(purchaseOrders);
-    setIsGRCreationOpen(true);
+
+    try {
+      const hydratedPurchaseOrders = await Promise.all(purchaseOrders.map(hydratePurchaseOrder));
+      setSelectedPOs(hydratedPurchaseOrders);
+      setIsGRCreationOpen(true);
+    } catch (error: any) {
+      message.error(error?.message || 'Failed to load purchase order detail.');
+    }
   };
 
   const handleCreateTempGR = (hint?: string) => {
@@ -454,13 +469,8 @@ export default function UpcomingInboundListview() {
   };
 
   const handleViewPODetail = async (po: PurchaseOrder) => {
-    if (!po.id) {
-      setSelectedPODetail(po);
-      return;
-    }
-
     try {
-      const detail = await services.detailPurchaseOrder(po.id);
+      const detail = await hydratePurchaseOrder(po);
       setSelectedPODetail(detail);
     } catch (error: any) {
       message.error(error?.message || 'Failed to load purchase order detail.');
@@ -789,7 +799,7 @@ export default function UpcomingInboundListview() {
       <Button
         type="primary"
         disabled={selectedPOs.length === 0}
-        onClick={() => handleCreateGR(selectedPOs)}
+        onClick={() => void handleCreateGR(selectedPOs)}
       >
         {selectedPOs.length > 0 ? (
           <Space size={8}>
@@ -1356,7 +1366,7 @@ export default function UpcomingInboundListview() {
             open={selectedPODetail !== null}
             onClose={() => setSelectedPODetail(null)}
             po={selectedPODetail}
-            onCreateGR={(po) => handleCreateGR([po])}
+            onCreateGR={(po) => void handleCreateGR([po])}
           />
 
           <GRDetailSidebar

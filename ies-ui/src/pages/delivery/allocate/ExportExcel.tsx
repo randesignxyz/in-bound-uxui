@@ -1,6 +1,6 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { ProFormDateRangePicker, ProFormDateTimeRangePicker, ProFormSelect } from '@ant-design/pro-components';
-import ProForm from '@ant-design/pro-form';
+import ProForm, { ProFormRadio } from '@ant-design/pro-form';
 import { Card, Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
@@ -15,33 +15,34 @@ interface Props extends FormModalProps {
   // transfer_id:string,
   loading: boolean
   initValues?: any
-  onSave: (customer: string, ordered_date: any,request_delivery_date: string) => void;
+  onSave: (customer: string, ordered_date: any, request_delivery_date: string,province:any,reportType:string) => void;
 }
 
 export default ({ loading, onSave, ...props }: Props) => {
-  const [form] = useForm<{ customer: string; ordered_date: any; request_delivery_date: string, type: string }>();
+  const [form] = useForm<{ customer: string; ordered_date: any; request_delivery_date: string, type: string,province:any,reportType:string }>();
   const requestActions = simpleRequestActions();
   const services = AllocateServiceAPI(requestActions);
   const [customer, setCustomer] = useState('')
+  const [selectedReportType, setSelectedReportType] = useState('dop_listing');
   const [route, setRoute] = useState("");
   const [zone, setZone] = useState<string[]>([]);
   const [type, seType] = useState("");
-  const [province, setProvince] = useState<string | undefined>(undefined);
   const [districtOpt, setDistrictOpt] = useState<any[]>([]);
   const [communeOpt, setCommuneOpt] = useState<any[]>([]);
   const [district, setDistrict] = useState<string | undefined>(undefined);
   const [commune, setCommune] = useState<string | undefined>(undefined);
   const [zoneOptions, setZoneOptions] = useState<any[]>([]);
+
   // useEffect(() => {
-  //   if (props.open) {
-  //     form.resetFields();
-  //     setCustomer('')
-  //     setRoute('')
-  //     setZone('')
-  //     setProvince('')
-  //     setDistrict('')
-  //     setCommune('')
-  //   }
+    // if (props.open) {
+      // form.resetFields();
+      // setCustomer('')
+      // setRoute('')
+      // setZone('')
+      // setProvince('')
+      // setDistrict('')
+      // setCommune('')
+    // }
   // }, [props.open]);
 
   // useEffect(() => {
@@ -128,7 +129,8 @@ export default ({ loading, onSave, ...props }: Props) => {
       onResetForm={() => form.resetFields()}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-        onSave(customer, dataForm.ordered_date, dataForm.request_delivery_date);
+        console.log(dataForm)
+        onSave(customer, dataForm.ordered_date, dataForm.request_delivery_date,dataForm.province,dataForm.reportType);
       }}
     >
       <Card>
@@ -334,67 +336,154 @@ export default ({ loading, onSave, ...props }: Props) => {
               />
             </Col>
           </Row> */}
+          <ProFormRadio.Group
+            label="Report Type"
+            name="reportType"
+            rules={[{ required: true }]}
+            initialValue={selectedReportType}
+            options={[
+              { value: 'dop_listing', label: 'DOP Listing' },
+              { value: 'normal', label: 'Outstanding' },
+            ]}
+            fieldProps={{
+              onChange: (e) => {
+                const value = e.target.value;
+                setSelectedReportType(value);
+                console.log("Selected:", value);
+              },
+            }}
+          />
+          {selectedReportType == 'normal' && (
+            <>
+              <Row gutter={6}>
+                <Col span={24}>
+                  <ProFormSelect
+                    name="customer"
+                    label="Customer"
+                    mode="multiple"
+                    request={async ({ keyWords }) => {
+                      const res = await services.pageCustomer({
+                        criteria: {
+                          searchValue: keyWords,
+                        },
+                        pagination: {
+                          current: 1,
+                          pageSize: 20,
+                        },
+                      })
 
-          <Row gutter={6}>
-            <Col span={24}>
-              <ProFormSelect
-                name="customer"
-                label="Customer"
-                mode="multiple"
-                request={async ({ keyWords }) => {
-                  const res = await services.pageCustomer({
-                    criteria: {
-                      searchValue: keyWords,
-                    },
-                    pagination: {
-                      current: 1,
-                      pageSize: 20,
-                    },
-                  })
+                      return res.items.map((c: any) => ({
+                        value: c.code,
+                        label: `${c.code} - ${c.name}`,
+                      }));
+                    }}
+                    fieldProps={{
+                      onChange: (value: any) => {
+                        const customerString = value.join(',');
+                        const finalValues = { ...value, customer: customerString };
+                        setCustomer(finalValues.customer)
+                      },
+                    }}
+                  />
+                </Col>
+              </Row>
+              <Row gutter={6}>
+                <Col span={24}>
+                  <ProFormDateRangePicker
+                    width={'lg'}
+                    name="ordered_date"
+                    label="Ordered Date"
+                    placeholder={['From Date', 'To Date']}
+                    fieldProps={{
+                      format: 'YYYY-MM-DD',
+                    }}
+                    rules={[{ required: true }]}
+                  />
+                </Col>
+              </Row>
+              <Row gutter={6}>
+                <Col span={24}>
+                  <ProFormDateRangePicker
+                    width={'lg'}
+                    name="request_delivery_date"
+                    label="Request Delivery Date"
+                    placeholder={['From Date', 'To Date']}
+                    fieldProps={{
+                      format: 'YYYY-MM-DD',
+                    }}
+                  // rules={[{ required: true }]}
+                  />
+                </Col>
+              </Row>
+            </>)}
+          {selectedReportType == 'dop_listing' && (
+            <>
+              <Row gutter={6}>
+                <Col span={24}>
+                  <ProFormDateRangePicker
+                    width={'lg'}
+                    name="request_delivery_date"
+                    label="Request Delivery Date (DOD)"
+                    placeholder={['From Date', 'To Date']}
+                    fieldProps={{
+                      format: 'YYYY-MM-DD',
+                    }}
+                  rules={[{ required: true }]}
+                  />
+                </Col>
+              </Row>
+              <Row gutter={6}>
+                <Col span={24}>
+                  <ProFormSelect
+                    name="customer"
+                    label="Customer"
+                    mode="multiple"
+                    request={async ({ keyWords }) => {
+                      const res = await services.pageCustomer({
+                        criteria: {
+                          searchValue: keyWords,
+                        },
+                        pagination: {
+                          current: 1,
+                          pageSize: 20,
+                        },
+                      })
 
-                  return res.items.map((c: any) => ({
-                    value: c.code,
-                    label: `${c.code} - ${c.name}`,
-                  }));
-                }}
-                fieldProps={{
-                  onChange: (value: any) => {
-                    const customerString = value.join(',');
-                    const finalValues = { ...value, customer: customerString };
-                    setCustomer(finalValues.customer)
-                  },
-                }}
-              />
-            </Col>
-          </Row>
-          <Row gutter={6}>
-            <Col span={24}>
-              <ProFormDateRangePicker
-                width={'lg'}
-                name="ordered_date"
-                label="Ordered Date"
-                placeholder={['From Date', 'To Date']}
-                fieldProps={{
-                  format: 'YYYY-MM-DD',
-                }}
-                rules={[{ required: true }]}
-              />
-            </Col>
-          </Row>
-          <Row gutter={6}>
-            <Col span={24}>
-              <ProFormDateRangePicker
-                width={'lg'}
-                name="request_delivery_date"
-                label="Request Delivery Date"
-                placeholder={['From Date', 'To Date']}
-                fieldProps={{
-                  format: 'YYYY-MM-DD',
-                }}
-              // rules={[{ required: true }]}
-              />
-            </Col>
-          </Row>
+                      return res.items.map((c: any) => ({
+                        value: c.code,
+                        label: `${c.code} - ${c.name}`,
+                      }));
+                    }}
+                    fieldProps={{
+                      onChange: (value: any) => {
+                        const customerString = value.join(',');
+                        const finalValues = { ...value, customer: customerString };
+                        setCustomer(finalValues.customer)
+                      },
+                    }}
+                  />
+                </Col>
+              </Row>
+              <Row gutter={12} >
+                <Col span={24}>
+                  <ProFormSelect
+                    label="Province"
+                    name="province"
+                    mode="multiple"
+                    allowClear
+                    showSearch
+                    request={async () => {
+                      const res = await services.list_Location("PROVINCE")
+                      return res.map((c: any) => ({
+                        value: c.id,
+                        label: `${c.name}`
+                      }));
+                    }}
+                  />
+                </Col>
+
+              </Row>
+            </>)}
         </ProForm>
       </Card>
     </FormModalComp >

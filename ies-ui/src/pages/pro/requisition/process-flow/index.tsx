@@ -8,6 +8,8 @@ import QuickView from './QuickView';
 import ViewForm from './ViewForm';
 import ProCommentForm from './ProActionForm';
 import ProActionForm from './ProActionForm';
+import DefaultSubtask from '@/pages/process-flow/components/forms/DefaultSubtask';
+import DefaultClarifyTask from '@/pages/process-flow/components/forms/DefaultClarifyTask';
 
 export const AcquisitionFormNames = {
   processDefKey: 'requisition_request_process',
@@ -146,7 +148,13 @@ export const AcquisitionForm: DataForm[] = [
       // AcquisitionOmmFormNames.constructionEd,
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <ProActionForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) =>{
+        if(props.action == 'CLARIFY_TASK')  { 
+            return <DefaultClarifyTask {...props} />    
+            
+        }
+       return <ProActionForm {...props} />
+      },
   },
   {
     formKey: [
@@ -156,11 +164,20 @@ export const AcquisitionForm: DataForm[] = [
       AcquisitionOmcFormNames.budgetControoler
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <BudgetControlForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) => {
+      if(props.action == 'CLARIFY_TASK')  { 
+            return <DefaultClarifyTask {...props} />    
+        }
+      return <BudgetControlForm {...props} />
+    }
   },
   {
     formKey: [AcquisitionFormNames.pro, AcquisitionNvcFormNames.pro],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <ProReviewForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) =>{
+      if(props.action == 'CLARIFY_TASK')  { 
+            return <DefaultClarifyTask {...props} />    
+      }
+      return <ProReviewForm {...props} />}
   },
 ];

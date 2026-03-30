@@ -154,6 +154,13 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
       message.error('Cannot assign the same picking amount.');
       return;
     }
+  const companies =
+  loadingItem?.deliveryNoteListItems?.reduce((acc: Record<number, string>, it) => {
+    if (it.company) {
+      acc[it.docEntry] = it.company
+    }
+    return acc
+  }, {}) || {}
     Modal.confirm({
       title: 'Picking Slip Assigning',
       content: 'Are you sure?',
@@ -171,12 +178,25 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
               dataForm.driverId,
               dataForm.licensePlate,
               itemDetail !== null,
-              dataForm.ownedTruckLoading
+              dataForm.ownedTruckLoading,
+              companies
 
             ),
           )(requestActions);
           props.onCancel?.();
           cb?.()
+          console.log('sdaa',itemDetail?.loading?.id || 0,
+              dataForm.docDate,
+              dataForm.shift,
+              loadingItem?.deliveryNoteListItems.map((it) => it.docEntry) || [],
+              loadingItem?.pickingItems.map(it => ({ itemCode: it.itemCode, qty: it.qty })) || [],
+              dataForm.whsCode,
+              dataForm.remarks,
+              dataForm.driverId,
+              dataForm.licensePlate,
+              itemDetail !== null,
+              dataForm.ownedTruckLoading,
+            companies)
           message.success('Picking slip assigned succesfully.');
         } catch (error) {
           message.error(`Failed to assign picking slip`);
@@ -284,6 +304,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
                 { title: 'Wherehouse Code', dataIndex: 'whsCode' },
                 { title: 'UoM', dataIndex: 'uomCode' },
                 { title: 'Shipped Qty', dataIndex: 'qty', align: 'right', render: (_, r) => formatterQty.format(r.qty) },
+                { title: 'Company', dataIndex: 'company' },
               ]}
               style={{ marginBlock: 5 }}
               size="small"
@@ -354,6 +375,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
               <ProTable<DeliveryNoteListItem>
                 columns={[
                   { title: 'Del.Doc Num', dataIndex: 'docNum' },
+                  { title: 'Company', dataIndex: 'company' },
                   { title: 'Cust. Code', dataIndex: 'cardCode' },
                   { title: 'Cust. Name', dataIndex: 'cardName' },
                   { title: 'P. Term', dataIndex: 'paymentTerm' },

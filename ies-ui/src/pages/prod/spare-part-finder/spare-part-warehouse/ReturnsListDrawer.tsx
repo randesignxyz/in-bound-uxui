@@ -22,6 +22,9 @@ import SparePartImage from '../spare-part-request/SparePartImage';
 import type { RequestDetailData } from '../spare-part-return/data';
 import { SparePartReturnAPI } from '../spare-part-return/service';
 import { RequestActions } from '@/services/apiGateway';
+import { getServiceUrl } from '@/services/ApiUrl';
+import { SparePartWarehouseReturnAPI } from './service.return';
+import { message } from 'antd';
 
 const { Title } = Typography;
 const MAX_ATTACHMENTS = 3;
@@ -40,20 +43,28 @@ export type ReturnStatus =
   | 'pending'
   | 'approved'
   | 'rejected'
+  | 'receiving'
   | 'in_progress'
   | 'completed'
   | 'partially_returned';
 
 interface ReturnItem {
   id: string | number;
-  imageId?: string; // used by SparePartImage to fetch from server
-  image?: string; // direct URL fallback
+  itemId?: number; // use for primary key for DB calls
+  imageId?: string;
+  image?: string;
   productId: string;
-  partName?: string; // canonical part name field
-  name: string; // display name (alias)
+  partName?: string;
+  name: string;
   usedQty: number;
   qtyToReturn: number;
   status?: string;
+  // Warehouse receipt fields (populated when COMPLETED)
+  receivedQty?: number;
+  goodQty?: number;
+  damagedQty?: number;
+  itemRemark?: string;
+  images?: string[];  // file IDs
 }
 
 interface ReturnData {
@@ -76,7 +87,7 @@ interface ReturnData {
  * Step 2: In Progress
  * Step 3: Completed / Partially Returned
  */
-const STATUS_STEPS = ['Return', 'Approved', 'In Progress', 'Completed'];
+const STATUS_STEPS = ['Return', 'Approved', 'Receiving', 'Completed'];
 
 /**
  * Maps each status to which step index it sits on.
@@ -84,16 +95,18 @@ const STATUS_STEPS = ['Return', 'Approved', 'In Progress', 'Completed'];
 const STATUS_STEP_MAP: Record<ReturnStatus, number> = {
   pending: 0,
   approved: 1,
-  rejected: 1, // same step as approved, but shown as error
+  rejected: 1,
+  receiving: 2,
   in_progress: 2,
   completed: 3,
-  partially_returned: 3, // same final step as completed, shown as finish
+  partially_returned: 3,
 };
 
 const statusColorMap: Record<ReturnStatus, string> = {
   pending:           'processing',
   approved:          'warning',
   rejected:          'error',
+  receiving:         'processing',
   in_progress:       'processing',
   completed:         'success',
   partially_returned:'warning',
@@ -103,13 +116,14 @@ const statusLabelMap: Record<ReturnStatus, string> = {
   pending: 'Return',
   approved: 'Approved',
   rejected: 'Rejected',
+  receiving: 'Receiving',
   in_progress: 'In Progress',
   completed: 'Completed',
   partially_returned: 'Partially Returned',
 };
 interface ReturnDetailActivity {
   id: string | number;
-  action?: 'submitted' | 'approved' | 'rejected' | 'completed' | 'partially_returned';
+  action?: 'submitted' | 'approved' | 'rejected' | 'receiving' | 'completed' | 'partially_returned';
   label: string;
   description?: string;
   by?: string; // who performed the action
@@ -149,13 +163,14 @@ const getStepStatus = (
 interface ReturnsListDrawerProps {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void; // call parent reload after successful record
   data: ReturnData | null;
   returnId?: number | null;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ReturnsListDrawer({ open, onClose, data, returnId }: ReturnsListDrawerProps) {
+export default function ReturnsListDrawer({ open, onClose, onSuccess, data, returnId }: ReturnsListDrawerProps) {
   const access = useAccess();
   const [loading, setLoading] = useState(false);
   const [statusOverride, setStatusOverride] = useState<ReturnStatus | null>(null);
@@ -176,18 +191,40 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
     return data?.status ?? 'pending';
   }, [statusOverride, fetchedData?.status, data?.status]);
 
+  const isGlobalReadOnly = useMemo(() => {
+    return ['completed', 'rejected', 'pending'].includes(effectiveStatus);
+  }, [effectiveStatus]);
+
+  const checkReadOnly = (record: ReturnItem) => {
+    if (isGlobalReadOnly) return true;
+    if (effectiveStatus === 'receiving') {
+      return (record.receivedQty ?? 0) >= record.qtyToReturn;
+    }
+    return false;
+  };
+
   // Map API items (fetchedData) to ReturnItem shape used by columnsReturn
   const tableItems: ReturnItem[] = useMemo(() => {
     if (fetchedData?.items?.length) {
-      return fetchedData.items.map((i, idx) => ({
-        id: i.no ?? idx + 1,
-        image: i.image,
-        productId: i.product_id,
-        name: i.item_name,
-        partName: i.item_name,
-        usedQty: i.used_quantity ?? 0,
-        qtyToReturn: i.quantity_to_return ?? 0,
-      }));
+      return fetchedData.items.map((i, idx) => {
+        const rowId = i.return_item_id ?? i.no ?? idx + 1;
+        return {
+          id: rowId,
+          itemId: i.return_item_id,
+          image: i.image,
+          productId: i.product_id,
+          name: i.item_name,
+          partName: i.item_name,
+          usedQty: i.used_quantity ?? 0,
+          qtyToReturn: i.quantity_to_return ?? 0,
+          // Receipt fields from completed returns
+          receivedQty: i.received_qty,
+          goodQty: i.good_qty,
+          damagedQty: i.damaged_qty,
+          itemRemark: i.remark,
+          images: i.images,
+        };
+      });
     }
     return data?.items ?? [];
   }, [fetchedData, data?.items]);
@@ -195,6 +232,11 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
   const currentStep = STATUS_STEP_MAP[effectiveStatus];
   // ─── Upload State ─────────────────────────────────
   const [attachmentMap, setAttachmentMap] = useState<Record<string, UploadFile[]>>({});
+  // ─── Per-row inspection state ─────────────────────
+  const [goodQtyMap,    setGoodQtyMap]    = useState<Record<string, number>>({});
+  const [damagedQtyMap, setDamagedQtyMap] = useState<Record<string, number>>({});
+  const [remarkMap,     setRemarkMap]     = useState<Record<string, string>>({});
+  const [returnRemark,  setReturnRemark]  = useState('');
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
@@ -224,53 +266,68 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
   };
 
 
-  useEffect(() => {
-    if (!open || !returnId) {
-      setFetchedData(null);
-      return;
-    }
+  const fetchDetail = async () => {
+    if (!returnId) return;
     setLoading(true);
-    SparePartReturnAPI(requestAction)
-      .fetch_spare_part_by_return_id(returnId)
-      .then((res: any) => {
-        const item = Array.isArray(res) ? res[0] : res;
-        if (item) {
-          const mapped: RequestDetailData = {
-            no: item.no ?? returnId,
-            request_id: item.request_id ?? '',
-            total_items: item.total_items ?? 0,
-            request_date: item.request_date ?? '',
-            status:
-              item.state === 'APPROVED'
-                ? 'Approved'
-                : item.state === 'REJECTED'
-                  ? 'Rejected'
-                  : item.state === 'COMPLETED'
-                    ? 'Completed'
+    try {
+      const res = await SparePartReturnAPI(requestAction).fetch_spare_part_by_return_id(returnId);
+      const item = Array.isArray(res) ? res[0] : res;
+      if (item) {
+        const mapped: RequestDetailData = {
+          no: item.no ?? returnId,
+          request_id: item.request_id ?? '',
+          total_items: item.total_items ?? 0,
+          request_date: item.request_date ?? '',
+          status:
+            item.state === 'APPROVED'
+              ? 'Approved'
+              : item.state === 'REJECTED'
+                ? 'Rejected'
+                : item.state === 'COMPLETED'
+                  ? 'Completed'
+                  : item.state === 'RECEIVING'
+                    ? 'Receiving'
                     : 'Pending',
-            remarks: item.remarks ?? '',
-            items: (item.items ?? []).map((i: any) => ({
-              no: i.no,
-              image: i.image ?? undefined,
-              product_id: i.product_id,
-              request_id: i.request_id,
-              item_name: i.item_name,
-              uom: i.uom,
-              quantity_to_return: i.quantity_to_return,
-              used_quantity: i.used_quantity,
-              total: i.total,
-            })),
-            activities: (item.activities ?? []).map((a: any) => ({
-              label: a.label,
-              description: a.description,
-              date: a.date,
-              dot: a.dot === 'pending' ? 'pending' : 'default',
-            })),
-          };
-          setFetchedData(mapped);
-        }
-      })
-      .finally(() => setLoading(false));
+          remarks: item.remarks ?? '',
+          items: (item.items ?? []).map((i: any) => ({
+            no: i.no,
+            return_item_id: i.return_item_id,
+            image: i.image ?? undefined,
+            product_id: i.product_id,
+            request_id: i.request_id,
+            item_name: i.item_name,
+            uom: i.uom,
+            quantity_to_return: i.quantity_to_return,
+            used_quantity: i.used_quantity,
+            total: i.total,
+            received_qty: i.received_qty,
+            good_qty: i.good_qty,
+            damaged_qty: i.damaged_qty,
+            remark: i.remark,
+            images: i.images,
+          })),
+          activities: (item.activities ?? []).map((a: any) => ({
+            label: a.label,
+            description: a.description,
+            date: a.date,
+            dot: a.dot === 'pending' ? 'pending' : 'default',
+          })),
+        };
+        setFetchedData(mapped);
+      }
+    } catch (err) {
+      console.error('Failed to fetch return detail', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open && returnId) {
+      fetchDetail();
+    } else {
+      setFetchedData(null);
+    }
   }, [open, returnId]);
   // Preview handler
   const handlePreview = async (file: UploadFile) => {
@@ -331,15 +388,105 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
     });
   };
 
-  const handleSave = () => {
-    // TODO: Implement save logic
-    console.log('Save clicked');
+  // ─── Upload damage images to FILE microservice ───────────────────
+  const uploadFilesToFileService = async (files: UploadFile[]): Promise<string[]> => {
+    const token = localStorage.getItem('accessToken');
+    const uploadUrl = `${getServiceUrl('FILE')}/upload`;
+    const ids: string[] = [];
+
+    for (const file of files) {
+      // Already uploaded (server ID stored in file.response or file.url is a real URL)
+      if (file.response && typeof file.response === 'string' && !file.response.startsWith('data:')) {
+        ids.push(file.response);
+        continue;
+      }
+      // Skip if no raw file object
+      if (!file.originFileObj) continue;
+
+      const formData = new FormData();
+      formData.append('file', file.originFileObj as File);
+
+      try {
+        const res = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+        if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+        const fileId: string = await res.text();
+        if (fileId) ids.push(fileId.replace(/"/g, '').trim());
+      } catch (err) {
+        console.error('Failed to upload damage image', err);
+      }
+    }
+    return ids;
   };
 
-  const handleSaveAndPickUp = () => {
-    // TODO: Implement save and pick up logic
-    console.log('Save and Pick Up clicked');
+  const handleSave = async () => {
+    if (!returnId) return;
+    setLoading(true);
+    try {
+      // Upload all damage images per row first, collect server IDs
+      const itemsWithImages = await Promise.all(
+        tableItems.map(async (item) => {
+          const key = String(item.id);
+          const files = attachmentMap[key] ?? [];
+          const damageImage = files.length > 0
+            ? await uploadFilesToFileService(files)
+            : [];
+
+          // Resolve defaults the same way the InputNumber columns do
+          const alreadyReceived = item.receivedQty ?? 0;
+          const remaining = item.qtyToReturn - alreadyReceived;
+          const goodQty    = goodQtyMap[key]    ?? remaining;
+          const damagedQty = damagedQtyMap[key] ?? 0;
+
+          if (goodQty + damagedQty <= 0) return null as any; // Skip items with no additions in this batch
+
+          return {
+            returnItemId: item.itemId ?? Number(item.id),
+            receivedProductId: item.productId,
+            receivedQty: goodQty + damagedQty,   // always > 0 when qty > 0
+            goodQty,
+            damagedQty,
+            remark: remarkMap[key] ?? '',
+            damageMessages: damagedQty > 0 ? (remarkMap[key] ?? '') : undefined,
+            damageImage: damageImage.length > 0 ? damageImage : undefined,
+          };
+        })
+      );
+
+      const itemsToConfirm = itemsWithImages.filter(i => i !== null);
+      if (!itemsToConfirm.length) {
+        message.warning('No quantities entered for receipt');
+        setLoading(false);
+        return;
+      }
+
+      const service = SparePartWarehouseReturnAPI(requestAction);
+      await service.warehouse_confirm_return(returnId, returnRemark, itemsToConfirm);
+      message.success('Return confirmed successfully');
+
+      // ─── Refresh Logic ───
+      await fetchDetail();        // Refresh drawer internal state
+      onSuccess?.();               // Notify parent list to reload
+      
+      // Clear current batch inputs
+      setGoodQtyMap({});
+      setDamagedQtyMap({});
+      setRemarkMap({});
+      setAttachmentMap({});
+      setReturnRemark('');
+      
+    } catch (e) {
+      console.error('Save failed', e);
+      message.error('Failed to confirm return');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleReceived = handleSave;
 
   const columnsReturn: ProColumns<ReturnItem>[] = [
     {
@@ -392,11 +539,24 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
       dataIndex: 'qtyToReturn',
       key: 'qty_key_return',
       align: 'center' as const,
-      render: (_: unknown, record: ReturnItem) => (
-        <span style={{ fontWeight: 600, color: '#d4a574', fontSize: 16 }}>
-          {record.qtyToReturn}
-        </span>
-      ),
+      render: (_: unknown, record: ReturnItem) => {
+        const isPartial = effectiveStatus === 'receiving';
+        const received = record.receivedQty ?? 0;
+        const total = record.qtyToReturn;
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontWeight: 600, color: '#d4a574', fontSize: 16 }}>
+              {total}
+            </span>
+            {isPartial && (
+              <Tag color={received >= total ? 'success' : 'processing'} style={{ fontSize: 10, marginTop: 4 }}>
+                {received} / {total} Received
+              </Tag>
+            )}
+          </div>
+        );
+      },
     },
     ...(access.canSpfWarehouseStaff
       ? [
@@ -404,18 +564,27 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
             title: 'Good',
             key: 'good_amount',
             render: (_: unknown, record: ReturnItem) => {
-              const goodQty = record.qtyToReturn - record.usedQty;
+              const key = String(record.id);
+              const isCompleted = effectiveStatus === 'completed';
+              const alreadyReceived = record.receivedQty ?? 0;
+              const remaining = record.qtyToReturn - alreadyReceived;
+              const defaultVal = remaining; // Default to remaining for partial receipts
+              
+              if (checkReadOnly(record)) {
+                return (
+                  <span style={{ fontWeight: 600, color: '#52c41a' }}>
+                    {record.goodQty ?? '—'}
+                  </span>
+                );
+              }
               return (
                 <InputNumber
                   min={0}
-                  max={record.qtyToReturn}
-                  defaultValue={goodQty}
+                  max={remaining}
+                  defaultValue={defaultVal}
+                  value={goodQtyMap[key] ?? defaultVal}
                   style={{ width: '100%' }}
-                  formatter={(value) => `${value}`.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',')}
-                  parser={(value: string | undefined) => {
-                    const parsed = value ? value.replace(/\\$\\s?|(,*)/g, '') : '';
-                    return parsed ? Number(parsed) : 0;
-                  }}
+                  onChange={(v) => setGoodQtyMap((prev) => ({ ...prev, [key]: v ?? 0 }))}
                 />
               );
             },
@@ -425,18 +594,27 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
             title: 'Damaged',
             key: 'damaged_amount',
             render: (_: unknown, record: ReturnItem) => {
-              const damagedQty = record.usedQty;
+              const key = String(record.id);
+              const isCompleted = effectiveStatus === 'completed';
+              const alreadyReceived = record.receivedQty ?? 0;
+              const remaining = record.qtyToReturn - alreadyReceived;
+              const defaultVal = 0; // Default damaged to 0 for partial receipts
+              
+              if (checkReadOnly(record)) {
+                return (
+                  <span style={{ fontWeight: 600, color: record.damagedQty ? '#ff4d4f' : '#8c8c8c' }}>
+                    {record.damagedQty ?? '—'}
+                  </span>
+                );
+              }
               return (
                 <InputNumber
                   min={0}
-                  max={record.qtyToReturn}
-                  defaultValue={damagedQty}
+                  max={remaining}
+                  defaultValue={defaultVal}
+                  value={damagedQtyMap[key] ?? defaultVal}
                   style={{ width: '100%' }}
-                  formatter={(value) => `${value}`.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',')}
-                  parser={(value: string | undefined) => {
-                    const parsed = value ? value.replace(/\\$\\s?|(,*)/g, '') : '';
-                    return parsed ? Number(parsed) : 0;
-                  }}
+                  onChange={(v) => setDamagedQtyMap((prev) => ({ ...prev, [key]: v ?? 0 }))}
                 />
               );
             },
@@ -445,17 +623,44 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
           {
             title: 'Remarks',
             key: 'messages',
-            render: () => (
-              <>
-                <Input.TextArea rows={1} placeholder="Enter any notes" />
-              </>
-            ),
+            render: (_: unknown, record: ReturnItem) => {
+              const key = String(record.id);
+              if (checkReadOnly(record)) {
+                return <Typography.Text type="secondary">{record.itemRemark || '—'}</Typography.Text>;
+              }
+              return (
+                <Input.TextArea
+                  rows={1}
+                  placeholder="Enter any notes"
+                  value={remarkMap[key] ?? ''}
+                  onChange={(e) => setRemarkMap((prev) => ({ ...prev, [key]: e.target.value }))}
+                />
+              );
+            },
             width: 180,
           },
           {
             title: 'Attachments',
             key: 'broken_image',
             render: (_: unknown, record: ReturnItem) => {
+              // COMPLETED / REJECTED / PENDING / FULLY RECEIVED: show server images
+              if (checkReadOnly(record)) {
+                const imgs = record.images ?? [];
+                if (!imgs.length) return <Typography.Text type="secondary">—</Typography.Text>;
+                return (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {imgs.map((fileId) => (
+                      <SparePartImage
+                        key={fileId}
+                        imageId={fileId}
+                        alt={record.name}
+                        size={ATTACHMENT_CARD_SIZE}
+                      />
+                    ))}
+                  </div>
+                );
+              }
+
               const rowFiles = attachmentMap[String(record.id)] ?? [];
 
               return (
@@ -599,13 +804,14 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
           {
             title: 'Action',
             key: 'action',
-            render: () => (
-              <Space>
-                <Button type="primary" size="small">
-                  Save
-                </Button>
-              </Space>
-            ),
+            render: (_: unknown, record: ReturnItem) =>
+              !checkReadOnly(record) ? (
+                <Space>
+                  <Button type="primary" size="small" onClick={handleSave}>
+                    Save
+                  </Button>
+                </Space>
+              ) : null,
             width: 100,
           },
         ]
@@ -629,14 +835,20 @@ export default function ReturnsListDrawer({ open, onClose, data, returnId }: Ret
       onClose={onClose}
       styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
       footer={
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Space>
-            <Button onClick={handleSave}>Edit</Button>
-            <Button type="primary" onClick={handleSaveAndPickUp}>
-              Save
-            </Button>
-          </Space>
-        </div>
+        !isGlobalReadOnly ? (
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Space>
+              <Button onClick={onClose}>Close</Button>
+              <Button type="primary" loading={loading} onClick={handleReceived}>
+                Received
+              </Button>
+            </Space>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button onClick={onClose}>Close</Button>
+          </div>
+        )
       }
     >
 

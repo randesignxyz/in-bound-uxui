@@ -1,17 +1,18 @@
 import { EllipsisOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, DatePicker, Input, Select, Space, Typography } from 'antd';
+import { Button, DatePicker, Input, Select, Space, Typography, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { simpleRequestActions } from '@/services/model';
 import { buildSummaryColumns } from './RequestsListWarehouseSummary';
 import {
   deriveWarehouseDisplayStatus,
-  mockWarehouseRequests,
   parseRequestDate,
   type WarehouseDisplayStatus,
   type WarehouseRequestRecord,
 } from './requestsWarehouse.shared';
-import RequestedBatchWareHouse from './RequestedBatchWareHouse';
+import RequestedBatchWareHouse, { type RequestDetailData } from './RequestedBatchWareHouse';
+import { SparePartWarehouseService } from './service';
 
 interface Props {
   requests?: WarehouseRequestRecord[];
@@ -19,30 +20,69 @@ interface Props {
 
 
 export default function RequestsListWarehouse({ requests }: Props) {
+  const requestActions = simpleRequestActions();
+  const services = SparePartWarehouseService(requestActions);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | WarehouseDisplayStatus>('All');
   const [priorityFilter, setPriorityFilter] = useState<string>('All');
   const [dateFilter, setDateFilter] = useState<Dayjs | null>(null);
 
-  const [requestRows, setRequestRows] = useState<WarehouseRequestRecord[]>(() =>
-    requests && requests.length > 0 ? requests : mockWarehouseRequests,
-  );
+  const [requestRows, setRequestRows] = useState<WarehouseRequestRecord[]>(() => requests || []);
+  const [loading, setLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<WarehouseRequestRecord | null>(null);
+  const [selectedRequestData, setSelectedRequestData] = useState<RequestDetailData | null>(null);
+
+  const loadRequests = useCallback(async () => {
+    if (requests && requests.length > 0) {
+      setRequestRows(requests);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await services.pageRequests({
+        searchValue: searchText,
+        status: statusFilter,
+        pagination: {
+          current: 1,
+          pageSize: 200,
+        },
+      });
+      setRequestRows(response.items || []);
+    } catch (error) {
+      message.error('Failed to load warehouse requests.');
+    } finally {
+      setLoading(false);
+    }
+  }, [requests, searchText, statusFilter]);
 
   useEffect(() => {
-    if (!requests || requests.length === 0) return;
-    setRequestRows(requests);
-  }, [requests]);
+    loadRequests();
+  }, [loadRequests]);
 
-  const openDrawer = useCallback((record: WarehouseRequestRecord) => {
+  const reloadRequests = useCallback(async () => {
+    await loadRequests();
+  }, [loadRequests]);
+
+  const openDrawer = useCallback(async (record: WarehouseRequestRecord) => {
     setSelectedRequest(record);
+    setSelectedRequestData(null);
     setDrawerOpen(true);
-  }, []);
+
+    try {
+      const response = await services.getRequestDetail(record.id);
+      setSelectedRequest(response.record);
+      setSelectedRequestData(response.detail);
+    } catch (error) {
+      message.error('Failed to load request details.');
+    }
+  }, [services]);
 
   const closeDrawer = useCallback(() => {
     setDrawerOpen(false);
     setSelectedRequest(null);
+    setSelectedRequestData(null);
   }, []);
 
   const filteredRequests = useMemo(
@@ -133,6 +173,7 @@ export default function RequestsListWarehouse({ requests }: Props) {
           rowKey="id"
           columns={summaryColumns}
           dataSource={filteredRequests}
+          loading={loading}
           tableLayout="fixed"
           pagination={{
             pageSize: 10,
@@ -148,10 +189,23 @@ export default function RequestsListWarehouse({ requests }: Props) {
       <RequestedBatchWareHouse
         open={drawerOpen}
         request={selectedRequest}
+        data={selectedRequestData || undefined}
         onClose={closeDrawer}
         onChange={(updated) => {
           setRequestRows((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
           setSelectedRequest(updated);
+        }}
+        onIssueRequest={async (payload) => {
+          const response = await services.issueRequest(payload);
+          setSelectedRequest(response.record);
+          setSelectedRequestData(response.detail);
+          await reloadRequests();
+        }}
+        onConfirmPickup={async (id) => {
+          const response = await services.confirmPickup(id);
+          setSelectedRequest(response.record);
+          setSelectedRequestData(response.detail);
+          await reloadRequests();
         }}
       />
     </>

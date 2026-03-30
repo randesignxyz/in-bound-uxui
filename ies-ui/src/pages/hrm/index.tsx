@@ -8,10 +8,11 @@ import PerformanceReport from './appraisal-request/components/PerformanceReport'
 import jobImage from '../../assets/jobsdes.png';
 import ipoImage from '../../assets/ipo.png'
 import { Divider } from 'antd/lib';
+import IOSExport from "./ios/reports/IOSExport";
 export const HrmPaths = {
     employee: '/hrm/employee',
     staffRequisition: '/hrm/staff-requisistion',
-    newStaffRequest: '/hrm/new-staff',
+    // newStaffRequest: '/hrm/new-staff',
     staffProposalRequest: '/hrm/staff-proposal',
     appraisalSubmit: '/hrm/appraisal-submit',
     appraisalRequest: '/hrm/appraisal-request',
@@ -21,6 +22,7 @@ export const HrmPaths = {
     ios: '/hrm/ios',
     masterData: '/hrm/master-data',
     iosUpload: '/hrm/ios-upload',
+    newStaffJoinerRequest: '/hrm/new-staff',
 }
 
 export default () => {
@@ -49,6 +51,14 @@ export default () => {
             description: 'Staff Proposal List',
             visible: access.canAccessHrStaffProposalMenuItem,
             link: `${HrmPaths.staffProposalRequest}/list`,
+            icon: requisitionIcon,
+        },
+         {
+            id: 'new-staff-support-request',
+            name: 'New Staff Support Request',
+            description: 'New Staff Support Request List',
+            visible: access.canAccessHRMNewStaffSupportRequest,
+            link: `${HrmPaths.newStaffJoinerRequest}/list`,
             icon: requisitionIcon,
         },
         {
@@ -101,6 +111,15 @@ export default () => {
             visible: access.canAccessHRMIOSRequest,
             link: `${HrmPaths.ios}/list`,
             icon: ipoImage,
+            menu: {
+                items: [
+                    { label: <IOSExport trigger={<a >Report</a>} />, 
+                        key: 'exportContract', 
+                        icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+                        disabled: !access.can('HRM_IOS_REQUEST_LIST','MENU_IOS_EXPORT_REPORT')
+                    }
+                ]
+            }
         },
         {
             id: 'ios',

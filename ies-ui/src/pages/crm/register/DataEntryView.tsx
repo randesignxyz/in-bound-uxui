@@ -333,6 +333,19 @@ export default({
               </Button> }
         </FooterToolbar> : <></>
       }}  
+      onValuesChange={(changedValues) => {
+        if (!changedValues.outletTypeId) return
+        const outletType = state1.initData?.outletTypeList?.find(
+          it => it.id == changedValues.outletTypeId
+        )
+        const channel = state1.initData?.lookupDataList?.find(
+          it => it.id == outletType?.mainChannelId )
+        const subChannel = state1.initData?.lookupDataList?.find(
+          it => it.id == outletType?.subChannelId
+        ) 
+        form.setFieldValue('channelId', channel?.id)
+        form.setFieldValue('subChannelId', subChannel?.id)
+      }}
     >
       <Space direction="vertical" style={{ width: '100%' }}>
         <ProCard size="small"                  
@@ -400,6 +413,7 @@ export default({
               label="Price & Trade Offer"
               name={'priceTradeOfferId'}
               placeholder={'Price & Trade Offer'}
+              showSearch
               rules={[{ required: true }]}
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -417,6 +431,7 @@ export default({
                       <ProFormSelect
                         name={'priceTradeOfferId'}
                         placeholder={'Price & Trade Offer'}
+                        showSearch
                         rules={[{ required: true }]}
                         options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST' && it?.actived=='Y')?.map((it) => ({
                           label: it.name,
@@ -439,6 +454,7 @@ export default({
                 </div>}
               name={'sapPriceTradeOfferId'}
               placeholder={'Price & Trade Offer'}
+              showSearch
               rules={[{ required: true }]}
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST_SAP' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -450,6 +466,7 @@ export default({
               label={`Payment Term `}
               name={'paymentTermId'}
               placeholder={'Payment Term'}
+              showSearch
               rules={[{ required: true }]}
                options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -467,6 +484,7 @@ export default({
                       <ProFormSelect
                         name={'paymentTermId'}
                         placeholder={'Payment Term'}
+                        showSearch
                         rules={[{ required: true }]}
                         options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM' && it?.actived=='Y')?.map((it) => ({
                           label: it.name,
@@ -489,6 +507,7 @@ export default({
                 </div>}
               name={'sapPaymentTermId'}
               placeholder={'Payment Term'}
+              showSearch
               rules={[{ required: true }]}
                options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM_SAP' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -499,11 +518,30 @@ export default({
               <ProFormSelect
               label="Outlet Type"
               name={'outletTypeId'}
+              showSearch
               rules={[{ required: true }]}
               placeholder={'Outlet Type'}
+              fieldProps={{
+                dropdownRender: (menu) => (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 12px', color: '#999', borderBottom: '1px solid #f0f0f0' }}>
+                      <span>Name</span>
+                      <span>Sub / Main Channel</span>
+                    </div>
+                    {menu}
+                  </>
+                ),
+                optionRender: (option) => (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{option.label}</span>
+                    <span style={{ color: '#999' }}>{option.data.subChannel}</span>
+                  </div>
+                ),
+              }}
               options={state1.initData?.outletTypeList?.map((it) => ({
                 label: it.name,
                 value: it.id,
+                subChannel: it.subChannel +' / '+it.mainChannel,
               }))}
               width={470}
             />
@@ -511,6 +549,7 @@ export default({
               label="Region"
               name={'regionId'}
               placeholder={'Region'}
+              showSearch
               rules={[{ required: true }]}
               options={state1.initData?.regionList?.map((it) => ({
                 label: it.name,
@@ -521,6 +560,7 @@ export default({
               <ProFormSelect
               label="Division"
               name={'divisionId'}
+              showSearch
               rules={[{ required: true }]}
               placeholder={'Division'}
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'CUSTOMER_DIVISION' && it?.actived=='Y')?.map((it) => ({
@@ -529,20 +569,11 @@ export default({
               }))}
               width={470}
             />
-            <ProFormSelect
-              label="Channel"
-              name={'channelId'}
-              rules={[{ required: true }]}
-              placeholder={'Channel'} //SALE_SUB_CHANNEL
-              options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_MAIN_CHANNEL' && it?.actived=='Y')?.map((it) => ({
-                label: it.name,
-                value: it.id,
-              }))}
-              width={470}
-            />    
+            
             <ProFormSelect
               label="Sub Channel"
               name={'subChannelId'}
+              showSearch
               rules={[{ required: true }]}
               placeholder={'Channel'} //SALE_SUB_CHANNEL
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_SUB_CHANNEL' && it?.actived=='Y')?.map((it) => ({
@@ -551,6 +582,18 @@ export default({
               }))}
               width={470}
             /> 
+             <ProFormSelect
+              label="Channel"
+              name={'channelId'}
+              showSearch
+              rules={[{ required: true }]}
+              placeholder={'Channel'} //SALE_SUB_CHANNEL
+              options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_MAIN_CHANNEL' && it?.actived=='Y')?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              width={470}
+            />   
           </ProFormGroup>   
           <ProFormSelect
               label="Sale Executive"
@@ -703,6 +746,7 @@ export default({
               label="Frequency of Purchase"
               name={'frequencyPurchase'}
               rules={[{required:true}]}
+              showSearch
               placeholder={'Payment Term'}
               options={[
                 {

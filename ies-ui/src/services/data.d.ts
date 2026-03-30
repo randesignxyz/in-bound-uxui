@@ -74,6 +74,8 @@ export interface StockCategoryLess {
 }
 
 export interface LookupDataItem {
+  groupType: string;
+  sequence?: number;
   id: number;
   key?: string;
   name: string;

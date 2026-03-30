@@ -113,8 +113,10 @@ const SaleOrderReport: React.FC<FormModalProps> = ({ ...props }) => {
   const onDowloadReportHandler = async () => {
     try {
       const dataForm = await form.validateFields();
+      const reportName = 'so-report'
+      // console.log(`${reportName}-${moment().format('YYYY-MM-DD HH-mm-ss')}.xlsx`)
       await saleService.downloadSoReport({
-        fileName: 'so-report',
+        fileName: `${reportName}`,
         reportName: 'so-report',
         type: 'EXCEL',
         data: {

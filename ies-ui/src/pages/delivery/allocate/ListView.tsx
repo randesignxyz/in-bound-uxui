@@ -2,7 +2,7 @@
 import TableView, { colLink, TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse, MenuProps, Flex } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse, MenuProps, Flex, Input } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
 import { Allocate, AllocateSOAdvanceParams, AreaList, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
@@ -142,6 +142,24 @@ export default () => {
   const [excelLoading, setExcelLoading] = useState(false)
   const allProvinceValues = provinceOptions.map(p => p.value);
   const allRouteValues = routeOptions.map(r => r.value);
+
+  const copyText = (text: string) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      document.execCommand('copy');
+      message.success('Copied SO number');
+    } catch {
+      message.error('Copy failed');
+    }
+
+    document.body.removeChild(textarea);
+  };
 
   useEffect(() => {
     if (state?.selectedRows) {
@@ -374,9 +392,21 @@ export default () => {
   };
 
   const handleTBA = async (ids: number[], selectedListDn: any[]) => {
+    let remarkValue = '';
     Modal.confirm({
       title: 'TBA',
-      content: 'Are you sure?',
+      content: (
+        <div>
+          <p>Are you sure?</p>
+          <Input.TextArea
+            placeholder="Enter remark (optional)"
+            rows={3}
+            onChange={(e) => {
+              remarkValue = e.target.value;
+            }}
+          />
+        </div>
+      ),
       onOk: async () => {
         const dnList = Array.isArray(selectedListDn)
           ? selectedListDn
@@ -386,9 +416,12 @@ export default () => {
           (dn.deliveryItems ?? []).map((it: any) => ({
             soDocEntry: String(dn.so_doc_entry ?? dn.soId),
             lineNum: Number(it.sap_line_num),
-            shipDate: dn.deliveryDate
+            shipDate: dn.deliveryDate,
+            company_code: dn.company_code
           }))
         );
+
+        const ids = dnList.map(dn => `${dn.id}-${dn.company_code}`);
 
         const uniqueMap = new Map<string, any>();
         rawLines.forEach((l) => {
@@ -403,7 +436,7 @@ export default () => {
             ? a.lineNum - b.lineNum
             : a.soDocEntry.localeCompare(b.soDocEntry)
         );
-
+        console.log('remarkValue', remarkValue)
         await services.ClaimDn(
           ids,
           access.currentUser?.login ?? '',
@@ -411,7 +444,8 @@ export default () => {
           'TBA',
           null,
           del_item,
-          'TBA'
+          'TBA',
+          remarkValue,
         );
 
         actionRef.current?.reloadAndRest?.();
@@ -421,9 +455,21 @@ export default () => {
   };
 
   const handleClearTBA = async (ids: number[], selectedListDn: any[]) => {
+    let remarkValue = '';
     Modal.confirm({
       title: 'Clear TBA',
-      content: 'Are you sure?',
+      content: (
+        <div>
+          <p>Are you sure?</p>
+          <Input.TextArea
+            placeholder="Enter remark (optional)"
+            rows={3}
+            onChange={(e) => {
+              remarkValue = e.target.value;
+            }}
+          />
+        </div>
+      ),
       onOk: async () => {
         const dnList = Array.isArray(selectedListDn)
           ? selectedListDn
@@ -433,7 +479,8 @@ export default () => {
           (dn.deliveryItems ?? []).map((it: any) => ({
             soDocEntry: String(dn.so_doc_entry ?? dn.soId),
             lineNum: Number(it.sap_line_num),
-            shipDate: dn.deliveryDate
+            shipDate: dn.deliveryDate,
+            company_code: dn.company_code
           }))
         );
 
@@ -442,7 +489,7 @@ export default () => {
           const key = `${l.soDocEntry}_${l.lineNum}`;
           if (!uniqueMap.has(key)) uniqueMap.set(key, l);
         });
-
+        const ids = dnList.map(dn => `${dn.id}-${dn.company_code}`);
         const del_item = Array.from(uniqueMap.values());
 
         del_item.sort((a, b) =>
@@ -458,7 +505,9 @@ export default () => {
           'TBA',
           null,
           del_item,
-          'open'
+          'open',
+          null,
+          remarkValue,
         );
 
         actionRef.current?.reloadAndRest?.();
@@ -467,8 +516,9 @@ export default () => {
     });
   };
 
-  const handleClaim = async (ids: number | number[]) => {
+  const handleClaim = async (ids: any | any[]) => {
     const claimed_line = await services.list_claimed_line()
+    console.log('ids', ids)
     setClaimIds(Array.isArray(ids) ? ids : [ids]);
     setClaimedLines(claimed_line);
     setClaimOpen(true);
@@ -483,13 +533,14 @@ export default () => {
           ? selectedListDn
           : [selectedListDn];
 
-        const ids = dnList.map(dn => Number(dn.id));
+        const ids = dnList.map(dn => `${dn.id}-${dn.company_code}`);
 
         const rawLines = dnList.flatMap(dn =>
           (dn.deliveryItems ?? []).map((it: any) => ({
             soDocEntry: String(dn.so_doc_entry ?? dn.soId),
             lineNum: Number(it.sap_line_num),
-            shipDate: dn.deliveryDate
+            shipDate: dn.deliveryDate,
+            company_code: dn.company_code
           }))
         );
 
@@ -860,17 +911,13 @@ export default () => {
         criteria: {
           ...dnSearch,
           ...params.criteria,
-          // sap_delivery_date:
-          //   dnSearch.sap_from_date && dnSearch.sap_to_date
-          //     ? null
-          //     : dnSearch.sap_delivery_date,
           filterPass: 'Unclaimed',
           sortBy,
           sortOrders,
         },
         pagination: {
           current: params.pagination?.current ?? 1,
-          pageSize: params.pagination?.pageSize ?? 20,
+          pageSize: 100,
         }
       });
 
@@ -911,7 +958,7 @@ export default () => {
 
         return {
           ...delivery,
-          key: delivery.id,
+          key: `${delivery.id}-${delivery.so_no}-${delivery.company_code}`,
           ...skuValues,
         };
       });
@@ -1000,25 +1047,26 @@ export default () => {
             if (record.status === 'TBA') {
               return null
             }
-
+            const key = `${record.id}-${record.company_code}`;
             return (
               <Checkbox
-                checked={selectedRowKeys.includes(record.id)}
+                checked={selectedRowKeys.includes(key)}
                 onChange={(e) => {
+
                   if (e.target.checked) {
-                    setSelectedRowKeys(prev => [...prev, record.id]);
+                    setSelectedRowKeys(prev => [...prev, key]);
                     setSelectedRows(prev => [...prev, record]);
                     setCardOpen({ visible: true });
                     setSelectedListDn(prev => [...prev, record]);
                     // setDataListDn(prev => prev.items.filter(r => r.id !== record.id));
                     setDataListDn(prev => ({
                       ...prev,
-                      items: prev?.items?.filter(r => r.id !== record.id),
+                      items: prev?.items?.filter(r => `${r.id}-${r.company_code}` !== key),
                     }));
                   } else {
-                    setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
-                    setSelectedRows(prev => prev.filter(r => r.id !== record.id));
-                    setSelectedListDn(prev => prev.filter(r => r.id !== record.id));
+                    setSelectedRowKeys(prev => prev.filter(k => k !== key));
+                    setSelectedRows(prev => prev.filter(r => `${r.id}-${r.company_code}` !== key));
+                    setSelectedListDn(prev => prev.filter(r => `${r.id}-${r.company_code}` !== key));
                     setDataListDn(prev => ({
                       ...prev,
                       items: [...prev.items, record],
@@ -1063,10 +1111,7 @@ export default () => {
             {/* SECOND ROW */}
             <Space size={8} style={{ marginTop: 4 }}>
               <Typography.Link
-                onClick={() => {
-                  navigator.clipboard.writeText(value.so_no);
-                  message.success('Copied SO number');
-                }}
+                onClick={() => copyText(value.so_no)}
               >
                 <CopyOutlined />
               </Typography.Link>
@@ -1099,49 +1144,49 @@ export default () => {
 
       ),
     },
-    {
-      title: 'Reserve No',
-      dataIndex: 'reserve_num',
-      key: 'reserve_num',
-      width: 300,
-      render: (_, value) => (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+    // {
+    //   title: 'Reserve No',
+    //   dataIndex: 'reserve_num',
+    //   key: 'reserve_num',
+    //   width: 300,
+    //   render: (_, value) => (
+    //     <>
+    //       <div style={{ display: 'flex', flexDirection: 'column' }}>
 
-            <Space
-              align="center"
-              size={6}
-              style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}
-            >
-              {value.reserve_num ?
-                <Typography.Link
-                  strong
-                  copyable
-                // onClick={() =>
-                //   setDrawerTypeOpen({ visible: true, data: value })
-                // }
-                >
-                  {value.reserve_num}
-                </Typography.Link>
-                : <>-</>}
-            </Space>
-          </div>
-        </>
+    //         <Space
+    //           align="center"
+    //           size={6}
+    //           style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}
+    //         >
+    //           {value.reserve_num ?
+    //             <Typography.Link
+    //               strong
+    //               copyable
+    //             // onClick={() =>
+    //             //   setDrawerTypeOpen({ visible: true, data: value })
+    //             // }
+    //             >
+    //               {value.reserve_num}
+    //             </Typography.Link>
+    //             : <>-</>}
+    //         </Space>
+    //       </div>
+    //     </>
 
-      ),
-    },
-    {
-      title: 'DO No',
-      dataIndex: 'id',
-      width: 200,
-      render: (_, value) => (
-        <>
-          <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
-            <Typography.Link strong copyable >{value.id}</Typography.Link>
-          </a>
-        </>
-      ),
-    },
+    //   ),
+    // },
+    // {
+    //   title: 'DO No',
+    //   dataIndex: 'id',
+    //   width: 200,
+    //   render: (_, value) => (
+    //     <>
+    //       <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
+    //         <Typography.Link strong copyable >{value.id}</Typography.Link>
+    //       </a>
+    //     </>
+    //   ),
+    // },
     // {
     //   title: 'Request Delivery Date',
     //   dataIndex: 'deliveryDate',
@@ -1156,7 +1201,7 @@ export default () => {
     //   },
     // },
     {
-      title: 'DOP',
+      title: 'DOD',
       dataIndex: 'deliveryDate',
       width: '8%',
       render: (_, r) =>
@@ -1165,7 +1210,7 @@ export default () => {
           : '-',
     },
     {
-      title: 'DOD',
+      title: 'DOP',
       dataIndex: 'dod_date',
       width: '6%',
       render: (_, r) =>
@@ -1173,7 +1218,16 @@ export default () => {
           ? `${dayjs.utc(r.dod_date).format('DD-MMM-YYYY')} ${r.eta}`
           : '-',
     },
-
+    {
+      title: 'Posted Date',
+      dataIndex: 'posted_date',
+      width: '5%',
+    },
+    {
+      title: 'Posted Time',
+      dataIndex: 'posted_time',
+      width: '5%',
+    },
     {
       title: 'Customer Code', dataIndex: 'customer_code', width: 150, render: (_, value) => (
         <>
@@ -1187,7 +1241,7 @@ export default () => {
       title: 'Shipping Address',
       dataIndex: 'shippingAddress',
       width: '10%',
-      render: (_, value) => (
+      render: (_, value) => ( 
         <a
           style={{
             whiteSpace: 'nowrap',
@@ -1201,7 +1255,7 @@ export default () => {
             }
           }}
         >
-          {value.shippingAddress?.replace('-', ' - ')}
+          <Typography.Link strong copyable >{value.shippingAddress?.replace('-', ' - ')}</Typography.Link>
         </a>
       ),
     },
@@ -1253,6 +1307,21 @@ export default () => {
           }
         },
         {
+          title: 'Weight', width: 120,
+          render: (_: any, r: { mergeItems: any[]; }) => {
+            if (!r.mergeItems) return 0;
+
+            const total = r.mergeItems.reduce((sum, item) => {
+              const weight = Number(item.weight) || 0;
+              const remaining_qty = Number(item.remaining_qty) || 0;
+
+              return sum + weight * remaining_qty;
+            }, 0);
+
+            return `${total.toFixed(2)} Kg`
+          }
+        },
+        {
           title: 'Truck Type', width: 150,
           dataIndex: 'truck_capacity',
         },
@@ -1266,7 +1335,7 @@ export default () => {
       children: skuColumns,
     },
     {
-      title: 'SAL Remark',
+      title: dnSearch.sap_delivery_date === 'TBA' ? 'Remark' : 'SAL Remark',
       dataIndex: 'remarks',
       width: 500, // keep reasonable width
       render: (_, record) => (
@@ -1276,7 +1345,7 @@ export default () => {
             wordBreak: 'break-word',  // ✅ break long words
           }}
         >
-          {record.remarks || '-'}
+          {dnSearch.sap_delivery_date === 'TBA' ? record.dop_remark || '-' : record.remarks || '-'}
         </div>
       ),
     },
@@ -1380,8 +1449,9 @@ export default () => {
                 : <></>}
               <Button style={{ marginLeft: 10 }} type="default"
                 onClick={() => {
-                  console.log(record.data.map(v => v.so_doc_entry)),
-                    (onSyncBySO(record.data.map(v => v.so_doc_entry)))
+                  console.log(record.data.map(v => `${v.so_doc_entry}-${v.company_code}`)),
+                  console.log(record)
+                    (onSyncBySO(record.data.map(v => `${v.so_doc_entry}-${v.company_code}`)))
                 }
 
                 }
@@ -1902,6 +1972,7 @@ export default () => {
       <Spin spinning={requestActions.request?.loading || loading}>
         {advanceSearchParams.filter == 'MT' ?
           <TableView<DNList, { searchValue?: string }>
+            key={advanceSearchParams.filter}
             displayOnly
             tableProps={{
               actionRef: actionRef,
@@ -2013,10 +2084,17 @@ export default () => {
 
           : advanceSearchParams.filter == 'DN' ?
             <TableView<DNList, { searchValue?: string }>
+              rowKey={(row) => `${row.id}-${row.so_no}-${row.company_code}`}
+              key={advanceSearchParams.filter}
               displayOnly
-              scroll={{ y: 55 * 5 }}
+              pagination={{
+                pageSize: 100,          // 👈 show 200 rows per page
+                defaultPageSize: 100,
+                showSizeChanger: false, // optional
+              }}
               tableProps={{
                 actionRef: actionRef,
+                tableLayout: 'fixed',
                 options: {
                   reload: false,
                   setting: false,
@@ -2047,6 +2125,7 @@ export default () => {
                           ]}
                           width={150}
                           showSearch
+                          allowClear={false}
                         />
                         <ProFormSelect
                           name="delivery_method_id"
@@ -2224,6 +2303,9 @@ export default () => {
                           placeholder="Province"
                           width={200}
                           fieldProps={{
+                            showSearch: true,
+                            filterTreeNode: (input, node) =>
+                              (node.title as string).toLowerCase().includes(input.toLowerCase()),
                             treeCheckable: true,
                             showCheckedStrategy: 'SHOW_CHILD',
                             treeData: provinceOptions.map(p => ({
@@ -2272,7 +2354,7 @@ export default () => {
                           }}
                         />
 
-                        <ProFormSelect
+                        {/* <ProFormSelect
                           placeholder="District"
                           name="district_id_dn"
                           value={districtId}
@@ -2300,7 +2382,7 @@ export default () => {
                           allowClear
                           showSearch
                           mode="multiple"
-                        />
+                        /> */}
                         <ProFormSelect
                           placeholder="Customer"
                           name="customer_dn"
@@ -2336,7 +2418,7 @@ export default () => {
                             <Button
                               type="primary"
                               disabled={selectedRowKeys.length === 0}
-                              onClick={() => (handleClaim(selectedRowKeys.map(k => Number(k))), console.log(selectedListDn))}
+                              onClick={() => (handleClaim(selectedRowKeys.map(k => (k))), console.log('selectedListDn', selectedListDn))}
                             >
                               Pick
                             </Button>
@@ -2420,12 +2502,17 @@ export default () => {
                 </Space>
               }
               columns={dnColumns}
+              scroll={{
+                x: 4500,
+                y: 600,
+              }}
               actionHandlers={{
                 onRequest: (criteria, pagination, sort) =>
                   onRequestDNDeatilHandler({
                     criteria: {
                       ...criteria,
                       ...dnSearch,
+                      searchValue: criteria?.searchValue ?? '',
                       sort
                     },
                     pagination,    // ✅ PASS pagination
@@ -2465,6 +2552,7 @@ export default () => {
                             ]}
                             width={150}
                             showSearch
+                            allowClear={false}
                           />
                           <ProFormDateRangePicker
                             name="sap_delivery_range_his"
@@ -2735,13 +2823,14 @@ export default () => {
           }
 
           setClaimLoading(true);
-
+          console.log('selectedListDn', selectedListDn)
           try {
             const rawLines = selectedListDn.flatMap(dn =>
               (dn.deliveryItems ?? []).map(it => ({
                 soDocEntry: String(dn.so_doc_entry),
                 lineNum: Number(it.sap_line_num),
                 shipDate: dn.deliveryDate,
+                company_code: dn.company_code
               }))
             );
 
@@ -2765,6 +2854,12 @@ export default () => {
               useExisting ? selectedClaimedLine : null,
               del_item
             );
+            console.log(claimIds,
+              access.currentUser?.login,
+              'Pick',
+              'Pick DN',
+              useExisting ? selectedClaimedLine : null,
+              del_item)
 
             message.success('Updated successfully');
 
@@ -2809,7 +2904,7 @@ export default () => {
         loading={excelLoading}
         initValues={dnSearch}
         onCancel={() => setExportModal({ visible: false })}
-        onSave={async (customer, ordered_date, request_delivery_date) => {
+        onSave={async (customer, ordered_date, request_delivery_date, province, reportType) => {
           const result = [
             {
               key: 'customer',
@@ -2847,24 +2942,69 @@ export default () => {
               type: 'dateTime',
             },
           ]
+          const result_listing = [
+            {
+              key: 'customer',
+              value: customer ?? null,
+              type: 'string',
+            },
+
+            {
+              key: 'request_delivery_startdate',
+              value: request_delivery_date?.[0]
+                ? (request_delivery_date[0])
+                : null,
+              type: 'dateTime',
+            },
+            {
+              key: 'request_delivery_enddate',
+              value: request_delivery_date?.[1]
+                ? (request_delivery_date[1])
+                : null,
+              type: 'dateTime',
+            },
+            {
+              key: 'province',
+              value: province ? province.join(",") : "",
+              type: 'string',
+            },
+
+
+          ]
+          console.log('customer, ordered_date, request_delivery_date, province, reportType', customer, ordered_date, request_delivery_date, province, reportType)
           console.log(result)
           try {
             setExcelLoading(true)
-            await downloadGenericReport(requestActions)({
-              fileName: `dop-${moment().format()}.xls`,
-              type: 'EXCEL',
-              data: {
-                reportName: 'DOP_Delivery_Detail_V2',
-                reportPath: '/Reports/Delivery',
-                data: result,
-              },
-            }).then(() => { })
+            if (reportType == 'normal') {
+              await downloadGenericReport(requestActions)({
+                fileName: `dop-${moment().format()}.xls`,
+                type: 'EXCEL',
+                data: {
+                  reportName: 'DOP_Delivery_Detail_V2',
+                  reportPath: '/Reports/Delivery',
+                  data: result,
+                },
+              }).then(() => { })
+              setExportModal({ visible: false });
+            } else if (reportType == 'dop_listing') {
+              await downloadGenericReport(requestActions)({
+                fileName: `dop-listing${moment().format()}.xls`,
+                type: 'EXCEL',
+                data: {
+                  reportName: 'DOP_Delivery_Listing',
+                  reportPath: '/Reports/Delivery',
+                  data: result_listing,
+                },
+              }).then(() => { })
+              setExportModal({ visible: false });
+            }
+
           } catch (error) {
             message.error('Failed to download.');
           } finally {
             setExcelLoading(false)
           }
-          setExportModal({ visible: false });
+
         }}
       />
     </>

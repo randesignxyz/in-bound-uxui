@@ -1,5 +1,5 @@
 import { CloseIndirectSoParams } from '@/services/sale/data';
-import { CheckOutlined, CloudUploadOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloudUploadOutlined, EditOutlined, PrinterOutlined, StopOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { Button, Modal, Spin, message } from 'antd';
 import React, { useEffect } from 'react';
@@ -10,8 +10,9 @@ import CloseSo from './CloseSo';
 import OrderFormView from './OrderFormView';
 import SapPosting from './SapPosting';
 import SoFormView from './SoFormView';
-import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
 import { simpleRequestActions } from '@/services/model';
+import { downloadGenericReport } from '@/services/apiGateway';
+import { getUrlReporting } from '@/pages/ReportUrl';
 
 interface Props {
   id?: number;
@@ -119,7 +120,34 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
     });
   };
 
+  const onDowloadReportHandler = async (id?: string, fileName?: string) => {
+    try {
+      const reportName = 'po-indirect-invoice-report-form';
+      await downloadGenericReport(requestActions)({
+        fileName: `${fileName}-Invoice`,
+        type: 'PDF',
+        data: {
+          reportName: reportName,
+          reportPath: getUrlReporting('sale/forms'),
+          data: [{ key: 'SOId', value: id, type: 'string' }],
+        },
+      }).then(() => { });
+    } catch (error: any) {
+      message.error(error.message || 'Failed to generate report.');
+    }
+  };
+
+
   const buttons = [
+    <Button
+      type="link"
+      icon={<PrinterOutlined />}
+      hidden={(state.data?.soDetail?.associatedTo.customer.typeId !== 102)}
+      key="invoice"
+      onClick={() => onDowloadReportHandler(state.data?.soDetail?.id?.toString(), state.data?.soDetail?.docEntryNum)}
+    >
+      Invoice
+    </Button>,
     <Button
       type="link"
       icon={<StopOutlined />}
@@ -143,6 +171,12 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         htmlType="button"
         onClick={() => modals.showModal('sap-posting')}
         key="sapPosting"
+        disabled={
+          state.data?.soDetail?.status === 'Posted' ||
+          state.data?.soDetail?.status === 'Closed'||
+          state.data?.soDetail?.status === 'Canceled'
+          
+        }
       >
         <CloudUploadOutlined /> SAP Posting
       </Button>
@@ -164,7 +198,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
       {openInTab ? (
         <>
           <OrderFormView actionButtons={buttons} soDetail={state.data?.soDetail} />
-          <SoFormView data={state.data?.soDetail} onRefreshSo={(id) => actions.fetchSo(id)}/>
+          <SoFormView data={state.data?.soDetail} onRefreshSo={(id) => actions.fetchSo(id)} />
         </>
       ) : (
         <PageContainer
@@ -174,7 +208,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
           content={
             <OrderFormView
               soDetail={state.data?.soDetail}
-              // {...(access.canCreateEditSo ? { actionButtons: buttons } : {})}
+            // {...(access.canCreateEditSo ? { actionButtons: buttons } : {})}
             />
           } extra={
             access.canCreateEditSo &&
@@ -183,7 +217,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
             buttons
           }
         >
-          <SoFormView data={state.data?.soDetail} onRefreshSo={(id) => actions.fetchSo(id)}/>
+          <SoFormView data={state.data?.soDetail} onRefreshSo={(id) => actions.fetchSo(id)} />
         </PageContainer>
       )}
 

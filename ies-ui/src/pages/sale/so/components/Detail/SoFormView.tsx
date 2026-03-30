@@ -5,13 +5,14 @@ import AttachmentsView from './AttachementsView';
 import DeliveryListItemView from './DeliveryItemListView';
 import OrderFormView from './OrderFormView';
 import OrderLineItems from './OrderLineItems';
+import ItemByCompany from './ItemByCompany';
 
 const SoFormView = ({ data, onRefreshSo }: { data?: SoDetail; onRefreshSo?: (id: number) => void }) => {
   return (
     <Tabs>
       <Tabs.TabPane
         tab={
-          <Space size={0}>
+          <Space size={2}>
             <DollarCircleOutlined /> <span>Purchase Order</span>
           </Space>
         }
@@ -21,7 +22,7 @@ const SoFormView = ({ data, onRefreshSo }: { data?: SoDetail; onRefreshSo?: (id:
       </Tabs.TabPane>
       <Tabs.TabPane
         tab={
-          <Space size={0}>
+          <Space size={2}>
             <EnvironmentOutlined /> <span>Delivery</span>
           </Space>
         }
@@ -35,6 +36,7 @@ const SoFormView = ({ data, onRefreshSo }: { data?: SoDetail; onRefreshSo?: (id:
           soNum={data?.soNo}
           docEntry={data?.docEntry}
           soStatus={data?.status}
+          logSync={data?.logSync}
           onSyncSuccess={() => {
             if (data?.id) {
               onRefreshSo?.(data.id);
@@ -44,7 +46,17 @@ const SoFormView = ({ data, onRefreshSo }: { data?: SoDetail; onRefreshSo?: (id:
       </Tabs.TabPane>
       <Tabs.TabPane
         tab={
-          <Space size={0}>
+          <Space size={2}>
+            <DollarCircleOutlined /> <span>Item By Company</span>
+          </Space>
+        }
+        key="itemByCompany"
+      >
+        <ItemByCompany data={data} />
+      </Tabs.TabPane>
+      <Tabs.TabPane
+        tab={
+          <Space size={2}>
             <PaperClipOutlined /> <span>Attachment</span>
           </Space>
         }

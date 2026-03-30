@@ -1,9 +1,9 @@
 
 import '@/pages/index.less'
-import { Badge, Button, Card, Flex, Form, Space, Spin, Tag, Typography } from "antd"
+import { Badge, Button, Card, Flex, Form, message, Space, Spin, Tag, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
-import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
+import { ExportOutlined, EyeOutlined, FileAddOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, PlusOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
@@ -18,6 +18,7 @@ import AdvanceSearch from './components/List/AdvanceSearch'
 import { simpleRequestActions } from '@/services/model'
 import ExcelSaleAreaFilter from './components/ExcelFilterSelect'
 import moment from 'moment'
+import PageWrapperV1 from '@/components/PageWrapperV1'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -28,6 +29,7 @@ export default () => {
     const actionRef = useRef<ActionType>();
     const [form] = Form.useForm();
     const access = useAccess();
+    const [loading, isLoading] = useState(false)
     const [filter, setFilter] = useState<TableViewSearchParams<SoAdvanceSearchParams>>({
         criteria: {
             advanceSearch: {
@@ -69,33 +71,60 @@ export default () => {
     const [isSelectAll, setIsSelectAll] = useState(false);
 
 
-    return <Spin spinning={false}>
-        <PageWrapper<SoItemLess, FilterType, {}>
-            onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
+    return <Spin spinning={loading}>
+        <PageWrapperV1<SoItemLess, FilterType, {}>
+            // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
+            addOptionsMode='inline'
+            addOptionsPosition='right'
+            showFullScreenButton
+            // showNewWindowButton
+
             tabRender={item => access.canCreateEditSo ? [
-                { action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New PO' },
+
+                {
+                    action: 'PO', tabIcon: <FileAddOutlined />, panel: ({ key, onUpdateTab }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='PO' actionHandlers={{
+                        onBack() {
+                            onUpdateTab("view", undefined, undefined, key)
+                        },
+                    }} />, tabLabel: 'New PO', multiple: true,
+                },
+                { action: 'GO', tabIcon: <FileAddOutlined />, panel: ({ key, onUpdateTab }) => <ViewWrapper addNew openInTab tabKey={key.toString()} target='GO' />, tabLabel: 'New GO', multiple: true },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
-                    tabLabel: item?.poNo
+                    tabLabel: item?.poNo,
+
                 },
                 {
                     action: 'action1', value: `${item?.customerCode} - ${item?.customerName}`,
                     panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
                     tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
-                }
+                },
             ] : [
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
                     tabLabel: item?.poNo
                 },
-                {
-                    action: 'action1', value: `${item?.customerCode} - ${item?.customerName}`,
-                    panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
-                    tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
-                }
             ]}
+            defaultTabClosable={false}
+            addOptions={[
+                {
+                    action: "PO",
+                    label: <Space><PlusOutlined /><span>PO</span></Space>,
+                    // icon: <FileAddOutlined />,
+                    tabLabel: 'New PO',
+                    multiple: true,
+                },
+                {
+                    action: "GO",
+                    label: <Space><PlusOutlined /><span>GO</span></Space>,
+                    // icon: <FileAddOutlined />,
+                    tabLabel: 'New GO',
+                    multiple: true
+                },
+            ]}
+
             listView={{
                 type: 'Table',
                 title: 'PO List',
@@ -124,8 +153,18 @@ export default () => {
                         type: 'link',
                         disabled: !access.canCreateEditSo,
                         onClick: async () => {
-                            await actions.syncFromSFA()
-                            actionRef.current?.reload(true)
+                            try {
+                                isLoading(true)
+                                await actions.syncFromSFA()
+                                actionRef.current?.reload(true)
+                                message.success("Sync Success");
+                            } catch(error: any) {
+                                message.error(error.message);
+                            } finally {
+                                isLoading(false)
+                            }
+
+
                         }
                     }, {
                         icon: <PlusCircleOutlined />,
@@ -143,9 +182,9 @@ export default () => {
                                 ...v.criteria?.advanceSearch,
                                 customerType: value
                             }
-                        }
+                        } 
                     }))
-                    actionRef.current?.reload(true)
+                    actionRef.current?.reload(true) 
                 }}
                     onStatusChanged={(value) => {
                         setIsSelectAll(value == "AllPending")
@@ -204,13 +243,14 @@ export default () => {
                     ))
                 },
 
-                advanceSearchButton: <Space align='baseline'>
-                    <Button style={{ marginTop: -6 }} icon={<FileSearchOutlined />}
+                advanceSearchButton: <Space align='center'>
+                    <Button style={{ marginTop: 0 }} icon={<FileSearchOutlined />}
                         onClick={() => modals.showModal('advanceSearch')}
                     />
                     <ProForm
                         form={form}
                         submitter={false}
+                        style={{ marginTop: 10 }}
                     >
                         <ExcelSaleAreaFilter
                             form={form}
@@ -252,6 +292,7 @@ export default () => {
                     dataSource: data?.items,
                     loading: isFetching,
                     actionRef: actionRef,
+
                     pagination: {
                         total: data?.total
                     },
@@ -298,8 +339,8 @@ export default () => {
                             sorter: 'poNo',
                             dataIndex: 'poNo',
                             key: 'poNo',
-                            width: 170,
-                            align: "center",
+                            width: 120,
+                            // align: "center", 
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.poNo || '',
@@ -349,16 +390,17 @@ export default () => {
                             render: (_, data) => data.shippingAddress,
                         },
                         {
-                            title: 'Order Date',
+                            // title: 'Order Date',
+                            title: 'Created Date',
                             align: 'right',
                             sorter: 'orderDate',
                             dataIndex: "orderDate",
                             width: 110,
                             render: (_, data) => moment(data.orderedDate).format('DD-MMM-YYYY'),
-
                         },
                         {
-                            title: "Order Time",
+                            // title: "Order Time",
+                            title: "Created Time",
                             width: 100,
                             render: (_, data) => moment(data.orderedDate).format('HH:mm:ss'),
                         },
@@ -446,7 +488,6 @@ export default () => {
             salespersons={state.data?.initData?.salespersons}
             lookDataList={state.data?.initData?.lookDataList}
             onSearch={(data) => {
-                console.log('data', data)
                 setFilter(v => ({
                     ...v,
                     criteria: {

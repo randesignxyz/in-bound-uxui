@@ -8,8 +8,10 @@ import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { useRef, useState } from 'react';
+import { simpleRequestActions } from '@/services/model';
 import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../data';
 import RequestedBatchDrawer from '../RequestedBatchDrawer';
+import { buildRequestDetailData, SparePartRequestService } from '../service';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -97,49 +99,11 @@ const deriveDisplayReceived = (row: Pick<MyRequestItem, 'requestStatus' | 'total
   return 0;
 };
 
-// --- Mock data generator ---
-const mockRequests: MyRequestItem[] = Array.from({ length: 50 }, (_, i) => {
-  const requestStatus = [
-    'pending',
-    'approved',
-    'rejected',
-    'in-progress',
-    'partial',
-    'ready_to_Pickup',
-    'completed',
-  ][Math.floor(Math.random() * 7)] as RequestStatus;
-
-  const totalItems = Math.floor(Math.random() * 10) + 1;
-
-  const receivedItems =
-    requestStatus === 'completed'
-      ? totalItems
-      : requestStatus === 'partial'
-        ? Math.min(totalItems - 1, Math.floor(Math.random() * totalItems) + 1)
-        : requestStatus === 'ready_to_Pickup'
-          ? Math.min(totalItems - 1, Math.floor(Math.random() * totalItems))
-          : 0;
-
-  return {
-    id: i + 1,
-    requestId: `REQ-${1000 + i}`,
-    priority: ['low', 'normal', 'high', 'urgent'][Math.floor(Math.random() * 4)] as RequestPriority,
-    requestDate: dayjs()
-      .subtract(Math.floor(Math.random() * 30), 'day')
-      .toISOString(),
-    totalItems,
-    receivedItems,
-    requestStatus,
-    remark: ['Urgent order', 'Check availability', 'For maintenance', 'Regular request'][
-      Math.floor(Math.random() * 4)
-    ],
-    type: ['MRO-W', 'MRO-S', 'MRO-G'][Math.floor(Math.random() * 3)] as SparePartType,
-  };
-});
-
 export default function MyRequestListview() {
   const access = useAccess();
   const actionRef = useRef<ActionType>();
+  const requestActions = simpleRequestActions();
+  const services = SparePartRequestService(requestActions);
 
   const [searchValue, setSearchValue] = useState<string>('');
   const [detailOpen, setDetailOpen] = useState(false);
@@ -165,59 +129,29 @@ export default function MyRequestListview() {
     return d.format('YYYY-MMM-DD, h:mm A');
   };
 
-  // --- Mock requestData function with search & filters ---
   const requestData = async (
     pagination: { current?: number; pageSize?: number },
     _sort?: Record<string, SortOrder>,
   ) => {
-    let filtered = [...mockRequests];
-
-    // Filter by search
-    if (searchValue?.trim()) {
-      const v = searchValue.trim().toLowerCase();
-      filtered = filtered.filter(
-        (r) =>
-          r.requestId.toLowerCase().includes(v) ||
-          r.remark.toLowerCase().includes(v) ||
-          r.type?.toLowerCase().includes(v),
-      );
-    }
-
-    // Filter by priority
-    if (filters.priority !== 'ALL') {
-      filtered = filtered.filter((r) => r.priority === filters.priority);
-    }
-
-    // Filter by status
-    if (filters.status !== 'ALL') {
-      filtered = filtered.filter((r) => r.requestStatus === filters.status);
-    }
-
-    // Filter by type
-    if (filters.type !== 'ALL') {
-      filtered = filtered.filter((r) => r.type === filters.type);
-    }
-
-    // Filter by date range
-    if (filters.dateRange) {
-      const [start, end] = filters.dateRange.map((d) => dayjs(d));
-      const startAt = start.startOf('day');
-      const endAt = end.endOf('day');
-      filtered = filtered.filter((r) => {
-        const d = dayjs(r.requestDate);
-        return d.isSameOrAfter(startAt) && d.isSameOrBefore(endAt);
-      });
-    }
-
-    // Pagination
-    const current = pagination.current || 1;
-    const pageSize = pagination.pageSize || 10;
-    const start = (current - 1) * pageSize;
-    const end = start + pageSize;
+    const response = await services.pageMyRequests({
+      criteria: {
+        searchValue,
+        advanceSearch: {
+          priority: filters.priority,
+          status: filters.status,
+          type: filters.type,
+          dateRange: filters.dateRange,
+        },
+      },
+      pagination: {
+        current: pagination.current,
+        pageSize: pagination.pageSize,
+      },
+    });
 
     return {
-      data: filtered.slice(start, end),
-      total: filtered.length,
+      data: response.items || [],
+      total: response.total || 0,
       success: true,
     };
   };
@@ -429,6 +363,29 @@ export default function MyRequestListview() {
       <RequestedBatchDrawer
         open={detailOpen}
         request={selectedRequest}
+        data={selectedRequest ? buildRequestDetailData(selectedRequest) : undefined}
+        onApprove={async (payload) => {
+          await services.approveRequest(payload);
+          setSelectedRequest((prev) =>
+            prev && prev.id === payload.id
+              ? { ...prev, requestStatus: 'approved' }
+              : prev,
+          );
+          reloadTable();
+        }}
+        onReject={async ({ id }) => {
+          await services.rejectRequest({ id });
+          setSelectedRequest((prev) =>
+            prev && prev.id === id
+              ? { ...prev, requestStatus: 'rejected' }
+              : prev,
+          );
+          reloadTable();
+        }}
+        onConfirmPickup={async (id) => {
+          await services.confirmPickup(id);
+          reloadTable();
+        }}
         onClose={() => {
           setDetailOpen(false);
           setSelectedRequest(null);

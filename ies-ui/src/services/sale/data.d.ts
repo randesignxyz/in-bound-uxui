@@ -116,7 +116,8 @@ export type SaleServiceName =
   | 'sync-so-from-sap'
   | 'list-sync-so'
   | 'sync-all-so-from-sap'
-  | 'update-all-sap-saleplan';
+  | 'update-all-sap-saleplan'
+  | 'update-so-back-to-sap';
 
 /** Stock */
 // export interface StockControl {
@@ -775,12 +776,13 @@ export interface So {
   budgetCode?: string;
   distributorId?: number;
   attachments?: { id: number; imageId: string; status: string }[];
+  target?: string
 }
 export interface SyncSO {
-    doc_entry_num: string
-    so_no: string
-    customer_code: string
-    shipping_address: string
+  doc_entry_num: string
+  so_no: string
+  customer_code: string
+  shipping_address: string
 }
 export interface EditSo {
   deliveryId: number,
@@ -789,7 +791,7 @@ export interface EditSo {
 export interface SoDetail {
   id: number;
   soNo?: string;
-  docEntry?:string
+  docEntry?: string
   amount: number;
   discountAmount: number;
   vatAmount?: number;
@@ -836,6 +838,7 @@ export interface SoDetail {
   };
   items?: SoItemDetail[];
   deliveries?: Delivery[];
+  target?: string
   distributor?: {
     id: number;
     name: string;
@@ -855,6 +858,17 @@ export interface SoDetail {
       region: string;
     };
   };
+  logSync?: LogSyncDetail[];
+}
+export interface LogSyncDetail {
+  docEntry?: string;
+  errorMessage?: string;
+  id?: string;
+  poNumber?: string;
+  soNo?: string;
+  status?: string;
+  system?: string;
+
 }
 
 export interface StatusLookup {
@@ -905,8 +919,8 @@ export interface SoItem {
   categoryId?: number;
   type?: string;
   STD?: number | null;
-  TDO?: number| null;
-  TDP?: number| null;
+  TDO?: number | null;
+  TDP?: number | null;
   budgetCode?: string;
   subItems?: SoItem[];
   associatedTo?: {
@@ -931,6 +945,7 @@ export interface Delivery {
     shippingAddress: ?AddressInfo;
   };
   line_num?: number
+  
 }
 
 export interface DeliveryItem {
@@ -946,6 +961,8 @@ export interface DeliveryItem {
     uom: LookupDataItem;
   };
   remarks?: string
+  soNo?:string
+  company?:string
 }
 
 export interface SoDeliveryDetail {
@@ -1011,8 +1028,8 @@ export interface SoItemDetail {
   budgetCode?: string;
   index?: number;
   STD?: number | null;
-  TDO?: number| null;
-  TDP?: number| null;
+  TDO?: number | null;
+  TDP?: number | null;
 }
 
 export interface Distributor {

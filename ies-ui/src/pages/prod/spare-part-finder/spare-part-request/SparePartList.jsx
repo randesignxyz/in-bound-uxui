@@ -7,6 +7,7 @@ import { useRef, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import RequestItemModal from './requestItem';
 import { SparePartRequestAPI } from './service.api';
+import { SparePartRequestService } from './service';
 import SparePartImage from './SparePartImage';
 import SpfDetails from './SpfDetails';
 
@@ -29,6 +30,7 @@ export default function SparePartListView() {
   const actionRef = useRef();
   const requestActions = simpleRequestActions();
   const services = SparePartRequestAPI(requestActions);
+  const requestServices = SparePartRequestService(requestActions);
   const { RangePicker } = DatePicker;
   const canSeeWarehouseLocation = access.canSpfWarehouseStaff || access.canAdmin;
 
@@ -436,13 +438,8 @@ export default function SparePartListView() {
             return;
           }
 
-          if (typeof services.createRequest !== 'function') {
-            message.info('Request submission API is not wired yet.');
-            return;
-          }
-
           try {
-            const created = await services.createRequest(payload);
+            const created = await requestServices.createRequest(payload);
             message.success(`Request ${created.requestId} submitted successfully.`);
             setRequestModalOpen(false);
             setSelectedRowKeys([]);

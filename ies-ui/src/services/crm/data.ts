@@ -51,8 +51,10 @@ export interface SalePerson {
 export interface outletType {
   id: number;
   name: string;
-  mainChannel: string;
+  subChannelId?: number;
   subChannel: string;
+  mainChannelId?: number;
+  mainChannel: string;  
 }
 
 export interface BasicData {

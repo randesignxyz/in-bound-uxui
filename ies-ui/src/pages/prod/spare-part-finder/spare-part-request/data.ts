@@ -7,6 +7,20 @@ export type SparePartStockStatus = 'available' | 'low' | 'no-stock';
 export type RequestPriority = 'urgent' | 'high' | 'normal' | 'low';
 export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'in-progress' | 'partial' | 'ready_to_Pickup' | 'completed';
 
+export interface MyRequestLineItem {
+  requestLineId: number;
+  sparePartId: string;
+  sparePartCode: string;
+  sparePartName: string;
+  requestedQty: number;
+  approvedQty: number;
+  unit: string;
+  toWarehouseCode?: string;
+  forLine?: string;
+  remark?: string;
+  imageId?: string | string[];
+}
+
 export interface SparePartRequestSearch {
   searchValue?: string;
   tab?: SparePartTab;
@@ -59,6 +73,8 @@ export interface SparePartRequestItem {
 export interface MyRequestItem {
   id: number;
   requestId: string;
+  requestNo?: string;
+  requestedBy?: string;
   priority: RequestPriority;
   requestDate: string;
   totalItems: number;
@@ -66,6 +82,11 @@ export interface MyRequestItem {
   requestStatus: RequestStatus;
   remark: string;
   type?: SparePartType;
+  totalApprovedQty?: number;
+  totalIssuedQty?: number;
+  totalPickedQty?: number;
+  items?: MyRequestLineItem[];
+  rawRequestStatus?: string;
 }
 
 // =======================================

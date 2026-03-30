@@ -87,6 +87,7 @@ const statusLabelMap: Record<RequestStatus, string> = {
 
 export interface RequestDetailLineItem {
   no: number;
+  requestLineId?: number;
   image?: string;
   imageId?: string;
   productId: string;
@@ -106,6 +107,7 @@ export interface RequestDetailLineItem {
   category?: string;
   sparePartType?: string;
   businessUnit?: string;
+  uom?: string;
 }
 
 export interface RequestDetailActivity {
@@ -132,6 +134,9 @@ export interface RequestDetailData {
   warehouseBy?: string;
   items: RequestDetailLineItem[];
   activities: RequestDetailActivity[];
+  shipments?: Shipment[];
+  pickupStatus?: string;
+  rawStatus?: string;
 }
 
 export interface DrawerBatchReturnItemsProps {
@@ -140,6 +145,11 @@ export interface DrawerBatchReturnItemsProps {
   data?: RequestDetailData | null;
   onClose?: () => void;
   onChange?: (updated: any) => void;
+  onIssueRequest?: (payload: {
+    id: number;
+    lines: Array<{ requestLineId: number; issueQty: number }>;
+  }) => Promise<void>;
+  onConfirmPickup?: (id: number) => Promise<void>;
 }
 
 type SendingMap = Record<string, number>;
@@ -150,7 +160,15 @@ const clampInt = (v: unknown) => {
   return Math.max(0, Math.floor(n));
 };
 
-export default function RequestedBatchWareHouse({ open, request, data: propData, onClose, onChange }: DrawerBatchReturnItemsProps) {
+export default function RequestedBatchWareHouse({
+  open,
+  request,
+  data: propData,
+  onClose,
+  onChange,
+  onIssueRequest,
+  onConfirmPickup,
+}: DrawerBatchReturnItemsProps) {
   const access = useAccess();
   const initKeyRef = useRef<string>('');
 
@@ -392,7 +410,7 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
   }, [data.requestDate, selectedProduct]);
 
   const canWarehouseOperate = access.canSpfWarehouseStaff || access.canAdmin;
-  const isReadyForWarehouseWork = effectiveStatus !== 'pending' && effectiveStatus !== 'rejected';
+  const isReadyForWarehouseWork = effectiveStatus !== 'rejected' && effectiveStatus !== 'completed';
 
   const mapToWarehouseItems = (items: RequestDetailLineItem[]) =>
     items.map((it) => ({
@@ -521,6 +539,35 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
       return;
     }
 
+    if (onIssueRequest && data.id) {
+      const lines = workingItems
+        .map((item) => ({
+          requestLineId: Number(item.requestLineId || 0),
+          issueQty: clampInt(mergedDraft[item.productId]),
+        }))
+        .filter((item) => item.requestLineId > 0 && item.issueQty > 0);
+
+      if (lines.length === 0) {
+        message.warning('No valid request lines were found to issue.');
+        return;
+      }
+
+      onIssueRequest({ id: data.id, lines })
+        .then(() => {
+          setDraftByProductId({});
+          setSendingByProductId((prev) => {
+            const cleared = { ...prev };
+            Object.keys(cleared).forEach((k) => (cleared[k] = 0));
+            return cleared;
+          });
+          message.success('Request issued successfully.');
+        })
+        .catch(() => {
+          message.error('Failed to issue request.');
+        });
+      return;
+    }
+
     // Update the sent quantities on working items
     const nextItems = workingItems.map((it) => {
       const toAdd = clampInt(mergedDraft[it.productId]);
@@ -591,6 +638,17 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
   const handleConfirmPicked = (shipmentId: string) => {
     if (!canWarehouseOperate) {
       message.error('You are not allowed to confirm.');
+      return;
+    }
+
+    if (onConfirmPickup && data.id) {
+      onConfirmPickup(data.id)
+        .then(() => {
+          message.success('Pickup confirmed successfully.');
+        })
+        .catch(() => {
+          message.error('Failed to confirm pickup.');
+        });
       return;
     }
 
@@ -704,8 +762,8 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
     },
      {
       title: 'UoM',
-      dataIndex: 'UoM',
-      key: 'UoM',
+      dataIndex: 'uom',
+      key: 'uom',
       ellipsis: true,
       width: 'auto'
     },
@@ -725,7 +783,7 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
             value={Math.min(current, remaining)}
             min={0}
             max={remaining}
-            disabled={!canWarehouseOperate || !isReadyForWarehouseWork || remaining <= 0 || effectiveStatus === 'completed'}
+            disabled={!canWarehouseOperate || !isReadyForWarehouseWork || remaining <= 0}
             onChange={(v) =>
               setSendingByProductId((prev) => ({
                 ...prev,
@@ -864,21 +922,16 @@ export default function RequestedBatchWareHouse({ open, request, data: propData,
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
-              {effectiveStatus === 'pending' && canWarehouseOperate && (
-                <Button type="default" onClick={handleConfirmRequester}>
-                  Confirm Requester
-                </Button>
-              )}
               <Button
                 onClick={handleSave}
-                disabled={!canWarehouseOperate || !isReadyForWarehouseWork || effectiveStatus === 'completed'}
+                disabled={!canWarehouseOperate || !isReadyForWarehouseWork}
               >
                 Save (Draft)
               </Button>
               <Button
                 type="primary"
                 onClick={handleSaveAndPickUp}
-                disabled={!canWarehouseOperate || !isReadyForWarehouseWork || effectiveStatus === 'completed'}
+                disabled={!canWarehouseOperate || !isReadyForWarehouseWork}
               >
                 Save &amp; Pick up
               </Button>

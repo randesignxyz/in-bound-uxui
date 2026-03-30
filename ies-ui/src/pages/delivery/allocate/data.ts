@@ -119,6 +119,7 @@ interface mergeItems {
   so_num?: string
   sequence?: string
   volume?: string
+  weight?:string
 }
 interface DN {
   createdBy?: string

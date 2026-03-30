@@ -688,6 +688,7 @@ export interface DeliveryNoteDetail {
   driverCode: string;
   driverName: string;
   items: DeliveryNoteItem[];
+  company?:string
 }
 
 export interface DeliveryNoteItem {
@@ -714,6 +715,7 @@ export interface InvoiceItem {
   amountAfterVat: Double;
   salesperson: string;
   sameTrip?: boolean
+  company?:string
 }
 
 export interface DeliveryNoteListItem {
@@ -733,6 +735,7 @@ export interface DeliveryNoteListItem {
   shift: string;
   paymentTerm?: string;
   selected?: boolean;
+  company?:string
 }
 
 export interface PickingSlipItem {
@@ -800,6 +803,7 @@ export interface AddedInvoice {
 export interface AssignDocParam {
   deliveryId: number;
   deliveryDocEntry: number[];
+  companies?:any
   reassigned?: boolean;
   collectedInvoices: {
     docEntry: number;

@@ -146,10 +146,8 @@ export default({
                 const changeCateRecord = items?.find(it => it.key == record?.key )
                
                 if(items?.length < dataSource.length){
-                     console.log('on change11 ', changeCateRecord)
                     const newRecord = dataSource.find(it=> !items.find(r=> r.key==it.key))
                     if(newRecord){
-                        console.log('on change1122 ', newRecord)
                         onSetItems?.(
                             [...items,{key: newRecord?.key,empId: newRecord.empId,empNo: newRecord.empNo,empName: newRecord.empName}]
                         )

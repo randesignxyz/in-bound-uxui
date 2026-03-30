@@ -31,6 +31,7 @@ const STATUS_COLOR: Record<string, string> = {
   PENDING:    'processing',
   APPROVED:   'warning',
   REJECTED:   'error',
+  RECEIVING:  'processing',
   COMPLETED:  'success',
 };
 
@@ -38,6 +39,7 @@ const STATUS_LABEL: Record<string, string> = {
   PENDING:   'Pending',
   APPROVED:  'Approved',
   REJECTED:  'Rejected',
+  RECEIVING: 'Receiving',
   COMPLETED: 'Completed',
 };
 
@@ -124,11 +126,14 @@ export default function ReturnsListWarehouse() {
       title: 'Status',
       dataIndex: 'returnStatus',
       key: 'returnStatus',
-      render: (_dom, record) => (
-        <Tag bordered={false} color={STATUS_COLOR[record.returnStatus] ?? 'default'}>
-          {STATUS_LABEL[record.returnStatus] ?? record.returnStatus}
-        </Tag>
-      ),
+      render: (_dom, record) => {
+        const statusKey = record.returnStatus?.toUpperCase() || '';
+        return (
+          <Tag bordered={false} color={STATUS_COLOR[statusKey] ?? 'success'}>
+            {STATUS_LABEL[statusKey] ?? record.returnStatus}
+          </Tag>
+        );
+      },
     },
     {
       title: 'Action',
@@ -208,6 +213,7 @@ export default function ReturnsListWarehouse() {
       <ReturnsListDrawer
         open={detailOpen}
         onClose={() => { setDetailOpen(false); setSelectedReturn(null); }}
+        onSuccess={() => actionRef.current?.reload()}
         data={selectedReturn as any}
         returnId={selectedReturn?.returnId}
       />

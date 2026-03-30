@@ -206,6 +206,7 @@ const DestApproval: React.FC<{
                     name={'candidateOptions'}
                     options={[
                       { label: 'Sub task', value: 'SUB_TASK' },
+                       { label: 'Comment', value: 'CLARIFY_TASK' },
                       { label: 'Reassign', value: 'REASSIGN' },
                     ]}
                   />

@@ -112,7 +112,7 @@ export interface SparePartReturnListItem {
   return_id?: string;
   return_date?: string;
   total_items?: number;
-  status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+  status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Receiving';
   remarks?: string;
   return_quantity?: number;
   used_quantity?: number;
@@ -188,7 +188,7 @@ export interface MyRequestToReturnItem {
   return_date: string;
   manager_decide_date?: string;
   total_items: number;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Receiving';
   remarks?: string;
 }
 
@@ -197,6 +197,7 @@ export const MY_REQUESTS_TO_RETURN_STATUS_OPTIONS = [
   { value: 'Status', label: 'Status' },
   { value: 'Pending', label: 'Pending' },
   { value: 'Approved', label: 'Approved' },
+  { value: 'Receiving', label: 'Receiving' },
   { value: 'Rejected', label: 'Rejected' },
   { value: 'Completed', label: 'Completed' },
 ] as const;
@@ -204,6 +205,7 @@ export const MY_REQUESTS_TO_RETURN_STATUS_OPTIONS = [
 /** One line item in the Details Request drawer table */
 export interface RequestDetailLineItem {
   no: number;
+  return_item_id?: number;
   image?: string;
   product_id: string;
   request_id: string;
@@ -212,6 +214,12 @@ export interface RequestDetailLineItem {
   quantity_to_return: number;
   used_quantity: number;
   total: number;
+  // Warehouse receipt fields (present when state = COMPLETED)
+  received_qty?: number;
+  good_qty?: number;
+  damaged_qty?: number;
+  remark?: string;
+  images?: string[];  // file IDs from FILE microservice
 }
 
 /** One activity in Recent Activities timeline */

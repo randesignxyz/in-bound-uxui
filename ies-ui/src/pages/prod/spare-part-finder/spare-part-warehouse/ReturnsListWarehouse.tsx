@@ -5,7 +5,8 @@ import { Space } from 'antd/lib';
 import { useRef, useState } from 'react';
 import { RequestActions } from '@/services/apiGateway';
 import { SparePartWarehouseReturnAPI } from './service.return';
-import ReturnsListDrawer, { type ReturnStatus } from './ReturnsListDrawer';
+import type { RequestDetailData, ReturnStatus } from '../spare-part-return/data';
+import ReturnsListDrawer from './ReturnsListDrawer';
 
 const { RangePicker } = DatePicker;
 
@@ -214,7 +215,18 @@ export default function ReturnsListWarehouse() {
         open={detailOpen}
         onClose={() => { setDetailOpen(false); setSelectedReturn(null); }}
         onSuccess={() => actionRef.current?.reload()}
-        data={selectedReturn as any}
+        data={selectedReturn ? {
+          no: selectedReturn.returnId,
+          request_id: selectedReturn.returnNo,
+          total_items: selectedReturn.totalItems,
+          request_date: selectedReturn.returnDate,
+          status: (selectedReturn.returnStatus === 'COMPLETE' || selectedReturn.returnStatus === 'COMPLETED'
+            ? 'Completed'
+            : selectedReturn.returnStatus.charAt(0) + selectedReturn.returnStatus.slice(1).toLowerCase()) as ReturnStatus,
+          remarks: selectedReturn.remark,
+          items: [],
+          activities: [],
+        } : null}
         returnId={selectedReturn?.returnId}
       />
     </>

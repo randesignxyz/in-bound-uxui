@@ -19,7 +19,7 @@ import {
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from '../spare-part-request/SparePartImage';
-import type { RequestDetailData } from '../spare-part-return/data';
+import type { RequestDetailData, ReturnStatus } from '../spare-part-return/data';
 import { SparePartReturnAPI } from '../spare-part-return/service';
 import { RequestActions } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
@@ -39,14 +39,15 @@ type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
  *         ↓ (if approved)
  *     in_progress → completed | partially_returned
  */
-export type ReturnStatus =
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'receiving'
-  | 'in_progress'
-  | 'completed'
-  | 'partially_returned';
+// Internal UI status for map keys (keeping these to avoid breaking UI logic)
+export type DrawerReturnStatus =
+  | 'Pending'
+  | 'Approved'
+  | 'Rejected'
+  | 'Receiving'
+  | 'In Progress'
+  | 'Completed'
+  | 'Partially Returned';
 
 interface ReturnItem {
   id: string | number;
@@ -92,34 +93,34 @@ const STATUS_STEPS = ['Return', 'Approved', 'Receiving', 'Completed'];
 /**
  * Maps each status to which step index it sits on.
  */
-const STATUS_STEP_MAP: Record<ReturnStatus, number> = {
-  pending: 0,
-  approved: 1,
-  rejected: 1,
-  receiving: 2,
-  in_progress: 2,
-  completed: 3,
-  partially_returned: 3,
+const STATUS_STEP_MAP: Record<ReturnStatus | string, number> = {
+  Pending: 0,
+  Approved: 1,
+  Rejected: 1,
+  Receiving: 2,
+  'In Progress': 2,
+  Completed: 3,
+  'Partially Returned': 3,
 };
 
-const statusColorMap: Record<ReturnStatus, string> = {
-  pending:           'processing',
-  approved:          'warning',
-  rejected:          'error',
-  receiving:         'processing',
-  in_progress:       'processing',
-  completed:         'success',
-  partially_returned:'warning',
+const statusColorMap: Record<ReturnStatus | string, string> = {
+  Pending: 'processing',
+  Approved: 'warning',
+  Rejected: 'error',
+  Receiving: 'processing',
+  'In Progress': 'processing',
+  Completed: 'success',
+  'Partially Returned': 'warning',
 };
 
-const statusLabelMap: Record<ReturnStatus, string> = {
-  pending: 'Return',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  receiving: 'Receiving',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  partially_returned: 'Partially Returned',
+const statusLabelMap: Record<ReturnStatus | string, string> = {
+  Pending: 'Return',
+  Approved: 'Approved',
+  Rejected: 'Rejected',
+  Receiving: 'Receiving',
+  'In Progress': 'In Progress',
+  Completed: 'Completed',
+  'Partially Returned': 'Partially Returned',
 };
 interface ReturnDetailActivity {
   id: string | number;
@@ -152,7 +153,7 @@ const getStepStatus = (
   stepIndex: number,
   currentStep: number,
 ): 'finish' | 'process' | 'wait' | 'error' => {
-  if (effectiveStatus === 'rejected' && stepIndex === 1) return 'error';
+  if (effectiveStatus === 'Rejected' && stepIndex === 1) return 'error';
   if (stepIndex < currentStep) return 'finish';
   if (stepIndex === currentStep) return 'process';
   return 'wait';
@@ -164,7 +165,7 @@ interface ReturnsListDrawerProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void; // call parent reload after successful record
-  data: ReturnData | null;
+  data: RequestDetailData | null;
   returnId?: number | null;
 }
 
@@ -183,21 +184,21 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   const [fetchedData, setFetchedData] = useState<RequestDetailData | null>(null);
 
   const effectiveStatus: ReturnStatus = useMemo(() => {
-    if (statusOverride) return statusOverride;
+    if (statusOverride) return statusOverride as any;
     // fetchedData.status is 'Pending' | 'Approved' | 'Rejected' | 'Completed'
     if (fetchedData?.status) {
-      return fetchedData.status.toLowerCase() as ReturnStatus;
+      return fetchedData.status;
     }
-    return data?.status ?? 'pending';
+    return (data?.status as any) ?? 'Pending';
   }, [statusOverride, fetchedData?.status, data?.status]);
 
   const isGlobalReadOnly = useMemo(() => {
-    return ['completed', 'rejected', 'pending'].includes(effectiveStatus);
+    return ['Completed', 'Rejected', 'Pending'].includes(effectiveStatus);
   }, [effectiveStatus]);
 
   const checkReadOnly = (record: ReturnItem) => {
     if (isGlobalReadOnly) return true;
-    if (effectiveStatus === 'receiving') {
+    if (effectiveStatus === 'Receiving') {
       return (record.receivedQty ?? 0) >= record.qtyToReturn;
     }
     return false;
@@ -226,7 +227,16 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
         };
       });
     }
-    return data?.items ?? [];
+    // Fallback to data?.items if no fetchedData
+    const items = data?.items ?? [];
+    return items.map((i: any, idx: number) => ({
+      ...i,
+      id: i.id ?? idx + 1,
+      qtyToReturn: i.qtyToReturn ?? i.quantity_to_return ?? 0,
+      usedQty: i.usedQty ?? i.used_quantity ?? 0,
+      productId: i.productId ?? i.product_id ?? '',
+      name: i.name ?? i.item_name ?? '',
+    }));
   }, [fetchedData, data?.items]);
 
   const currentStep = STATUS_STEP_MAP[effectiveStatus];
@@ -283,7 +293,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
               ? 'Approved'
               : item.state === 'REJECTED'
                 ? 'Rejected'
-                : item.state === 'COMPLETED'
+                : item.state === 'COMPLETE' || item.state === 'COMPLETED'
                   ? 'Completed'
                   : item.state === 'RECEIVING'
                     ? 'Receiving'
@@ -521,7 +531,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       key: 'qty_key_return',
       align: 'center' as const,
       render: (_: unknown, record: ReturnItem) => {
-        const isPartial = effectiveStatus === 'receiving';
+        const isPartial = effectiveStatus === 'Receiving';
         const received = record.receivedQty ?? 0;
         const total = record.qtyToReturn;
 
@@ -546,7 +556,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             key: 'good_amount',
             render: (_: unknown, record: ReturnItem) => {
               const key = String(record.id);
-              const isCompleted = effectiveStatus === 'completed';
+              const isCompleted = effectiveStatus === 'Completed';
               const alreadyReceived = record.receivedQty ?? 0;
               const remaining = record.qtyToReturn - alreadyReceived;
               const defaultVal = remaining; // Default to remaining for partial receipts
@@ -576,7 +586,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             key: 'damaged_amount',
             render: (_: unknown, record: ReturnItem) => {
               const key = String(record.id);
-              const isCompleted = effectiveStatus === 'completed';
+              const isCompleted = effectiveStatus === 'Completed';
               const alreadyReceived = record.receivedQty ?? 0;
               const remaining = record.qtyToReturn - alreadyReceived;
               const defaultVal = 0; // Default damaged to 0 for partial receipts
@@ -804,11 +814,11 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           }}
           contentStyle={{ fontWeight: 500, color: '#262626' }}
         >
-          <Descriptions.Item label="No">{fetchedData?.no ?? data?.id ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Return ID">{fetchedData?.request_id ?? data?.requestId ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Total Items">{fetchedData?.total_items ?? data?.totalItems ?? 0}</Descriptions.Item>
+          <Descriptions.Item label="No">{fetchedData?.no ?? data?.no ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Return ID">{fetchedData?.request_id ?? data?.request_id ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Total Items">{fetchedData?.total_items ?? data?.total_items ?? 0}</Descriptions.Item>
           <Descriptions.Item label="Return Date">
-            {formatDateTime(fetchedData?.request_date ?? data?.requestDate)}
+            {formatDateTime(fetchedData?.request_date ?? data?.request_date)}
           </Descriptions.Item>
           <Descriptions.Item label="Status">
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}>{statusLabelMap[effectiveStatus]}</Tag>
@@ -837,10 +847,8 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
 
             // Description hint shown below each step node
             const description =
-              index === 1 && effectiveStatus === 'rejected'
+              index === 1 && effectiveStatus === 'Rejected'
                 ? 'Rejected'
-                : index === STATUS_STEPS.length - 1 && effectiveStatus === 'partially_returned'
-                ? 'Some items were not returned'
                 : undefined;
 
             return {

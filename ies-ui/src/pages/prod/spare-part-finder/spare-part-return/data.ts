@@ -181,6 +181,9 @@ export interface SparePartReturnItemSearch {
   advanceSearch?: SparePartReturnAdvanceSearch;
 }
 
+/** Status for My Requests to Return */
+export type ReturnStatus = 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Receiving';
+
 /** One row in "My Requests to Return" table */
 export interface MyRequestToReturnItem {
   id: number;
@@ -188,7 +191,7 @@ export interface MyRequestToReturnItem {
   return_date: string;
   manager_decide_date?: string;
   total_items: number;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Receiving';
+  status: ReturnStatus;
   remarks?: string;
 }
 

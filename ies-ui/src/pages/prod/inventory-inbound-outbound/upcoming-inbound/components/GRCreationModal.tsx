@@ -76,6 +76,10 @@ function deriveReceiptType(purchaseOrders: PurchaseOrder[]) {
     : 'Unplanned';
 }
 
+function requiresTraceabilityFields(item: GRItem) {
+  return !item.isMissing && item.receiveQty > 0;
+}
+
 export function GRCreationModal({
   open,
   onClose,
@@ -110,22 +114,36 @@ export function GRCreationModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
+    let nextItem: GRItem | null = null;
     setItems((prev) =>
       prev.map((item, itemIndex) => {
         if (itemIndex !== index) return item;
         if (field === 'receiveQty') {
           const nextQty = Math.min(Math.max(0, Number(value) || 0), item.poQty);
-          return nextQty > 0 && item.isMissing
-            ? { ...item, receiveQty: nextQty, isMissing: false, missingRemark: '' }
-            : { ...item, receiveQty: nextQty };
+          nextItem =
+            nextQty > 0 && item.isMissing
+              ? { ...item, receiveQty: nextQty, isMissing: false, missingRemark: '' }
+              : { ...item, receiveQty: nextQty };
+          return nextItem;
         }
-        return { ...item, [field]: value } as GRItem;
+        nextItem = { ...item, [field]: value } as GRItem;
+        return nextItem;
       }),
     );
-    setErrors((prev) => ({
-      ...prev,
-      [`${String(field)}-${index}`]: false,
-    }));
+    setErrors((prev) => {
+      const nextErrors = {
+        ...prev,
+        [`${String(field)}-${index}`]: false,
+      };
+
+      if (field === 'receiveQty' && nextItem && !requiresTraceabilityFields(nextItem)) {
+        delete nextErrors[`productDate-${index}`];
+        delete nextErrors[`expiryDate-${index}`];
+        delete nextErrors[`batchNumber-${index}`];
+      }
+
+      return nextErrors;
+    });
   }, []);
 
   const setReceiptStatus = useCallback((index: number, status: 'Good' | 'Missing') => {
@@ -181,10 +199,11 @@ export function GRCreationModal({
         if (!item.missingRemark?.trim()) nextErrors[`missingRemark-${index}`] = true;
         return;
       }
-      if (item.receiveQty <= 0) nextErrors[`receiveQty-${index}`] = true;
-      if (!item.productDate) nextErrors[`productDate-${index}`] = true;
-      if (!item.expiryDate) nextErrors[`expiryDate-${index}`] = true;
-      if (!item.batchNumber.trim()) nextErrors[`batchNumber-${index}`] = true;
+      if (requiresTraceabilityFields(item)) {
+        if (!item.productDate) nextErrors[`productDate-${index}`] = true;
+        if (!item.expiryDate) nextErrors[`expiryDate-${index}`] = true;
+        if (!item.batchNumber.trim()) nextErrors[`batchNumber-${index}`] = true;
+      }
     });
 
     setErrors(nextErrors);
@@ -197,9 +216,7 @@ export function GRCreationModal({
     const nextProcessState =
       correctionMode || submissionMode === 'draft'
         ? 'GRPO_DRAFT'
-        : hasDiscrepancy
-          ? 'MISMATCH_EXCEPTION'
-          : 'QC_PENDING';
+        : 'QC_PENDING';
 
     return {
       id: initialReceipt?.id,

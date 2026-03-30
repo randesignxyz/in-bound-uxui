@@ -28,6 +28,7 @@ const statusColor: Record<LegacyGRStatus, string> = {
   'Pending Approval': 'gold',
   Approved: 'green',
   Posted: 'blue',
+  Merged: 'cyan',
   'Correction Required': 'red',
 };
 

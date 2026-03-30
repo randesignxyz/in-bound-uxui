@@ -33,6 +33,7 @@ const PROCESS_STATE_VALUES: UpcomingInboundProcessState[] = [
   'QC_PASSED',
   'PENDING_SUPERVISOR_REVIEW',
   'CORRECTION_REQUIRED',
+  'MERGED_TO_SUPERVISOR_REVIEW',
   'SUPERVISOR_APPROVED',
   'TRANSFERRED_TO_PM_RM_WH',
   'FIN_SUBMITTED',
@@ -65,6 +66,7 @@ const LEGACY_STATUS_VALUES: LegacyGRStatus[] = [
   'Pending Approval',
   'Approved',
   'Posted',
+  'Merged',
   'Correction Required',
 ];
 

@@ -56,7 +56,37 @@ interface QCVerificationModalProps {
   onSubmit: (payload: QCVerificationSubmitPayload) => Promise<boolean> | boolean;
 }
 
+function summarizeQcRouting(items: GRItem[]) {
+  const passedItems = items.filter((item) => item.qcDecision === 'Pass');
+  const correctionItems = items.filter(
+    (item) => item.qcDecision === 'Reject' || item.qcDecision === 'On-Hold',
+  );
+
+  if (passedItems.length > 0 && correctionItems.length > 0) {
+    return {
+      type: 'warning' as const,
+      message:
+        'Mixed QC result: passed items and received quantities will move to supervisor review, while rejected or on-hold items will return to warehouse correction.',
+    };
+  }
+
+  if (correctionItems.length > 0) {
+    return {
+      type: 'warning' as const,
+      message:
+        'All reviewed items will return to warehouse correction after this QC submission.',
+    };
+  }
+
+  return {
+    type: 'success' as const,
+    message:
+      'All reviewed items and received quantities will move to supervisor review after this QC submission.',
+  };
+}
+
 function deriveOutcome(items: GRItem[]): Pick<QCVerificationSubmitPayload, 'processState' | 'qcResult' | 'exceptionReason' | 'stepTitle'> {
+  const passedCount = items.filter((item) => item.qcDecision === 'Pass').length;
   const rejected = items.filter((item) => item.qcDecision === 'Reject');
   if (rejected.length > 0) {
     return {
@@ -65,7 +95,10 @@ function deriveOutcome(items: GRItem[]): Pick<QCVerificationSubmitPayload, 'proc
       exceptionReason: rejected
         .map((item) => `${item.code}: ${item.qcRemark?.trim() || 'Rejected during QC'}`)
         .join('; '),
-      stepTitle: 'QC rejected item(s) and returned receipt to warehouse for correction',
+      stepTitle:
+        passedCount > 0
+          ? 'QC forwarded passed item(s) to supervisor and returned rejected item(s) for correction'
+          : 'QC rejected item(s) and returned receipt to warehouse for correction',
     };
   }
 
@@ -77,7 +110,10 @@ function deriveOutcome(items: GRItem[]): Pick<QCVerificationSubmitPayload, 'proc
       exceptionReason: onHold
         .map((item) => `${item.code}: ${item.qcRemark?.trim() || 'Marked on hold during QC'}`)
         .join('; '),
-      stepTitle: 'QC placed item(s) on hold and returned receipt to warehouse for correction',
+      stepTitle:
+        passedCount > 0
+          ? 'QC forwarded passed item(s) to supervisor and returned on-hold item(s) for correction'
+          : 'QC placed item(s) on hold and returned receipt to warehouse for correction',
     };
   }
 
@@ -123,6 +159,8 @@ export function QCVerificationModal({
     );
     return uniqueBatch.length > 0 ? uniqueBatch.join(', ') : 'N/A';
   }, [receipt.items]);
+
+  const routingSummary = useMemo(() => summarizeQcRouting(items), [items]);
 
   const updateItem = (index: number, field: 'qcDecision' | 'qcRemark', value: string) => {
     setItems((prev) =>
@@ -332,6 +370,12 @@ export function QCVerificationModal({
                 }
               />
             )}
+            <Alert
+              type={routingSummary.type}
+              showIcon
+              style={{ marginBottom: 20 }}
+              message={routingSummary.message}
+            />
             <Descriptions column={3} size="small" style={{ marginTop: 10, marginBottom: 28 }}>
             <Descriptions.Item label="PO Reference">{summarizePOReferences(receipt)}</Descriptions.Item>
             <Descriptions.Item label="Supplier">{summarizeSuppliers(receipt)}</Descriptions.Item>

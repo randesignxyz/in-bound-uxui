@@ -8,6 +8,7 @@ export type InboundProcessState =
   | 'QC_PASSED'
   | 'PENDING_SUPERVISOR_REVIEW'
   | 'CORRECTION_REQUIRED'
+  | 'MERGED_TO_SUPERVISOR_REVIEW'
   | 'SUPERVISOR_APPROVED'
   | 'TRANSFERRED_TO_PM_RM_WH'
   | 'FIN_SUBMITTED'
@@ -19,6 +20,7 @@ export type LegacyGRStatus =
   | 'Pending Approval'
   | 'Approved'
   | 'Posted'
+  | 'Merged'
   | 'Correction Required';
 
 export type GRScenarioPath =
@@ -261,6 +263,8 @@ export function mapProcessStateToLegacyStatus(state: InboundProcessState): Legac
       return 'Pending Approval';
     case 'SUPERVISOR_APPROVED':
       return 'Approved';
+    case 'MERGED_TO_SUPERVISOR_REVIEW':
+      return 'Merged';
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -284,6 +288,7 @@ export const officialStateLabel: Record<InboundProcessState, string> = {
   QC_PASSED: 'QC Passed',
   PENDING_SUPERVISOR_REVIEW: 'Pending Supervisor Review',
   CORRECTION_REQUIRED: 'Correction Required',
+  MERGED_TO_SUPERVISOR_REVIEW: 'Merged To Supervisor Review',
   SUPERVISOR_APPROVED: 'Supervisor Approved',
   TRANSFERRED_TO_PM_RM_WH: 'Supervisor Approved',
   FIN_SUBMITTED: 'Supervisor Approved',
@@ -299,6 +304,7 @@ export function getGoodsReceiptWorkflowProgress(receipt: GoodsReceipt) {
     MISMATCH_EXCEPTION: 50,
     QC_PASSED: 75,
     PENDING_SUPERVISOR_REVIEW: 75,
+    MERGED_TO_SUPERVISOR_REVIEW: 75,
     SUPERVISOR_APPROVED: 100,
     TRANSFERRED_TO_PM_RM_WH: 100,
     FIN_SUBMITTED: 100,
@@ -350,6 +356,8 @@ function getVisibleWorkflowState(processState: InboundProcessState): InboundProc
     case 'DAILY_CLOSED':
     case 'MONTHLY_SUMMARY_READY':
       return 'SUPERVISOR_APPROVED';
+    case 'MERGED_TO_SUPERVISOR_REVIEW':
+      return 'PENDING_SUPERVISOR_REVIEW';
     default:
       return processState;
   }
@@ -452,6 +460,8 @@ function mapActivityProcessStateToTimelineStates(
 
   switch (processState) {
     case 'PENDING_SUPERVISOR_REVIEW':
+      return ['QC_PASSED', 'PENDING_SUPERVISOR_REVIEW'];
+    case 'MERGED_TO_SUPERVISOR_REVIEW':
       return ['QC_PASSED', 'PENDING_SUPERVISOR_REVIEW'];
     case 'MISMATCH_EXCEPTION':
       return ['CORRECTION_REQUIRED'];

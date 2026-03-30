@@ -95,6 +95,10 @@ function normalizeReceiptForUI(receipt: GoodsReceipt): GoodsReceipt {
   };
 }
 
+function isVisibleOperationalReceipt(receipt: GoodsReceipt) {
+  return receipt.processState !== 'MERGED_TO_SUPERVISOR_REVIEW';
+}
+
 export default function UpcomingInboundListview() {
   const access = useAccess();
   const requestActions = simpleRequestActions();
@@ -170,13 +174,32 @@ export default function UpcomingInboundListview() {
       ]);
 
       if (poResult.status === 'fulfilled') {
-        setPurchaseOrders(poResult.value);
+        const nextPurchaseOrders = poResult.value;
+        setPurchaseOrders(nextPurchaseOrders);
+        setSelectedPODetail((prev) => {
+          if (!prev) return prev;
+          return nextPurchaseOrders.find((po) => po.id === prev.id || po.poNumber === prev.poNumber) || null;
+        });
+        setSelectedPOs((prev) =>
+          prev
+            .map(
+              (selected) =>
+                nextPurchaseOrders.find(
+                  (po) => po.id === selected.id || po.poNumber === selected.poNumber,
+                ) || null,
+            )
+            .filter((po): po is PurchaseOrder => po !== null),
+        );
       } else {
         message.error(poResult.reason?.message || 'Failed to load purchase orders.');
       }
 
       if (receiptResult.status === 'fulfilled') {
-        setReceipts(receiptResult.value.items.map(normalizeReceiptForUI));
+        setReceipts(
+          receiptResult.value.items
+            .map(normalizeReceiptForUI)
+            .filter(isVisibleOperationalReceipt),
+        );
       } else {
         message.error(receiptResult.reason?.message || 'Failed to load inbound receiving history.');
       }
@@ -198,6 +221,12 @@ export default function UpcomingInboundListview() {
 
   const syncReceiptInState = (receipt: GoodsReceipt) => {
     const normalized = normalizeReceiptForUI(receipt);
+
+    if (!isVisibleOperationalReceipt(normalized)) {
+      setReceipts((prev) => prev.filter((row) => row.grNumber !== normalized.grNumber));
+      setSelectedGR((prev) => (prev?.grNumber === normalized.grNumber ? null : prev));
+      return normalized;
+    }
 
     setReceipts((prev) => {
       const exists = prev.some((row) => row.grNumber === normalized.grNumber);
@@ -347,7 +376,7 @@ export default function UpcomingInboundListview() {
 
   // Handlers (mirrors WarehouseStaffUI)
   const hydratePurchaseOrder = async (po: PurchaseOrder): Promise<PurchaseOrder> => {
-    if (!po.id || po.items.length > 0) {
+    if (!po.id) {
       return po;
     }
 

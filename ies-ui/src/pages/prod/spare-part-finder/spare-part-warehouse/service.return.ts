@@ -1,0 +1,67 @@
+import { ServiceApiType, RequestActions, singleRequest } from "@/services/apiGateway";
+import { Paging } from "@/services/API";
+
+// ─── Item type for confirm-return ──────────────────────────────────────────────
+export interface WarehouseConfirmReturnItem {
+    returnItemId: number;
+    receivedProductId?: string;
+    receivedQty: number;
+    goodQty: number;
+    damagedQty: number;
+    remark?: string;
+    damageMessages?: string;
+    damageImage?: string[];
+}
+
+const SparePartReturnAction = {
+    paga_fetch_spare_parts_return_by_status_approved: (
+        page: number = 1,
+        pageSize: number = 20
+    ): ServiceApiType<any> => ({
+        type: "PAGING_QUERY",
+        actionName: "fetch-spare-parts-return-by-status-approved",
+        endpoint: "PROD",
+        payload: {},
+        pagination: { page, pageSize },
+    }),
+    warehouse_confirm_return: (
+        returnId: number,
+        remark: string,
+        items: WarehouseConfirmReturnItem[]
+    ): ServiceApiType<any> => ({
+        type: "EXEC",
+        actionName: "warehouse-confirm-return",
+        endpoint: "PROD",
+        payload: {
+            returnId,
+            remark,
+            items,
+        },
+    }),
+};
+
+const SparePartWarehouseReturnAPI = (requestAction: RequestActions) => {
+    return {
+        paga_fetch_spare_parts_return_by_status_approved: async (
+            page: number = 1,
+            pageSize: number = 20
+        ): Promise<Paging<any>> => {
+            const res = await singleRequest<any>(
+                SparePartReturnAction.paga_fetch_spare_parts_return_by_status_approved(page, pageSize)
+            )(requestAction);
+            return res as Paging<any>;
+        },
+        warehouse_confirm_return: async (
+            returnId: number,
+            remark: string,
+            items: WarehouseConfirmReturnItem[]
+        ): Promise<any> => {
+            const res = await singleRequest<any>(
+                SparePartReturnAction.warehouse_confirm_return(returnId, remark, items)
+            )(requestAction);
+            return res;
+        },
+    };
+};
+
+export { SparePartWarehouseReturnAPI };

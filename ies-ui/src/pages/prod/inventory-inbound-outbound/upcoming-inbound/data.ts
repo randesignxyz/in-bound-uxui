@@ -278,6 +278,7 @@ export interface InboundQcReviewItemInput {
 export interface InboundSubmitQcReviewInput {
   id: number;
   items: InboundQcReviewItemInput[];
+  documentChecklist?: InboundGrDocumentChecklistApi;
 }
 
 export interface InboundSubmitSupervisorReviewInput {

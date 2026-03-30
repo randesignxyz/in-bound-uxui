@@ -662,6 +662,7 @@ export default function UpcomingInboundListview() {
       qcResult: GoodsReceipt['qcResult'];
       exceptionReason?: string;
       stepTitle: string;
+      documentChecklist: GoodsReceipt['documentChecklist'];
     },
   ) => {
     if (!receipt.id) {
@@ -678,6 +679,13 @@ export default function UpcomingInboundListview() {
           qcDecision: item.qcDecision || 'Pass',
           qcRemark: item.qcRemark || undefined,
         })),
+        documentChecklist: {
+          vendorDN: payload.documentChecklist.vendorDN,
+          goodsReceiptPOForm: payload.documentChecklist.goodsReceiptPOForm,
+          pmrmLabelForm: false,
+          pmrmStockCardForm: payload.documentChecklist.pmrmStockCardForm,
+          supportingDocs: payload.documentChecklist.supportingDocs || [],
+        },
       });
       await loadInboundData();
       const updated = syncReceiptInState(response.data);

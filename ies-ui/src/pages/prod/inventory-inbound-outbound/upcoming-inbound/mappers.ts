@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import type {
   InboundDashboardSummaryApi,
   InboundGoodsReceiptApi,
@@ -91,7 +92,7 @@ export function mapInboundPurchaseOrders(orders: InboundPurchaseOrderApi[]): Upc
 
 export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInboundGoodsReceipt {
   const processState = normalizeEnum(api.processState, PROCESS_STATE_VALUES, 'GRPO_DRAFT');
-  const createdDate = api.createdDate ?? '';
+  const createdDate = formatDisplayTimestamp(api.createdDate);
   const fallbackStepTitle = api.workflowLabel || api.recordTypeLabel || mapProcessStateToLegacyStatus(processState);
   const qcResult = normalizeQcResult(api.qcResult, processState);
 
@@ -138,7 +139,7 @@ export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInb
     createdBy: api.createdBy ?? '',
     createdDate,
     approvedBy: api.approvedBy ?? api.qcReviewedBy ?? undefined,
-    approvedDate: api.approvedDate ?? api.qcReviewedAt ?? undefined,
+    approvedDate: formatDisplayTimestamp(api.approvedDate ?? api.qcReviewedAt),
     specMatch: api.specMatch,
     qtyMatch: api.qtyMatch,
     qualityCheckRequired: api.qualityCheckRequired,
@@ -219,10 +220,17 @@ export function mapInboundActivity(activity: InboundGrActivityApi): UpcomingInbo
   return {
     title: activity.title,
     description: activity.description ?? activity.title,
-    timestamp: activity.timestamp ?? '',
+    timestamp: formatDisplayTimestamp(activity.timestamp),
     state: normalizeActivityState(activity.state),
     processState: normalizeEnum(activity.state, PROCESS_STATE_VALUES, undefined),
   };
+}
+
+function formatDisplayTimestamp(value?: string | null): string {
+  if (!value) return '';
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return value;
+  return parsed.format('YYYY-MM-DD HH:mm:ss');
 }
 
 function buildInboundScenarioMeta(

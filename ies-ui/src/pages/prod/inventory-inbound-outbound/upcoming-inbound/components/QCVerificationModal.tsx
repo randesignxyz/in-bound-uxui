@@ -13,7 +13,9 @@ import {
   Table,
   Tag,
   Typography,
+  Upload,
 } from 'antd';
+import type { UploadFile, UploadProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { GoodsReceipt, GRItem, InboundProcessState, QcDecision } from '../workflow';
 import {
@@ -31,6 +33,7 @@ import {
   FileImageOutlined,
   FilePdfOutlined,
   FileTextOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
 import { FullscreenModal } from './FullscreenModal';
 
@@ -47,6 +50,7 @@ interface QCVerificationSubmitPayload {
   qcResult: GoodsReceipt['qcResult'];
   exceptionReason?: string;
   stepTitle: string;
+  documentChecklist: GoodsReceipt['documentChecklist'];
 }
 
 interface QCVerificationModalProps {
@@ -136,6 +140,7 @@ export function QCVerificationModal({
   const [remarkEditorIndex, setRemarkEditorIndex] = useState<number | null>(null);
   const [draftRemark, setDraftRemark] = useState('');
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -151,6 +156,13 @@ export function QCVerificationModal({
     setRemarkEditorIndex(null);
     setDraftRemark('');
     setSelectedDocument(null);
+    setUploadedFiles(
+      (receipt.documentChecklist.supportingDocs || []).map((fileName, index) => ({
+        uid: `qc-doc-${index}-${fileName}`,
+        name: fileName,
+        status: 'done',
+      })),
+    );
   }, [open, receipt]);
 
   const batchSummary = useMemo(() => {
@@ -176,6 +188,14 @@ export function QCVerificationModal({
   const openRemarkEditor = (index: number) => {
     setRemarkEditorIndex(index);
     setDraftRemark(items[index]?.qcRemark || '');
+  };
+
+  const handleUploadChange: UploadProps['onChange'] = (info) => {
+    setUploadedFiles(info.fileList.slice(-10));
+  };
+
+  const removeFile = (uid: string) => {
+    setUploadedFiles((prev) => prev.filter((file) => file.uid !== uid));
   };
 
   const handleSaveRemark = () => {
@@ -212,6 +232,10 @@ export function QCVerificationModal({
       const shouldClose = await onSubmit({
         items,
         ...outcome,
+        documentChecklist: {
+          ...receipt.documentChecklist,
+          supportingDocs: uploadedFiles.map((file) => file.name),
+        },
       });
       if (shouldClose) {
         onClose();
@@ -429,11 +453,28 @@ export function QCVerificationModal({
 
             <Form layout="vertical" style={{ marginBottom: 24 }}>
               <Form.Item label="Supporting Documents">
-                {receipt.documentChecklist.supportingDocs.length > 0 ? (
+                <Upload
+                  multiple
+                  fileList={uploadedFiles}
+                  onChange={handleUploadChange}
+                  onRemove={(file) => {
+                    removeFile(file.uid);
+                    return true;
+                  }}
+                  beforeUpload={() => false}
+                  accept=".pdf,.doc,.docx,image/*"
+                  listType="text"
+                >
+                  <Button icon={<InboxOutlined />}>Upload QC Photos / PDF / Notes</Button>
+                </Upload>
+                <div style={{ fontSize: 12, color: '#999', marginTop: 6, marginBottom: 12 }}>
+                  QC can attach additional supporting documents before submitting the review.
+                </div>
+                {uploadedFiles.length > 0 ? (
                   <List
                     bordered
                     size="small"
-                    dataSource={receipt.documentChecklist.supportingDocs}
+                    dataSource={uploadedFiles.map((file) => file.name)}
                     renderItem={(doc) => (
                       <List.Item
                         actions={[

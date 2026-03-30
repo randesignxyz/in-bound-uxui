@@ -88,7 +88,12 @@ export default function MySparePartList() {
       actionRef.current?.reloadAndRest?.();
     } catch (error) {
       console.error('Failed to submit return request:', error);
-      message.error('Failed to submit return request');
+      const errorMessage =
+        (error as any)?.response?.data?.message ||
+        (error as any)?.data?.message ||
+        (error as any)?.message ||
+        'Failed to submit return request';
+      message.error(errorMessage);
     } finally {
       hideLoading();
     }
@@ -283,6 +288,11 @@ export default function MySparePartList() {
               />
              ),
             },
+            // {
+            //   key: 'fulfillmentLineId',
+            //   title: 'Fulfillment Line ID',
+            //   dataIndex: 'fulfillmentLineId',
+            // },
             {
               key: 'part_number',
               title: 'Product Number',
@@ -310,7 +320,7 @@ export default function MySparePartList() {
               ),
             },
             { key: 'spare_part_name', title: 'Name', dataIndex: 'spare_part_name' },
-            { key: 'quantity', title: 'Quantity', dataIndex: 'quantity' },
+            { key: 'quantity', title: 'Quantity', dataIndex: 'deliveredQty' },
             { key: 'UoM', title: 'UoM', dataIndex: 'UoM' },
             { key: 'spare_part_type', title: 'Type', dataIndex: 'type' },
             { key: 'category', title: 'Category', dataIndex: 'category' },

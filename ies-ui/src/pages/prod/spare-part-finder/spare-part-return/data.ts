@@ -208,6 +208,7 @@ export interface RequestDetailLineItem {
   product_id: string;
   request_id: string;
   item_name: string;
+  uom?: string;
   quantity_to_return: number;
   used_quantity: number;
   total: number;

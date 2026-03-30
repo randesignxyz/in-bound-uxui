@@ -1,7 +1,6 @@
 import FormModalComp from "@/components/FormModal";
 import { EditableProTable, ProColumns } from "@ant-design/pro-components";
 import { useState, useEffect } from "react";
-import { Avatar } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import SparePartImage from "../spare-part-request/SparePartImage";
 
@@ -131,19 +130,16 @@ export default function FormModalSelectItems({
       title: "Action",
       valueType: "option",
       width: 160,
-      render: (_, record, __, action) => [
-        <a key="edit" onClick={() => action?.startEditable?.(record.id)}>
-          Edit
-        </a>,
+      render: (_, record) => [
         <a
-          key="delete"
+          key="remove"
           onClick={() => {
             const newData = dataSource.filter((item) => item.id !== record.id);
             updateItems(newData);
             setEditableRowKeys(newData.map((item) => item.id));
           }}
         >
-          <span style={{ color: "#ff4d4f" }}>Delete</span>
+          <span style={{ color: "#ff4d4f" }}>Remove</span>
         </a>,
       ],
     },
@@ -178,10 +174,9 @@ export default function FormModalSelectItems({
           type: "multiple",
           editableKeys,
           onChange: setEditableRowKeys,
-          actionRender: (row, _, defaultDoms) => [
-            defaultDoms.save,
+          actionRender: (row) => [
             <a
-              key="delete"
+              key="remove"
               onClick={() => {
                 const newData = dataSource.filter(
                   (item) => item.id !== row.id
@@ -190,7 +185,7 @@ export default function FormModalSelectItems({
                 setEditableRowKeys(newData.map((item) => item.id));
               }}
             >
-              <span style={{ color: "#ff4d4f" }}>Delete</span>
+              <span style={{ color: "#ff4d4f" }}>Remove</span>
             </a>,
           ],
           onSave: async (rowKey, data) => {

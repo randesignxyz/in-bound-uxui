@@ -50,6 +50,18 @@ const SparePartReturnAction = {
     endpoint: "PROD",
     payload,
   }),
+  fetch_spare_part_by_return_id: (returnId: number): ServiceApiType<any> => ({
+    type: "LIST_QUERY",
+    actionName: "fetch-spare-parts-by-return-id",
+    endpoint: "PROD",
+    payload: { returnId }
+  }),
+  warehouse_approve_spare_part_return: (requestToReturnId: number, action: string): ServiceApiType<any> => ({
+    type: "EXEC",
+    actionName: "approve-or-reject-to-return",
+    endpoint: "PROD",
+    payload: { requestToReturnId, action }
+  }),
   fetch_batch_spare_parts_return: (
     params: TableViewSearchParams<TableViewSearchReturnsParam>
   ): ServiceApiType<any> => ({
@@ -111,6 +123,18 @@ const SparePartReturnAPI = (requestAction: RequestActions) => {
         ...res,
         items: (res.items || []).map(mapToMyRequestToReturn),
       };
+    },
+    fetch_spare_part_by_return_id: async (returnId: number): Promise<any> => {
+      const res = (await singleRequest<any>(
+        SparePartReturnAction.fetch_spare_part_by_return_id(returnId)
+      )(requestAction)) as any;
+      return res;
+    },
+    warehouse_approve_spare_part_return: async (requestToReturnId: number, action: string): Promise<any> => {
+      const res = await singleRequest<any>(
+        SparePartReturnAction.warehouse_approve_spare_part_return(requestToReturnId, action)
+      )(requestAction);
+      return res;
     },
   };
 };

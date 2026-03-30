@@ -53,12 +53,15 @@ export default function MyRequestsToReturn() {
   const actionRef = useRef<ActionType>();
   const [statusFilter, setStatusFilter] = useState<string>('Status');
   const [searchValue, setSearchValue] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [returnDateRange, setReturnDateRange] = useState<[Dayjs, Dayjs] | undefined>();
   const [managerDecisionDateRange, setManagerDecisionDateRange] = useState<
     [Dayjs, Dayjs] | undefined
   >();
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState<RequestDetailData | null>(null);
+  const [detailReturnId, setDetailReturnId] = useState<number | null>(null);
   const navigate = useNavigate();
 
   const requestAction: RequestActions = {
@@ -78,10 +81,14 @@ export default function MyRequestsToReturn() {
       activities: [],
     };
     setDetailData(data);
+    setDetailReturnId(record.id);
     setDetailOpen(true);
   };
 
   const fetchReturnPages = async (params: { current?: number; pageSize?: number }) => {
+    setCurrentPage(params.current ?? 1);
+    setPageSize(params.pageSize ?? 10);
+
     const result = await SparePartReturnAPI(requestAction).fetch_batch_spare_parts_return({
       pagination: {
         current: params.current,
@@ -176,6 +183,16 @@ export default function MyRequestsToReturn() {
           ]}
           columns={[
             {
+                key: 'id',
+                title: '',
+                width: 48,
+                 render: (_, __, index) => (
+                  <span style={{ fontWeight: 'bold' }}>
+                    {(currentPage - 1) * pageSize + index + 1}
+                  </span>
+                 )
+            },
+            {
               title: '',
               width: 48,
               render: (_, record) => (
@@ -195,16 +212,8 @@ export default function MyRequestsToReturn() {
               key: 'return_id',
               title: 'Return Id',
               dataIndex: 'return_id',
-              render: (value, record) => (
-                <a
-                  onClick={() =>
-                    navigate(`/prod/spare-part-request/view/${record.id}`, {
-                      state: { id: record.id },
-                    })
-                  }
-                >
-                  {value}
-                </a>
+              render: (value) => (
+                <a>{value}</a>
               ),
             },
             {
@@ -228,19 +237,19 @@ export default function MyRequestsToReturn() {
               dataIndex: 'status',
               render: (_, record) =>
                 record.status === 'Pending' ? (
-                  <Tag color="processing" bordered={false} style={{ width: '100%' }}>
+                  <Tag color="processing" bordered={false}>
                     Pending
                   </Tag>
                 ) : record.status === 'Rejected' ? (
-                  <Tag color="error" bordered={false} style={{ width: '100%' }}>
+                  <Tag color="error" bordered={false}>
                     Rejected
                   </Tag>
                 ) : record.status === 'Completed' ? (
-                  <Tag color="success" bordered={false} style={{ width: '100%' }}>
+                  <Tag color="success" bordered={false}>
                     Completed
                   </Tag>
                 ) : record.status === 'Approved' ? (
-                  <Tag color="warning" bordered={false} style={{ width: '100%' }}>
+                  <Tag color="warning" bordered={false}>
                     Approved
                   </Tag>
                 ) : (
@@ -260,9 +269,11 @@ export default function MyRequestsToReturn() {
       <DrawerBatchReturnItems
         open={detailOpen}
         data={detailData}
+        returnId={detailReturnId}
         onClose={() => {
           setDetailOpen(false);
           setDetailData(null);
+          setDetailReturnId(null);
         }}
       />
     </>

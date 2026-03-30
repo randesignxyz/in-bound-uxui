@@ -1,4 +1,4 @@
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import {  PlusOutlined } from '@ant-design/icons';
 import { ProColumns, ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
@@ -17,8 +17,11 @@ import {
   Typography,
   Upload,
 } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from '../spare-part-request/SparePartImage';
+import type { RequestDetailData } from '../spare-part-return/data';
+import { SparePartReturnAPI } from '../spare-part-return/service';
+import { RequestActions } from '@/services/apiGateway';
 
 const { Title } = Typography;
 const MAX_ATTACHMENTS = 3;
@@ -88,12 +91,12 @@ const STATUS_STEP_MAP: Record<ReturnStatus, number> = {
 };
 
 const statusColorMap: Record<ReturnStatus, string> = {
-  pending: 'blue',
-  approved: 'success',
-  rejected: 'error',
-  in_progress: 'processing',
-  completed: 'success',
-  partially_returned: 'warning',
+  pending:           'processing',
+  approved:          'warning',
+  rejected:          'error',
+  in_progress:       'processing',
+  completed:         'success',
+  partially_returned:'warning',
 };
 
 const statusLabelMap: Record<ReturnStatus, string> = {
@@ -114,26 +117,7 @@ interface ReturnDetailActivity {
   dot?: 'pending' | 'done';
 }
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const logs: ReturnDetailActivity[] = [
-  {
-    id: 1,
-    action: 'submitted',
-    label: 'Return request submitted',
-    description: 'User submitted return request',
-    by: 'John',
-    date: '2026-03-16T08:00:00',
-    dot: 'done',
-  },
-  {
-    id: 2,
-    action: 'approved',
-    label: 'Approved',
-    description: 'Manager approved the request',
-    by: 'Manager',
-    date: '2026-03-16T08:20:00',
-    dot: 'done',
-  },
-];
+
 const formatDateTime = (date?: string) => {
   if (!date) return '—';
   return new Date(date).toLocaleString();
@@ -166,19 +150,47 @@ interface ReturnsListDrawerProps {
   open: boolean;
   onClose: () => void;
   data: ReturnData | null;
+  returnId?: number | null;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDrawerProps) {
+export default function ReturnsListDrawer({ open, onClose, data, returnId }: ReturnsListDrawerProps) {
   const access = useAccess();
+  const [loading, setLoading] = useState(false);
   const [statusOverride, setStatusOverride] = useState<ReturnStatus | null>(null);
-  const [activityLogs] = useState<ReturnDetailActivity[]>(logs);
+
+  const requestAction: RequestActions = {
+    start: (name) => console.log(`Loading: ${name}`),
+    end: (status) => console.log(status),
+  };
+
+  const [fetchedData, setFetchedData] = useState<RequestDetailData | null>(null);
 
   const effectiveStatus: ReturnStatus = useMemo(() => {
     if (statusOverride) return statusOverride;
+    // fetchedData.status is 'Pending' | 'Approved' | 'Rejected' | 'Completed'
+    if (fetchedData?.status) {
+      return fetchedData.status.toLowerCase() as ReturnStatus;
+    }
     return data?.status ?? 'pending';
-  }, [statusOverride, data?.status]);
+  }, [statusOverride, fetchedData?.status, data?.status]);
+
+  // Map API items (fetchedData) to ReturnItem shape used by columnsReturn
+  const tableItems: ReturnItem[] = useMemo(() => {
+    if (fetchedData?.items?.length) {
+      return fetchedData.items.map((i, idx) => ({
+        id: i.no ?? idx + 1,
+        image: i.image,
+        productId: i.product_id,
+        name: i.item_name,
+        partName: i.item_name,
+        usedQty: i.used_quantity ?? 0,
+        qtyToReturn: i.quantity_to_return ?? 0,
+      }));
+    }
+    return data?.items ?? [];
+  }, [fetchedData, data?.items]);
 
   const currentStep = STATUS_STEP_MAP[effectiveStatus];
   // ─── Upload State ─────────────────────────────────
@@ -211,6 +223,55 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
     };
   };
 
+
+  useEffect(() => {
+    if (!open || !returnId) {
+      setFetchedData(null);
+      return;
+    }
+    setLoading(true);
+    SparePartReturnAPI(requestAction)
+      .fetch_spare_part_by_return_id(returnId)
+      .then((res: any) => {
+        const item = Array.isArray(res) ? res[0] : res;
+        if (item) {
+          const mapped: RequestDetailData = {
+            no: item.no ?? returnId,
+            request_id: item.request_id ?? '',
+            total_items: item.total_items ?? 0,
+            request_date: item.request_date ?? '',
+            status:
+              item.state === 'APPROVED'
+                ? 'Approved'
+                : item.state === 'REJECTED'
+                  ? 'Rejected'
+                  : item.state === 'COMPLETED'
+                    ? 'Completed'
+                    : 'Pending',
+            remarks: item.remarks ?? '',
+            items: (item.items ?? []).map((i: any) => ({
+              no: i.no,
+              image: i.image ?? undefined,
+              product_id: i.product_id,
+              request_id: i.request_id,
+              item_name: i.item_name,
+              uom: i.uom,
+              quantity_to_return: i.quantity_to_return,
+              used_quantity: i.used_quantity,
+              total: i.total,
+            })),
+            activities: (item.activities ?? []).map((a: any) => ({
+              label: a.label,
+              description: a.description,
+              date: a.date,
+              dot: a.dot === 'pending' ? 'pending' : 'default',
+            })),
+          };
+          setFetchedData(mapped);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [open, returnId]);
   // Preview handler
   const handlePreview = async (file: UploadFile) => {
     if (!file.url && !file.preview && file.originFileObj) {
@@ -221,7 +282,7 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
     setPreviewOpen(true);
     setPreviewTitle(file.name || '');
   };
-
+  
   const handleAttachmentChange =
     (itemId: string | number): UploadProps['onChange'] =>
     async ({ fileList: newFileList }) => {
@@ -285,7 +346,6 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
       title: 'No',
       dataIndex: 'id',
       key: 'number_id',
-      width: 40,
     },
     {
       title: 'Image',
@@ -306,7 +366,6 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
       title: 'Product ID',
       dataIndex: 'productId',
       key: 'product_id',
-      width: 120,
       render: (_: unknown, entity: ReturnItem) => (
         <Typography.Link>{entity.productId}</Typography.Link>
       ),
@@ -316,21 +375,17 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
       dataIndex: 'name',
       key: 'name_product',
       ellipsis: true,
-      width: 180,
     },
     {
       title: 'UoM',
       dataIndex: 'UoM',
       key: 'UoM',
-      ellipsis: true,
-      width: 60,
     },
     {
       title: 'Used QTY',
       dataIndex: 'usedQty',
       key: 'used_key',
       align: 'center' as const,
-      width: 50,
     },
     {
       title: 'QTY to Return',
@@ -342,7 +397,6 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
           {record.qtyToReturn}
         </span>
       ),
-      width: 50,
     },
     ...(access.canSpfWarehouseStaff
       ? [
@@ -394,7 +448,6 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
             render: () => (
               <>
                 <Input.TextArea rows={1} placeholder="Enter any notes" />
-                <p>Broken because of...</p>
               </>
             ),
             width: 180,
@@ -586,19 +639,6 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
         </div>
       }
     >
-      {/* ── Approver Action Buttons (only when status = return / pending) ── */}
-      {access.canSpfApprover && effectiveStatus === 'pending' && (
-        <div style={{ textAlign: 'right', marginBottom: 16 }}>
-          <Space>
-            <Button danger onClick={() => setStatusOverride('rejected')}>
-              Reject
-            </Button>
-            <Button type="primary" onClick={() => setStatusOverride('approved')}>
-              Approve
-            </Button>
-          </Space>
-        </div>
-      )}
 
       {/* ── Info Descriptions ── */}
       <div style={{ marginBottom: 24 }}>
@@ -614,16 +654,16 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
           }}
           contentStyle={{ fontWeight: 500, color: '#262626' }}
         >
-          <Descriptions.Item label="No">{data?.id ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Return ID">{data?.requestId ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Type">{data?.type ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="No">{fetchedData?.no ?? data?.id ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Return ID">{fetchedData?.request_id ?? data?.requestId ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Total Items">{fetchedData?.total_items ?? data?.totalItems ?? 0}</Descriptions.Item>
           <Descriptions.Item label="Return Date">
-            {formatDateTime(data?.requestDate)}
+            {formatDateTime(fetchedData?.request_date ?? data?.requestDate)}
           </Descriptions.Item>
           <Descriptions.Item label="Status">
-            <Tag color={statusColorMap[effectiveStatus]}>{statusLabelMap[effectiveStatus]}</Tag>
+            <Tag color={statusColorMap[effectiveStatus]} bordered={false}>{statusLabelMap[effectiveStatus]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Total Items">{data?.totalItems ?? 0}</Descriptions.Item>
+          <Descriptions.Item label="Remarks">{fetchedData?.remarks || '—'}</Descriptions.Item>
         </Descriptions>
       </div>
 
@@ -671,11 +711,13 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
         </Title>
         <ProTable<ReturnItem>
           columns={columnsReturn}
-          dataSource={data?.items || []}
+          dataSource={tableItems}
+          loading={loading}
           rowKey="id"
           pagination={false}
           search={false}
           options={false}
+          tableLayout="auto"
           style={{ backgroundColor: 'transparent' }}
           rowClassName={() => 'custom-row'}
         />
@@ -694,26 +736,16 @@ export default function ReturnsListDrawer({ open, onClose, data }: ReturnsListDr
       </Title>
       <Timeline
         style={{ marginBottom: 24 }}
-        items={activityLogs.map((log) => ({
-          color:
-            log.action === 'approved'
-              ? ''
-              : log.action === 'rejected'
-              ? 'red'
-              : log.action === 'completed'
-              ? 'green'
-              : 'blue',
+        items={(fetchedData?.activities ?? []).map((a) => ({
+          color: a.dot === 'pending' ? 'gray' : 'blue',
           children: (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div>
-                <Typography.Text strong>{log.label}</Typography.Text>
+                <Typography.Text strong>{a.label}</Typography.Text>
                 <br />
-                <Typography.Text type="secondary">{log.description}</Typography.Text>
-                <br />
-                <Typography.Text type="secondary">By: {log.by || 'System'}</Typography.Text>
+                <Typography.Text type="secondary">{a.description}</Typography.Text>
               </div>
-
-              <Typography.Text type="secondary">{formatDateTime(log.date)}</Typography.Text>
+              {a.date && <Typography.Text type="secondary">{a.date}</Typography.Text>}
             </div>
           ),
         }))}

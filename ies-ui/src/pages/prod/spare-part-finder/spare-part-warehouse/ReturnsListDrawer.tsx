@@ -212,7 +212,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
     return access.canSpfWarehouseStaff && canEditAttachments;
   }, [access.canSpfWarehouseStaff, canEditAttachments]);
 
-  const shouldShowReceivedButton = access.canSpfWarehouseStaff;
+  const shouldShowReceivedButton = access.canSpfWarehouseStaff && workflowStatus !== 'Completed';
 
   const checkReadOnly = (record: ReturnItem) => {
     if (isGlobalReadOnly) return true;

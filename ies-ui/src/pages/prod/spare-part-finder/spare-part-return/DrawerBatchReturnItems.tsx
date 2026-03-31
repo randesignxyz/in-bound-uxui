@@ -1,11 +1,12 @@
+import { EyeOutlined } from '@ant-design/icons';
 import { ProColumns, ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Button, Descriptions, Drawer, Space, Steps, Tag, Timeline, Typography, message } from 'antd';
+import { Button, Descriptions, Drawer, Image, Space, Steps, Tag, Timeline, Typography, message } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from '../spare-part-request/SparePartImage';
 import type { RequestDetailData, RequestDetailLineItem, ReturnStatus } from './data';
 import { SparePartReturnAPI } from './service';
-import type { RequestActions } from '@/services/apiGateway';
+import { getUploadFileObjectUrlV2, type RequestActions } from '@/services/apiGateway';
 
 const { Title } = Typography;
 const ATTACHMENT_CARD_SIZE = 56;
@@ -230,6 +231,9 @@ export default function DrawerBatchReturnItems({
   const [loading, setLoading] = useState(false);
   const [fetchedData, setFetchedData] = useState<RequestDetailData | null>(null);
   const [stepStatus, setStepStatus] = useState<ReturnStatus>('Pending');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
 
   const requestAction: RequestActions = {
     start: (name) => console.log(`Loading: ${name}`),
@@ -291,6 +295,18 @@ export default function DrawerBatchReturnItems({
       message.error(action === 'APPROVE' ? 'Failed to approve return request' : 'Failed to reject return request');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePreviewImage = async (fileId: string, title: string) => {
+    try {
+      const imageUrl = await getUploadFileObjectUrlV2()(fileId);
+      setPreviewImage(imageUrl);
+      setPreviewTitle(title);
+      setPreviewOpen(true);
+    } catch (error) {
+      console.error('Failed to preview returned image', error);
+      message.error('Failed to preview image');
     }
   };
 
@@ -377,8 +393,42 @@ export default function DrawerBatchReturnItems({
 
         return (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {record.images.map((fileId) => (
-              <SparePartImage key={fileId} imageId={fileId} alt={record.name} size={ATTACHMENT_CARD_SIZE} />
+            {record.images.map((fileId, index) => (
+              <div
+                key={fileId}
+                style={{
+                  position: 'relative',
+                  width: ATTACHMENT_CARD_SIZE,
+                  height: ATTACHMENT_CARD_SIZE,
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  border: '1px solid #d9d9d9',
+                  background: '#fafafa',
+                  cursor: 'pointer',
+                }}
+                onClick={() => void handlePreviewImage(fileId, `${record.name} ${index + 1}`)}
+              >
+                <SparePartImage imageId={fileId} alt={record.name} size={ATTACHMENT_CARD_SIZE} />
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(0,0,0,0.45)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0,
+                    transition: 'opacity 0.2s',
+                  }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0')}
+                >
+                  <EyeOutlined
+                    style={{ color: '#fff', fontSize: 14 }}
+                    onClick={() => void handlePreviewImage(fileId, `${record.name} ${index + 1}`)}
+                  />
+                </div>
+              </div>
             ))}
           </div>
         );
@@ -495,6 +545,24 @@ export default function DrawerBatchReturnItems({
           ),
         }))}
       />
+
+      {previewImage && (
+        <Image
+          preview={{
+            visible: previewOpen,
+            onVisibleChange: (visible) => setPreviewOpen(visible),
+            afterOpenChange: (visible) => {
+              if (!visible) {
+                setPreviewImage('');
+                setPreviewTitle('');
+              }
+            },
+          }}
+          src={previewImage}
+          alt={previewTitle}
+          style={{ display: 'none' }}
+        />
+      )}
     </Drawer>
   );
 }

@@ -200,10 +200,7 @@ export default function ReturnsListWarehouse() {
             style={{ width: 180 }}
             options={[
               { value: 'all',       label: 'All Status' },
-              { value: 'PENDING',   label: 'Pending' },
               { value: 'APPROVED',  label: 'Approved' },
-              { value: 'REJECTED',  label: 'Rejected' },
-              { value: 'RECEIVING', label: 'Receiving' },
               { value: 'PARTIAL_RETURN', label: 'Partially Returned' },
               { value: 'COMPLETED', label: 'Completed' },
             ]}
@@ -222,6 +219,16 @@ export default function ReturnsListWarehouse() {
           tableLayout="fixed"
           size="small"
           bordered
+            toolBarRender={() => [
+            <Space key="toolbar" size="small">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => actionRef.current?.reloadAndRest?.()}
+              >
+                Refresh
+              </Button>
+            </Space>,
+          ]}
           search={false}
           options={false}
           pagination={{

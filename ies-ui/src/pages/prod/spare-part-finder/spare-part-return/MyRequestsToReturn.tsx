@@ -254,11 +254,8 @@ export default function MyRequestsToReturn() {
                   <Tag color="warning" bordered={false}>
                     Approved
                   </Tag>
-                ) : status === 'Receiving' ? (
-                  <Tag color="processing" bordered={false}>
-                    Receiving
-                  </Tag>
-                ) : status === 'Partially Returned' ? (
+                ) 
+                 : status === 'Partially Returned' ? (
                   <Tag color="processing" bordered={false}>
                     Partially Returned
                   </Tag>

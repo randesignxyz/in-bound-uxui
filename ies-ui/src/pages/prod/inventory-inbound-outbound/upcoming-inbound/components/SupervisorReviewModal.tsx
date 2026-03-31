@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Button, Descriptions, Empty, Input, List, Modal, Space, Table, Tag, Typography, message } from 'antd';
+import { Alert, Button, Descriptions, Empty, Input, Space, Table, Tag, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { GoodsReceipt, GRItem } from '../workflow';
 import {
@@ -11,16 +11,9 @@ import {
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
-import {
-  EyeOutlined,
-  FileExcelOutlined,
-  FileImageOutlined,
-  FilePdfOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
 import { FullscreenModal } from './FullscreenModal';
+import { SupportingDocsList } from './SupportingDocsList';
 
-const { Text } = Typography;
 const { TextArea } = Input;
 
 interface SupervisorReviewModalProps {
@@ -37,13 +30,11 @@ export function SupervisorReviewModal({
   onSubmit,
 }: SupervisorReviewModalProps) {
   const [note, setNote] = useState('');
-  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setNote('');
-    setSelectedDocument(null);
   }, [open, receipt.grNumber]);
 
   const columns: ColumnsType<GRItem> = [
@@ -132,25 +123,6 @@ export function SupervisorReviewModal({
     },
   ];
 
-  const getDocumentIcon = (fileName: string) => {
-    const lowerName = fileName.toLowerCase();
-    if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) {
-      return <FileExcelOutlined style={{ color: '#52c41a', fontSize: 18 }} />;
-    }
-    if (lowerName.endsWith('.pdf')) {
-      return <FilePdfOutlined style={{ color: '#ff4d4f', fontSize: 18 }} />;
-    }
-    if (
-      lowerName.endsWith('.jpg') ||
-      lowerName.endsWith('.jpeg') ||
-      lowerName.endsWith('.png') ||
-      lowerName.endsWith('.webp')
-    ) {
-      return <FileImageOutlined style={{ color: '#1677ff', fontSize: 18 }} />;
-    }
-    return <FileTextOutlined style={{ color: '#8c8c8c', fontSize: 18 }} />;
-  };
-
   return (
     <FullscreenModal
       title="Supervisor Review Inbound Receiving"
@@ -228,31 +200,7 @@ export function SupervisorReviewModal({
 
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontWeight: 600, marginBottom: 10 }}>Documents For Review</div>
-          {receipt.documentChecklist.supportingDocs.length > 0 ? (
-            <List
-              bordered
-              size="small"
-              dataSource={receipt.documentChecklist.supportingDocs}
-              renderItem={(doc) => (
-                <List.Item
-                  actions={[
-                    <Button
-                      key={`view-${doc}`}
-                      type="link"
-                      icon={<EyeOutlined />}
-                      onClick={() => setSelectedDocument(doc)}
-                    >
-                      View
-                    </Button>,
-                  ]}
-                >
-                  <List.Item.Meta avatar={getDocumentIcon(doc)} title={<Text>{doc}</Text>} />
-                </List.Item>
-              )}
-            />
-          ) : (
-            <Text type="secondary">No supporting documents attached.</Text>
-          )}
+          <SupportingDocsList docs={receipt.documentChecklist.supportingDocs} />
         </div>
 
           <div style={{ marginBottom: 8 }}>
@@ -317,44 +265,6 @@ export function SupervisorReviewModal({
         </div>
       </div>
 
-      <Modal
-        title={selectedDocument || 'Document Preview'}
-        open={selectedDocument !== null}
-        onCancel={() => setSelectedDocument(null)}
-        footer={null}
-        width={720}
-        destroyOnClose
-      >
-        {selectedDocument && (
-          <div style={{ paddingTop: 8 }}>
-            <Space align="start" size={12} style={{ marginBottom: 16 }}>
-              {getDocumentIcon(selectedDocument)}
-              <div>
-                <div style={{ fontWeight: 600 }}>{selectedDocument}</div>
-                <Text type="secondary">
-                  Supervisor review attachment preview.
-                </Text>
-              </div>
-            </Space>
-
-            <div
-              style={{
-                minHeight: 260,
-                border: '1px solid #f0f0f0',
-                borderRadius: 8,
-                background: '#fafafa',
-                padding: 16,
-              }}
-            >
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>Preview</div>
-              <Text type="secondary">
-                Attachment preview is not yet connected to a real file viewer. Wire this dialog to
-                backend document storage when the document endpoint is ready.
-              </Text>
-            </div>
-          </div>
-        )}
-      </Modal>
     </FullscreenModal>
   );
 }

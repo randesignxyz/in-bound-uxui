@@ -6,14 +6,13 @@ import {
   Empty,
   Form,
   Input,
-  List,
   Modal,
   Select,
   Space,
   Table,
   Tag,
-  Typography,
   Upload,
+  message,
 } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -28,16 +27,20 @@ import {
   summarizeSuppliers,
 } from '../workflow';
 import {
-  EyeOutlined,
-  FileExcelOutlined,
-  FileImageOutlined,
-  FilePdfOutlined,
-  FileTextOutlined,
   InboxOutlined,
 } from '@ant-design/icons';
+import {
+  applyUploadedSupportingDocs,
+  hasIncompleteAppFilesUpload,
+  normalizeUploadFileList,
+  previewSupportingUploadFile,
+  stageSupportingDocBeforeUpload,
+  supportingDocsToUploadFiles,
+  uploadPendingSupportingDocs,
+} from '../supportingDocs';
 import { FullscreenModal } from './FullscreenModal';
+import { SupportingDocsList } from './SupportingDocsList';
 
-const { Text } = Typography;
 const { TextArea } = Input;
 
 type EditableQCItem = GRItem & {
@@ -139,7 +142,6 @@ export function QCVerificationModal({
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [remarkEditorIndex, setRemarkEditorIndex] = useState<number | null>(null);
   const [draftRemark, setDraftRemark] = useState('');
-  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -155,14 +157,7 @@ export function QCVerificationModal({
     setErrors({});
     setRemarkEditorIndex(null);
     setDraftRemark('');
-    setSelectedDocument(null);
-    setUploadedFiles(
-      (receipt.documentChecklist.supportingDocs || []).map((fileName, index) => ({
-        uid: `qc-doc-${index}-${fileName}`,
-        name: fileName,
-        status: 'done',
-      })),
-    );
+    setUploadedFiles(supportingDocsToUploadFiles(receipt.documentChecklist.supportingDocs || []));
   }, [open, receipt]);
 
   const batchSummary = useMemo(() => {
@@ -191,7 +186,7 @@ export function QCVerificationModal({
   };
 
   const handleUploadChange: UploadProps['onChange'] = (info) => {
-    setUploadedFiles(info.fileList.slice(-10));
+    setUploadedFiles(normalizeUploadFileList(info.fileList, 10, 'QC'));
   };
 
   const removeFile = (uid: string) => {
@@ -226,20 +221,28 @@ export function QCVerificationModal({
 
   const handleSubmit = async () => {
     if (!validate()) return;
+    if (hasIncompleteAppFilesUpload(uploadedFiles)) {
+      message.error('Remove failed files before submitting.');
+      return;
+    }
     setIsSubmitting(true);
     try {
+      const supportingDocs = await uploadPendingSupportingDocs(uploadedFiles, 'QC');
+      setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
       const outcome = deriveOutcome(items);
       const shouldClose = await onSubmit({
         items,
         ...outcome,
         documentChecklist: {
           ...receipt.documentChecklist,
-          supportingDocs: uploadedFiles.map((file) => file.name),
+          supportingDocs,
         },
       });
       if (shouldClose) {
         onClose();
       }
+    } catch (error: any) {
+      message.error(error?.message || 'Failed to prepare supporting documents.');
     } finally {
       setIsSubmitting(false);
     }
@@ -352,25 +355,6 @@ export function QCVerificationModal({
     },
   ];
 
-  const getDocumentIcon = (fileName: string) => {
-    const lowerName = fileName.toLowerCase();
-    if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) {
-      return <FileExcelOutlined style={{ color: '#52c41a', fontSize: 18 }} />;
-    }
-    if (lowerName.endsWith('.pdf')) {
-      return <FilePdfOutlined style={{ color: '#ff4d4f', fontSize: 18 }} />;
-    }
-    if (
-      lowerName.endsWith('.jpg') ||
-      lowerName.endsWith('.jpeg') ||
-      lowerName.endsWith('.png') ||
-      lowerName.endsWith('.webp')
-    ) {
-      return <FileImageOutlined style={{ color: '#1677ff', fontSize: 18 }} />;
-    }
-    return <FileTextOutlined style={{ color: '#8c8c8c', fontSize: 18 }} />;
-  };
-
   return (
     <>
       <FullscreenModal
@@ -455,49 +439,28 @@ export function QCVerificationModal({
               <Form.Item label="Supporting Documents">
                 <Upload
                   multiple
+                  beforeUpload={stageSupportingDocBeforeUpload}
                   fileList={uploadedFiles}
+                  showUploadList={false}
                   onChange={handleUploadChange}
                   onRemove={(file) => {
                     removeFile(file.uid);
                     return true;
                   }}
-                  beforeUpload={() => false}
+                  onPreview={(file) => previewSupportingUploadFile(file)}
                   accept=".pdf,.doc,.docx,image/*"
                   listType="text"
                 >
                   <Button icon={<InboxOutlined />}>Upload QC Photos / PDF / Notes</Button>
                 </Upload>
                 <div style={{ fontSize: 12, color: '#999', marginTop: 6, marginBottom: 12 }}>
-                  QC can attach additional supporting documents before submitting the review.
+                  QC files stay local until you submit the review.
                 </div>
-                {uploadedFiles.length > 0 ? (
-                  <List
-                    bordered
-                    size="small"
-                    dataSource={uploadedFiles.map((file) => file.name)}
-                    renderItem={(doc) => (
-                      <List.Item
-                        actions={[
-                          <Button
-                            key={`view-${doc}`}
-                            type="link"
-                            icon={<EyeOutlined />}
-                            onClick={() => setSelectedDocument(doc)}
-                          >
-                            View
-                          </Button>,
-                        ]}
-                      >
-                        <List.Item.Meta
-                          avatar={getDocumentIcon(doc)}
-                          title={<Text>{doc}</Text>}
-                        />
-                      </List.Item>
-                    )}
-                  />
-                ) : (
-                  <Text type="secondary">No supporting documents attached.</Text>
-                )}
+                <SupportingDocsList
+                  files={uploadedFiles}
+                  fallbackSource="QC"
+                  onRemoveFile={removeFile}
+                />
               </Form.Item>
             </Form>
           </div>
@@ -536,45 +499,6 @@ export function QCVerificationModal({
           value={draftRemark}
           onChange={(event) => setDraftRemark(event.target.value)}
         />
-      </Modal>
-
-      <Modal
-        title={selectedDocument || 'Document Preview'}
-        open={selectedDocument !== null}
-        onCancel={() => setSelectedDocument(null)}
-        footer={null}
-        width={720}
-        destroyOnClose
-      >
-        {selectedDocument && (
-          <div style={{ paddingTop: 8 }}>
-            <Space align="start" size={12} style={{ marginBottom: 16 }}>
-              {getDocumentIcon(selectedDocument)}
-              <div>
-                <div style={{ fontWeight: 600 }}>{selectedDocument}</div>
-                <Text type="secondary">
-                  QC review attachment preview.
-                </Text>
-              </div>
-            </Space>
-
-            <div
-              style={{
-                minHeight: 260,
-                border: '1px solid #f0f0f0',
-                borderRadius: 8,
-                background: '#fafafa',
-                padding: 16,
-              }}
-            >
-              <div style={{ fontWeight: 600, marginBottom: 8 }}>Preview</div>
-              <Text type="secondary">
-                Attachment preview is not yet connected to a real file viewer. Wire this dialog to
-                backend document storage when the document endpoint is ready.
-              </Text>
-            </div>
-          </div>
-        )}
       </Modal>
     </>
   );

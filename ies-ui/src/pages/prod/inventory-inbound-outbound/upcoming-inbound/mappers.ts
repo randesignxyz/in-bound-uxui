@@ -22,6 +22,7 @@ import {
   type GRScenarioPath,
   type LegacyGRStatus,
   type QcDecision,
+  type SupportingDocReference,
 } from './workflow';
 
 const PROCESS_STATE_VALUES: UpcomingInboundProcessState[] = [
@@ -212,7 +213,15 @@ function mapInboundDocumentChecklist(
     vendorDN: checklist.vendorDN,
     goodsReceiptPOForm: checklist.goodsReceiptPOForm,
     pmrmStockCardForm: checklist.pmrmStockCardForm,
-    supportingDocs: checklist.supportingDocs,
+    supportingDocs: checklist.supportingDocs.map(mapSupportingDoc),
+  };
+}
+
+function mapSupportingDoc(doc: SupportingDocReference): SupportingDocReference {
+  return {
+    fileId: doc.fileId ?? undefined,
+    fileName: doc.fileName,
+    source: doc.source ?? undefined,
   };
 }
 

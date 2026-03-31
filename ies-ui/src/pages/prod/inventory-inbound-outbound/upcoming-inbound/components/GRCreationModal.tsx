@@ -21,6 +21,7 @@ import {
   Tag,
   Typography,
   Upload,
+  message,
 } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -34,7 +35,18 @@ import dayjs from 'dayjs';
 import { buildReceiptExceptionReason, hasReceiptDiscrepancy } from '../workflow';
 import type { GRItem, PurchaseOrder } from '../workflow';
 import type { UpcomingInboundGoodsReceipt } from '../data';
+import {
+  applyUploadedSupportingDocs,
+  hasIncompleteAppFilesUpload,
+  normalizeUploadFileList,
+  previewSupportingUploadFile,
+  stageSupportingDocBeforeUpload,
+  supportingDocsToUploadFiles,
+  uploadPendingSupportingDocs,
+  uploadFilesToSupportingDocs,
+} from '../supportingDocs';
 import { FullscreenModal } from './FullscreenModal';
+import { SupportingDocsList } from './SupportingDocsList';
 
 const { Text } = Typography;
 
@@ -182,7 +194,7 @@ export function GRCreationModal({
   }, []);
 
   const handleUploadChange: UploadProps['onChange'] = (info) => {
-    setUploadedFiles(info.fileList.slice(-10));
+    setUploadedFiles(normalizeUploadFileList(info.fileList, 10, 'WAREHOUSE'));
   };
 
   const removeFile = (uid: string) => {
@@ -206,11 +218,18 @@ export function GRCreationModal({
       }
     });
 
+    if (hasIncompleteAppFilesUpload(uploadedFiles)) {
+      nextErrors.supportingDocs = true;
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
 
-  const buildGRData = (submissionMode: 'draft' | 'submit') => {
+  const buildGRData = (
+    submissionMode: 'draft' | 'submit',
+    supportingDocs = uploadFilesToSupportingDocs(uploadedFiles, 'WAREHOUSE'),
+  ) => {
     const hasDiscrepancy = hasReceiptDiscrepancy(items);
     const exceptionReason = buildReceiptExceptionReason(items);
     const nextProcessState =
@@ -243,7 +262,7 @@ export function GRCreationModal({
       deliveryNoteNumber,
       receiverWarehouseName,
       items,
-      uploadedFiles: uploadedFiles.map((file) => file.name),
+      uploadedFiles: supportingDocs,
       specMatch: true,
       qtyMatch: !hasDiscrepancy,
       qualityCheckRequired: true,
@@ -254,7 +273,7 @@ export function GRCreationModal({
         vendorDN: deliveryNoteNumber.trim().length > 0,
         goodsReceiptPOForm: true,
         pmrmStockCardForm: false,
-        supportingDocs: uploadedFiles.map((file) => file.name),
+        supportingDocs,
       },
       storedOnHoldConfirmed,
     };
@@ -263,10 +282,14 @@ export function GRCreationModal({
   const handleSaveDraft = async () => {
     setIsSubmitting(true);
     try {
-      const shouldClose = await onSaveDraft(buildGRData('draft'));
+      const supportingDocs = await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
+      setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
+      const shouldClose = await onSaveDraft(buildGRData('draft', supportingDocs));
       if (shouldClose) {
         onClose();
       }
+    } catch (error: any) {
+      message.error(error?.message || 'Failed to prepare supporting documents.');
     } finally {
       setIsSubmitting(false);
     }
@@ -276,10 +299,16 @@ export function GRCreationModal({
     if (!validate()) return;
     setIsSubmitting(true);
     try {
-      const shouldClose = await onSubmit(buildGRData(correctionMode ? 'draft' : 'submit'));
+      const supportingDocs = await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
+      setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
+      const shouldClose = await onSubmit(
+        buildGRData(correctionMode ? 'draft' : 'submit', supportingDocs),
+      );
       if (shouldClose) {
         onClose();
       }
+    } catch (error: any) {
+      message.error(error?.message || 'Failed to prepare supporting documents.');
     } finally {
       setIsSubmitting(false);
     }
@@ -350,13 +379,7 @@ export function GRCreationModal({
           qcRemark: '',
         })),
       );
-      setUploadedFiles(
-        (initialReceipt.documentChecklist.supportingDocs || []).map((fileName, index) => ({
-          uid: `existing-${index}`,
-          name: fileName,
-          status: 'done',
-        })),
-      );
+      setUploadedFiles(supportingDocsToUploadFiles(initialReceipt.documentChecklist.supportingDocs || []));
       setStoredOnHoldConfirmed(true);
       setErrors({});
       closeScanModal();
@@ -746,19 +769,34 @@ export function GRCreationModal({
 
           <div style={{ marginBottom: 24 }}>
             <h4 style={{ marginBottom: 12 }}>Documents</h4>
-            <Upload
-              multiple
-              fileList={uploadedFiles}
-              onChange={handleUploadChange}
-              onRemove={(file) => removeFile(file.uid)}
-              beforeUpload={() => false}
-              accept=".pdf,.doc,.docx,image/*"
-              listType="text"
+            <Form.Item
+              validateStatus={errors.supportingDocs ? 'error' : undefined}
+              help={errors.supportingDocs ? 'Remove failed files before continuing.' : undefined}
+              style={{ marginBottom: 8 }}
             >
-              <Button icon={<InboxOutlined />}>Upload Delivery Note / PDF / Photos</Button>
-            </Upload>
+              <Upload
+                multiple
+                beforeUpload={stageSupportingDocBeforeUpload}
+                fileList={uploadedFiles}
+                showUploadList={false}
+                onChange={handleUploadChange}
+                onRemove={(file) => removeFile(file.uid)}
+                onPreview={(file) => previewSupportingUploadFile(file)}
+                accept=".pdf,.doc,.docx,image/*"
+                listType="text"
+              >
+                <Button icon={<InboxOutlined />}>Upload Delivery Note / PDF / Photos</Button>
+              </Upload>
+            </Form.Item>
             <div style={{ fontSize: 12, color: '#999', marginTop: 6 }}>
-              PDF, Word (.doc, .docx), or images. Click to open file picker.
+              PDF, Word (.doc, .docx), or images. Files stay local until you save or submit this receipt.
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <SupportingDocsList
+                files={uploadedFiles}
+                fallbackSource="WAREHOUSE"
+                onRemoveFile={removeFile}
+              />
             </div>
           </div>
 

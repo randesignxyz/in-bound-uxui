@@ -13,6 +13,7 @@ import {
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
+import { SupportingDocsList } from './SupportingDocsList';
 
 interface GRDetailSidebarProps {
   open: boolean;
@@ -302,17 +303,7 @@ export function GRDetailSidebar({
           <Divider />
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontWeight: 600, marginBottom: 12 }}>Supporting Documents</div>
-            {supportingDocs.length > 0 ? (
-              <Space wrap>
-                {supportingDocs.map((documentName) => (
-                  <Tag key={documentName} color="processing">
-                    {documentName}
-                  </Tag>
-                ))}
-              </Space>
-            ) : (
-              <div style={{ color: '#8c8c8c' }}>No supporting documents attached.</div>
-            )}
+            <SupportingDocsList docs={supportingDocs} />
           </div>
 
           <Divider />

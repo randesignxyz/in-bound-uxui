@@ -88,11 +88,19 @@ export interface GRItem {
 
 export type QcDecision = 'Pass' | 'On-Hold' | 'Reject';
 
+export type SupportingDocSource = 'WAREHOUSE' | 'QC' | 'SUPERVISOR';
+
+export interface SupportingDocReference {
+  fileId?: string | null;
+  fileName: string;
+  source?: SupportingDocSource | null;
+}
+
 export interface GRDocumentChecklist {
   vendorDN: boolean;
   goodsReceiptPOForm: boolean;
   pmrmStockCardForm: boolean;
-  supportingDocs: string[];
+  supportingDocs: SupportingDocReference[];
 }
 
 export interface GRActivity {
@@ -105,6 +113,7 @@ export interface GRActivity {
 
 export interface GoodsReceipt {
   grNumber: string;
+  receivingNumber?: string;
   poNumber: string;
   supplier: string;
   poReferences: Array<{
@@ -227,6 +236,12 @@ export const poLinkStatusLabel: Record<POLinkStatus, string> = {
   LINKED: 'Linked',
 };
 
+export const supportingDocSourceLabel: Record<SupportingDocSource, string> = {
+  WAREHOUSE: 'Warehouse',
+  QC: 'QC',
+  SUPERVISOR: 'Supervisor',
+};
+
 export function getGoodsReceiptSourceColor(sourceType: GoodsReceiptSourceType) {
   switch (sourceType) {
     case 'PLANNED':
@@ -248,6 +263,19 @@ export function getPOLinkStatusColor(status: POLinkStatus) {
       return 'warning';
     case 'LINKED':
       return 'success';
+    default:
+      return 'default';
+  }
+}
+
+export function getSupportingDocSourceColor(source?: SupportingDocSource | null) {
+  switch (source) {
+    case 'WAREHOUSE':
+      return 'blue';
+    case 'QC':
+      return 'gold';
+    case 'SUPERVISOR':
+      return 'green';
     default:
       return 'default';
   }

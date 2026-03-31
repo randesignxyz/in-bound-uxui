@@ -8,6 +8,7 @@ import type {
   POLinkStatus,
   PurchaseOrder,
   QcDecision,
+  SupportingDocReference,
 } from './workflow';
 
 export interface InboundPurchaseOrderSearch {
@@ -105,7 +106,13 @@ export interface InboundGrDocumentChecklistApi {
   goodsReceiptPOForm: boolean;
   pmrmLabelForm: boolean;
   pmrmStockCardForm: boolean;
-  supportingDocs: string[];
+  supportingDocs: SupportingDocReferenceApi[];
+}
+
+export interface SupportingDocReferenceApi {
+  fileId?: string | null;
+  fileName: string;
+  source?: string | null;
 }
 
 export interface InboundPmrmLabelApi {

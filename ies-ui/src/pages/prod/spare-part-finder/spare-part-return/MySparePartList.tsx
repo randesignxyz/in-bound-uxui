@@ -1,5 +1,5 @@
 import { RequestActions } from '@/services/apiGateway';
-import { EyeOutlined, MoreOutlined, ReloadOutlined } from '@ant-design/icons';
+import { EyeOutlined, InfoCircleOutlined, MoreOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProTable } from '@ant-design/pro-components';
 import type { Dayjs } from 'dayjs';
 import {
@@ -240,6 +240,14 @@ export default function MySparePartList() {
               setSelectedRowKeys(keys);
               setSelectedItems(rows);
             },
+            getCheckboxProps: (record) => {
+              const total = record.deliveredQty ?? 0;
+              const returning = record.pendingReturnQty ?? 0;
+              const returned = record.returnedQty ?? 0;
+              return {
+                disabled: (total - returning - returned) <= 0,
+              };
+            },
           }}
           toolBarRender={() => [
             <Space key="spr-return-bar" size="small">
@@ -324,22 +332,24 @@ export default function MySparePartList() {
             {
               key: 'quantity',
               title: 'Quantity',
-              dataIndex: 'deliveredQty',
-              render: (_, record: SparePartReturnListItem) => (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontWeight: 500 }}>{record.deliveredQty}</span>
-                  {(record.pendingReturnQty ?? 0) > 0 && (
-                    <Tag color="processing" bordered={false} style={{ margin: 0, fontSize: 10, lineHeight: '14px', width: 'fit-content' }}>
-                      Returning: {record.pendingReturnQty}
-                    </Tag>
-                  )}
-                  {(record.returnedQty ?? 0) > 0 && (
-                    <Tag color="success" bordered={false} style={{ margin: 0, fontSize: 10, lineHeight: '14px', width: 'fit-content' }}>
-                      Returned: {record.returnedQty}
-                    </Tag>
-                  )}
-                </div>
-              ),
+              align: 'center',
+              render: (_, record: SparePartReturnListItem) => {
+                const total = record.deliveredQty ?? 0;
+                const returning = record.pendingReturnQty ?? 0;
+                const returned = record.returnedQty ?? 0;
+                const available = Math.max(0, total - returning - returned);
+
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <span style={{ fontWeight: 500 }}>{available}</span>
+                    {(returning > 0 || returned > 0) && (
+                      <Tooltip title={`Returning: ${returning} | Returned: ${returned}`}>
+                        <InfoCircleOutlined style={{ color: '#1890ff', fontSize: 13, cursor: 'pointer' }} />
+                      </Tooltip>
+                    )}
+                  </div>
+                );
+              },
             },
             { key: 'UoM', title: 'UoM', dataIndex: 'UoM' },
             { key: 'spare_part_type', title: 'Type', dataIndex: 'type' },

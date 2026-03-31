@@ -277,6 +277,9 @@ export default function MyRequestsToReturn() {
         open={detailOpen}
         data={detailData}
         returnId={detailReturnId}
+        onSuccess={() => {
+          actionRef.current?.reloadAndRest?.();
+        }}
         onClose={() => {
           setDetailOpen(false);
           setDetailData(null);

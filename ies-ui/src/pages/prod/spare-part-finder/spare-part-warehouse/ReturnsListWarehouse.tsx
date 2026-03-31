@@ -15,7 +15,7 @@ const { RangePicker } = DatePicker;
 export type WarehouseReturnRow = {
   returnId: number;
   returnNo: string;
-  returnStatus: string;          // "APPROVED" | "REJECTED" | "PENDING" | "COMPLETED"
+  returnStatus: string;          // "APPROVED" | "REJECTED" | "PENDING" | "COMPLETED" | "PARTIAL_RETURN"
   returnByUser: string;
   returnDate: string;
   remark?: string;
@@ -34,6 +34,8 @@ const STATUS_COLOR: Record<string, string> = {
   REJECTED:   'error',
   RECEIVING:  'processing',
   COMPLETED:  'success',
+  COMPLETE:   'success',
+  PARTIAL_RETURN: 'processing',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -42,6 +44,25 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED:  'Rejected',
   RECEIVING: 'Receiving',
   COMPLETED: 'Completed',
+  COMPLETE:  'Completed',
+  PARTIAL_RETURN: 'Partially Returned',
+};
+
+const mapReturnStatusToUiStatus = (status?: string): ReturnStatus => {
+  const normalized = String(status ?? '').trim().toUpperCase();
+
+  if (normalized === 'APPROVED') return 'Approved';
+  if (normalized === 'REJECTED') return 'Rejected';
+  if (normalized === 'RECEIVING') return 'Receiving';
+  if (normalized === 'COMPLETE' || normalized === 'COMPLETED') return 'Completed';
+  if (normalized === 'PARTIAL_RETURN') return 'Partially Returned';
+  return 'Pending';
+};
+
+const normalizeWarehouseReturnStatus = (status?: string) => {
+  const normalized = String(status ?? '').trim().toUpperCase();
+  if (normalized === 'COMPLETE') return 'COMPLETED';
+  return normalized;
 };
 
 const formatDate = (iso?: string | null) =>
@@ -77,7 +98,7 @@ export default function ReturnsListWarehouse() {
     // client-side status filter
     const filtered = statusFilter === 'all'
       ? items
-      : items.filter((r) => r.returnStatus === statusFilter);
+      : items.filter((r) => normalizeWarehouseReturnStatus(r.returnStatus) === statusFilter);
 
     return { data: filtered, success: true, total };
   };
@@ -128,7 +149,7 @@ export default function ReturnsListWarehouse() {
       dataIndex: 'returnStatus',
       key: 'returnStatus',
       render: (_dom, record) => {
-        const statusKey = record.returnStatus?.toUpperCase() || '';
+        const statusKey = normalizeWarehouseReturnStatus(record.returnStatus);
         return (
           <Tag bordered={false} color={STATUS_COLOR[statusKey] ?? 'success'}>
             {STATUS_LABEL[statusKey] ?? record.returnStatus}
@@ -182,6 +203,8 @@ export default function ReturnsListWarehouse() {
               { value: 'PENDING',   label: 'Pending' },
               { value: 'APPROVED',  label: 'Approved' },
               { value: 'REJECTED',  label: 'Rejected' },
+              { value: 'RECEIVING', label: 'Receiving' },
+              { value: 'PARTIAL_RETURN', label: 'Partially Returned' },
               { value: 'COMPLETED', label: 'Completed' },
             ]}
           />
@@ -220,9 +243,7 @@ export default function ReturnsListWarehouse() {
           request_id: selectedReturn.returnNo,
           total_items: selectedReturn.totalItems,
           request_date: selectedReturn.returnDate,
-          status: (selectedReturn.returnStatus === 'COMPLETE' || selectedReturn.returnStatus === 'COMPLETED'
-            ? 'Completed'
-            : selectedReturn.returnStatus.charAt(0) + selectedReturn.returnStatus.slice(1).toLowerCase()) as ReturnStatus,
+          status: mapReturnStatusToUiStatus(selectedReturn.returnStatus),
           remarks: selectedReturn.remark,
           items: [],
           activities: [],

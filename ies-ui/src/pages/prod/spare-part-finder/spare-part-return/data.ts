@@ -112,7 +112,13 @@ export interface SparePartReturnListItem {
   return_id?: string;
   return_date?: string;
   total_items?: number;
-  status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Receiving';
+  status?:
+    | 'Pending'
+    | 'Approved'
+    | 'Rejected'
+    | 'Completed'
+    | 'Receiving'
+    | 'Partially Returned';
   remarks?: string;
   return_quantity?: number;
   used_quantity?: number;
@@ -182,7 +188,13 @@ export interface SparePartReturnItemSearch {
 }
 
 /** Status for My Requests to Return */
-export type ReturnStatus = 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Receiving';
+export type ReturnStatus =
+  | 'Pending'
+  | 'Approved'
+  | 'Rejected'
+  | 'Completed'
+  | 'Receiving'
+  | 'Partially Returned';
 
 /** One row in "My Requests to Return" table */
 export interface MyRequestToReturnItem {
@@ -201,6 +213,7 @@ export const MY_REQUESTS_TO_RETURN_STATUS_OPTIONS = [
   { value: 'Pending', label: 'Pending' },
   { value: 'Approved', label: 'Approved' },
   { value: 'Receiving', label: 'Receiving' },
+  { value: 'Partially Returned', label: 'Partially Returned' },
   { value: 'Rejected', label: 'Rejected' },
   { value: 'Completed', label: 'Completed' },
 ] as const;
@@ -371,6 +384,7 @@ export const mapToMyRequestToReturn = (
   else if (s === 'REJECTED') status = 'Rejected';
   else if (s === 'COMPLETE' || s === 'COMPLETED') status = 'Completed';
   else if (s === 'RECEIVING') status = 'Receiving';
+  else if (s === 'PARTIAL_RETURN') status = 'Partially Returned';
 
   return {
     id: item.returnId,

@@ -20,6 +20,7 @@ const mapStatusToApiValue = (status: string) => {
   if (status === 'Completed') return 'COMPLETED';
   if (status === 'Pending') return 'PENDING';
   if (status === 'Receiving') return 'RECEIVING';
+  if (status === 'Partially Returned') return 'PARTIAL_RETURN';
   return '';
 };
 
@@ -256,6 +257,10 @@ export default function MyRequestsToReturn() {
                 ) : status === 'Receiving' ? (
                   <Tag color="processing" bordered={false}>
                     Receiving
+                  </Tag>
+                ) : status === 'Partially Returned' ? (
+                  <Tag color="processing" bordered={false}>
+                    Partially Returned
                   </Tag>
                 ) : (
                   ''

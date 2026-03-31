@@ -98,7 +98,7 @@ const statusColorMap: Record<ReturnStatus | string, string> = {
   Receiving: 'processing',
   'In Progress': 'processing',
   Completed: 'success',
-  'Partially Returned': 'warning',
+  'Partially Returned': 'processing',
 };
 
 const statusLabelMap: Record<ReturnStatus | string, string> = {
@@ -138,6 +138,35 @@ const getStepStatus = (
   return 'wait';
 };
 
+const mapApiValueToStatus = (value?: string): ReturnStatus => {
+  switch ((value ?? '').toUpperCase()) {
+    case 'APPROVED':
+      return 'Approved';
+    case 'REJECTED':
+      return 'Rejected';
+    case 'COMPLETE':
+    case 'COMPLETED':
+      return 'Completed';
+    case 'RECEIVING':
+      return 'Receiving';
+    case 'PARTIAL_RETURN':
+    case 'PARTIALLY_RETURNED':
+      return 'Partially Returned';
+    default:
+      return 'Pending';
+  }
+};
+
+const getWorkflowStatus = (status?: string, state?: string): ReturnStatus => {
+  const normalizedState = mapApiValueToStatus(state);
+  if (normalizedState !== 'Pending') {
+    return normalizedState;
+  }
+
+  const normalizedStatus = mapApiValueToStatus(status);
+  return normalizedStatus === 'Partially Returned' ? 'Receiving' : normalizedStatus;
+};
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ReturnsListDrawerProps {
@@ -154,6 +183,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   const access = useAccess();
   const [loading, setLoading] = useState(false);
   const [statusOverride] = useState<ReturnStatus | null>(null);
+  const [workflowStatus, setWorkflowStatus] = useState<ReturnStatus>(data?.status ?? 'Pending');
 
   const requestAction: RequestActions = {
     start: (name) => console.log(`Loading: ${name}`),
@@ -164,7 +194,6 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
 
   const effectiveStatus: ReturnStatus = useMemo(() => {
     if (statusOverride) return statusOverride as any;
-    // fetchedData.status is 'Pending' | 'Approved' | 'Rejected' | 'Completed'
     if (fetchedData?.status) {
       return fetchedData.status;
     }
@@ -172,20 +201,22 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   }, [statusOverride, fetchedData?.status, data?.status]);
 
   const isGlobalReadOnly = useMemo(() => {
-    return ['Completed', 'Rejected', 'Pending'].includes(effectiveStatus);
-  }, [effectiveStatus]);
+    return ['Completed', 'Rejected', 'Pending'].includes(workflowStatus);
+  }, [workflowStatus]);
 
   const canEditAttachments = useMemo(() => {
-    return ['Receiving', 'Completed'].includes(effectiveStatus);
-  }, [effectiveStatus]);
+    return ['Receiving', 'Completed', 'Approved'].includes(workflowStatus);
+  }, [workflowStatus]);
 
   const canSubmitChanges = useMemo(() => {
     return access.canSpfWarehouseStaff && canEditAttachments;
   }, [access.canSpfWarehouseStaff, canEditAttachments]);
 
+  const shouldShowReceivedButton = access.canSpfWarehouseStaff;
+
   const checkReadOnly = (record: ReturnItem) => {
     if (isGlobalReadOnly) return true;
-    if (effectiveStatus === 'Receiving') {
+    if (workflowStatus === 'Receiving') {
       return (record.receivedQty ?? 0) >= record.qtyToReturn;
     }
     return false;
@@ -226,7 +257,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
     }));
   }, [fetchedData, data?.items]);
 
-  const currentStep = STATUS_STEP_MAP[effectiveStatus];
+  const currentStep = STATUS_STEP_MAP[workflowStatus];
   // ─── Upload State ─────────────────────────────────
   const [attachmentMap, setAttachmentMap] = useState<Record<string, UploadFile[]>>({});
   // ─── Per-row inspection state ─────────────────────
@@ -275,16 +306,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           request_id: item.request_id ?? '',
           total_items: item.total_items ?? 0,
           request_date: item.request_date ?? '',
-          status:
-            item.state === 'APPROVED'
-              ? 'Approved'
-              : item.state === 'REJECTED'
-                ? 'Rejected'
-                : item.state === 'COMPLETE' || item.state === 'COMPLETED'
-                  ? 'Completed'
-                  : item.state === 'RECEIVING'
-                    ? 'Receiving'
-                    : 'Pending',
+          status: mapApiValueToStatus(item.status || item.state),
           remarks: item.remarks ?? '',
           items: (item.items ?? []).map((i: any) => ({
             no: i.no,
@@ -311,6 +333,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           })),
         };
         setFetchedData(mapped);
+        setWorkflowStatus(getWorkflowStatus(item.status, item.state));
       }
     } catch (err) {
       console.error('Failed to fetch return detail', err);
@@ -324,8 +347,9 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       fetchDetail();
     } else {
       setFetchedData(null);
+      setWorkflowStatus(data?.status === 'Partially Returned' ? 'Receiving' : data?.status ?? 'Pending');
     }
-  }, [open, returnId]);
+  }, [open, returnId, data?.status]);
   // Preview handler
   const handlePreview = async (file: UploadFile) => {
     if (!file.url && !file.preview && file.originFileObj) {
@@ -539,7 +563,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       key: 'qty_key_return',
       align: 'center' as const,
       render: (_: unknown, record: ReturnItem) => {
-        const isPartial = effectiveStatus === 'Receiving';
+        const isPartial = workflowStatus === 'Receiving';
         const received = record.receivedQty ?? 0;
         const total = record.qtyToReturn;
 
@@ -808,19 +832,6 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             align: 'center' as const,
             width: 260,
           },
-          {
-            title: 'Action',
-            key: 'action',
-            render: (_: unknown, record: ReturnItem) =>
-              (!checkReadOnly(record) || canEditAttachments) ? (
-                <Space>
-                  <Button type="primary" size="small" onClick={handleSave}>
-                    Save
-                  </Button>
-                </Space>
-              ) : null,
-            width: 100,
-          },
         ]
       : []),
   ];
@@ -842,11 +853,16 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       onClose={onClose}
       styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
       footer={
-        canSubmitChanges ? (
+        shouldShowReceivedButton ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
               <Button onClick={onClose}>Close</Button>
-              <Button type="primary" loading={loading} onClick={handleReceived}>
+              <Button
+                type="primary"
+                loading={loading}
+                disabled={!canSubmitChanges}
+                onClick={handleReceived}
+              >
                 Received
               </Button>
             </Space>
@@ -896,7 +912,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           current={currentStep}
           size="default"
           items={STATUS_STEPS.map((title, index) => {
-            const stepStatus = getStepStatus(effectiveStatus, index, currentStep);
+            const stepStatus = getStepStatus(workflowStatus, index, currentStep);
 
             // For the last step (index 3), show the precise label
             const label =

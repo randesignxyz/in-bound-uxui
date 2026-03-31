@@ -30,8 +30,10 @@ export interface SparePartPickedLine {
   deliveredQty: number;
   category: string;
   businessUnit: string;
-   kind: string;
-   imageId?: string;
+  kind: string;
+  imageId?: string;
+  pendingReturnQty?: number;
+  returnedQty?: number;
 }
 
 export interface SparePartShipment {
@@ -108,6 +110,8 @@ export interface SparePartReturnListItem {
   type?: string;
   kind?: string;
   deliveredQty?: number;
+  pendingReturnQty?: number;
+  returnedQty?: number;
   // Fields for My Requests to Return
   return_id?: string;
   return_date?: string;
@@ -267,6 +271,7 @@ export interface TableViewSearchReturnsParam{
   returnDateFrom?: string;
   returnDateTo?: string;
 }
+
 /** Mock list for My Requests to Return */
 export const MOCK_MY_REQUESTS_TO_RETURN: MyRequestToReturnItem[] = [
   { id: 1, return_id: 'RET-001', return_date: '2025-03-01', total_items: 3, status: 'Pending', remarks: 'Urgent' },
@@ -369,6 +374,8 @@ export const mapToFlattenedRowsMySparePartList = (
         deliveredQty:             line.deliveredQty,
         category:                 line.category,
         type:                     line.type,
+        pendingReturnQty:         line.pendingReturnQty ?? 0,
+        returnedQty:              line.returnedQty ?? 0,
       }))
     )
   );

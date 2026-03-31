@@ -137,7 +137,7 @@ export default function DrawerViewItem({
                 color: '#d4a574',
                 lineHeight: 1
               }}>
-                {data?.stock_quantity || 24}
+                {data?.deliveryQTY || 24}
               </Text>
               <Text style={{ marginLeft: 4, color: '#8c8c8c' }}>Units</Text>
             </div>
@@ -401,15 +401,7 @@ export default function DrawerViewItem({
           }}
           onClick={onRequestParts}
         >
-          Request Parts
-        </Button>
-        <Button 
-          size="large"
-          block
-          style={{ flex: 1 }}
-          onClick={onInventoryLog}
-        >
-          Inventory Log
+          Return Part
         </Button>
       </div>
     </Drawer>

@@ -13,6 +13,7 @@ import {
   Radio,
   Select,
   Space,
+  Tag,
   Tooltip,
   Typography,
 } from 'antd';
@@ -320,7 +321,26 @@ export default function MySparePartList() {
               ),
             },
             { key: 'spare_part_name', title: 'Name', dataIndex: 'spare_part_name' },
-            { key: 'quantity', title: 'Quantity', dataIndex: 'deliveredQty' },
+            {
+              key: 'quantity',
+              title: 'Quantity',
+              dataIndex: 'deliveredQty',
+              render: (_, record: SparePartReturnListItem) => (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontWeight: 500 }}>{record.deliveredQty}</span>
+                  {(record.pendingReturnQty ?? 0) > 0 && (
+                    <Tag color="processing" bordered={false} style={{ margin: 0, fontSize: 10, lineHeight: '14px', width: 'fit-content' }}>
+                      Returning: {record.pendingReturnQty}
+                    </Tag>
+                  )}
+                  {(record.returnedQty ?? 0) > 0 && (
+                    <Tag color="success" bordered={false} style={{ margin: 0, fontSize: 10, lineHeight: '14px', width: 'fit-content' }}>
+                      Returned: {record.returnedQty}
+                    </Tag>
+                  )}
+                </div>
+              ),
+            },
             { key: 'UoM', title: 'UoM', dataIndex: 'UoM' },
             { key: 'spare_part_type', title: 'Type', dataIndex: 'type' },
             { key: 'category', title: 'Category', dataIndex: 'category' },

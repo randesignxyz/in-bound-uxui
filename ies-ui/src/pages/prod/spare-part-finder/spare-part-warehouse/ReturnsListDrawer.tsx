@@ -591,6 +591,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
               const alreadyReceived = record.receivedQty ?? 0;
               const remaining = record.qtyToReturn - alreadyReceived;
               const defaultVal = remaining; // Default to remaining for partial receipts
+              const prev = record.goodQty ?? 0;
               
               if (checkReadOnly(record)) {
                 return (
@@ -600,17 +601,24 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                 );
               }
               return (
-                <InputNumber
-                  min={0}
-                  max={remaining}
-                  defaultValue={defaultVal}
-                  value={goodQtyMap[key] ?? defaultVal}
-                  style={{ width: '100%' }}
-                  onChange={(v) => setGoodQtyMap((prev) => ({ ...prev, [key]: v ?? 0 }))}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {prev > 0 && (
+                    <span style={{ color: '#8c8c8c', fontSize: 13, whiteSpace: 'nowrap' }}>
+                      {prev} +
+                    </span>
+                  )}
+                  <InputNumber
+                    min={0}
+                    max={remaining}
+                    defaultValue={defaultVal}
+                    value={goodQtyMap[key] ?? defaultVal}
+                    style={{ width: '100%', minWidth: 60 }}
+                    onChange={(v) => setGoodQtyMap((prevMap) => ({ ...prevMap, [key]: v ?? 0 }))}
+                  />
+                </div>
               );
             },
-            width: 90,
+            width: 100,
           },
           {
             title: 'Damaged',
@@ -620,6 +628,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
               const alreadyReceived = record.receivedQty ?? 0;
               const remaining = record.qtyToReturn - alreadyReceived;
               const defaultVal = 0; // Default damaged to 0 for partial receipts
+              const prev = record.damagedQty ?? 0;
               
               if (checkReadOnly(record)) {
                 return (
@@ -629,17 +638,24 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                 );
               }
               return (
-                <InputNumber
-                  min={0}
-                  max={remaining}
-                  defaultValue={defaultVal}
-                  value={damagedQtyMap[key] ?? defaultVal}
-                  style={{ width: '100%' }}
-                  onChange={(v) => setDamagedQtyMap((prev) => ({ ...prev, [key]: v ?? 0 }))}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {prev > 0 && (
+                    <span style={{ color: '#8c8c8c', fontSize: 13, whiteSpace: 'nowrap' }}>
+                      {prev} +
+                    </span>
+                  )}
+                  <InputNumber
+                    min={0}
+                    max={remaining}
+                    defaultValue={defaultVal}
+                    value={damagedQtyMap[key] ?? defaultVal}
+                    style={{ width: '100%', minWidth: 60 }}
+                    onChange={(v) => setDamagedQtyMap((prevMap) => ({ ...prevMap, [key]: v ?? 0 }))}
+                  />
+                </div>
               );
             },
-            width: 90,
+            width: 100,
           },
           {
             title: 'Remarks',

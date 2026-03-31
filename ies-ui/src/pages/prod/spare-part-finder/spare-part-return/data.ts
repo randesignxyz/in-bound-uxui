@@ -302,20 +302,7 @@ export const SPARE_PART_CATEGORY_OPTIONS = [
  * to flattened table rows (SparePartReturnListItem[]).
  * Field names are kept aligned with existing table columns.
  */
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  return isNaN(date.getTime())
-    ? dateStr
-    : date.toLocaleString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true, 
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-};
+const formatDate = (dateStr: string) => formatSpfDateTime(dateStr);
 
 export const mapToFlattenedRowsMySparePartList = (
   items: SparePartPickedRequest[]
@@ -375,3 +362,4 @@ export const mapToMyRequestToReturn = (
           : 'Pending',
   remarks: item.remark ?? '',
 });
+import { formatSpfDateTime } from '../shared/dateTime';

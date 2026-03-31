@@ -8,6 +8,7 @@ export interface ShipmentLine {
   productId: string;
   itemName: string;
   quantity: number;
+  uom?: string;
 }
 
 export type ShipmentStatus = 'ready_to_pickup' | 'confirmed_picked' | 'completed';

@@ -113,14 +113,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
         width: '331px',
       },
     ],
-    links: isDev
-      ? [
-        <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
-          <LinkOutlined />
-          <span>OpenAPI</span>
-        </Link>,
-      ]
-      : [],
+    links: [],
     menuHeaderRender: undefined,
     childrenRender: (children) => {
       // const isSidebarEnabled = localStorage.getItem('sidebarEnabled') === 'true';

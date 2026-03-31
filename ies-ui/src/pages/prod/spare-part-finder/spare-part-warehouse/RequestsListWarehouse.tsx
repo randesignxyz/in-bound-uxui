@@ -14,12 +14,7 @@ import {
 import RequestedBatchWareHouse, { type RequestDetailData } from './RequestedBatchWareHouse';
 import { SparePartWarehouseService } from './service';
 
-interface Props {
-  requests?: WarehouseRequestRecord[];
-}
-
-
-export default function RequestsListWarehouse({ requests }: Props) {
+export default function RequestsListWarehouse() {
   const requestActions = simpleRequestActions();
   const services = SparePartWarehouseService(requestActions);
   const [searchText, setSearchText] = useState('');
@@ -27,18 +22,13 @@ export default function RequestsListWarehouse({ requests }: Props) {
   const [priorityFilter, setPriorityFilter] = useState<string>('All');
   const [dateFilter, setDateFilter] = useState<Dayjs | null>(null);
 
-  const [requestRows, setRequestRows] = useState<WarehouseRequestRecord[]>(() => requests || []);
+  const [requestRows, setRequestRows] = useState<WarehouseRequestRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<WarehouseRequestRecord | null>(null);
   const [selectedRequestData, setSelectedRequestData] = useState<RequestDetailData | null>(null);
 
   const loadRequests = useCallback(async () => {
-    if (requests && requests.length > 0) {
-      setRequestRows(requests);
-      return;
-    }
-
     setLoading(true);
     try {
       const response = await services.pageRequests({
@@ -55,7 +45,7 @@ export default function RequestsListWarehouse({ requests }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [requests, searchText, statusFilter]);
+  }, [searchText, statusFilter]);
 
   useEffect(() => {
     loadRequests();

@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { RequestActions } from '@/services/apiGateway';
 import { SparePartWarehouseReturnAPI } from './service.return';
 import ReturnsListDrawer, { type ReturnStatus } from './ReturnsListDrawer';
+import { formatSpfDateTime } from '../shared/dateTime';
 
 const { RangePicker } = DatePicker;
 
@@ -44,7 +45,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const formatDate = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+  formatSpfDateTime(iso);
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -103,7 +104,7 @@ export default function ReturnsListWarehouse() {
       title: 'Return Date',
       dataIndex: 'returnDate',
       key: 'returnDate',
-      render: (_dom, record) => formatDate(record.returnDate),
+      render: (_dom, record) => formatSpfDateTime(record.returnDate),
     },
     {
       title: 'Requested By',

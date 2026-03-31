@@ -15,19 +15,18 @@ import {
 } from 'antd';
 import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from './data';
 import SpfDetails from './SpfDetails';
 import { useAccess } from '@umijs/max';
 import SparePartImage from './SparePartImage';
+import { formatSpfDateTime } from '../shared/dateTime';
 
 const { Title, Text } = Typography;
 
 const formatDateTime = (iso?: string) => {
   if (!iso) return '—';
-  const d = dayjs(iso);
-  return d.isValid() ? d.format('YYYY-MMM-DD, h:mm A') : String(iso);
+  return formatSpfDateTime(iso);
 };
 
 const STATUS_STEPS = ['Requested', 'Approved', 'In Progress', 'Completed'] as const;
@@ -84,6 +83,19 @@ const parsePickedItemsCount = (description?: string): number | null => {
   return Number.isFinite(n) && n >= 0 ? n : null;
 };
 
+const getActivityRank = (label?: string): number => {
+  const normalized = String(label || '').trim().toLowerCase();
+
+  if (normalized === 'requested') return 1;
+  if (normalized === 'approved') return 2;
+  if (normalized === 'rejected') return 2;
+  if (normalized === 'in progress') return 3;
+  if (normalized === 'ready to pick up') return 4;
+  if (/^partial pick up #\d+$/i.test(normalized)) return 5;
+  if (normalized === 'completed') return 6;
+  return 7;
+};
+
 export interface RequestDetailLineItem {
   no: number;
   requestLineId?: number;
@@ -92,6 +104,7 @@ export interface RequestDetailLineItem {
   productId: string;
   requestId: string;
   itemName: string;
+  requestedQty?: number;
   quantityToReturn: number;
   usedQuantity: number;
   total: number;
@@ -184,50 +197,38 @@ export default function RequestedBatchDrawer({
   const access = useAccess();
   const data: RequestDetailData = useMemo(() => {
     if (propData) return propData;
-
-    const fallbackRequest: MyRequestItem = request ?? {
-      id: 0,
-      requestId: '-',
-      priority: 'normal',
-      requestDate: new Date().toISOString(),
-      totalItems: 0,
-      receivedItems: 0,
-      requestStatus: 'pending',
-      remark: '',
-      type: 'MRO-W',
-    };
-
     const items: RequestDetailLineItem[] =
-      fallbackRequest.items?.map((item, index) => ({
+      (request?.items || []).map((item, index) => ({
         no: index + 1,
         requestLineId: item.requestLineId,
         imageId: Array.isArray(item.imageId) ? item.imageId[0] : item.imageId,
         productId: item.sparePartId || item.sparePartCode,
-        requestId: fallbackRequest.requestId,
+        requestId: request?.requestId || '',
         itemName: item.sparePartName,
         quantityToReturn: Number(item.approvedQty || item.requestedQty || 0),
         usedQuantity: 0,
         total: Number(item.requestedQty || 0),
         warehouseSentQuantity: 0,
-        warehouse: item.toWarehouseCode || fallbackRequest.type,
-        sparePartType: fallbackRequest.type,
+        warehouse: item.toWarehouseCode,
+        sparePartType: item.type || request?.type,
         businessUnit: item.unit,
         uom: item.unit,
         description: item.remark,
-      })) ||
-      [];
+      }));
+
+    const requestType = request?.type || items.find((item) => item.sparePartType)?.sparePartType;
 
     return {
-      id: fallbackRequest.id,
-      requestId: fallbackRequest.requestId,
-      requestDate: fallbackRequest.requestDate,
-      status: fallbackRequest.requestStatus,
-      priority: fallbackRequest.priority,
-      type: fallbackRequest.type,
-      totalItems: fallbackRequest.totalItems,
-      receivedItems: fallbackRequest.receivedItems,
-      remark: fallbackRequest.remark,
-      requestedBy: fallbackRequest.requestedBy,
+      id: request?.id,
+      requestId: request?.requestId || '',
+      requestDate: request?.requestDate || '',
+      status: request?.requestStatus || 'pending',
+      priority: request?.priority,
+      type: requestType as SparePartType | undefined,
+      totalItems: request?.totalItems || items.length,
+      receivedItems: request?.receivedItems,
+      remark: request?.remark,
+      requestedBy: request?.requestedBy,
       items,
       activities: [],
     };
@@ -385,12 +386,7 @@ export default function RequestedBatchDrawer({
         });
       }
 
-      if (
-        data.status === 'in-progress' ||
-        data.status === 'ready_to_Pickup' ||
-        data.status === 'partial' ||
-        data.status === 'completed'
-      ) {
+      if (data.status === 'in-progress') {
         pushOnce({
           label: 'In Progress',
           description: 'Warehouse processing request',
@@ -410,7 +406,7 @@ export default function RequestedBatchDrawer({
         });
       }
 
-      if (seededPicked.length > 0 && (data.status === 'partial' || data.status === 'ready_to_Pickup' || data.status === 'completed')) {
+      if (seededPicked.length > 0 && (data.status === 'partial' || data.status === 'ready_to_Pickup')) {
         pushOnce({
           label: 'Partial Pick up #1',
           description: `Picked ${seededPicked.length} item(s)`,
@@ -646,6 +642,7 @@ export default function RequestedBatchDrawer({
     {
       title: 'Product ID',
       dataIndex: 'productId',
+      ellipsis: true,
       render: (_: unknown, record) => {
         const mark = itemMarks[record.productId];
         const isEdited = Boolean(editedItems[record.productId]);
@@ -707,6 +704,13 @@ export default function RequestedBatchDrawer({
     },
     {
       title: 'Qty Requested',
+      dataIndex: 'requestedQty',
+      align: 'center',
+      width: '10%',
+      render: (_: unknown, record) => Number(record.requestedQty ?? record.total ?? 0),
+    },
+    {
+      title: 'Approve QTY',
       dataIndex: 'quantityToReturn',
       align: 'center',
       width: '10%',
@@ -732,7 +736,7 @@ export default function RequestedBatchDrawer({
           {
             title: 'Action',
             key: 'approver_action',
-            fixed: 'right' as const,
+            ellipsis: true,
             render: (_: unknown, record: RequestDetailLineItem) => {
               const marked = itemMarks[record.productId];
               const isPicked = pickedProductIds.has(record.productId);
@@ -820,7 +824,7 @@ export default function RequestedBatchDrawer({
       category: selectedProduct.category,
       spare_part_type: selectedProduct.sparePartType,
       business_unit: selectedProduct.businessUnit,
-      requested_date: formatDateTime(data.requestDate),
+      requested_date: formatSpfDateTime(data.requestDate),
     };
   }, [data.requestDate, selectedProduct]);
 
@@ -837,7 +841,10 @@ export default function RequestedBatchDrawer({
           setActivityLogs((prev) => [
             ...prev,
             {
-              label: effectiveStatus === 'partial' ? 'Partial Pick up' : 'Completed',
+              label:
+                effectiveStatus === 'partial'
+                  ? `Partial Pick up #${Math.max(1, pickupBatches.length)}`
+                  : 'Completed',
               description:
                 effectiveStatus === 'partial'
                   ? 'Pickup confirmed for the latest shipment'
@@ -887,13 +894,6 @@ export default function RequestedBatchDrawer({
       setActivityLogs((prev) => [
         ...prev,
         {
-          label: `Pick up #${nextBatchNo}`,
-          description: `Picked ${newlyPicked.length} item(s)`,
-          date: new Date().toISOString(),
-          by: data.requestedBy ?? 'Requester',
-          dot: 'done',
-        },
-        {
           label: 'Completed',
           description: 'Picked up all requested items',
           date: new Date().toISOString(),
@@ -906,7 +906,7 @@ export default function RequestedBatchDrawer({
       setActivityLogs((prev) => [
         ...prev,
         {
-          label: `${hasMorePickableNow ? 'Pick up' : 'Partial Pick up'} #${nextBatchNo}`,
+          label: `Partial Pick up #${nextBatchNo}`,
           description: `Picked ${newlyPicked.length} item(s)`,
           date: new Date().toISOString(),
           by: data.requestedBy ?? 'Requester',
@@ -945,6 +945,72 @@ export default function RequestedBatchDrawer({
 
   const shipmentNoForReady = pickupBatches.length > 0 ? pickupBatches.length + 1 : 1;
 
+  const displayActivityLogs = useMemo(() => {
+    let readyCount = 0;
+    let partialPickupCount = 0;
+
+    return [...activityLogs]
+      .sort((left, right) => {
+        const leftTime = new Date(left.date || data.requestDate).getTime();
+        const rightTime = new Date(right.date || data.requestDate).getTime();
+
+        if (leftTime !== rightTime) return leftTime - rightTime;
+        return getActivityRank(left.label) - getActivityRank(right.label);
+      })
+      .map((activity) => {
+        const rawLabel = String(activity.label || '').trim();
+        const normalizedLabel = rawLabel.toLowerCase();
+        const parsedBatchNo = parsePickupBatchNo(rawLabel);
+
+        if (normalizedLabel.includes('partial issue')) {
+          readyCount += 1;
+          return {
+            ...activity,
+            label: 'Ready to Pick up',
+            description: `Shipment #${readyCount} is ready to pick up`,
+          };
+        }
+
+        if (normalizedLabel.includes('ready to pick')) {
+          readyCount += 1;
+          return {
+            ...activity,
+            label: 'Ready to Pick up',
+            description:
+              activity.description?.trim() || `Shipment #${readyCount} is ready to pick up`,
+          };
+        }
+
+        if (normalizedLabel.includes('partial pick up') || /^pick up #\d+$/i.test(rawLabel)) {
+          partialPickupCount += 1;
+          return {
+            ...activity,
+            label: `Partial Pick up #${parsedBatchNo ?? partialPickupCount}`,
+          };
+        }
+
+        if (normalizedLabel.includes('processing') || normalizedLabel === 'in progress') {
+          return {
+            ...activity,
+            label: 'In Progress',
+          };
+        }
+
+        if (normalizedLabel === 'completed') {
+          return {
+            ...activity,
+            label: 'Completed',
+          };
+        }
+
+        if (normalizedLabel === 'requested' || normalizedLabel === 'approved' || normalizedLabel === 'rejected') {
+          return activity;
+        }
+
+        return activity;
+      });
+  }, [activityLogs, data.requestDate]);
+
   const pickupCard =
     hasAnyPickupAvailable ? (
       <Card
@@ -960,6 +1026,7 @@ export default function RequestedBatchDrawer({
             <Table<RequestDetailLineItem>
               size="small"
               rowKey="productId"
+              tableLayout="fixed"
               pagination={false}
               style={{ marginTop: 8 }}
               rowSelection={{
@@ -1016,7 +1083,7 @@ export default function RequestedBatchDrawer({
             <span>Request Details</span>
           </div>
         }
-        width="80%"
+        width="50vw"
         placement="right"
         onClose={handleClose}
         open={open}
@@ -1128,7 +1195,7 @@ export default function RequestedBatchDrawer({
           <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
           <Descriptions.Item label="Type">{data.type ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Request Date">{formatDateTime(data.requestDate)}</Descriptions.Item>
+          <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Status">
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}
@@ -1161,12 +1228,20 @@ export default function RequestedBatchDrawer({
           }))}
         />
 
+        <Title level={5} style={{ marginBottom: 8 }}>
+          Message
+        </Title>
+        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+          {data.remark?.trim() ? data.remark : '—'}
+        </Text>
+
         <Title level={5} style={{ marginBottom: 16 }}>
           Items
         </Title>
         <Table<RequestDetailLineItem>
           size="small"
           rowKey="no"
+          tableLayout="fixed"
           pagination={false}
           columns={columns}
           dataSource={requestItems}
@@ -1184,7 +1259,6 @@ export default function RequestedBatchDrawer({
             }
             return {};
           }}
-          scroll={{ x: 700 }}
           style={{ marginBottom: 32 }}
         />
 
@@ -1196,7 +1270,7 @@ export default function RequestedBatchDrawer({
         </Title>
         <Timeline
           style={{ marginBottom: 32 }}
-          items={activityLogs.map((a: RequestDetailActivity) => {
+          items={displayActivityLogs.map((a: RequestDetailActivity) => {
             const pickupBatchNo = parsePickupBatchNo(a.label);
             const pickupBatch =
               typeof pickupBatchNo === 'number'
@@ -1221,6 +1295,7 @@ export default function RequestedBatchDrawer({
                   <Table<RequestDetailLineItem>
                     size="small"
                     rowKey="productId"
+                    tableLayout="fixed"
                     pagination={false}
                     dataSource={pickupBatch.items}
                     columns={[
@@ -1262,7 +1337,7 @@ export default function RequestedBatchDrawer({
                       <br />
                       <Text type="secondary">By: {a.by || 'System'}</Text>
                     </div>
-                    <Text type="secondary">{formatDateTime(a.date)}</Text>
+                    <Text type="secondary">{formatSpfDateTime(a.date)}</Text>
                   </div>
                   {pickupItemsTable}
                 </div>
@@ -1271,12 +1346,7 @@ export default function RequestedBatchDrawer({
           })}
         />
 
-        <Title level={5} style={{ marginBottom: 8 }}>
-          Message
-        </Title>
-        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
-          {data.remark?.trim() ? data.remark : '—'}
-        </Text>
+        
       </Drawer>
 
       <SpfDetails

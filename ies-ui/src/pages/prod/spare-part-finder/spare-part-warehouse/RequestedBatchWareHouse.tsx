@@ -16,21 +16,19 @@ import {
 } from 'antd';
 import { DownOutlined, RightOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAccess } from '@umijs/max';
 import SpfDetails from '../spare-part-request/SpfDetails';
 import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../spare-part-request/data';
 import type { WarehouseRequestRecord } from './requestsWarehouse.shared';
-import { shipmentsStore } from '../shipmentsStore';
 import type { Shipment, ShipmentLine } from '../shipmentsStore';
+import { formatSpfDateTime } from '../shared/dateTime';
 
 const { Title, Text } = Typography;
 
 const formatDateTime = (iso?: string) => {
   if (!iso) return '—';
-  const d = dayjs(iso);
-  return d.isValid() ? d.format('YYYY-MMM-DD, h:mm A') : String(iso);
+  return formatSpfDateTime(iso);
 };
 
 const STATUS_STEPS = ['Requested', 'Approved', 'In Progress', 'Completed'] as const;
@@ -43,7 +41,8 @@ const normalizeWarehouseStatus = (status: unknown): RequestStatus => {
   if (raw === 'partial') return 'partial';
   if (raw === 'completed') return 'completed';
   if (raw === 'rejected') return 'rejected';
-  if (raw === 'approved' || raw === 'pending') return 'pending';
+  if (raw === 'approved') return 'approved';
+  if (raw === 'pending') return 'pending';
   return 'pending';
 };
 
@@ -137,6 +136,9 @@ export interface RequestDetailData {
   shipments?: Shipment[];
   pickupStatus?: string;
   rawStatus?: string;
+  pickupQrToken?: string;
+  pickupQrGeneratedAt?: string;
+  pickupQrExpiredAt?: string;
 }
 
 export interface DrawerBatchReturnItemsProps {
@@ -158,6 +160,19 @@ const clampInt = (v: unknown) => {
   const n = Number(v);
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.floor(n));
+};
+
+const getActivityRank = (label?: string): number => {
+  const normalized = String(label || '').trim().toLowerCase();
+
+  if (normalized === 'requested') return 1;
+  if (normalized === 'approved') return 2;
+  if (normalized === 'rejected') return 2;
+  if (normalized === 'confirmed') return 3;
+  if (normalized === 'ready to pick up') return 4;
+  if (/^partial issue #\d+$/i.test(normalized)) return 5;
+  if (normalized === 'completed') return 6;
+  return 7;
 };
 
 export default function RequestedBatchWareHouse({
@@ -188,84 +203,43 @@ export default function RequestedBatchWareHouse({
   const data: RequestDetailData = useMemo(() => {
     if (propData) return propData;
     const req = request as any;
-    const fallbackRequest = {
-      id: req?.id ?? 0,
-      requestId: req?.requestId ?? '-',
-      priority: req?.priority ?? 'normal',
-      requestDate: req?.requestDate ?? new Date().toISOString(),
-      totalItems: req?.totalItems ?? (req?.items?.length || 0),
-      receivedItems: req?.receivedItems ?? 0,
-      requestStatus: normalizeWarehouseStatus(req?.requestStatus || req?.status || 'pending'),
-      remark: req?.remark ?? '',
-      type: req?.type ?? 'MRO-W',
-    };
-
     const realItems: any[] = req?.items ?? [];
-    let items: RequestDetailLineItem[];
-
-    if (realItems.length > 0) {
-      items = realItems.map((it: any, i: number) => ({
-        no: i + 1,
-        productId: it.productId ?? `PRD-${String(fallbackRequest.id).padStart(3, '0')}-${String(i + 1).padStart(3, '0')}`,
-        requestId: fallbackRequest.requestId,
-        itemName: it.itemName ?? `Spare Part ${i + 1}`,
-        quantityToReturn: Number(it.quantity) || 1,
-        usedQuantity: 0,
-        total: Number(it.quantity) || 1,
-        warehouseSentQuantity: Number(it.receivedQuantity) || 0,
-        stockQuantity: it.stockQuantity ?? 0,
-        warehouse: fallbackRequest.type,
-        zone: it.zone ?? '—',
-        shelf: it.shelf ?? '—',
-        level: it.level ?? '—',
-        company: it.company ?? '—',
-        category: it.category ?? '—',
-        sparePartType: it.sparePartType ?? '—',
-        businessUnit: it.businessUnit ?? '—',
-      }));
-    } else {
-      items = Array.from(
-        { length: Math.max(0, fallbackRequest.totalItems || 0) },
-        (_, i) => {
-          const no = i + 1;
-          const productId = `PRD-${String(fallbackRequest.id).padStart(3, '0')}-${String(no).padStart(3, '0')}`;
-          const quantityToReturn = 1;
-          return {
-            no,
-            productId,
-            requestId: fallbackRequest.requestId,
-            itemName: `Spare Part ${no}`,
-            quantityToReturn,
-            usedQuantity: 0,
-            total: quantityToReturn,
-            warehouseSentQuantity: 0,
-            stockQuantity: Math.max(0, Math.floor(Math.random() * 30)),
-            warehouse: fallbackRequest.type,
-            zone: 'A-307',
-            shelf: '12',
-            level: '02',
-            company: 'Isobaric Valve Co.',
-            category: 'Hydraulic',
-            sparePartType: 'Control Valve',
-            businessUnit: 'BU-001',
-          };
-        },
-      );
-    }
-
+    const items: RequestDetailLineItem[] = realItems.map((it: any, i: number) => ({
+      no: i + 1,
+      requestLineId: Number(it.requestLineId || it.id || 0) || undefined,
+      imageId: Array.isArray(it.imageId) ? it.imageId[0] : it.imageId,
+      productId: it.productId ?? it.sparePartId ?? it.sparePartCode ?? '',
+      requestId: req?.requestId ?? '',
+      itemName: it.itemName ?? it.sparePartName ?? '',
+      quantityToReturn: Number(it.quantity ?? it.approvedQty ?? 0),
+      usedQuantity: 0,
+      total: Number(it.quantity ?? it.approvedQty ?? 0),
+      warehouseSentQuantity: Number(it.receivedQuantity ?? it.issuedQty ?? 0),
+      description: it.remark ?? it.description ?? undefined,
+      stockQuantity: it.stockQuantity,
+      warehouse: it.toWarehouseCode ?? req?.type,
+      zone: it.zone,
+      shelf: it.shelf,
+      level: it.level,
+      company: it.company,
+      category: it.category,
+      sparePartType: it.sparePartType ?? it.type ?? req?.type,
+      businessUnit: it.businessUnit ?? it.unit,
+      uom: it.uom ?? it.unit,
+    }));
     return {
-      id: fallbackRequest.id,
-      requestId: fallbackRequest.requestId,
-      requestDate: fallbackRequest.requestDate,
-      status: fallbackRequest.requestStatus,
-      priority: fallbackRequest.priority as RequestPriority,
-      type: fallbackRequest.type as SparePartType,
-      totalItems: items.length,
-      receivedItems: fallbackRequest.receivedItems,
-      remark: fallbackRequest.remark,
-      requestedBy: req?.requester ?? req?.requestedBy ?? 'Requester',
-      approvedBy: req?.approvedBy ?? req?.approver ?? req?.approved_by ?? 'Approver',
-      warehouseBy: req?.warehouseBy ?? 'Warehouse',
+      id: req?.id,
+      requestId: req?.requestId ?? '',
+      requestDate: req?.requestDate ?? '',
+      status: normalizeWarehouseStatus(req?.requestStatus || req?.status || 'pending'),
+      priority: req?.priority as RequestPriority,
+      type: (req?.type || items.find((item) => item.sparePartType)?.sparePartType) as SparePartType,
+      totalItems: req?.totalItems ?? items.length,
+      receivedItems: req?.receivedItems,
+      remark: req?.remark,
+      requestedBy: req?.requester ?? req?.requestedBy,
+      approvedBy: req?.approvedBy ?? req?.approver ?? req?.approved_by,
+      warehouseBy: req?.warehouseBy,
       items,
       activities: req?.activities ?? [],
     };
@@ -293,15 +267,13 @@ export default function RequestedBatchWareHouse({
     if (data.status === 'ready_to_Pickup') return 'ready_to_Pickup';
     if (data.status === 'partial') return 'partial';
     if (data.status === 'in-progress') return 'in-progress';
+    if (data.status === 'approved') return 'approved';
     if (data.status === 'rejected') return 'rejected';
 
     if (hasReadyToPickupShipment) return 'ready_to_Pickup';
 
     if (totals.totalRequested > 0 && totals.totalSent >= totals.totalRequested) return 'completed';
     if (totals.totalSent > 0 && totals.totalSent < totals.totalRequested) return 'partial';
-
-    // In Progress in warehouse means requester confirmed but no quantity sent yet.
-    if (totals.totalSent === 0 && data.status !== 'pending') return 'in-progress';
 
     return 'pending';
   }, [data.status, shipmentBatches, statusOverride, totals.totalRequested, totals.totalSent]);
@@ -332,43 +304,25 @@ export default function RequestedBatchWareHouse({
     setSendingByProductId(nextSending);
     setDraftByProductId({ ...nextSending });
 
-    const baseLogs: RequestDetailActivity[] = [];
-
-    if (data.status !== 'pending' && data.status !== 'rejected') {
-      const approverName = data.approvedBy ?? 'Approver';
-      baseLogs.push({
-        label: 'Approved',
-        description: `Request approved by ${approverName}`,
-        date: data.requestDate,
-        by: approverName,
-        dot: 'done',
-      });
-
-      baseLogs.push({
-        label: 'In Progress',
-        description: 'Warehouse confirmed requester and started processing',
-        date: data.requestDate,
-        by: data.warehouseBy ?? 'Warehouse',
-        dot: data.status === 'completed' ? 'done' : 'pending',
-      });
-    } else {
-      const approverName = data.approvedBy ?? 'Approver';
-      baseLogs.push({
-        label: 'Requested',
-        description: `Requested by ${data.requestedBy ?? 'Requester'}`,
-        date: data.requestDate,
-        by: data.requestedBy ?? 'Requester',
-        dot: 'done',
-      });
-
-      baseLogs.push({
-        label: 'Approved',
-        description: `Approved by ${approverName} (Pending)`,
-        date: data.requestDate,
-        by: approverName,
-        dot: 'pending',
-      });
-    }
+    const baseLogs: RequestDetailActivity[] =
+      (data.activities || []).length > 0
+        ? data.activities
+        : [
+            {
+              label: 'Requested',
+              description: `Requested by ${data.requestedBy ?? 'Requester'}`,
+              date: data.requestDate,
+              by: data.requestedBy ?? 'Requester',
+              dot: 'done',
+            },
+            {
+              label: 'Approved',
+              description: `Approved by ${data.approvedBy ?? 'Approver'}`,
+              date: data.requestDate,
+              by: data.approvedBy ?? 'Approver',
+              dot: data.status === 'pending' ? 'pending' : 'done',
+            },
+          ];
 
     const existingShipments = (data as any).shipments || [];
     setShipmentBatches(existingShipments);
@@ -409,6 +363,45 @@ export default function RequestedBatchWareHouse({
     };
   }, [data.requestDate, selectedProduct]);
 
+  const displayActivityLogs = useMemo(() => {
+    let readyCount = 0;
+    let partialIssueCount = 0;
+
+    return [...activityLogs]
+      .sort((left, right) => {
+        const leftTime = new Date(left.date || data.requestDate).getTime();
+        const rightTime = new Date(right.date || data.requestDate).getTime();
+
+        if (leftTime !== rightTime) return leftTime - rightTime;
+        return getActivityRank(left.label) - getActivityRank(right.label);
+      })
+      .map((activity) => {
+        const rawLabel = String(activity.label || '').trim();
+        const normalizedLabel = rawLabel.toLowerCase();
+        const shipmentMatch = rawLabel.match(/shipment\s*#\s*(\d+)/i);
+        const shipmentNo = shipmentMatch ? Number(shipmentMatch[1]) : undefined;
+
+        if (normalizedLabel.includes('ready to pick')) {
+          readyCount += 1;
+          return {
+            ...activity,
+            label: 'Ready to Pick up',
+            description: activity.description?.trim() || `Shipment #${shipmentNo ?? readyCount} is ready to pick up`,
+          };
+        }
+
+        if (normalizedLabel.includes('partial issue')) {
+          partialIssueCount += 1;
+          return {
+            ...activity,
+            label: `Partial Issue #${shipmentNo ?? partialIssueCount}`,
+          };
+        }
+
+        return activity;
+      });
+  }, [activityLogs, data.requestDate]);
+
   const canWarehouseOperate = access.canSpfWarehouseStaff || access.canAdmin;
   const isReadyForWarehouseWork = effectiveStatus !== 'rejected' && effectiveStatus !== 'completed';
 
@@ -420,6 +413,7 @@ export default function RequestedBatchWareHouse({
       quantity: clampInt(it.quantityToReturn),
       receivedQuantity: clampInt(it.warehouseSentQuantity),
       businessUnit: it.businessUnit,
+      uom: it.uom,
     }));
 
   const emitWarehouseUpdate = (next: {
@@ -441,6 +435,26 @@ export default function RequestedBatchWareHouse({
     });
   };
 
+  const handleConfirmPickupRequest = () => {
+    if (!canWarehouseOperate) {
+      message.error('You are not allowed to confirm pickup.');
+      return;
+    }
+
+    if (!onConfirmPickup || !data.id) {
+      message.warning('Pickup confirmation is not available.');
+      return;
+    }
+
+    onConfirmPickup(data.id)
+      .then(() => {
+        message.success('Pickup confirmed successfully.');
+      })
+      .catch(() => {
+        message.error('Failed to confirm pickup.');
+      });
+  };
+
   const handleConfirmRequester = () => {
     if (!canWarehouseOperate) {
       message.error('You are not allowed to confirm requester.');
@@ -452,11 +466,11 @@ export default function RequestedBatchWareHouse({
     setActivityLogs((prev) => [
       ...prev,
       {
-        label: 'In Progress',
+        label: 'Confirmed',
         description: 'Warehouse confirmed requester and started processing',
         date: new Date().toISOString(),
         by: data.warehouseBy ?? 'Warehouse',
-        dot: 'pending',
+        dot: 'done',
       },
     ]);
 
@@ -501,8 +515,6 @@ export default function RequestedBatchWareHouse({
     setStatusOverride(nextDraftStatus);
     message.success('Draft saved. You can continue editing or click "Save & Pick up" when ready.');
 
-    shipmentsStore.saveDraft(data.requestId, nextDraft);
-
     emitWarehouseUpdate({
       status: nextDraftStatus === 'in-progress' ? 'In Progress' : 'Partial',
       items: workingItems,
@@ -519,26 +531,10 @@ export default function RequestedBatchWareHouse({
       message.error('You are not allowed to operate.');
       return;
     }
-
-    // Merge current input with existing draft
     const mergedDraft = { ...draftByProductId };
     Object.entries(sendingByProductId).forEach(([pid, qty]) => {
       mergedDraft[pid] = (mergedDraft[pid] || 0) + qty;
     });
-
-    const shipmentLines: ShipmentLine[] = workingItems
-      .map((it) => ({
-        productId: it.productId,
-        itemName: it.itemName,
-        quantity: clampInt(mergedDraft[it.productId]),
-      }))
-      .filter((l) => l.quantity > 0);
-
-    if (shipmentLines.length === 0) {
-      message.warning('Please save or enter amounts for at least one item before saving for pick up.');
-      return;
-    }
-
     if (onIssueRequest && data.id) {
       const lines = workingItems
         .map((item) => ({
@@ -546,12 +542,10 @@ export default function RequestedBatchWareHouse({
           issueQty: clampInt(mergedDraft[item.productId]),
         }))
         .filter((item) => item.requestLineId > 0 && item.issueQty > 0);
-
       if (lines.length === 0) {
         message.warning('No valid request lines were found to issue.');
         return;
       }
-
       onIssueRequest({ id: data.id, lines })
         .then(() => {
           setDraftByProductId({});
@@ -567,160 +561,7 @@ export default function RequestedBatchWareHouse({
         });
       return;
     }
-
-    // Update the sent quantities on working items
-    const nextItems = workingItems.map((it) => {
-      const toAdd = clampInt(mergedDraft[it.productId]);
-      const requested = clampInt(it.quantityToReturn);
-      const sent = clampInt(it.warehouseSentQuantity);
-      return { ...it, warehouseSentQuantity: Math.min(requested, sent + toAdd) };
-    });
-
-    const shipmentNo = shipmentBatches.length + 1;
-    const newShipment: Shipment = {
-      id: `SHP-${Date.now()}`,
-      shipmentNo,
-      createdAt: new Date().toISOString(),
-      createdBy: data.warehouseBy ?? 'Warehouse',
-      lines: shipmentLines,
-      status: 'ready_to_pickup',
-    };
-
-    const nextShipments = [...shipmentBatches, newShipment];
-    setShipmentBatches(nextShipments);
-    setWorkingItems(nextItems);
-
-    // Clear draft and inputs
-    setDraftByProductId({});
-    setSendingByProductId((prev) => {
-      const cleared = { ...prev };
-      Object.keys(cleared).forEach((k) => (cleared[k] = 0));
-      return cleared;
-    });
-
-    const nextTotalRequested = nextItems.reduce((sum, it) => sum + clampInt(it.quantityToReturn), 0);
-    const nextTotalSent = nextItems.reduce((sum, it) => sum + clampInt(it.warehouseSentQuantity), 0);
-
-    // Overall status: if all qty sent → ready_to_Pickup (will become completed after confirm picked)
-    // Otherwise still ready_to_Pickup for this batch, overall stays ready_to_Pickup
-    const nextStatus: RequestStatus = 'ready_to_Pickup';
-    setStatusOverride(nextStatus);
-
-    setActivityLogs((prev) => [
-      ...prev,
-      {
-        label: `Ready to Pick up (Shipment #${shipmentNo})`,
-        description: `Shipment #${shipmentNo} is ready for pick up — waiting for requester to collect`,
-        date: new Date().toISOString(),
-        by: data.warehouseBy ?? 'Warehouse',
-        dot: 'pending', // pending = waiting for requester
-      },
-    ]);
-    message.success(`Shipment #${shipmentNo} is now ready for pick up. Requester can come to collect.`);
-
-    // Write to shared store
-    shipmentsStore.addShipment(
-      data.requestId,
-      { id: newShipment.id, shipmentNo, createdAt: newShipment.createdAt, createdBy: newShipment.createdBy, lines: shipmentLines },
-      'ready_to_Pickup',
-    );
-
-    emitWarehouseUpdate({
-      status: 'Ready To Pick Up',
-      items: nextItems,
-      shipments: nextShipments,
-    });
-  };
-
-  // ─── CONFIRM PICKED (per shipment card) ─────────────────────────────────────
-  // Warehouse clicks this after requester comes and physically picks up.
-  // Sets that shipment → completed. If all shipments completed → request completed.
-  const handleConfirmPicked = (shipmentId: string) => {
-    if (!canWarehouseOperate) {
-      message.error('You are not allowed to confirm.');
-      return;
-    }
-
-    if (onConfirmPickup && data.id) {
-      onConfirmPickup(data.id)
-        .then(() => {
-          message.success('Pickup confirmed successfully.');
-        })
-        .catch(() => {
-          message.error('Failed to confirm pickup.');
-        });
-      return;
-    }
-
-    const shipment = shipmentBatches.find((s) => s.id === shipmentId);
-    if (!shipment) return;
-
-    const updatedShipments = shipmentBatches.map((s) =>
-      s.id === shipmentId
-        ? { ...s, status: 'completed' as const, confirmedAt: new Date().toISOString(), confirmedBy: data.warehouseBy ?? 'Warehouse' }
-        : s,
-    );
-    setShipmentBatches(updatedShipments);
-
-    // Check if all shipments are now completed AND all requested qty was sent
-    const allShipmentsCompleted = updatedShipments.every((s) => s.status === 'completed');
-    const nextTotalRequested = workingItems.reduce((sum, it) => sum + clampInt(it.quantityToReturn), 0);
-    const nextTotalSent = workingItems.reduce((sum, it) => sum + clampInt(it.warehouseSentQuantity), 0);
-    const allQtySent = nextTotalRequested > 0 && nextTotalSent >= nextTotalRequested;
-
-    const hasReadyToPickupShipment = updatedShipments.some((s) => s.status !== 'completed');
-    const nextOverallStatus: RequestStatus = hasReadyToPickupShipment
-      ? 'ready_to_Pickup'
-      : allShipmentsCompleted && allQtySent
-        ? 'completed'
-        : 'partial';
-    setStatusOverride(nextOverallStatus);
-
-    // Keep "Ready to Pick up" history and append a separate "Picked up" event.
-    setActivityLogs((prev) => [
-      ...prev,
-      {
-        label: `Picked up (Shipment #${shipment.shipmentNo})`,
-        description: `Requester picked up Shipment #${shipment.shipmentNo}`,
-        date: new Date().toISOString(),
-        by: data.warehouseBy ?? 'Warehouse',
-        dot: 'done',
-      },
-    ]);
-
-    if (nextOverallStatus === 'completed') {
-      setActivityLogs((prev) => [
-        ...prev,
-        {
-          label: 'Completed',
-          description: 'All items have been picked up — request completed',
-          date: new Date().toISOString(),
-          by: data.warehouseBy ?? 'Warehouse',
-          dot: 'done',
-        },
-      ]);
-      message.success('All items picked up! Request is now completed.');
-    } else if (nextOverallStatus === 'partial') {
-      setActivityLogs((prev) => [
-        ...prev,
-      ]);
-      message.success('Shipment confirmed. Request remains Partial until all requested quantities are sent and picked.');
-    } else {
-      message.success(`Shipment #${shipment.shipmentNo} confirmed as picked up. More items are still ready to pick up.`);
-    }
-
-    shipmentsStore.confirmShipmentPicked(data.requestId, shipmentId, data.warehouseBy ?? 'Warehouse');
-
-    emitWarehouseUpdate({
-      status:
-        nextOverallStatus === 'completed'
-          ? 'Completed'
-          : nextOverallStatus === 'ready_to_Pickup'
-            ? 'Ready To Pick Up'
-            : 'Partial',
-      items: workingItems,
-      shipments: updatedShipments,
-    });
+    message.warning('Issue action is not available for this request.');
   };
 
   const columns: ColumnsType<RequestDetailLineItem> = [
@@ -819,23 +660,9 @@ export default function RequestedBatchWareHouse({
 
     const cardExtra = isCompleted ? (
       <Text type="secondary" style={{ fontSize: 12 }}>
-        Confirmed: {formatDateTime(shipment.confirmedAt)}
+        Confirmed: {formatSpfDateTime(shipment.confirmedAt)}
       </Text>
-    ) : (
-      canWarehouseOperate && (
-        <Popconfirm
-          title="Confirm Pick up"
-          description="Has the requester come and picked up this shipment?"
-          okText="Yes, Confirm Picked"
-          cancelText="Not yet"
-          onConfirm={() => handleConfirmPicked(shipment.id)}
-        >
-          <Button type="primary" size="small" icon={<CheckCircleOutlined />}>
-            Confirm Picked
-          </Button>
-        </Popconfirm>
-      )
-    );
+    ) : null;
 
     return (
       <Card
@@ -851,7 +678,7 @@ export default function RequestedBatchWareHouse({
       >
         <div style={{ marginBottom: 6 }}>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            Created by {shipment.createdBy} · {formatDateTime(shipment.createdAt)}
+            Created by {shipment.createdBy} · {formatSpfDateTime(shipment.createdAt)}
           </Text>
         </div>
         <Table
@@ -862,6 +689,7 @@ export default function RequestedBatchWareHouse({
           columns={[
             { title: 'Product ID', dataIndex: 'productId', width: 140 },
             { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
+            { title: 'UoM', dataIndex: 'uom', width: 90 },
             { title: 'Qty Sent', dataIndex: 'quantity', width: 90, align: 'right' as const },
           ]}
         />
@@ -903,6 +731,7 @@ export default function RequestedBatchWareHouse({
           columns={[
             { title: 'Product ID', dataIndex: 'productId', width: 140 },
             { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
+            { title: 'UoM', dataIndex: 'uom', width: 90 },
             { title: 'Draft Qty', dataIndex: 'draftQty', width: 90, align: 'right' as const },
           ]}
         />
@@ -922,6 +751,22 @@ export default function RequestedBatchWareHouse({
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
+              <Popconfirm
+                title="Confirm Pick up"
+                description="Confirm that the requester has picked up the prepared spare parts?"
+                okText="Confirm"
+                cancelText="Cancel"
+                onConfirm={handleConfirmPickupRequest}
+                disabled={!canWarehouseOperate || !data.id || effectiveStatus !== 'ready_to_Pickup'}
+              >
+                <Button
+                  type="primary"
+                  ghost
+                  disabled={!canWarehouseOperate || !data.id || effectiveStatus !== 'ready_to_Pickup'}
+                >
+                  Confirm Pick up
+                </Button>
+              </Popconfirm>
               <Button
                 onClick={handleSave}
                 disabled={!canWarehouseOperate || !isReadyForWarehouseWork}
@@ -949,7 +794,7 @@ export default function RequestedBatchWareHouse({
           <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
           <Descriptions.Item label="Type">{data.type ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Request Date">{formatDateTime(data.requestDate)}</Descriptions.Item>
+          <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Status">
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}>
@@ -982,16 +827,23 @@ export default function RequestedBatchWareHouse({
           }))}
         />
 
+        <Title level={5} style={{ marginBottom: 8 }}>
+          Message
+        </Title>
+        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+          {data.remark?.trim() ? data.remark : '—'}
+        </Text>
+
         <Title level={5} style={{ marginBottom: 16 }}>
           Items
         </Title>
-        <Table<RequestDetailLineItem>
-          size="small"
-          rowKey="no"
-          pagination={false}
-          columns={columns}
-          dataSource={workingItems}
-          scroll={{ x: 900 }}
+  <Table<RequestDetailLineItem>
+    size="small"
+    rowKey="no"
+    tableLayout="auto"
+    pagination={false}
+    columns={columns}
+    dataSource={workingItems}
           style={{ marginBottom: 24 }}
         />
 
@@ -1013,7 +865,7 @@ export default function RequestedBatchWareHouse({
         </Title>
         <Timeline
           style={{ marginBottom: 24 }}
-          items={activityLogs.map((a) => {
+          items={displayActivityLogs.map((a) => {
             // Match 'Ready to Pick up (Shipment #N)' or 'Picked up (Shipment #N)' labels
             const shipmentMatch = String(a.label || '').match(/shipment\s*#\s*(\d+)/i);
             const shipmentNo = shipmentMatch ? Number(shipmentMatch[1]) : -1;
@@ -1036,20 +888,23 @@ export default function RequestedBatchWareHouse({
             const shipmentItems = batchLines.map((l) => ({
               productId: l.productId,
               itemName: l.itemName,
+              uom: l.uom,
               quantity: l.quantity,
             }));
 
             const expandedTable =
               isExpandable && isExpanded ? (
                 <div style={{ marginTop: 8 }}>
-                  <Table
-                    size="small"
-                    rowKey="productId"
-                    pagination={false}
-                    dataSource={shipmentItems}
+          <Table
+            size="small"
+            rowKey="productId"
+            tableLayout="auto"
+            pagination={false}
+            dataSource={shipmentItems}
                     columns={[
                       { title: 'Product ID', dataIndex: 'productId' },
                       { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
+                      { title: 'UoM', dataIndex: 'uom', width: 90 },
                       { title: 'Qty Sent', dataIndex: 'quantity', align: 'right' as const },
                     ]}
                   />
@@ -1086,7 +941,7 @@ export default function RequestedBatchWareHouse({
                       <br />
                       <Text type="secondary">By: {a.by || 'System'}</Text>
                     </div>
-                    <Text type="secondary">{formatDateTime(a.date)}</Text>
+                    <Text type="secondary">{formatSpfDateTime(a.date)}</Text>
                   </div>
                   {expandedTable}
                 </div>
@@ -1095,12 +950,7 @@ export default function RequestedBatchWareHouse({
           })}
         />
 
-        <Title level={5} style={{ marginBottom: 8 }}>
-          Message
-        </Title>
-        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
-          {data.remark?.trim() ? data.remark : '—'}
-        </Text>
+        
       </Drawer>
 
       <SpfDetails
@@ -1114,3 +964,4 @@ export default function RequestedBatchWareHouse({
     </>
   );
 }
+

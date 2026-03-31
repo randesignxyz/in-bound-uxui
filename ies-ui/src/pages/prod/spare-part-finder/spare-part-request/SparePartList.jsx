@@ -12,7 +12,6 @@ import SparePartImage from './SparePartImage';
 import SpfDetails from './SpfDetails';
 
 const typeOptions = [
-  { label: 'All Type', value: 'All' },
   { label: 'MRO-W', value: 'MRO-W' },
   { label: 'MRO-S', value: 'MRO-S' },
   { label: 'MRO-G', value: 'MRO-G' },
@@ -44,8 +43,10 @@ export default function SparePartListView() {
   const [currentRows, setCurrentRows] = useState([]);
   const [knownCategories, setKnownCategories] = useState([]);
   const [knownWarehouses, setKnownWarehouses] = useState([]);
+  const [knownBusinessUnits, setKnownBusinessUnits] = useState([]);
   const [filters, setFilters] = useState({
-    type: 'All',
+    type: [],
+    businessUnits: [],
     category: undefined,
     status: 'All',
     warehouse: '',
@@ -62,6 +63,8 @@ export default function SparePartListView() {
     ...knownWarehouses.map((wh) => ({ label: wh, value: wh })),
   ];
 
+  const businessUnitOptions = knownBusinessUnits.map((item) => ({ label: item, value: item }));
+
   const reloadTable = (resetPage = false) => {
     if (resetPage) {
       actionRef.current?.setPageInfo?.({ current: 1 });
@@ -69,11 +72,45 @@ export default function SparePartListView() {
     actionRef.current?.reload?.();
   };
 
+  const syncSelection = (normalizedKeys, rows = []) => {
+    setSelectedRowKeys(normalizedKeys);
+
+    setSelectedItemsById((previous) => {
+      const next = {};
+      const keySet = new Set(normalizedKeys);
+
+      Object.keys(previous || {}).forEach((k) => {
+        if (keySet.has(k)) {
+          next[k] = previous[k];
+        }
+      });
+
+      (rows || []).forEach((r) => {
+        if (r?.id != null) {
+          next[String(r.id)] = r;
+        }
+      });
+
+      return next;
+    });
+  };
+
+  const handleToggleRowSelection = (record) => {
+    const key = String(record?.id ?? '');
+    if (!key) return;
+
+    const nextKeys = selectedRowKeys.includes(key)
+      ? selectedRowKeys.filter((item) => item !== key)
+      : [...selectedRowKeys, key];
+
+    syncSelection(nextKeys, [record]);
+  };
+
   const requestData = async (params) => {
     const response = await services.page({
       criteria: {
         searchValue,
-        type: filters.type,
+        type: filters.type.length === 1 ? filters.type[0] : '',
         category: filters.category || '',
         status: filters.status,
         warehouse: filters.warehouse || '',
@@ -97,6 +134,14 @@ export default function SparePartListView() {
       });
     }
 
+    if (filters.type.length > 0) {
+      rows = rows.filter((item) => filters.type.includes(item.type));
+    }
+
+    if (filters.businessUnits.length > 0) {
+      rows = rows.filter((item) => filters.businessUnits.includes(item.businessUnit));
+    }
+
     setCurrentRows(rows);
     setSelectedItemsById((previous) => {
       if (!selectedRowKeys?.length) return previous;
@@ -114,6 +159,10 @@ export default function SparePartListView() {
     });
     setKnownWarehouses((previous) => {
       const merged = new Set([...previous, ...rows.map((item) => item.warehouse).filter(Boolean)]);
+      return Array.from(merged).sort();
+    });
+    setKnownBusinessUnits((previous) => {
+      const merged = new Set([...previous, ...rows.map((item) => item.businessUnit).filter(Boolean)]);
       return Array.from(merged).sort();
     });
 
@@ -185,24 +234,37 @@ export default function SparePartListView() {
             }}
           />
 
-          <Button.Group>
-            {typeOptions.map((option) => (
-              <Button
-                key={option.value}
-                type={filters.type === option.value ? 'primary' : 'default'}
-                onClick={() => {
-                  setFilters((previous) => ({ ...previous, type: option.value }));
-                  reloadTable(true);
-                }}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </Button.Group>
+          <Select
+            mode="multiple"
+            allowClear
+            maxTagCount="responsive"
+            style={{ minWidth: 140 }}
+            value={filters.businessUnits}
+            placeholder="All BU"
+            options={businessUnitOptions}
+            onChange={(value) => {
+              setFilters((previous) => ({ ...previous, businessUnits: value || [] }));
+              reloadTable(true);
+            }}
+          />
+
+          <Select
+            mode="multiple"
+            allowClear
+            maxTagCount="responsive"
+            style={{ minWidth: 140 }}
+            value={filters.type}
+            placeholder="All Type"
+            options={typeOptions}
+            onChange={(value) => {
+              setFilters((previous) => ({ ...previous, type: value || [] }));
+              reloadTable(true);
+            }}
+          />
 
           {/* {canSeeWarehouseLocation && ( */}
             <Select
-              style={{ width: 180 }}
+              style={{ width: 140 }}
               value={filters.warehouse}
               options={warehouseOptions}
               onChange={(value) => {
@@ -213,7 +275,7 @@ export default function SparePartListView() {
           {/* )} */}
 
           <Select
-            style={{ width: 180 }}
+            style={{ width: 140 }}
             value={filters.category || ''}
             options={categoryOptions}
             onChange={(value) => {
@@ -221,6 +283,8 @@ export default function SparePartListView() {
               reloadTable(true);
             }}
           />
+
+          
 
           <Select
             style={{ width: 140 }}
@@ -256,9 +320,11 @@ export default function SparePartListView() {
           actionRef={actionRef}
           size="small"
           rowKey={(record) => String(record.id)}
+          tableLayout="auto"
           search={false}
           options={false}
           bordered
+          scroll={{ x: 'max-content' }}
           pagination={{
             defaultPageSize: 10,
             showSizeChanger: true,
@@ -266,41 +332,28 @@ export default function SparePartListView() {
           }}
           rowSelection={{
             selectedRowKeys,
-            preserveSelectedRowKeys: true,
             onChange: (keys, rows) => {
-              const normalizedKeys = (keys || []).map((k) => String(k));
-              setSelectedRowKeys(normalizedKeys);
-
-              setSelectedItemsById((previous) => {
-                const next = {};
-                const keySet = new Set(normalizedKeys);
-
-                Object.keys(previous || {}).forEach((k) => {
-                  if (keySet.has(k)) {
-                    next[k] = previous[k];
-                  }
-                });
-
-                (rows || []).forEach((r) => {
-                  if (r?.id != null) {
-                    next[String(r.id)] = r;
-                  }
-                });
-
-                return next;
-              });
+              syncSelection((keys || []).map((key) => String(key)), rows || []);
             },
           }}
+          rowClassName={(record) =>
+            selectedRowKeys.includes(String(record.id)) ? 'ant-table-row-selected' : ''
+          }
+          onRow={(record) => ({
+            onClick: (event) => {
+              const target = event.target;
+              if (target instanceof HTMLElement && target.closest('a, button, input, textarea, .ant-select')) {
+                return;
+              }
+              handleToggleRowSelection(record);
+            },
+            style: { cursor: 'pointer' },
+          })}
           toolBarRender={() => [
             <Space key="spr-action-bar" size="small">
               <Button icon={<ReloadOutlined />} onClick={() => reloadTable(false)}>
                 Refresh
               </Button>
-              {(access.canSpfRequester || access.canSpfApprover) &&(
-                <Button onClick={() => message.info('Import Excel action is not wired yet.')}>
-                Import Excel
-              </Button>
-              )}
               {(access.canSpfRequester || access.canSpfApprover) && (
                 <Button type="primary" disabled={selectedRowKeys.length === 0} onClick={openRequestModal}>
                   Request{selectedRowKeys.length ? ` (${selectedRowKeys.length})` : ''}
@@ -340,33 +393,37 @@ export default function SparePartListView() {
             {
               title: 'Part Name',
               dataIndex: 'partName',
+              ellipsis: true,
             },
             {
               title: 'Type',
               dataIndex: 'type',
-              width: 100,
             },
             ...(canSeeWarehouseLocation
               ? [
                   {
+                    title: 'Categories',
+                    dataIndex: 'category',
+                  },
+                  {
+                    title: 'Business Unit',
+                    dataIndex: 'businessUnit',
+                  },
+                  {
                     title: 'Warehouse',
                     dataIndex: 'warehouse',
-                    width: 120,
                     render: (v) => v || '—',
                   },
                   {
                     title: 'Level',
-                    width: 120,
                     render: (_, record) => record.locations?.[0]?.level || '—',
                   },
                   {
                     title: 'Shelve',
-                    width: 120,
                     render: (_, record) => record.locations?.[0]?.shelve || '—',
                   },
                   {
                     title: 'Bin',
-                    width: 120,
                     render: (_, record) => record.locations?.[0]?.bin || '—',
                   },
                   // {
@@ -377,10 +434,7 @@ export default function SparePartListView() {
                   // },
                 ]
               : []),
-            {
-              title: 'Categories',
-              dataIndex: 'category',
-            },
+            
             {
               title: 'Stock',
               dataIndex: 'stock',
@@ -395,11 +449,7 @@ export default function SparePartListView() {
                 return record.stock;
               },
             },
-            {
-              title: 'Business Unit',
-              dataIndex: 'businessUnit',
-              width: 120,
-            },
+            
             {
               title: 'Status',
               dataIndex: 'status',
@@ -451,7 +501,6 @@ export default function SparePartListView() {
         }}
         onAddMore={() => {
           setRequestModalOpen(false);
-          message.info('Select more items from the list, then click Request again.');
         }}
       />
 
@@ -479,9 +528,7 @@ export default function SparePartListView() {
           onClose={closeDetails}
           onRequestParts={handleRequestPartsFromDetails}
           onInventoryLog={() => {}}
-          EditImage={() => {
-            message.info('Edit image action is not wired yet.');
-          }}
+          EditImage={undefined}
       />
 
     </>

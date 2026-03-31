@@ -12,6 +12,7 @@ export interface MyRequestLineItem {
   sparePartId: string;
   sparePartCode: string;
   sparePartName: string;
+  type?: SparePartType;
   requestedQty: number;
   approvedQty: number;
   unit: string;
@@ -50,6 +51,8 @@ export interface SparePartRequestItem {
   tags?: string[];
   type: SparePartType;
   category: string;
+  uom?: string;
+  uomOptions?: string[];
   stock: number;
   businessUnit: string;
   status: SparePartStockStatus;

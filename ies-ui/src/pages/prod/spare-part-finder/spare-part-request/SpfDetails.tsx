@@ -161,7 +161,7 @@ export default function SpfDetails({
 
         {/* Product Name */}
         <Title level={4} style={{ margin: '0 0 16px 0', fontWeight: 600 }}>
-          {data?.spare_part_name || "Heavy Duty Hydraulic Control Valve"}
+          {data?.spare_part_name || '-'}
         </Title>
 
         {/* Part Number */}
@@ -181,7 +181,7 @@ export default function SpfDetails({
             Description
           </Text>
           <Text style={{ fontSize: 14, lineHeight: 1.6, color: '#595959' }}>
-            {data?.description || "Precision-engineered hydraulic control valve designed for high-pressure industrial applications. Featuring a high-flow capacity with minimal leakage, optimized for heavy-duty earthmoving equipment and stationary industrial machinery."}
+            {data?.description || '-'}
           </Text>
         </div>
       </div>

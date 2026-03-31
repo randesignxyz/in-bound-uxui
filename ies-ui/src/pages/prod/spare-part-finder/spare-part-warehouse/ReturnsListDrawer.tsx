@@ -25,6 +25,7 @@ import { RequestActions } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { SparePartWarehouseReturnAPI } from './service.return';
 import { message } from 'antd';
+import { formatSpfDateTime } from '../shared/dateTime';
 
 const { Title } = Typography;
 const MAX_ATTACHMENTS = 3;
@@ -134,7 +135,7 @@ interface ReturnDetailActivity {
 
 const formatDateTime = (date?: string) => {
   if (!date) return '—';
-  return new Date(date).toLocaleString();
+  return formatSpfDateTime(date);
 };
 
 /**
@@ -870,7 +871,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           <Descriptions.Item label="Return ID">{fetchedData?.request_id ?? data?.requestId ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Total Items">{fetchedData?.total_items ?? data?.totalItems ?? 0}</Descriptions.Item>
           <Descriptions.Item label="Return Date">
-            {formatDateTime(fetchedData?.request_date ?? data?.requestDate)}
+            {formatSpfDateTime(fetchedData?.request_date ?? data?.requestDate)}
           </Descriptions.Item>
           <Descriptions.Item label="Status">
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}>{statusLabelMap[effectiveStatus]}</Tag>

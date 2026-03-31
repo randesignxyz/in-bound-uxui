@@ -9,6 +9,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { useRef, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
+import { formatSpfDateTime } from '../../shared/dateTime';
 import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../data';
 import RequestedBatchDrawer from '../RequestedBatchDrawer';
 import { buildRequestDetailData, SparePartRequestService } from '../service';
@@ -122,11 +123,6 @@ export default function MyRequestListview() {
   const reloadTable = () => {
     actionRef.current?.setPageInfo?.({ current: 1 });
     actionRef.current?.reload?.();
-  };
-
-  const formatDate = (dateStr: string) => {
-    const d = dayjs(dateStr);
-    return d.format('YYYY-MMM-DD, h:mm A');
   };
 
   const requestData = async (
@@ -290,7 +286,7 @@ export default function MyRequestListview() {
                   title: 'Request date',
                   dataIndex: 'requestDate',
                   width: 200,
-                  render: (_, r) => formatDate(r.requestDate),
+                  render: (_, r) => formatSpfDateTime(r.requestDate),
                 },
                 {
                   title: 'Total Items',

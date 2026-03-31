@@ -7,6 +7,7 @@ import type {
   MyRequestSearch,
   RequestPriority,
   RequestStatus,
+  SparePartType,
   SparePartRequestItem,
 } from './data';
 import type {
@@ -30,6 +31,7 @@ type MyRequestLineDto = {
   sparePartId: string;
   sparePartCode: string;
   sparePartName: string;
+  type?: string | null;
   requestedQty: number;
   approvedQty?: number;
   unit: string;
@@ -46,6 +48,7 @@ type MyRequestDto = {
   requestedDate?: string;
   requestDate?: string;
   requestStatus: BackendRequestStatus;
+  type?: string | null;
   remark?: string | null;
   totalRequestedQty?: number;
   totalApprovedQty?: number;
@@ -159,6 +162,14 @@ const normalizePriority = (value?: string | null): RequestPriority => {
   return 'normal';
 };
 
+const normalizeSparePartType = (value?: string | null): SparePartType | undefined => {
+  const normalized = String(value || '').trim().replace(/_/g, '-').toUpperCase();
+  if (normalized === 'MRO-S') return 'MRO-S';
+  if (normalized === 'MRO-G') return 'MRO-G';
+  if (normalized === 'MRO-W') return 'MRO-W';
+  return undefined;
+};
+
 const normalizeRequestStatus = (
   status?: BackendRequestStatus,
   totalIssuedQty: number = 0,
@@ -223,6 +234,7 @@ const mapRequestLine = (item: MyRequestLineDto): MyRequestLineItem => ({
   sparePartId: item.sparePartId,
   sparePartCode: item.sparePartCode,
   sparePartName: item.sparePartName,
+  type: normalizeSparePartType(item.type),
   requestedQty: Number(item.requestedQty || 0),
   approvedQty: Number(item.approvedQty || 0),
   unit: item.unit || 'pcs',
@@ -236,6 +248,7 @@ export const mapMyRequestItem = (item: MyRequestDto): MyRequestItem => {
   const totalIssuedQty = Number(item.totalIssuedQty || 0);
   const totalPickedQty = Number(item.totalPickedQty || 0);
   const items = (item.items || []).map(mapRequestLine);
+  const requestType = normalizeSparePartType(item.type) || items.find((line) => line.type)?.type;
 
   return {
     id: Number(item.id || 0),
@@ -244,6 +257,7 @@ export const mapMyRequestItem = (item: MyRequestDto): MyRequestItem => {
     requestedBy: item.requestId,
     priority: normalizePriority(item.priority),
     requestDate: item.requestedDate || item.requestDate || '',
+    type: requestType,
     totalItems: Number(item.totalRequestedQty || 0),
     receivedItems: totalPickedQty,
     requestStatus: normalizeRequestStatus(item.requestStatus, totalIssuedQty, totalPickedQty),
@@ -321,6 +335,7 @@ const buildRequestActivities = (request: MyRequestItem): RequestDetailActivity[]
 };
 
 export const buildRequestDetailData = (request: MyRequestItem): RequestDetailData => {
+  const detailType = request.type || request.items?.find((item) => item.type)?.type;
   const items: RequestDetailLineItem[] = (request.items || []).map((item, index) => ({
     no: index + 1,
     requestLineId: item.requestLineId,
@@ -328,12 +343,13 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     productId: item.sparePartId || item.sparePartCode,
     requestId: request.requestId,
     itemName: item.sparePartName,
+    requestedQty: Number(item.requestedQty || 0),
     quantityToReturn: Number(item.approvedQty || item.requestedQty || 0),
     usedQuantity: 0,
     total: Number(item.requestedQty || 0),
     warehouseSentQuantity: 0,
     warehouse: item.toWarehouseCode,
-    sparePartType: request.type,
+    sparePartType: item.type || detailType,
     businessUnit: item.unit,
     uom: item.unit,
     description: item.remark,
@@ -345,7 +361,7 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     requestDate: request.requestDate,
     status: request.requestStatus,
     priority: request.priority,
-    type: request.type,
+    type: detailType,
     totalItems: request.totalItems,
     receivedItems: request.receivedItems,
     remark: request.remark,

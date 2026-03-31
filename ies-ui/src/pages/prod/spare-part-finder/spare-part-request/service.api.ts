@@ -26,6 +26,7 @@ export interface SparePartRequestListApiItem {
   partName: string;
   description?: string;
   tag?: string;
+  uom?: string | string[] | null;
   type: string;
   category: string;
   stock: number;
@@ -111,9 +112,37 @@ const mapType = (type?: string): SparePartType => {
   return 'MRO-W';
 };
 
+const normalizeUomOptions = (value?: string | string[] | null): string[] => {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.map((item) => String(item || '').trim()).filter(Boolean)));
+  }
+
+  const normalized = String(value || '').trim();
+  if (!normalized) return [];
+
+  try {
+    const parsed = JSON.parse(normalized);
+    if (Array.isArray(parsed)) {
+      return Array.from(new Set(parsed.map((item) => String(item || '').trim()).filter(Boolean)));
+    }
+  } catch (error) {
+    // Keep fallback parsing below for non-JSON payloads such as "[PCS,BOX]".
+  }
+
+  const flattened = normalized
+    .replace(/^\[/, '')
+    .replace(/\]$/, '')
+    .split(',')
+    .map((item) => item.trim().replace(/^"+|"+$/g, ''))
+    .filter(Boolean);
+
+  return Array.from(new Set(flattened.length > 0 ? flattened : [normalized]));
+};
+
 const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string): SparePartRequestItem => {
   const firstLocation = item.locations?.[0];
   const stock = firstLocation?.availableQty ?? item.avalailableStock ?? item.stock ?? 0;
+  const uomOptions = normalizeUomOptions(item.uom);
 
   return {
     id: item.id,
@@ -125,6 +154,8 @@ const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string):
     tags: item.tag ? [item.tag] : undefined,
     type: mapType(item.type),
     category: item.category,
+    uom: uomOptions[0],
+    uomOptions,
     stock,
     businessUnit: item.businessUnit,
     status: mapStockStatus(stock),

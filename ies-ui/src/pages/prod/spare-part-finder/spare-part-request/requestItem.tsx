@@ -10,7 +10,7 @@ import {
   Typography,
   message,
 } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { SparePartRequestItem } from './data';
 import SparePartImage from './SparePartImage';
 
@@ -53,6 +53,41 @@ const priorityOptions: { label: string; value: PriorityLevel; color: string; bor
 
 const TABLE_MIN_WIDTH = '90vw';
 
+const normalizeUomOptions = (value?: string | string[]) => {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.map((item) => String(item || '').trim()).filter(Boolean)));
+  }
+
+  const normalized = String(value || '').trim();
+  if (!normalized) return [];
+
+  try {
+    const parsed = JSON.parse(normalized);
+    if (Array.isArray(parsed)) {
+      return Array.from(new Set(parsed.map((item) => String(item || '').trim()).filter(Boolean)));
+    }
+  } catch (error) {
+    // Keep fallback parsing below for non-JSON payloads such as "[PCS,BOX]".
+  }
+
+  const flattened = normalized
+    .replace(/^\[/, '')
+    .replace(/\]$/, '')
+    .split(',')
+    .map((item) => item.trim().replace(/^"+|"+$/g, ''))
+    .filter(Boolean);
+
+  return Array.from(new Set(flattened.length > 0 ? flattened : [normalized]));
+};
+
+const getItemUomOptions = (item: SparePartRequestItem) => {
+  if (Array.isArray(item.uomOptions) && item.uomOptions.length > 0) {
+    return item.uomOptions;
+  }
+
+  return normalizeUomOptions(item.uom);
+};
+
 const RequestItemModal: React.FC<RequestItemModalProps> = ({
   open,
   selectedItems,
@@ -64,22 +99,46 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   const [remark, setRemark] = useState<string>('');
   const [priority, setPriority] = useState<PriorityLevel>('normal');
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
-    if (open) {
-      setRows(
-        selectedItems.map((item, idx) => ({
+    if (!open) {
+      wasOpenRef.current = false;
+      return;
+    }
+
+    setRows((previous) => {
+      const previousByProductId = new Map(
+        previous.map((row) => [String(row.item.productId), row]),
+      );
+
+      return selectedItems.map((item, idx) => {
+        const previousRow = previousByProductId.get(String(item.productId));
+        const uomOptions = getItemUomOptions(item);
+
+        if (previousRow) {
+          return {
+            ...previousRow,
+            key: idx,
+            item,
+            uom: previousRow.uom || uomOptions[0] || '',
+          };
+        }
+
+        return {
           key: idx,
           item,
           quantity: item.stock > 0 ? 1 : 0,
           purpose: '',
-          uom: 'pcs',
+          uom: uomOptions[0] || '',
           toWarehouseCode: item.warehouse || 'WH1',
           forLine: 'Line1',
-        })),
-      );
-      setRemark('');
-      setPriority('normal');
+        };
+      });
+    });
+
+    if (!wasOpenRef.current) {
+      wasOpenRef.current = true;
     }
   }, [open, selectedItems]);
 
@@ -123,6 +182,11 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     const missingLine = rows.some((r) => !r.forLine.trim());
     if (missingLine) {
       message.warning('Please select a line for all items.');
+      return;
+    }
+    const missingUom = rows.some((r) => !r.uom.trim());
+    if (missingUom) {
+      message.warning('Please select a UOM for all items.');
       return;
     }
 
@@ -186,7 +250,13 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       align: 'center' as const,
     },
     {
-      title: 'Ware House',
+      title: 'BU',
+      dataIndex: ['item', 'businessUnit'],
+      width: '4%',
+      align: 'center' as const,
+    },
+    {
+      title: 'Warehouse',
       dataIndex: ['item', 'warehouse'],
       width: '7%',
     },
@@ -201,9 +271,9 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
         onChange={(value) => updateRow(record.key, { toWarehouseCode: value })}
         options={
           [
-            { value: 'WH1', label: 'Warehouse 1' },
-            { value: 'WH2', label: 'Warehouse 2' },
-            { value: 'WH3', label: 'Warehouse 3' },
+            { value: 'WH1', label: 'WH 1' },
+            { value: 'WH2', label: 'WH 2' },
+            { value: 'WH3', label: 'WH 3' },
           ]
         }
       />
@@ -229,38 +299,35 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
      )
     },
 
-    {
-      title: 'BU',
-      dataIndex: ['item', 'businessUnit'],
-      width: '4%',
-      align: 'center' as const,
-    },
+    
   {
     title: 'UoM',
     dataIndex: 'uom',
     width: '6%',
-    render: (_: unknown, record: RequestRowItem) => (
-      <Select
-        placeholder="Please select"
-        value={record.uom}
-        onChange={(value) => {
-          updateRow(record.key, { uom: value });
-        }}
-        style={{ width: '100%' , 
-         paddingLeft: 8,
-         paddingRight: 8,
-        }}
-      >
-        <Select.Option value="pcs">PCS</Select.Option>
-        <Select.Option value="box">BOX</Select.Option>
-        <Select.Option value="set">SET</Select.Option>
-        <Select.Option value="pack">PACK</Select.Option>
-        <Select.Option value="ctn">CTN</Select.Option>
-        <Select.Option value="l">L</Select.Option>
-        <Select.Option value="kg">KG</Select.Option>
-        <Select.Option value="rol">ROL</Select.Option>
-      </Select>
-    ),
+    render: (_: unknown, record: RequestRowItem) => {
+      const uomOptions = getItemUomOptions(record.item);
+      const selectedUom = record.uom || uomOptions[0] || '';
+
+      if (uomOptions.length <= 1) {
+        return <Typography.Text>{selectedUom || '-'}</Typography.Text>;
+      }
+
+      return (
+        <Select
+          placeholder="Please select"
+          value={selectedUom || undefined}
+          onChange={(value) => {
+            updateRow(record.key, { uom: value });
+          }}
+          options={uomOptions.map((item) => ({ value: item, label: item }))}
+          style={{
+            width: '100%',
+            paddingLeft: 8,
+            paddingRight: 8,
+          }}
+        />
+      );
+    },
   },
     {
       title: 'QTY to Request',
@@ -349,7 +416,6 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       footer={modalFooter}
       maskClosable={false}
       centered
-      destroyOnClose
       styles={{
         body: {
           background: '#fafafa',

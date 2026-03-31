@@ -1,6 +1,7 @@
 import { EyeOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { Button, Progress, Tag, Typography } from 'antd';
+import { formatSpfDateTime } from '../shared/dateTime';
 import {
   calcRequestTotals,
   deriveWarehouseDisplayStatus,
@@ -75,7 +76,13 @@ export const buildSummaryColumns = (options: {
   },
   { title: 'BU', key: 'bu', width: 80, render: (_, record) => record.items[0]?.businessUnit || '-' },
   { title: 'Created By', dataIndex: 'requester', key: 'requester', width: 130 },
-  { title: 'Created Date', dataIndex: 'requestDate', key: 'requestDate', width: 170 },
+  {
+    title: 'Created Date',
+    dataIndex: 'requestDate',
+    key: 'requestDate',
+    width: 170,
+    render: (_, record) => formatSpfDateTime(record.requestDate),
+  },
   {
     title: 'Status',
     dataIndex: 'status',

@@ -407,8 +407,8 @@ export default function RequestedBatchWareHouse({
             ...(data.status === 'in-progress'
               ? [
                   {
-                    label: 'Confirmed',
-                    description: 'Warehouse confirmed and started processing this request',
+                    label: 'Accepted',
+                    description: 'Warehouse accepted and started processing this request',
                     date: data.requestDate,
                     by: currentActor,
                     dot: 'done' as const,
@@ -420,8 +420,8 @@ export default function RequestedBatchWareHouse({
     const existingShipments = (data as any).shipments || [];
     setShipmentBatches(existingShipments);
 
-    setActivityLogs((prev) => mergeActivities(baseLogs, prev));
-  }, [data.approvedBy, data.draftItems, data.items, data.requestDate, data.requestId, data.requestedBy, data.status, open]);
+    setActivityLogs(baseLogs);
+  }, [data.activities, data.approvedBy, data.draftItems, data.items, data.requestDate, data.requestId, data.requestedBy, data.shipments, data.status, open]);
 
   const handleClose = () => {
     initKeyRef.current = '';

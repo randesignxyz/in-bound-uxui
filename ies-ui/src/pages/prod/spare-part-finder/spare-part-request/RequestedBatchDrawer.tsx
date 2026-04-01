@@ -129,6 +129,15 @@ const mergeActivities = (
   return merged;
 };
 
+const isLocalPersistedActivity = (activity?: RequestDetailActivity | null): boolean => {
+  const normalized = String(activity?.label || '').trim().toLowerCase();
+  return (
+    normalized === 'item edited' ||
+    normalized === 'item deleted' ||
+    normalized === 'item canceled'
+  );
+};
+
 interface PersistedRequestDrawerState {
   activityLogs?: RequestDetailActivity[];
   quantityOverrides?: Record<string, number>;
@@ -342,7 +351,18 @@ export default function RequestedBatchDrawer({
       return;
     }
 
-    const initKey = `${open ? '1' : '0'}|${data.requestId}`;
+    const initKey = [
+      open ? '1' : '0',
+      data.requestId,
+      data.status,
+      data.receivedItems ?? '',
+      data.activities
+        .map((activity) => `${activity.label}|${activity.date ?? ''}|${activity.by ?? ''}`)
+        .join(','),
+      (data.pickupBatches || [])
+        .map((batch) => `${batch.batchNo}|${batch.createdAt}|${batch.items.length}`)
+        .join(','),
+    ].join('|');
     if (initKeyRef.current === initKey) return;
     initKeyRef.current = initKey;
 
@@ -354,7 +374,6 @@ export default function RequestedBatchDrawer({
     setEditingItem(null);
     setEditingQuantity(1);
 
-    const prePickedCount = typeof data.receivedItems === 'number' ? data.receivedItems : 0;
     const seededPicked =
       data.pickupBatches?.flatMap((batch) => batch.items).filter((item) => Number(item.usedQuantity || item.quantityToReturn || 0) > 0) ||
       [];
@@ -547,16 +566,21 @@ export default function RequestedBatchDrawer({
           }))
         : fallbackLogs;
 
-    setActivityLogs(mergeActivities(serverLogs, persistedState?.activityLogs || []));
+    setActivityLogs(
+      mergeActivities(
+        serverLogs,
+        (persistedState?.activityLogs || []).filter((activity) => isLocalPersistedActivity(activity)),
+      ),
+    );
     lastServerStatusRef.current = data.status;
     lastShipmentNoticeRef.current = data.status === 'ready_to_Pickup' && seededPicked.length > 0 ? 1 : 0;
-  }, [data.activities, data.items, data.receivedItems, data.requestDate, data.status, data.requestId, open]);
+  }, [data.activities, data.items, data.pickupBatches, data.receivedItems, data.requestDate, data.status, data.requestId, open]);
 
   useEffect(() => {
     if (!open || !data.requestId || resetPersistRef.current) return;
 
     writePersistedDrawerState(data.requestId, {
-      activityLogs,
+      activityLogs: activityLogs.filter((activity) => isLocalPersistedActivity(activity)),
       quantityOverrides,
       itemMarks,
       editedItems,
@@ -566,7 +590,7 @@ export default function RequestedBatchDrawer({
   const handleClose = () => {
     resetPersistRef.current = true;
     writePersistedDrawerState(data.requestId, {
-      activityLogs,
+      activityLogs: activityLogs.filter((activity) => isLocalPersistedActivity(activity)),
       quantityOverrides,
       itemMarks,
       editedItems,
@@ -1027,6 +1051,7 @@ export default function RequestedBatchDrawer({
 
   useEffect(() => {
     if (!open) return;
+    if ((data.activities || []).length > 0 || (data.pickupBatches || []).length > 0) return;
 
     const prev = lastServerStatusRef.current;
     if (prev === data.status) return;
@@ -1050,7 +1075,7 @@ export default function RequestedBatchDrawer({
         ]);
       }
     }
-  }, [data.status, open, pickupBatches.length]);
+  }, [data.activities, data.pickupBatches, data.status, open, pickupBatches.length]);
 
   const shipmentNoForReady = pickupBatches.length > 0 ? pickupBatches.length + 1 : 1;
 
@@ -1158,15 +1183,6 @@ export default function RequestedBatchDrawer({
               columns={columnsForPickupTable}
             />
           </div>
-
-          <Button
-            type="primary"
-            disabled={pickupSelection.length === 0}
-            onClick={confirmPickup}
-            style={{ alignSelf: 'flex-end' }}
-          >
-            Confirm Pick up
-          </Button>
         </Space>
       </Card>
     ) : null;

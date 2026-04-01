@@ -1,4 +1,4 @@
-import { EllipsisOutlined, SearchOutlined } from '@ant-design/icons';
+import { EllipsisOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, DatePicker, Input, Select, Space, Typography, message } from 'antd';
 import type { Dayjs } from 'dayjs';
@@ -107,44 +107,50 @@ export default function RequestsListWarehouse() {
           padding: 12,
         }}
       >
-        <Space wrap size="middle">
-          <Input.Search
-            allowClear
-            enterButton={<SearchOutlined />}
-            value={searchText}
-            placeholder="Search Request ID"
-            style={{ width: 280 }}
-            onChange={(event) => setSearchText(event.target.value || '')}
-          />
-          <Select
-            placeholder="All Status"
-            value={statusFilter}
-            onChange={(value) => setStatusFilter((value as 'All' | WarehouseDisplayStatus) || 'All')}
-            style={{ width: 200 }}
-            options={[
-              { value: 'All', label: 'All Status' },
-              { value: 'Pending', label: 'Pending' },
-              { value: 'In Progress', label: 'In Progress' },
-              { value: 'Ready To Pick Up', label: 'Ready To Pick Up' },
-              { value: 'Partial', label: 'Partial' },
-              { value: 'Completed', label: 'Completed' },
-              { value: 'Rejected', label: 'Rejected' },
-            ]}
-          />
-          <Select
-            style={{ width: 160 }}
-            value={priorityFilter}
-            options={[
-              { label: 'All Priority', value: 'All' },
-              { label: 'Urgent', value: 'Urgent' },
-              { label: 'High', value: 'High' },
-              { label: 'Normal', value: 'Normal' },
-              { label: 'Low', value: 'Low' },
-            ]}
-            onChange={(value) => setPriorityFilter(value || 'All')}
-          />
-          <DatePicker allowClear style={{ width: 180 }} value={dateFilter} onChange={(v) => setDateFilter(v)} />
-        </Space>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+          <Space wrap size="middle">
+            <Input.Search
+              allowClear
+              enterButton={<SearchOutlined />}
+              value={searchText}
+              placeholder="Search Request ID"
+              style={{ width: 280 }}
+              onChange={(event) => setSearchText(event.target.value || '')}
+            />
+            <Select
+              placeholder="All Status"
+              value={statusFilter}
+              onChange={(value) => setStatusFilter((value as 'All' | WarehouseDisplayStatus) || 'All')}
+              style={{ width: 200 }}
+              options={[
+                { value: 'All', label: 'All Status' },
+                { value: 'Pending', label: 'Pending' },
+                { value: 'In Progress', label: 'In Progress' },
+                { value: 'Ready To Pick Up', label: 'Ready To Pick Up' },
+                { value: 'Partial', label: 'Partial' },
+                { value: 'Completed', label: 'Completed' },
+                { value: 'Rejected', label: 'Rejected' },
+              ]}
+            />
+            <Select
+              style={{ width: 160 }}
+              value={priorityFilter}
+              options={[
+                { label: 'All Priority', value: 'All' },
+                { label: 'Urgent', value: 'Urgent' },
+                { label: 'High', value: 'High' },
+                { label: 'Normal', value: 'Normal' },
+                { label: 'Low', value: 'Low' },
+              ]}
+              onChange={(value) => setPriorityFilter(value || 'All')}
+            />
+            <DatePicker allowClear style={{ width: 180 }} value={dateFilter} onChange={(v) => setDateFilter(v)} />
+          </Space>
+
+          <Button icon={<ReloadOutlined />} onClick={reloadRequests}>
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #f0f0f0', padding: 12 }}>
@@ -173,6 +179,19 @@ export default function RequestsListWarehouse() {
           }}
           search={false}
           options={false}
+          onRow={(record) => ({
+            onClick: (event) => {
+              const target = event.target;
+              if (
+                target instanceof HTMLElement &&
+                target.closest('a, button, input, textarea, .ant-select, .ant-picker')
+              ) {
+                return;
+              }
+              openDrawer(record as WarehouseRequestRecord);
+            },
+            style: { cursor: 'pointer' },
+          })}
         />
       </div>
 
@@ -187,6 +206,12 @@ export default function RequestsListWarehouse() {
         }}
         onIssueRequest={async (payload) => {
           const response = await services.issueRequest(payload);
+          setSelectedRequest(response.record);
+          setSelectedRequestData(response.detail);
+          await reloadRequests();
+        }}
+        onSaveDraft={async (payload) => {
+          const response = await services.saveDraft(payload);
           setSelectedRequest(response.record);
           setSelectedRequestData(response.detail);
           await reloadRequests();

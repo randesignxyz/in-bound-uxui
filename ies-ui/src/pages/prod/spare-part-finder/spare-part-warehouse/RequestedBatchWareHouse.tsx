@@ -133,6 +133,7 @@ export interface RequestDetailData {
   warehouseBy?: string;
   items: RequestDetailLineItem[];
   activities: RequestDetailActivity[];
+  draftItems?: Array<{ requestLineId: number; draftQty: number }>;
   shipments?: Shipment[];
   pickupStatus?: string;
   rawStatus?: string;
@@ -148,6 +149,10 @@ export interface DrawerBatchReturnItemsProps {
   onClose?: () => void;
   onChange?: (updated: any) => void;
   onIssueRequest?: (payload: {
+    id: number;
+    lines: Array<{ requestLineId: number; issueQty: number }>;
+  }) => Promise<void>;
+  onSaveDraft?: (payload: {
     id: number;
     lines: Array<{ requestLineId: number; issueQty: number }>;
   }) => Promise<void>;
@@ -182,6 +187,7 @@ export default function RequestedBatchWareHouse({
   onClose,
   onChange,
   onIssueRequest,
+  onSaveDraft,
   onConfirmPickup,
 }: DrawerBatchReturnItemsProps) {
   const access = useAccess();
@@ -257,6 +263,10 @@ export default function RequestedBatchWareHouse({
     () => Object.values(draftByProductId).reduce((sum, v) => sum + clampInt(v), 0),
     [draftByProductId],
   );
+  const currentSelectionTotal = useMemo(
+    () => Object.values(sendingByProductId).reduce((sum, v) => sum + clampInt(v), 0),
+    [sendingByProductId],
+  );
 
   const effectiveStatus: RequestStatus = useMemo(() => {
     if (statusOverride) return statusOverride;
@@ -286,7 +296,14 @@ export default function RequestedBatchWareHouse({
       return;
     }
 
-    const initKey = `${data.requestId}`;
+    const initKey = [
+      data.requestId,
+      data.status,
+      data.pickupStatus || '',
+      data.shipments?.length || 0,
+      (data.draftItems || []).map((item) => `${item.requestLineId}:${item.draftQty}`).join(','),
+      data.items.map((item) => `${item.requestLineId}:${item.warehouseSentQuantity || 0}`).join(','),
+    ].join('|');
     if (initKeyRef.current === initKey) return;
     initKeyRef.current = initKey;
 
@@ -297,12 +314,15 @@ export default function RequestedBatchWareHouse({
     setExpandedShipmentBatchNos([]);
 
     const nextSending: SendingMap = {};
+    const nextDraft: SendingMap = {};
     setWorkingItems(data.items);
     data.items.forEach((it) => {
       nextSending[it.productId] = 0;
+      const savedDraft = data.draftItems?.find((draft) => draft.requestLineId === it.requestLineId)?.draftQty ?? 0;
+      nextDraft[it.productId] = clampInt(savedDraft);
     });
     setSendingByProductId(nextSending);
-    setDraftByProductId({ ...nextSending });
+    setDraftByProductId(nextDraft);
 
     const baseLogs: RequestDetailActivity[] =
       (data.activities || []).length > 0
@@ -328,7 +348,7 @@ export default function RequestedBatchWareHouse({
     setShipmentBatches(existingShipments);
 
     setActivityLogs(baseLogs);
-  }, [data.approvedBy, data.items, data.requestDate, data.requestId, data.requestedBy, data.status, open]);
+  }, [data.approvedBy, data.draftItems, data.items, data.requestDate, data.requestId, data.requestedBy, data.status, open]);
 
   const handleClose = () => {
     initKeyRef.current = '';
@@ -404,6 +424,13 @@ export default function RequestedBatchWareHouse({
 
   const canWarehouseOperate = access.canSpfWarehouseStaff || access.canAdmin;
   const isReadyForWarehouseWork = effectiveStatus !== 'rejected' && effectiveStatus !== 'completed';
+  const showConfirmPickup = canWarehouseOperate && !!data.id && effectiveStatus === 'ready_to_Pickup';
+  const showSaveDraft = canWarehouseOperate && isReadyForWarehouseWork && effectiveStatus !== 'ready_to_Pickup' && currentSelectionTotal > 0;
+  const showSaveAndPickUp =
+    canWarehouseOperate &&
+    isReadyForWarehouseWork &&
+    effectiveStatus !== 'ready_to_Pickup' &&
+    (currentSelectionTotal > 0 || totalDraft > 0);
 
   const mapToWarehouseItems = (items: RequestDetailLineItem[]) =>
     items.map((it) => ({
@@ -497,29 +524,35 @@ export default function RequestedBatchWareHouse({
       return;
     }
 
-    // Merge current inputs into draft accumulator
     const nextDraft = { ...draftByProductId };
     Object.entries(sendingByProductId).forEach(([pid, qty]) => {
       nextDraft[pid] = (nextDraft[pid] || 0) + qty;
     });
-    setDraftByProductId(nextDraft);
+    const lines = workingItems
+      .map((item) => ({
+        requestLineId: Number(item.requestLineId || 0),
+        issueQty: clampInt(nextDraft[item.productId]),
+      }))
+      .filter((item) => item.requestLineId > 0 && item.issueQty > 0);
 
-    // Clear the input row
-    setSendingByProductId((prev) => {
-      const cleared = { ...prev };
-      Object.keys(cleared).forEach((k) => (cleared[k] = 0));
-      return cleared;
-    });
+    if (!onSaveDraft || !data.id) {
+      message.warning('Draft save is not available.');
+      return;
+    }
 
-    const nextDraftStatus: RequestStatus = totals.totalSent > 0 ? 'partial' : 'in-progress';
-    setStatusOverride(nextDraftStatus);
-    message.success('Draft saved. You can continue editing or click "Save & Pick up" when ready.');
-
-    emitWarehouseUpdate({
-      status: nextDraftStatus === 'in-progress' ? 'In Progress' : 'Partial',
-      items: workingItems,
-      shipments: shipmentBatches,
-    });
+    onSaveDraft({ id: data.id, lines })
+      .then(() => {
+        setSendingByProductId((prev) => {
+          const cleared = { ...prev };
+          Object.keys(cleared).forEach((k) => (cleared[k] = 0));
+          return cleared;
+        });
+        setStatusOverride('in-progress');
+        message.success('Draft saved successfully.');
+      })
+      .catch(() => {
+        message.error('Failed to save draft.');
+      });
   };
 
   // ─── SAVE & PICK UP ─────────────────────────────────────────────────────────
@@ -638,7 +671,12 @@ export default function RequestedBatchWareHouse({
   ];
 
   // ─── Shipment Batch Cards ────────────────────────────────────────────────────
-  const shipmentCards = shipmentBatches.map((shipment) => {
+  const orderedShipmentBatches = useMemo(
+    () => [...shipmentBatches].sort((left, right) => left.shipmentNo - right.shipmentNo),
+    [shipmentBatches],
+  );
+
+  const shipmentCards = orderedShipmentBatches.map((shipment) => {
     const isCompleted = shipment.status === 'completed';
     const cardTitle = (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -751,35 +789,30 @@ export default function RequestedBatchWareHouse({
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
-              <Popconfirm
-                title="Confirm Pick up"
-                description="Confirm that the requester has picked up the prepared spare parts?"
-                okText="Confirm"
-                cancelText="Cancel"
-                onConfirm={handleConfirmPickupRequest}
-                disabled={!canWarehouseOperate || !data.id || effectiveStatus !== 'ready_to_Pickup'}
-              >
-                <Button
-                  type="primary"
-                  ghost
-                  disabled={!canWarehouseOperate || !data.id || effectiveStatus !== 'ready_to_Pickup'}
+              {showConfirmPickup ? (
+                <Popconfirm
+                  title="Confirm Pick up"
+                  description="Confirm that the requester has picked up the prepared spare parts?"
+                  okText="Confirm"
+                  cancelText="Cancel"
+                  onConfirm={handleConfirmPickupRequest}
                 >
-                  Confirm Pick up
+        
+                  <Button type="primary">
+                    Confirm Pick up
+                  </Button>
+                </Popconfirm>
+              ) : null}
+              {showSaveDraft ? (
+                <Button onClick={handleSave}>
+                  Save (Draft)
                 </Button>
-              </Popconfirm>
-              <Button
-                onClick={handleSave}
-                disabled={!canWarehouseOperate || !isReadyForWarehouseWork}
-              >
-                Save (Draft)
-              </Button>
-              <Button
-                type="primary"
-                onClick={handleSaveAndPickUp}
-                disabled={!canWarehouseOperate || !isReadyForWarehouseWork}
-              >
-                Save &amp; Pick up
-              </Button>
+              ) : null}
+              {showSaveAndPickUp ? (
+                <Button type="primary" onClick={handleSaveAndPickUp}>
+                  Save &amp; Pick up
+                </Button>
+              ) : null}
             </Space>
           </div>
         }
@@ -793,19 +826,20 @@ export default function RequestedBatchWareHouse({
         >
           <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
-          <Descriptions.Item label="Type">{data.type ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
+          <Descriptions.Item label="Type">{data.type ?? '—'}</Descriptions.Item>         
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Total Items">{data.totalItems}</Descriptions.Item>
           <Descriptions.Item label="Status">
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}>
               {statusLabelMap[effectiveStatus]}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Total Items">{data.totalItems}</Descriptions.Item>
           <Descriptions.Item label="Sent Qty">
             {totals.totalSent} / {totals.totalRequested}
           </Descriptions.Item>
+          <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
         </Descriptions>
+        
 
         <Title level={5} style={{ marginBottom: 16 }}>
           Status Timeline
@@ -869,19 +903,20 @@ export default function RequestedBatchWareHouse({
             // Match 'Ready to Pick up (Shipment #N)' or 'Picked up (Shipment #N)' labels
             const shipmentMatch = String(a.label || '').match(/shipment\s*#\s*(\d+)/i);
             const shipmentNo = shipmentMatch ? Number(shipmentMatch[1]) : -1;
-            const shipmentIdx = shipmentNo > 0 ? shipmentNo - 1 : -1;
-            const matchedBatch = shipmentIdx >= 0 ? shipmentBatches[shipmentIdx] : undefined;
+            const matchedBatch = shipmentNo > 0
+              ? orderedShipmentBatches.find((shipment) => shipment.shipmentNo === shipmentNo)
+              : undefined;
             const batchLines: ShipmentLine[] = (matchedBatch?.lines ?? []) as ShipmentLine[];
-            const isReadyToPickUpEntry = /ready\s*to\s*pick\s*up/i.test(String(a.label || ''));
-            const isExpandable = batchLines.length > 0 && !isReadyToPickUpEntry;
-            const isExpanded = isExpandable && expandedShipmentBatchNos.includes(shipmentIdx);
+            const isPartialIssueEntry = /^partial issue #\d+$/i.test(String(a.label || '').trim());
+            const isExpandable = batchLines.length > 0 && isPartialIssueEntry;
+            const isExpanded = isExpandable && expandedShipmentBatchNos.includes(shipmentNo);
 
             const toggleExpanded = () => {
               if (!isExpandable) return;
               setExpandedShipmentBatchNos((prev: number[]) =>
-                prev.includes(shipmentIdx)
-                  ? prev.filter((n: number) => n !== shipmentIdx)
-                  : [...prev, shipmentIdx].sort((x, y) => x - y),
+                prev.includes(shipmentNo)
+                  ? prev.filter((n: number) => n !== shipmentNo)
+                  : [...prev, shipmentNo].sort((x, y) => x - y),
               );
             };
 

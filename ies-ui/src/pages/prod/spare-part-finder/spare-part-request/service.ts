@@ -45,6 +45,7 @@ type MyRequestDto = {
   id: number;
   requestNo?: string;
   requestId: string;
+  managerId?: string | null;
   requestedDate?: string;
   requestDate?: string;
   requestStatus: BackendRequestStatus;
@@ -185,6 +186,8 @@ const normalizeRequestStatus = (
       return 'rejected';
     case 'PARTIAL_ISSUE':
       return 'partial';
+    case 'IN_PROGRESS':
+      return 'in-progress';
     case 'READY_TO_PICKUP':
       return 'ready_to_Pickup';
     case 'COMPLETE':
@@ -205,6 +208,8 @@ const mapRequestStatusFilter = (value?: MyRequestSearch['status']) => {
       return 'REJECTED';
     case 'partial':
       return 'PARTIAL_ISSUE';
+    case 'in-progress':
+      return 'IN_PROGRESS';
     case 'ready_to_Pickup':
       return 'READY_TO_PICKUP';
     case 'completed':
@@ -255,6 +260,7 @@ export const mapMyRequestItem = (item: MyRequestDto): MyRequestItem => {
     requestId: item.requestNo || item.requestId,
     requestNo: item.requestNo || undefined,
     requestedBy: item.requestId,
+    approvedBy: item.managerId || undefined,
     priority: normalizePriority(item.priority),
     requestDate: item.requestedDate || item.requestDate || '',
     type: requestType,
@@ -286,7 +292,7 @@ const buildRequestActivities = (request: MyRequestItem): RequestDetailActivity[]
       label: 'Approved',
       description: 'Request approved',
       date: request.requestDate,
-      by: 'Approver',
+      by: request.approvedBy,
       dot: 'done',
     });
   }
@@ -296,7 +302,7 @@ const buildRequestActivities = (request: MyRequestItem): RequestDetailActivity[]
       label: 'Rejected',
       description: 'Request rejected',
       date: request.requestDate,
-      by: 'Approver',
+      by: request.approvedBy,
       dot: 'done',
     });
   }
@@ -366,7 +372,7 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     receivedItems: request.receivedItems,
     remark: request.remark,
     requestedBy: request.requestedBy,
-    approvedBy: 'Approver',
+    approvedBy: request.approvedBy,
     items,
     activities: buildRequestActivities(request),
   };

@@ -1,4 +1,4 @@
-import { EyeOutlined, SearchOutlined } from '@ant-design/icons';
+import { EyeOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
@@ -80,23 +80,27 @@ const clampNonNegativeInt = (value: unknown): number => {
   return Math.max(0, Math.floor(n));
 };
 
-const deriveDisplayStatus = (row: Pick<MyRequestItem, 'requestStatus' | 'totalItems' | 'receivedItems'>): RequestStatus => {
-  const total = clampNonNegativeInt(row.totalItems);
+const deriveDisplayStatus = (
+  row: Pick<MyRequestItem, 'requestStatus' | 'totalItems' | 'totalApprovedQty' | 'receivedItems'>,
+): RequestStatus => {
+  const approved = clampNonNegativeInt(row.totalApprovedQty);
   const received = clampNonNegativeInt(row.receivedItems);
 
-  if (total > 0 && received >= total) return 'completed';
+  if (approved > 0 && received >= approved) return 'completed';
+  if (approved > 0 && received > 0 && received < approved) return 'partial';
   if (row.requestStatus === 'ready_to_Pickup') return 'ready_to_Pickup';
-  if (received > 0) return 'partial';
   return row.requestStatus;
 };
 
-const deriveDisplayReceived = (row: Pick<MyRequestItem, 'requestStatus' | 'totalItems' | 'receivedItems'>): number => {
+const deriveDisplayReceived = (
+  row: Pick<MyRequestItem, 'requestStatus' | 'totalItems' | 'totalApprovedQty' | 'receivedItems'>,
+): number => {
   const status = deriveDisplayStatus(row);
-  const total = clampNonNegativeInt(row.totalItems);
+  const approved = clampNonNegativeInt(row.totalApprovedQty);
   const received = clampNonNegativeInt(row.receivedItems);
 
   if (status === 'partial' || status === 'ready_to_Pickup' || status === 'completed')
-    return total > 0 ? Math.min(received, total) : received;
+    return approved > 0 ? Math.min(received, approved) : received;
   return 0;
 };
 
@@ -123,6 +127,15 @@ export default function MyRequestListview() {
   const reloadTable = () => {
     actionRef.current?.setPageInfo?.({ current: 1 });
     actionRef.current?.reload?.();
+  };
+
+  const refreshTable = () => {
+    actionRef.current?.reload?.();
+  };
+
+  const openDetail = (record: MyRequestItem) => {
+    setSelectedRequest(record);
+    setDetailOpen(true);
   };
 
   const requestData = async (
@@ -163,64 +176,70 @@ export default function MyRequestListview() {
       ) : (
         <>
           <Card size="small" style={{ marginBottom: 10 }}>
-            <Space wrap size="middle">
-              <Input.Search
-                allowClear
-                style={{ width: 300 }}
-                placeholder="Search Request ID or Remark"
-                value={searchValue}
-                onChange={(event) => {
-                  const nextValue = event.target.value;
-                  setSearchValue(nextValue);
-                  reloadTable();
-                }}
-                onSearch={(v) => {
-                  setSearchValue(v || '');
-                  reloadTable();
-                }}
-                enterButton={<SearchOutlined />}
-              />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+              <Space wrap size="middle">
+                <Input.Search
+                  allowClear
+                  style={{ width: 300 }}
+                  placeholder="Search Request ID or Remark"
+                  value={searchValue}
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    setSearchValue(nextValue);
+                    reloadTable();
+                  }}
+                  onSearch={(v) => {
+                    setSearchValue(v || '');
+                    reloadTable();
+                  }}
+                  enterButton={<SearchOutlined />}
+                />
 
-              <Select
-                style={{ minWidth: 180 }}
-                value={filters.status}
-                options={statusFilterOptions}
-                onChange={(value) => {
-                  setFilters((prev) => ({ ...prev, status: value }));
-                  reloadTable();
-                }}
-              />
+                <Select
+                  style={{ minWidth: 180 }}
+                  value={filters.status}
+                  options={statusFilterOptions}
+                  onChange={(value) => {
+                    setFilters((prev) => ({ ...prev, status: value }));
+                    reloadTable();
+                  }}
+                />
 
-              <Select
-                style={{ minWidth: 140 }}
-                value={filters.priority}
-                options={priorityOptions}
-                onChange={(value) => {
-                  setFilters((prev) => ({ ...prev, priority: value }));
-                  reloadTable();
-                }}
-              />
+                <Select
+                  style={{ minWidth: 140 }}
+                  value={filters.priority}
+                  options={priorityOptions}
+                  onChange={(value) => {
+                    setFilters((prev) => ({ ...prev, priority: value }));
+                    reloadTable();
+                  }}
+                />
 
-              <RangePicker
-                placeholder={['Filter Date', 'End date']}
-                value={
-                  filters.dateRange
-                    ? [dayjs(filters.dateRange[0]), dayjs(filters.dateRange[1])]
-                    : null
-                }
-                onChange={(dates) => {
-                  if (dates && dates[0] && dates[1]) {
-                    setFilters((prev) => ({
-                      ...prev,
-                      dateRange: [dates[0]!.toISOString(), dates[1]!.toISOString()],
-                    }));
-                  } else {
-                    setFilters((prev) => ({ ...prev, dateRange: undefined }));
+                <RangePicker
+                  placeholder={['Filter Date', 'End date']}
+                  value={
+                    filters.dateRange
+                      ? [dayjs(filters.dateRange[0]), dayjs(filters.dateRange[1])]
+                      : null
                   }
-                  reloadTable();
-                }}
-              />
-            </Space>
+                  onChange={(dates) => {
+                    if (dates && dates[0] && dates[1]) {
+                      setFilters((prev) => ({
+                        ...prev,
+                        dateRange: [dates[0]!.toISOString(), dates[1]!.toISOString()],
+                      }));
+                    } else {
+                      setFilters((prev) => ({ ...prev, dateRange: undefined }));
+                    }
+                    reloadTable();
+                  }}
+                />
+              </Space>
+
+              <Button icon={<ReloadOutlined />} onClick={refreshTable}>
+                Refresh
+              </Button>
+            </div>
           </Card>
 
           <Card size="small">
@@ -251,10 +270,7 @@ export default function MyRequestListview() {
                         type="text"
                         size="small"
                         icon={<EyeOutlined style={{ color: '#999' }} />}
-                        onClick={() => {
-                          setSelectedRequest(r);
-                          setDetailOpen(true);
-                        }}
+                        onClick={() => openDetail(r)}
                       />
                     </Tooltip>
                   ),
@@ -294,6 +310,14 @@ export default function MyRequestListview() {
                   width: 110,
                   align: 'center',
                   sorter: true,
+                },
+                {
+                  title: 'Approved Items',
+                  dataIndex: 'totalApprovedQty',
+                  width: 130,
+                  align: 'center',
+                  sorter: true,
+                  render: (_: unknown, r) => clampNonNegativeInt(r.totalApprovedQty),
                 },
                 {
                   title: 'Received Items',
@@ -338,10 +362,7 @@ export default function MyRequestListview() {
                         color: '#fff',
                         minWidth: 84,
                       }}
-                      onClick={() => {
-                        setSelectedRequest(record);
-                        setDetailOpen(true);
-                      }}
+                      onClick={() => openDetail(record)}
                     >
                       View Detail
                     </Button>
@@ -350,6 +371,19 @@ export default function MyRequestListview() {
                 ]: []),
               ] as import('@ant-design/pro-components').ProColumns<MyRequestItem>[]
               }
+              onRow={(record) => ({
+                onClick: (event) => {
+                  const target = event.target;
+                  if (
+                    target instanceof HTMLElement &&
+                    target.closest('a, button, input, textarea, .ant-select, .ant-picker')
+                  ) {
+                    return;
+                  }
+                  openDetail(record);
+                },
+                style: { cursor: 'pointer' },
+              })}
               request={async (params, sort) => requestData(params, sort)}
             />
           </Card>

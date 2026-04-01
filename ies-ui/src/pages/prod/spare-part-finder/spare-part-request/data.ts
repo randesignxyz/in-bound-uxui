@@ -78,6 +78,7 @@ export interface MyRequestItem {
   requestId: string;
   requestNo?: string;
   requestedBy?: string;
+  approvedBy?: string;
   priority: RequestPriority;
   requestDate: string;
   totalItems: number;

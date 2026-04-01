@@ -197,38 +197,50 @@ export default function RequestedBatchDrawer({
   const access = useAccess();
   const data: RequestDetailData = useMemo(() => {
     if (propData) return propData;
+
+    const fallbackRequest: MyRequestItem = request ?? {
+      id: 0,
+      requestId: '-',
+      priority: 'normal',
+      requestDate: new Date().toISOString(),
+      totalItems: 0,
+      receivedItems: 0,
+      requestStatus: 'pending',
+      remark: '',
+      type: 'MRO-W',
+    };
+
     const items: RequestDetailLineItem[] =
-      (request?.items || []).map((item, index) => ({
+      fallbackRequest.items?.map((item, index) => ({
         no: index + 1,
         requestLineId: item.requestLineId,
         imageId: Array.isArray(item.imageId) ? item.imageId[0] : item.imageId,
         productId: item.sparePartId || item.sparePartCode,
-        requestId: request?.requestId || '',
+        requestId: fallbackRequest.requestId,
         itemName: item.sparePartName,
         quantityToReturn: Number(item.approvedQty || item.requestedQty || 0),
         usedQuantity: 0,
         total: Number(item.requestedQty || 0),
         warehouseSentQuantity: 0,
-        warehouse: item.toWarehouseCode,
-        sparePartType: item.type || request?.type,
+        warehouse: item.toWarehouseCode || fallbackRequest.type,
+        sparePartType: fallbackRequest.type,
         businessUnit: item.unit,
         uom: item.unit,
         description: item.remark,
-      }));
-
-    const requestType = request?.type || items.find((item) => item.sparePartType)?.sparePartType;
+      })) ||
+      [];
 
     return {
-      id: request?.id,
-      requestId: request?.requestId || '',
-      requestDate: request?.requestDate || '',
-      status: request?.requestStatus || 'pending',
-      priority: request?.priority,
-      type: requestType as SparePartType | undefined,
-      totalItems: request?.totalItems || items.length,
-      receivedItems: request?.receivedItems,
-      remark: request?.remark,
-      requestedBy: request?.requestedBy,
+      id: fallbackRequest.id,
+      requestId: fallbackRequest.requestId,
+      requestDate: fallbackRequest.requestDate,
+      status: fallbackRequest.requestStatus,
+      priority: fallbackRequest.priority,
+      type: fallbackRequest.type,
+      totalItems: fallbackRequest.totalItems,
+      receivedItems: fallbackRequest.receivedItems,
+      remark: fallbackRequest.remark,
+      requestedBy: fallbackRequest.requestedBy,
       items,
       activities: [],
     };
@@ -443,8 +455,8 @@ export default function RequestedBatchDrawer({
       const description = String(a?.description || '');
 
       // avoid confusing generic logs that duplicate our status timeline
+      if (label === 'requested') return;
       if (label === 'processing' && /status updated/i.test(description)) return;
-      if (label === 'requested' && /request created/i.test(description)) return;
 
       const byFallback =
         label.includes('approve')
@@ -703,20 +715,20 @@ export default function RequestedBatchDrawer({
         width: '10%',
     },
     {
-      title: 'Qty Requested',
+      title: 'Requested',
       dataIndex: 'requestedQty',
       align: 'center',
       width: '10%',
       render: (_: unknown, record) => Number(record.requestedQty ?? record.total ?? 0),
     },
     {
-      title: 'Approve QTY',
+      title: 'Approved',
       dataIndex: 'quantityToReturn',
       align: 'center',
       width: '10%',
     },
     {
-      title: 'Qty Sent',
+      title: 'Sent',
       align: 'center',
       width: '10%',
       render: (_: unknown, record) =>
@@ -727,7 +739,7 @@ export default function RequestedBatchDrawer({
             : 0,
     },
     {
-      title: 'Qty Received',
+      title: 'Received',
       align: 'center',
       width: '10%',
       render: (_: unknown, record) => (pickedProductIds.has(record.productId) ? record.quantityToReturn : 0),
@@ -1083,7 +1095,7 @@ export default function RequestedBatchDrawer({
             <span>Request Details</span>
           </div>
         }
-        width="50vw"
+        width="60%"
         placement="right"
         onClose={handleClose}
         open={open}
@@ -1195,8 +1207,8 @@ export default function RequestedBatchDrawer({
           <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
           <Descriptions.Item label="Type">{data.type ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
           <Descriptions.Item label="Status">
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}
             >
@@ -1204,8 +1216,8 @@ export default function RequestedBatchDrawer({
               
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
           <Descriptions.Item label="Received Items">{displayedReceivedItems}</Descriptions.Item>
+          <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
         </Descriptions>
 
         <Title level={5} style={{ marginBottom: 16 }}>

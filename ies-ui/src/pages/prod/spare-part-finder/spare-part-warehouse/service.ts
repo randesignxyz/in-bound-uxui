@@ -11,6 +11,7 @@ import type { WarehouseDisplayStatus, WarehouseRequestRecord } from './requestsW
 
 type BackendIssueStatus =
   | 'APPROVED'
+  | 'IN_PROGRESS'
   | 'PARTIAL_ISSUE'
   | 'READY_TO_PICKUP'
   | 'COMPLETE'
@@ -57,6 +58,7 @@ type IssueRequestDto = {
   id: number;
   requestNo: string;
   requesterId: string;
+  approverId?: string | null;
   requestedDate?: string;
   requestStatus: BackendIssueStatus;
   type?: string | null;
@@ -68,6 +70,7 @@ type IssueRequestDto = {
   priority?: string | null;
   items?: IssueLineDto[];
   history?: IssueHistoryDto[];
+  draftItems?: Array<{ requestLineId: number; draftQty: number }>;
   pickupStatus?: string | null;
 };
 
@@ -92,6 +95,8 @@ type IssueRequestPayload = {
     issueQty: number;
   }>;
 };
+
+type SaveDraftPayload = IssueRequestPayload;
 
 const SparePartWarehouseAction = {
   pageRequests: (params: PageIssueRequestsParams): ServiceApiType<any> => ({
@@ -119,6 +124,12 @@ const SparePartWarehouseAction = {
   issueRequest: (payload: IssueRequestPayload): ServiceApiType<IssueRequestPayload> => ({
     type: 'EXEC',
     actionName: 'issue-spare-part-request',
+    endpoint: 'PROD',
+    payload,
+  }),
+  saveDraft: (payload: SaveDraftPayload): ServiceApiType<SaveDraftPayload> => ({
+    type: 'EXEC',
+    actionName: 'save-spare-part-issue-draft',
     endpoint: 'PROD',
     payload,
   }),
@@ -167,8 +178,10 @@ const deriveRecordStatus = (
   switch (normalizedRequestStatus) {
     case 'REJECTED':
       return 'Rejected';
+    case 'IN_PROGRESS':
+      return 'In Progress';
     case 'PARTIAL_ISSUE':
-      return 'Partial';
+      return 'Ready To Pick Up';
     case 'READY_TO_PICKUP':
     case 'COMPLETE':
       return 'Ready To Pick Up';
@@ -222,30 +235,48 @@ const mapIssueLineDetail = (item: IssueLineDto, requestId: string, index: number
 const buildShipments = (
   history: IssueHistoryDto[],
   pickupStatus?: string | null,
+  requestStatus?: string | null,
 ): Shipment[] => {
   const isConfirmed = String(pickupStatus || '').trim().toLowerCase() === 'confirmed';
+  const normalizedRequestStatus = String(requestStatus || '').trim().toUpperCase();
+  const orderedHistory = [...history].sort((left, right) => {
+    const leftTime = new Date(left.issuedAt || '').getTime();
+    const rightTime = new Date(right.issuedAt || '').getTime();
+    return leftTime - rightTime;
+  });
 
-  return history.map((entry, index) => ({
+  return orderedHistory.map((entry, index) => {
+    const isPreviouslyPicked =
+      !isConfirmed &&
+      normalizedRequestStatus === 'PARTIAL_ISSUE' &&
+      index < orderedHistory.length - 1;
+
+    return ({
     id: entry.fulfillmentId,
     shipmentNo: index + 1,
     createdAt: entry.issuedAt || '',
     createdBy: entry.warehouseStaffId || 'Warehouse',
-    status: isConfirmed ? 'completed' : 'ready_to_pickup',
-    confirmedAt: isConfirmed ? entry.issuedAt || '' : undefined,
-    confirmedBy: isConfirmed ? entry.warehouseStaffId || 'Warehouse' : undefined,
+    status: isConfirmed || isPreviouslyPicked ? 'completed' : 'ready_to_pickup',
+    confirmedAt: isConfirmed || isPreviouslyPicked ? entry.issuedAt || '' : undefined,
+    confirmedBy: isConfirmed || isPreviouslyPicked ? entry.warehouseStaffId || 'Warehouse' : undefined,
     lines: (entry.items || []).map((line) => ({
       productId: line.sparePartId || line.sparePartCode,
       itemName: line.sparePartName,
       quantity: Number(line.deliveredQty || 0),
       uom: line.unit || 'pcs',
     })),
-  }));
+  })});
 };
 
 const buildActivities = (
   item: IssueRequestDto,
   status: RequestDetailData['status'],
 ): RequestDetailActivity[] => {
+  const orderedHistory = [...(item.history || [])].sort((left, right) => {
+    const leftTime = new Date(left.issuedAt || item.requestedDate || '').getTime();
+    const rightTime = new Date(right.issuedAt || item.requestedDate || '').getTime();
+    return leftTime - rightTime;
+  });
   const activities: RequestDetailActivity[] = [
     {
       label: 'Requested',
@@ -261,7 +292,7 @@ const buildActivities = (
       label: 'Approved',
       description: 'Request approved',
       date: item.requestedDate,
-      by: 'Approver',
+      by: item.approverId || undefined,
       dot: 'done',
     });
   }
@@ -276,19 +307,37 @@ const buildActivities = (
     });
   }
 
-  (item.history || []).forEach((entry, index) => {
+  orderedHistory.forEach((entry, index) => {
+    const isPreviouslyPicked =
+      String(item.pickupStatus || '').trim().toLowerCase() !== 'confirmed' &&
+      String(item.requestStatus || '').trim().toUpperCase() === 'PARTIAL_ISSUE' &&
+      index < orderedHistory.length - 1;
+
     activities.push({
       label: 'Ready to Pick up',
       description: `Shipment #${index + 1} is ready to pick up`,
       date: entry.issuedAt || item.requestedDate,
       by: entry.warehouseStaffId || 'Warehouse',
-      dot: String(item.pickupStatus || '').trim().toLowerCase() === 'confirmed' ? 'done' : 'pending',
+      dot:
+        String(item.pickupStatus || '').trim().toLowerCase() === 'confirmed' || isPreviouslyPicked
+          ? 'done'
+          : 'pending',
     });
+
+    if (isPreviouslyPicked) {
+      activities.push({
+        label: `Partial Issue #${index + 1}`,
+        description: `Shipment #${index + 1} was picked up, but the request is still partially issued.`,
+        date: entry.issuedAt || item.requestedDate,
+        by: item.requesterId || 'Requester',
+        dot: 'done',
+      });
+    }
   });
 
   if (String(item.pickupStatus || '').trim().toLowerCase() === 'confirmed') {
     if (status === 'partial') {
-      (item.history || []).forEach((entry, index) => {
+      orderedHistory.forEach((entry, index) => {
         activities.push({
           label: `Partial Issue #${index + 1}`,
           description: `Shipment #${index + 1} was picked up, but the request is still partially issued.`,
@@ -301,7 +350,7 @@ const buildActivities = (
       activities.push({
         label: 'Completed',
         description: 'All issued items have been picked up.',
-        date: item.history?.[item.history.length - 1]?.issuedAt || item.requestedDate,
+        date: orderedHistory[orderedHistory.length - 1]?.issuedAt || item.requestedDate,
         by: item.requesterId || 'Requester',
         dot: 'done',
       });
@@ -319,8 +368,12 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
       ? 'rejected'
       : rawStatus === 'APPROVED'
         ? 'approved'
+        : rawStatus === 'IN_PROGRESS'
+          ? 'in-progress'
         : rawStatus === 'PARTIAL_ISSUE'
-          ? 'partial'
+          ? normalizedPickupStatus === 'confirmed'
+            ? 'partial'
+            : 'ready_to_Pickup'
           : rawStatus === 'READY_TO_PICKUP'
             ? 'ready_to_Pickup'
             : rawStatus === 'COMPLETE'
@@ -340,11 +393,15 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
     receivedItems: Number(item.totalIssuedQty || 0),
     remark: item.remark || '',
     requestedBy: item.requesterId || 'Requester',
-    approvedBy: 'Approver',
+    approvedBy: item.approverId || undefined,
     warehouseBy: item.history?.[item.history.length - 1]?.warehouseStaffId || 'Warehouse',
     items: (item.items || []).map((line, index) => mapIssueLineDetail(line, item.requestNo || '', index)),
     activities: buildActivities(item, normalizedStatus),
-    shipments: buildShipments(item.history || [], item.pickupStatus),
+    shipments: buildShipments(item.history || [], item.pickupStatus, item.requestStatus),
+    draftItems: (item.draftItems || []).map((entry) => ({
+      requestLineId: Number(entry.requestLineId || 0),
+      draftQty: Number(entry.draftQty || 0),
+    })),
     pickupStatus: item.pickupStatus || undefined,
     rawStatus: item.requestStatus,
     pickupQrToken: (item as any).pickupQrToken || undefined,
@@ -399,6 +456,21 @@ export const SparePartWarehouseService = (requestAction: RequestActions) => ({
     const data = unwrapExecPayload(response);
     if (!data) {
       throw new Error('Issue request response is missing data.');
+    }
+
+    return {
+      record: mapIssueRequestRecord(data),
+      detail: mapIssueRequestDetail(data),
+    };
+  },
+  saveDraft: async (payload: SaveDraftPayload): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {
+    const response = (await singleRequest<ExecResponseDto<IssueRequestDto>>(
+      SparePartWarehouseAction.saveDraft(payload),
+    )(requestAction)) as ExecResponseDto<IssueRequestDto>;
+
+    const data = unwrapExecPayload(response);
+    if (!data) {
+      throw new Error('Save draft response is missing data.');
     }
 
     return {

@@ -23,7 +23,7 @@ export default function ListView() {
     <Tabs
     items={[
         {
-            label: 'Requests List',
+            label: 'Request List',
             key: '1',
             children: <MyRequestListview />,
         },

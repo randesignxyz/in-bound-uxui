@@ -10,7 +10,6 @@ import {
   Input,
   message,
   Popconfirm,
-  Radio,
   Select,
   Space,
   Switch,
@@ -31,7 +30,7 @@ import SparePartImage from '../spare-part-request/SparePartImage';
 
 export default function MySparePartList() {
   const actionRef = useRef<ActionType>();
-  const [radioValue, setRadioValue] = useState('All');
+  const [radioValue, setRadioValue] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>(
     SPARE_PART_CATEGORY_OPTIONS[0].value,
@@ -50,6 +49,20 @@ export default function MySparePartList() {
   const [selectedItem, setSelectedItem] = useState<SparePartReturnListItem | null>(null);
   const [updatingFulfillmentLineId, setUpdatingFulfillmentLineId] = useState<number | null>(null);
   const radioOptions = SPARE_PART_RETURN_RADIO_OPTIONS;
+  const selectedWarehouseLabel =
+    radioValue.length === 0
+      ? 'Select warehouses...'
+      : radioOptions
+          .filter((opt) => radioValue.includes(opt.value))
+          .map((opt) => opt.label)
+          .join(', ');
+
+  const handleWarehousesChange = (values: string[]) => {
+    setRadioValue(values);
+    setSelectedRowKeys([]);
+    setSelectedItems([]);
+    actionRef.current?.reloadAndRest?.();
+  };
 
   const requestAction: RequestActions = {
     start: (serviceName) => console.log(`Loading: ${serviceName}`),
@@ -143,6 +156,9 @@ export default function MySparePartList() {
     setModalOpen((prev) => ({ ...prev, visible: false }));
   };
 
+  const selectedWarehouseFilterValue =
+    radioValue.length > 0 && !radioValue.includes('All') ? radioValue.join(',') : undefined;
+
   return (
     <>
       <Card size="small" style={{ marginBottom: 10 }}>
@@ -159,22 +175,19 @@ export default function MySparePartList() {
 
           {/* Desktop: Radio Group */}
           <div className="radio-group-desktop">
-            <Radio.Group
-              value={radioValue}
-              onChange={(e) => {
-                setRadioValue(e.target.value);
-                setSelectedRowKeys([]);
-                setSelectedItems([]);
-                actionRef.current?.reloadAndRest?.();
-              }}
-            >
-              {radioOptions.map((opt) => (
-                <Radio.Button key={opt.value} value={opt.value}>
-                  {opt.label}
-                </Radio.Button>
-              ))}
-            </Radio.Group>
-          </div>
+          <Select
+            mode="multiple"
+            allowClear
+            style={{ minWidth: 250 }}
+            placeholder="Select warehouses..."
+            value={radioValue}
+            onChange={(values: string[]) => handleWarehousesChange(values)}
+            options={radioOptions.map((opt) => ({
+              label: opt.label,
+              value: opt.value,
+            }))}
+          />
+        </div>
 
           {/* Mobile: Dropdown */}
           <div className="radio-group-mobile">
@@ -184,18 +197,20 @@ export default function MySparePartList() {
                   key: opt.value,
                   label: opt.label,
                   onClick: () => {
-                    setRadioValue(opt.value);
-                    setSelectedRowKeys([]);
-                    setSelectedItems([]);
-                    actionRef.current?.reloadAndRest?.();
+                    const nextValues = radioValue.includes(opt.value)
+                      ? radioValue.filter((value) => value !== opt.value)
+                      : [...radioValue, opt.value];
+                    handleWarehousesChange(nextValues);
                   },
                 })),
-                selectedKeys: [radioValue],
+                selectable: true,
+                multiple: true,
+                selectedKeys: radioValue,
               }}
               trigger={['click']}
             >
               <Button>
-                {radioOptions.find((opt) => opt.value === radioValue)?.label} <MoreOutlined />
+                {selectedWarehouseLabel} <MoreOutlined />
               </Button>
             </Dropdown>
           </div>
@@ -267,8 +282,8 @@ export default function MySparePartList() {
                     selectedCategory !== SPARE_PART_CATEGORY_OPTIONS[0].value
                       ? selectedCategory
                       : undefined,
-                  warehouse: radioValue !== 'All' ? radioValue : undefined,
-                  warehouseCode: radioValue !== 'All' ? radioValue : undefined,
+                  warehouse: selectedWarehouseFilterValue,
+                  warehouseCode: selectedWarehouseFilterValue,
                   pickedItemState,
                   dateRange,
                 },

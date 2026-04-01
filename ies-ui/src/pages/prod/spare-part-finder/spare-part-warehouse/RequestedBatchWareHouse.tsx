@@ -554,45 +554,29 @@ export default function RequestedBatchWareHouse({
 
     onConfirmPickup(data.id)
       .then(() => {
-        const confirmedBy =
-          currentUser.initialState?.currentUser?.login || data.warehouseBy || 'Warehouse';
         const latestReadyShipment = [...shipmentBatches]
           .sort((left, right) => right.shipmentNo - left.shipmentNo)
           .find((shipment) => shipment.status !== 'completed');
-        const confirmedShipmentNo = latestReadyShipment?.shipmentNo ?? shipmentBatches.length;
         const nextStatus =
           totals.totalRequested > 0 && totals.totalSent >= totals.totalRequested ? 'completed' : 'partial';
 
         setStatusOverride(nextStatus);
-        setActivityLogs((prev) => [
-          ...prev,
-          {
-            label: 'Confirm Pick up',
-            description: `Shipment #${Math.max(1, confirmedShipmentNo)} pickup confirmed`,
-            date: new Date().toISOString(),
-            by: confirmedBy,
-            dot: 'done',
-          },
-          ...(nextStatus === 'partial'
-            ? [
-                {
-                  label: `Partial Issue #${Math.max(1, confirmedShipmentNo)}`,
-                  description: `Shipment #${Math.max(1, confirmedShipmentNo)} was picked up, but the request is still partially issued.`,
-                  date: new Date().toISOString(),
-                  by: data.requestedBy ?? 'Requester',
-                  dot: 'done' as const,
-                },
-              ]
-            : [
-                {
-                  label: 'Completed',
-                  description: 'All issued items have been picked up.',
-                  date: new Date().toISOString(),
-                  by: data.requestedBy ?? 'Requester',
-                  dot: 'done' as const,
-                },
-              ]),
-        ]);
+        setShipmentBatches((prev) =>
+          prev.map((shipment) =>
+            shipment.shipmentNo === (latestReadyShipment?.shipmentNo ?? shipment.shipmentNo)
+              ? {
+                  ...shipment,
+                  status: 'completed',
+                  confirmedAt: shipment.confirmedAt || new Date().toISOString(),
+                  confirmedBy:
+                    shipment.confirmedBy ||
+                    currentUser.initialState?.currentUser?.login ||
+                    data.warehouseBy ||
+                    undefined,
+                }
+              : shipment,
+          ),
+        );
         message.success('Pickup confirmed successfully.');
       })
       .catch(() => {

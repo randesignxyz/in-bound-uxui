@@ -14,6 +14,8 @@ import {
 export const buildSummaryColumns = (options: {
   onViewRequest?: (request: WarehouseRequestRecord) => void;
   onAcceptRequest?: (request: WarehouseRequestRecord) => void;
+
+  
 }): ProColumns<WarehouseRequestRecord>[] => [
   
   {

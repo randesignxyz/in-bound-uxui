@@ -264,9 +264,9 @@ export default function MyRequestListview() {
                 */}
               </Space>
 
-              <Button icon={<ReloadOutlined />} onClick={refreshTable}>
+              {/* <Button icon={<ReloadOutlined />} onClick={refreshTable}>
                 Refresh
-              </Button>
+              </Button> */}
             </div>
           </Card>
 
@@ -284,6 +284,15 @@ export default function MyRequestListview() {
                 pageSizeOptions: [10, 20, 50],
                 showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
               }}
+
+              toolBarRender={() => [
+                <Space key="spr-action-bar" size="small">
+                  <Button icon={<ReloadOutlined />} onClick={refreshTable}>
+                    Refresh
+                  </Button>
+                </Space>,
+              ]}
+              
               columns={
                 [
                 ...(access.canSpfRequester ? [

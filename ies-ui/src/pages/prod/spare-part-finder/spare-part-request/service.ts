@@ -1,3 +1,4 @@
+import { getServiceUrl } from '@/services/ApiUrl';
 import type { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import type { Paging } from '@/services/API';
 import { type RequestActions, type ServiceApiType, singleRequest } from '@/services/apiGateway';
@@ -10,6 +11,7 @@ import type {
   SparePartType,
   SparePartRequestItem,
 } from './data';
+import { mapItem, type SparePartRequestListApiItem } from './service.api';
 import type {
   RequestDetailActivity,
   RequestDetailData,
@@ -228,6 +230,64 @@ const normalizePriority = (value?: string | null): RequestPriority => {
   if (normalized === 'high') return 'high';
   if (normalized === 'low') return 'low';
   return 'normal';
+};
+
+type ImportedRequestRowDto = {
+  rowNumber: number;
+  requestedQty: number;
+  purpose: string;
+  toWarehouseCode: string;
+  forLine: string;
+  uom: string;
+  item: SparePartRequestListApiItem;
+};
+
+type ImportedRequestFailedRowDto = {
+  rowNumber: number;
+  productId?: string | null;
+  requestedQty?: string | null;
+  purpose?: string | null;
+  toWarehouseCode?: string | null;
+  forLine?: string | null;
+  uom?: string | null;
+  reasons?: string[] | null;
+};
+
+type ImportedRequestResultDto = {
+  totalRows: number;
+  successCount: number;
+  failureCount: number;
+  successfulRows?: ImportedRequestRowDto[];
+  failedRows?: ImportedRequestFailedRowDto[];
+};
+
+export type ImportedRequestRow = {
+  rowNumber: number;
+  quantity: number;
+  purpose: string;
+  toWarehouseCode: string;
+  forLine: string;
+  uom: string;
+  item: SparePartRequestItem;
+};
+
+export type ImportedRequestFailedRow = {
+  rowNumber: number;
+  productId?: string;
+  requestedQty?: string;
+  purpose?: string;
+  toWarehouseCode?: string;
+  forLine?: string;
+  uom?: string;
+  reasons: string[];
+};
+
+export type ImportedRequestResult = {
+  totalRows: number;
+  successCount: number;
+  failureCount: number;
+  successfulRows: ImportedRequestRow[];
+  failedRows: ImportedRequestFailedRow[];
 };
 
 const normalizeSparePartType = (value?: string | null): SparePartType | undefined => {
@@ -702,5 +762,62 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
   },
   confirmPickup: async (id: number): Promise<any> => {
     return await singleRequest<any>(SparePartRequestAction.confirmPickup(id))(requestAction);
+  },
+  importRequestFile: async (file: File): Promise<ImportedRequestResult> => {
+    requestAction?.start?.('import-spare-part-request');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${getServiceUrl('PROD')}/spare-part-finder/requests/import`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as ImportedRequestResultDto & {
+        message?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(payload?.message || 'Failed to import spare part request file.');
+      }
+
+      const successfulRows =
+        (payload.successfulRows || []).map((row) => ({
+          rowNumber: row.rowNumber,
+          quantity: row.requestedQty,
+          purpose: row.purpose,
+          toWarehouseCode: row.toWarehouseCode,
+          forLine: row.forLine,
+          uom: row.uom,
+          item: mapItem(row.item, row.toWarehouseCode),
+        })) || [];
+
+      const failedRows =
+        (payload.failedRows || []).map((row) => ({
+          rowNumber: row.rowNumber,
+          productId: row.productId || undefined,
+          requestedQty: row.requestedQty || undefined,
+          purpose: row.purpose || undefined,
+          toWarehouseCode: row.toWarehouseCode || undefined,
+          forLine: row.forLine || undefined,
+          uom: row.uom || undefined,
+          reasons: row.reasons || [],
+        })) || [];
+
+      requestAction?.end?.('SUCCESS');
+      return {
+        totalRows: payload.totalRows || 0,
+        successCount: payload.successCount || successfulRows.length,
+        failureCount: payload.failureCount || failedRows.length,
+        successfulRows,
+        failedRows,
+      };
+    } catch (error) {
+      requestAction?.end?.('FAILED');
+      throw error;
+    }
   },
 });

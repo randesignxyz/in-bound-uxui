@@ -1,7 +1,7 @@
-import Icon, { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import Icon, { ReloadOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Button, Card, DatePicker, Input, Select, Space, Tag, Typography, message } from 'antd';
+import { Button, Card, DatePicker, Input, Modal, Select, Space, Tag, Typography, message } from 'antd';
 import dayjs from 'dayjs';
 import { useRef, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
@@ -27,6 +27,7 @@ const statusOptions = [
 export default function SparePartListView() {
   const access = useAccess();
   const actionRef = useRef();
+  const importInputRef = useRef();
   const requestActions = simpleRequestActions();
   const services = SparePartRequestAPI(requestActions);
   const requestServices = SparePartRequestService(requestActions);
@@ -38,6 +39,8 @@ export default function SparePartListView() {
   const [selectedItemsById, setSelectedItemsById] = useState({});
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestItems, setRequestItems] = useState([]);
+  const [requestInitialRows, setRequestInitialRows] = useState([]);
+  const [importingFile, setImportingFile] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsItem, setDetailsItem] = useState(null);
   const [currentRows, setCurrentRows] = useState([]);
@@ -183,8 +186,89 @@ export default function SparePartListView() {
       return;
     }
 
+    setRequestInitialRows((previous) => {
+      if (!previous.length) return previous;
+
+      const selectedIds = new Set(items.map((item) => String(item.id)));
+      return previous.every((row) => selectedIds.has(String(row.item.id))) ? previous : [];
+    });
     setRequestItems(items);
     setRequestModalOpen(true);
+  };
+
+  const showImportSummary = (result) => {
+    if (!result?.failedRows?.length) return;
+
+    Modal.info({
+      title: 'Import completed with validation issues',
+      width: 760,
+      content: (
+        <div style={{ maxHeight: 320, overflowY: 'auto', marginTop: 12 }}>
+          <Typography.Paragraph style={{ marginBottom: 12 }}>
+            Imported {result.successCount} valid row(s). {result.failureCount} row(s) were skipped.
+          </Typography.Paragraph>
+          {result.failedRows.slice(0, 12).map((row) => (
+            <div key={`import-failed-${row.rowNumber}`} style={{ marginBottom: 12 }}>
+              <Typography.Text strong>Row {row.rowNumber}</Typography.Text>
+              <div>{row.productId ? `Item: ${row.productId}` : 'Item: -'}</div>
+              <div>{(row.reasons || []).join(' ')}</div>
+            </div>
+          ))}
+          {result.failedRows.length > 12 && (
+            <Typography.Text type="secondary">
+              {result.failedRows.length - 12} more row(s) were omitted from this preview.
+            </Typography.Text>
+          )}
+        </div>
+      ),
+    });
+  };
+
+  const handleImportClick = () => {
+    importInputRef.current?.click?.();
+  };
+
+  const handleImportFileChange = async (event) => {
+    const file = event?.target?.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (!String(file.name || '').toLowerCase().endsWith('.xlsx')) {
+      message.warning('Please choose an .xlsx file.');
+      return;
+    }
+
+    setImportingFile(true);
+    try {
+      const result = await requestServices.importRequestFile(file);
+
+      if (result.failureCount > 0) {
+        showImportSummary(result);
+      }
+
+      if (!result.successfulRows.length) {
+        message.error('No valid rows were imported.');
+        return;
+      }
+
+      const importedItems = result.successfulRows.map((row) => row.item);
+      const importedKeys = importedItems.map((item) => String(item.id));
+
+      syncSelection(importedKeys, importedItems);
+      setRequestInitialRows(result.successfulRows);
+      setRequestItems(importedItems);
+      setRequestModalOpen(true);
+      message.success(`Imported ${result.successCount} row(s) successfully.`);
+    } catch (error) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.info?.message ||
+        error?.message ||
+        'Failed to import the Excel file.';
+      message.error(errorMessage);
+    } finally {
+      setImportingFile(false);
+    }
   };
 
   const openDetails = async (item) => {
@@ -212,6 +296,7 @@ export default function SparePartListView() {
 
   const handleRequestPartsFromDetails = () => {
     if (!detailsItem) return;
+    setRequestInitialRows([]);
     setRequestItems([detailsItem]);
     setRequestModalOpen(true);
     closeDetails();
@@ -355,6 +440,11 @@ export default function SparePartListView() {
                 Refresh
               </Button>
               {(access.canSpfRequester || access.canSpfApprover) && (
+                <Button icon={<UploadOutlined />} loading={importingFile} onClick={handleImportClick}>
+                  Import
+                </Button>
+              )}
+              {(access.canSpfRequester || access.canSpfApprover) && (
                 <Button type="primary" disabled={selectedRowKeys.length === 0} onClick={openRequestModal}>
                   Request{selectedRowKeys.length ? ` (${selectedRowKeys.length})` : ''}
                 </Button>
@@ -399,21 +489,22 @@ export default function SparePartListView() {
               title: 'Type',
               dataIndex: 'type',
             },
+            {
+              title: 'Categories',
+              dataIndex: 'category',
+            },
+            {
+              title: 'Business Unit',
+              dataIndex: 'businessUnit',
+            },
+            {
+              title: 'Warehouse',
+              dataIndex: 'warehouse',
+                render: (v) => v || '—',
+            },
             ...(canSeeWarehouseLocation
               ? [
-                  {
-                    title: 'Categories',
-                    dataIndex: 'category',
-                  },
-                  {
-                    title: 'Business Unit',
-                    dataIndex: 'businessUnit',
-                  },
-                  {
-                    title: 'Warehouse',
-                    dataIndex: 'warehouse',
-                    render: (v) => v || '—',
-                  },
+                  
                   {
                     title: 'Level',
                     render: (_, record) => record.locations?.[0]?.level || '—',
@@ -481,7 +572,11 @@ export default function SparePartListView() {
       <RequestItemModal
         open={requestModalOpen}
         selectedItems={requestItems}
-        onCancel={() => setRequestModalOpen(false)}
+        initialRows={requestInitialRows}
+        onCancel={() => {
+          setRequestModalOpen(false);
+          setRequestInitialRows([]);
+        }}
         onSubmit={async (payload) => {
           if (!(access.canSpfRequester || access.canSpfApprover)) {
             message.error('You are not allowed to submit spare part requests.');
@@ -494,6 +589,7 @@ export default function SparePartListView() {
             setRequestModalOpen(false);
             setSelectedRowKeys([]);
             setSelectedItemsById({});
+            setRequestInitialRows([]);
             reloadTable(true);
           } catch (error) {
             message.error('Failed to submit request.');
@@ -502,6 +598,14 @@ export default function SparePartListView() {
         onAddMore={() => {
           setRequestModalOpen(false);
         }}
+      />
+
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".xlsx"
+        style={{ display: 'none' }}
+        onChange={handleImportFileChange}
       />
 
       <SpfDetails

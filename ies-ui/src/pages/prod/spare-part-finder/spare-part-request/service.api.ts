@@ -139,7 +139,7 @@ const normalizeUomOptions = (value?: string | string[] | null): string[] => {
   return Array.from(new Set(flattened.length > 0 ? flattened : [normalized]));
 };
 
-const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string): SparePartRequestItem => {
+export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string): SparePartRequestItem => {
   const firstLocation = item.locations?.[0];
   const stock = firstLocation?.availableQty ?? item.avalailableStock ?? item.stock ?? 0;
   const uomOptions = normalizeUomOptions(item.uom);

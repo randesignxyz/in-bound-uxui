@@ -162,9 +162,9 @@ export default function RequestsListWarehouse() {
             <DatePicker allowClear style={{ width: 180 }} value={dateFilter} onChange={(v) => setDateFilter(v)} />
           </Space>
 
-          <Button icon={<ReloadOutlined />} onClick={reloadRequests}>
+          {/* <Button icon={<ReloadOutlined />} onClick={reloadRequests}>
             Refresh
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -178,7 +178,9 @@ export default function RequestsListWarehouse() {
             marginBottom: 12,
           }}
         >
-          <Button type="text" icon={<EllipsisOutlined />} />
+          <Button icon={<ReloadOutlined />} onClick={reloadRequests}>
+            Refresh
+          </Button>
         </div>
         <ProTable<any>
           rowKey="id"

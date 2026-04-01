@@ -29,6 +29,14 @@ interface RequestRowItem {
 interface RequestItemModalProps {
   open: boolean;
   selectedItems: SparePartRequestItem[];
+  initialRows?: {
+    item: SparePartRequestItem;
+    quantity: number;
+    purpose: string;
+    toWarehouseCode: string;
+    forLine: string;
+    uom: string;
+  }[];
   onCancel: () => void;
   onSubmit: (payload: {
     items: {
@@ -91,6 +99,7 @@ const getItemUomOptions = (item: SparePartRequestItem) => {
 const RequestItemModal: React.FC<RequestItemModalProps> = ({
   open,
   selectedItems,
+  initialRows,
   onCancel,
   onSubmit,
   onAddMore,
@@ -111,9 +120,13 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       const previousByProductId = new Map(
         previous.map((row) => [String(row.item.productId), row]),
       );
+      const initialRowsByProductId = new Map(
+        (initialRows || []).map((row) => [String(row.item.productId), row]),
+      );
 
       return selectedItems.map((item, idx) => {
         const previousRow = previousByProductId.get(String(item.productId));
+        const initialRow = initialRowsByProductId.get(String(item.productId));
         const uomOptions = getItemUomOptions(item);
 
         if (previousRow) {
@@ -127,12 +140,12 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
 
         return {
           key: idx,
-          item,
-          quantity: item.stock > 0 ? 1 : 0,
-          purpose: '',
-          uom: uomOptions[0] || '',
-          toWarehouseCode: item.warehouse || 'WH1',
-          forLine: 'Line1',
+          item: initialRow?.item || item,
+          quantity: initialRow?.quantity ?? (item.stock > 0 ? 1 : 0),
+          purpose: initialRow?.purpose || '',
+          uom: initialRow?.uom || uomOptions[0] || '',
+          toWarehouseCode: initialRow?.toWarehouseCode || item.warehouse || 'WH1',
+          forLine: initialRow?.forLine || 'Line1',
         };
       });
     });
@@ -140,7 +153,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     if (!wasOpenRef.current) {
       wasOpenRef.current = true;
     }
-  }, [open, selectedItems]);
+  }, [open, selectedItems, initialRows]);
 
   const handleQuantityChange = (key: number, value: number) => {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, quantity: value } : r)));

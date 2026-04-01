@@ -28,7 +28,7 @@ import {
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useAccess } from '@umijs/max';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type GRItem,
   type GoodsReceiptSourceType,
@@ -42,6 +42,8 @@ import {
   summarizeSuppliers,
 } from './workflow';
 import type {
+  InboundDashboardSummaryApi,
+  InboundDashboardSummaryRange,
   InboundSaveGoodsReceiptInput,
   UpcomingInboundGoodsReceipt as GoodsReceipt,
   UpcomingInboundPurchaseOrder as PurchaseOrder,
@@ -71,8 +73,6 @@ const { Text } = Typography;
 type InboundViewMode = 'operations' | 'history' | 'activity';
 type POViewMode = 'card' | 'list';
 type InboundWorkspaceRole = 'WAREHOUSE_STAFF' | 'QC' | 'WAREHOUSE_SUPERVISOR';
-
-const today = '2026-03-06';
 
 const simulationRoleLabel: Record<InboundWorkspaceRole, string> = {
   WAREHOUSE_STAFF: 'Warehouse Staff',
@@ -107,7 +107,6 @@ export default function UpcomingInboundListview() {
   const [poViewMode, setPOViewMode] = useState<POViewMode>('list');
   const [simulationRole, setSimulationRole] = useState<InboundWorkspaceRole>('WAREHOUSE_STAFF');
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Shared PO filters (used by both card and list views)
   const [poSearchValue, setPOSearchValue] = useState('');
@@ -119,6 +118,18 @@ export default function UpcomingInboundListview() {
     useState<'ALL' | 'STANDARD' | 'TEMP'>('ALL');
   const [historyTypeFilter, setHistoryTypeFilter] = useState<'ALL' | 'Planned' | 'Unplanned'>('ALL');
   const [historyStatusFilter, setHistoryStatusFilter] = useState<'ALL' | 'pending' | 'completed'>('ALL');
+  const [dashboardSummaryRange, setDashboardSummaryRange] =
+    useState<InboundDashboardSummaryRange>('OVERALL');
+  const [inboundStats, setInboundStats] = useState<InboundDashboardSummaryApi>({
+    expectedToday: 0,
+    qcPending: 0,
+    supervisorPending: 0,
+    approved: 0,
+    exceptions: 0,
+    awaitingPOLink: 0,
+    totalGRs: 0,
+  });
+  const hasInitializedDashboardSummary = useRef(false);
 
   // GR state (mirrors WarehouseStaffUI)
   const [receipts, setReceipts] = useState<GoodsReceipt[]>([]);
@@ -160,51 +171,66 @@ export default function UpcomingInboundListview() {
   ];
 
   const loadInboundData = async () => {
-    setIsLoading(true);
+    const [poResult, receiptResult, summaryResult] = await Promise.allSettled([
+      services.listPurchaseOrders(),
+      services.pageGoodsReceipts({
+        criteria: {},
+        pagination: {
+          current: 1,
+          pageSize: 200,
+        },
+      }),
+      services.getDashboardSummary({
+        range: dashboardSummaryRange,
+      }),
+    ]);
+
+    if (poResult.status === 'fulfilled') {
+      const nextPurchaseOrders = poResult.value;
+      setPurchaseOrders(nextPurchaseOrders);
+      setSelectedPODetail((prev) => {
+        if (!prev) return prev;
+        return nextPurchaseOrders.find((po) => po.id === prev.id || po.poNumber === prev.poNumber) || null;
+      });
+      setSelectedPOs((prev) =>
+        prev
+          .map(
+            (selected) =>
+              nextPurchaseOrders.find(
+                (po) => po.id === selected.id || po.poNumber === selected.poNumber,
+              ) || null,
+          )
+          .filter((po): po is PurchaseOrder => po !== null),
+      );
+    } else {
+      message.error(poResult.reason?.message || 'Failed to load purchase orders.');
+    }
+
+    if (receiptResult.status === 'fulfilled') {
+      setReceipts(
+        receiptResult.value.items
+          .map(normalizeReceiptForUI)
+          .filter(isVisibleOperationalReceipt),
+      );
+    } else {
+      message.error(receiptResult.reason?.message || 'Failed to load inbound receiving history.');
+    }
+
+    if (summaryResult.status === 'fulfilled') {
+      setInboundStats(summaryResult.value);
+    } else {
+      message.error(summaryResult.reason?.message || 'Failed to load inbound dashboard summary.');
+    }
+  };
+
+  const loadDashboardSummary = async () => {
     try {
-      const [poResult, receiptResult] = await Promise.allSettled([
-        services.listPurchaseOrders(),
-        services.pageGoodsReceipts({
-          criteria: {},
-          pagination: {
-            current: 1,
-            pageSize: 200,
-          },
-        }),
-      ]);
-
-      if (poResult.status === 'fulfilled') {
-        const nextPurchaseOrders = poResult.value;
-        setPurchaseOrders(nextPurchaseOrders);
-        setSelectedPODetail((prev) => {
-          if (!prev) return prev;
-          return nextPurchaseOrders.find((po) => po.id === prev.id || po.poNumber === prev.poNumber) || null;
-        });
-        setSelectedPOs((prev) =>
-          prev
-            .map(
-              (selected) =>
-                nextPurchaseOrders.find(
-                  (po) => po.id === selected.id || po.poNumber === selected.poNumber,
-                ) || null,
-            )
-            .filter((po): po is PurchaseOrder => po !== null),
-        );
-      } else {
-        message.error(poResult.reason?.message || 'Failed to load purchase orders.');
-      }
-
-      if (receiptResult.status === 'fulfilled') {
-        setReceipts(
-          receiptResult.value.items
-            .map(normalizeReceiptForUI)
-            .filter(isVisibleOperationalReceipt),
-        );
-      } else {
-        message.error(receiptResult.reason?.message || 'Failed to load inbound receiving history.');
-      }
-    } finally {
-      setIsLoading(false);
+      const summary = await services.getDashboardSummary({
+        range: dashboardSummaryRange,
+      });
+      setInboundStats(summary);
+    } catch (error: any) {
+      message.error(error?.message || 'Failed to load inbound dashboard summary.');
     }
   };
 
@@ -212,6 +238,14 @@ export default function UpcomingInboundListview() {
     void loadInboundData();
   }, []);
 
+  useEffect(() => {
+    if (!hasInitializedDashboardSummary.current) {
+      hasInitializedDashboardSummary.current = true;
+      return;
+    }
+    void loadDashboardSummary();
+  }, [dashboardSummaryRange]);
+  
   useEffect(() => {
     if (isRoleSimulationEnabled) return;
     if (inboundRoleOptions.length === 0) return;
@@ -244,35 +278,12 @@ export default function UpcomingInboundListview() {
     return normalized;
   };
 
-  // Stats
-  const inboundStats = useMemo(() => {
-    const todayPOs = purchaseOrders.filter((po) => po.expectedDate === today);
-    const qcPending = receipts.filter(
-      (r) => r.processState === 'QC_PENDING',
-    ).length;
-    const supervisorPending = receipts.filter(
-      (r) => r.processState === 'PENDING_SUPERVISOR_REVIEW',
-    ).length;
-    const approved = receipts.filter(
-      (r) => r.processState === 'SUPERVISOR_APPROVED',
-    ).length;
-    const exceptions = receipts.filter(
-      (r) =>
-        r.processState === 'MISMATCH_EXCEPTION' || r.processState === 'CORRECTION_REQUIRED',
-    ).length;
-    const awaitingPOLink = receipts.filter(
-      (r) => r.receiptSourceType === 'TEMP_NO_PO' && r.poLinkStatus === 'WAITING_PO',
-    ).length;
-    return {
-      expectedToday: todayPOs.length,
-      qcPending,
-      supervisorPending,
-      approved,
-      exceptions,
-      awaitingPOLink,
-      totalGRs: receipts.length,
-    };
-  }, [purchaseOrders, receipts]);
+  const dashboardExpectedTitle =
+    dashboardSummaryRange === 'DAILY'
+      ? 'Expected Today'
+      : dashboardSummaryRange === 'WEEKLY'
+        ? 'Expected This Week'
+        : 'Expected Overall';
 
   const exceptionQueue = useMemo(
     () =>
@@ -972,11 +983,6 @@ export default function UpcomingInboundListview() {
         workspaceContent
       ) : (
       <div style={{ marginTop: 16 }}>
-        {isLoading && (
-          <Card size="small" bodyStyle={{ padding: '12px 16px' }} style={{ marginBottom: 16 }}>
-            <Text type="secondary">Loading inbound data...</Text>
-          </Card>
-        )}
         {shouldShowRoleSelector && (
           <Card size="small" bodyStyle={{ padding: '12px 16px' }} style={{ marginBottom: 16 }}>
             <Row justify="space-between" align="middle" gutter={[12, 12]}>
@@ -999,12 +1005,46 @@ export default function UpcomingInboundListview() {
           </Card>
         )}
 
+        <Row justify="space-between" align="middle" gutter={[12, 12]} style={{ marginBottom: 12 }}>
+          <Col>
+            <Text strong>Dashboard Summary</Text>
+            <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 2 }}>
+              Filter inbound dashboard cards by time range.
+            </div>
+          </Col>
+          <Col>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: 4,
+                background: '#f5f5f5',
+                border: '1px solid #d9d9d9',
+                borderRadius: 10,
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <Segmented
+                value={dashboardSummaryRange}
+                onChange={(value) =>
+                  setDashboardSummaryRange(value as InboundDashboardSummaryRange)
+                }
+                options={[
+                  { label: 'Daily', value: 'DAILY' },
+                  { label: 'Weekly', value: 'WEEKLY' },
+                  { label: 'Overall', value: 'OVERALL' },
+                ]}
+              />
+            </div>
+          </Col>
+        </Row>
+
         {/* Stats Row */}
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
           <Col xs={12} sm={8} lg={4}>
             <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
               <Statistic
-                title={<Text style={{ fontSize: 12 }}>Expected Today</Text>}
+                title={<Text style={{ fontSize: 12 }}>{dashboardExpectedTitle}</Text>}
                 value={inboundStats.expectedToday}
                 valueStyle={{ fontSize: 24, color: '#1890ff' }}
                 prefix={<InboxOutlined />}

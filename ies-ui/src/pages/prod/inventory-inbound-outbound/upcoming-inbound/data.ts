@@ -43,8 +43,11 @@ export interface InboundGoodsReceiptCountParams {
   status?: string | null;
 }
 
+export type InboundDashboardSummaryRange = 'DAILY' | 'WEEKLY' | 'OVERALL';
+
 export interface InboundDashboardSummaryParams {
   expectedDate?: string | null;
+  range?: InboundDashboardSummaryRange | null;
 }
 
 export interface InboundPoItemApi {

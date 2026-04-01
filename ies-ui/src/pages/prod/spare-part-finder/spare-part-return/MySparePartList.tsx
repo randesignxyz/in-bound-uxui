@@ -241,11 +241,8 @@ export default function MySparePartList() {
               setSelectedItems(rows);
             },
             getCheckboxProps: (record) => {
-              const total = record.deliveredQty ?? 0;
-              const returning = record.pendingReturnQty ?? 0;
-              const returned = record.returnedQty ?? 0;
               return {
-                disabled: (total - returning - returned) <= 0,
+                disabled: (record.availableQty ?? 0) <= 0,
               };
             },
           }}
@@ -334,10 +331,9 @@ export default function MySparePartList() {
               title: 'Quantity',
               align: 'center',
               render: (_, record: SparePartReturnListItem) => {
-                const total = record.deliveredQty ?? 0;
                 const returning = record.pendingReturnQty ?? 0;
                 const returned = record.returnedQty ?? 0;
-                const available = Math.max(0, total - returning - returned);
+                const available = record.availableQty ?? 0;
 
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>

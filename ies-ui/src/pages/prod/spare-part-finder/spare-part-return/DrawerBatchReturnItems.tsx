@@ -1,12 +1,29 @@
-import { EyeOutlined } from '@ant-design/icons';
+import { getUploadFileObjectUrlV2, type RequestActions } from '@/services/apiGateway';
+import { DownOutlined, EyeOutlined, RightOutlined } from '@ant-design/icons';
 import { ProColumns, ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Button, Descriptions, Drawer, Image, Space, Steps, Tag, Timeline, Typography, message } from 'antd';
+import {
+  Button,
+  Descriptions,
+  Drawer,
+  Image,
+  Space,
+  Steps,
+  Table,
+  Tag,
+  Timeline,
+  Typography,
+  message,
+} from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from '../spare-part-request/SparePartImage';
-import type { RequestDetailData, RequestDetailLineItem, ReturnStatus } from './data';
+import type {
+  RequestDetailActivityItem,
+  RequestDetailData,
+  RequestDetailLineItem,
+  ReturnStatus,
+} from './data';
 import { SparePartReturnAPI } from './service';
-import { getUploadFileObjectUrlV2, type RequestActions } from '@/services/apiGateway';
 
 const { Title } = Typography;
 const ATTACHMENT_CARD_SIZE = 56;
@@ -49,12 +66,13 @@ interface FetchReturnDetailResponseItem {
   remark?: string;
   images?: string[];
 }
-
 interface FetchReturnDetailResponseActivity {
   label?: string;
   description?: string;
   date?: string;
   dot?: string;
+  messages?: string;
+  items?: RequestDetailActivityItem[] | null;
 }
 
 interface FetchReturnDetailResponse {
@@ -216,9 +234,28 @@ const mapResponseToDetailData = (
     label: activity.label ?? '',
     description: activity.description ?? '',
     date: activity.date,
-    dot: activity.dot === 'pending' ? 'pending' : 'default',
+    dot: activity.dot,
+    messages: activity.messages,
+    items: activity.items ?? null,
   })),
 });
+
+const getTimelineColor = (dot?: string, label?: string) => {
+  switch ((dot ?? '').toLowerCase()) {
+    case 'approved':
+      return 'blue';
+    case 'rejected':
+      return 'red';
+    case 'completed':
+      return 'green';
+    case 'warehouse':
+      return 'blue';
+    case 'pending':
+      return 'gray';
+    default:
+      return (label ?? '').toLowerCase() === 'rejected' ? 'red' : 'blue';
+  }
+};
 
 export default function DrawerBatchReturnItems({
   open,
@@ -234,6 +271,12 @@ export default function DrawerBatchReturnItems({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
+  const [expandedActivities, setExpandedActivities] = useState<string[]>([]);
+  const toggleActivity = (key: string) => {
+    setExpandedActivities((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
 
   const requestAction: RequestActions = {
     start: (name) => console.log(`Loading: ${name}`),
@@ -256,8 +299,12 @@ export default function DrawerBatchReturnItems({
 
     setLoading(true);
     try {
-      const response = await SparePartReturnAPI(requestAction).fetch_spare_part_by_return_id(returnId);
-      const item = (Array.isArray(response) ? response[0] : response) as FetchReturnDetailResponse | undefined;
+      const response = await SparePartReturnAPI(requestAction).fetch_spare_part_by_return_id(
+        returnId,
+      );
+      const item = (Array.isArray(response) ? response[0] : response) as
+        | FetchReturnDetailResponse
+        | undefined;
 
       if (item) {
         setFetchedData(mapResponseToDetailData(item, returnId));
@@ -292,7 +339,11 @@ export default function DrawerBatchReturnItems({
       onClose();
     } catch (error) {
       console.error(`Failed to ${action.toLowerCase()} return request`, error);
-      message.error(action === 'APPROVE' ? 'Failed to approve return request' : 'Failed to reject return request');
+      message.error(
+        action === 'APPROVE'
+          ? 'Failed to approve return request'
+          : 'Failed to reject return request',
+      );
     } finally {
       setLoading(false);
     }
@@ -343,13 +394,20 @@ export default function DrawerBatchReturnItems({
       align: 'center',
       render: (_, record) => {
         const received = record.receivedQty ?? 0;
-        const showReceivedTag = ['Receiving', 'Partially Returned', 'Completed'].includes(effectiveStatus);
+        const showReceivedTag = ['Receiving', 'Partially Returned', 'Completed'].includes(
+          effectiveStatus,
+        );
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontWeight: 600, color: '#d4a574', fontSize: 16 }}>{record.qtyToReturn}</span>
+            <span style={{ fontWeight: 600, color: '#d4a574', fontSize: 16 }}>
+              {record.qtyToReturn}
+            </span>
             {showReceivedTag && (
-              <Tag color={received >= record.qtyToReturn ? 'success' : 'processing'} style={{ fontSize: 10, marginTop: 4 }}>
+              <Tag
+                color={received >= record.qtyToReturn ? 'success' : 'processing'}
+                style={{ fontSize: 10, marginTop: 4 }}
+              >
                 {received} / {record.qtyToReturn} Received
               </Tag>
             )}
@@ -379,7 +437,9 @@ export default function DrawerBatchReturnItems({
       title: 'Remarks',
       key: 'messages',
       width: 180,
-      render: (_, record) => <Typography.Text type="secondary">{record.itemRemark || '-'}</Typography.Text>,
+      render: (_, record) => (
+        <Typography.Text type="secondary">{record.itemRemark || '-'}</Typography.Text>
+      ),
     },
     {
       title: 'Attachments',
@@ -476,8 +536,12 @@ export default function DrawerBatchReturnItems({
           contentStyle={{ fontWeight: 500, color: '#262626' }}
         >
           <Descriptions.Item label="No">{fetchedData?.no ?? data?.no ?? '-'}</Descriptions.Item>
-          <Descriptions.Item label="Return ID">{fetchedData?.request_id ?? data?.request_id ?? '-'}</Descriptions.Item>
-          <Descriptions.Item label="Total Items">{fetchedData?.total_items ?? data?.total_items ?? 0}</Descriptions.Item>
+          <Descriptions.Item label="Return ID">
+            {fetchedData?.request_id ?? data?.request_id ?? '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="Total Items">
+            {fetchedData?.total_items ?? data?.total_items ?? 0}
+          </Descriptions.Item>
           <Descriptions.Item label="Return Date">
             {formatDateTime(fetchedData?.request_date ?? data?.request_date)}
           </Descriptions.Item>
@@ -486,7 +550,9 @@ export default function DrawerBatchReturnItems({
               {statusLabelMap[effectiveStatus]}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Remarks">{fetchedData?.remarks || data?.remarks || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Remarks">
+            {fetchedData?.remarks || data?.remarks || '-'}
+          </Descriptions.Item>
         </Descriptions>
       </div>
 
@@ -525,25 +591,86 @@ export default function DrawerBatchReturnItems({
           rowClassName={() => 'custom-row'}
         />
       </div>
-
       <Title level={5} style={{ marginBottom: 16 }}>
         Recent Activities
       </Title>
       <Timeline
         style={{ marginBottom: 24 }}
-        items={(fetchedData?.activities ?? []).map((activity) => ({
-          color: activity.dot === 'pending' ? 'gray' : 'blue',
-          children: (
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-              <div>
-                <Typography.Text strong>{activity.label}</Typography.Text>
-                <br />
-                <Typography.Text type="secondary">{activity.description}</Typography.Text>
-              </div>
-              {activity.date && <Typography.Text type="secondary">{activity.date}</Typography.Text>}
-            </div>
-          ),
-        }))}
+        items={(fetchedData?.activities ?? []).map((activity) => {
+            const activityKey = `${activity.label ?? ''}-${activity.date ?? ''}`;
+            const isExpanded = expandedActivities.includes(activityKey);
+            const activityItems = activity.items ?? [];
+            const hasItems = activityItems.length > 0;
+
+            return {
+              color: getTimelineColor(activity.dot, activity.label),
+              children: (
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 8,
+                      cursor: hasItems ? 'pointer' : undefined,
+                    }}
+                    onClick={hasItems ? () => toggleActivity(activityKey) : undefined}
+                    role={hasItems ? 'button' : undefined}
+                    aria-expanded={hasItems ? isExpanded : undefined}
+                  >
+                    <div>
+                      <Typography.Text strong>
+                        {hasItems && (
+                          <span style={{ marginRight: 6, color: '#8c8c8c' }}>
+                            {isExpanded ? <DownOutlined /> : <RightOutlined />}
+                          </span>
+                        )}
+                        {activity.label}
+                      </Typography.Text>
+                      <br />
+                      <Typography.Text type="secondary">{activity.description}</Typography.Text>
+                    </div>
+                    {activity.date && (
+                      <Typography.Text type="secondary">{activity.date}</Typography.Text>
+                    )}
+                  </div>
+
+                  {activity.messages && (
+                    <Typography.Text type="secondary" style={{ display: 'block', marginTop: 6 }}>
+                      {activity.messages}
+                    </Typography.Text>
+                  )}
+
+                  {isExpanded && hasItems && (
+                    <div style={{ marginTop: 8 }}>
+                      <Table<RequestDetailActivityItem>
+                        size="small"
+                        rowKey="itemId"
+                        pagination={false}
+                        dataSource={activityItems}
+                        columns={[
+                          { title: 'Product ID', dataIndex: 'itemId' },
+                          { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
+                          { title: 'UoM', dataIndex: 'uom' },
+                          { title: 'QTY Confirmed', dataIndex: 'qty_confirm', align: 'center' },
+                          { title: 'Good', dataIndex: 'good_qty', align: 'center' },
+                          { title: 'Damaged', dataIndex: 'damaged_qty', align: 'center' },
+                          {
+                            title: 'Message',
+                            dataIndex: 'damage_message',
+                            render: (_, record) => record.damage_message || record.remark || '-',
+                          },
+                          { title: 'From Warehouse', dataIndex: 'fromWarehouse' },
+                          { title: 'To Warehouse', dataIndex: 'toWarehouse' },
+                          { title: 'Business Unit', dataIndex: 'business_unit' },
+                        ]}
+                      />
+                    </div>
+                  )}
+                </div>
+              ),
+            };
+          })}
       />
 
       {previewImage && (

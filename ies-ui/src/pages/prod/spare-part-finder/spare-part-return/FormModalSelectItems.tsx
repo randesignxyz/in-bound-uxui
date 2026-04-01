@@ -84,8 +84,8 @@ export default function FormModalSelectItems({
       editable: false,
     },
     {
-       title: "QTY to Pick",
-      dataIndex: "deliveredQty",
+       title: "Available Qty",
+      dataIndex: "availableQty",
       width: 120,
       valueType: "digit",
       editable: false,

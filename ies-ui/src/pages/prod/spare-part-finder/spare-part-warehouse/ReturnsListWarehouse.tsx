@@ -160,6 +160,8 @@ export default function ReturnsListWarehouse() {
     {
       title: 'Action',
       key: 'action',
+      align: 'center',
+      
       width: 110,
       render: (_dom, record) => (
         <Button
@@ -167,7 +169,7 @@ export default function ReturnsListWarehouse() {
           icon={<EyeOutlined />}
           onClick={() => { setSelectedReturn(record); setDetailOpen(true); }}
         >
-          View Detail
+         
         </Button>
       ),
     },

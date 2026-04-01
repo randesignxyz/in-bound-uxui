@@ -112,6 +112,7 @@ export interface SparePartReturnListItem {
   deliveredQty?: number;
   pendingReturnQty?: number;
   returnedQty?: number;
+  availableQty?: number;
   // Fields for My Requests to Return
   return_id?: string;
   return_date?: string;
@@ -240,7 +241,23 @@ export interface RequestDetailLineItem {
   good_qty?: number;
   damaged_qty?: number;
   remark?: string;
-  images?: string[];  // file IDs from FILE microservice
+  images?: string[]; // file IDs from FILE microservice
+}
+
+export interface RequestDetailActivityItem {
+  itemId: string;
+  itemName: string;
+  qty_confirm: number;
+  from_request?: number;
+  uom: string;
+  image?: string[];
+  business_unit?: string;
+  fromWarehouse?: string;
+  toWarehouse?: string;
+  damaged_qty?: number;
+  good_qty?: number;
+  damage_message?: string | null;
+  remark?: string;
 }
 
 /** One activity in Recent Activities timeline */
@@ -248,7 +265,9 @@ export interface RequestDetailActivity {
   label: string;
   description: string;
   date?: string;
-  dot?: 'default' | 'pending';
+  dot?: string;
+  messages?: string;
+  items?: RequestDetailActivityItem[] | null;
 }
 
 /** Full request detail for DrawerBatchReturnItems (Details Request) */
@@ -262,6 +281,7 @@ export interface RequestDetailData {
   activities: RequestDetailActivity[];
   remarks?: string;
 }
+
 export interface TableViewSearchReturnsParam{
   status?: string;
   approvedDateFrom?: string;
@@ -271,36 +291,6 @@ export interface TableViewSearchReturnsParam{
   returnDateFrom?: string;
   returnDateTo?: string;
 }
-
-/** Mock list for My Requests to Return */
-export const MOCK_MY_REQUESTS_TO_RETURN: MyRequestToReturnItem[] = [
-  { id: 1, return_id: 'RET-001', return_date: '2025-03-01', total_items: 3, status: 'Pending', remarks: 'Urgent' },
-  { id: 2, return_id: 'RET-002', return_date: '2025-03-02', total_items: 5, status: 'Approved', remarks: '' },
-  { id: 3, return_id: 'RET-003', return_date: '2025-03-03', total_items: 2, status: 'Completed' },
-  { id: 4, return_id: 'RET-004', return_date: '2025-03-04', total_items: 8, status: 'Rejected', remarks: 'Missing docs' },
-  { id: 5, return_id: 'RET-005', return_date: '2025-03-05', total_items: 1, status: 'Pending' },
-];
-
-/** Mock request detail for drawer */
-export const MOCK_REQUEST_DETAIL: RequestDetailData = {
-  no: 2,
-  request_id: 'PRD-0001',
-  total_items: 6,
-  request_date: '2025-Dec-01 8:05AM',
-  status: 'Pending',
-  items: [
-    { no: 1, product_id: 'ELE-SNS-0r4', request_id: 'Re-001', item_name: 'Gloves', quantity_to_return: 12, used_quantity: 5, total: 17, image: 'https://via.placeholder.com/48?text=1' },
-    { no: 2, product_id: 'ELE-SNS-0r4', request_id: '2e-001', item_name: 'V-Belt A-42', quantity_to_return: 12, used_quantity: 0, total: 12, image: 'https://via.placeholder.com/48?text=2' },
-    { no: 3, product_id: 'ELE-SNS-0r4', request_id: 'Re-002', item_name: 'Gear Coupling Assembly', quantity_to_return: 12, used_quantity: 0, total: 12, image: 'https://via.placeholder.com/48?text=3' },
-    { no: 4, product_id: 'ELE-SNS-0r4', request_id: 'Re-0032', item_name: 'V-Belt A50V-Belt A50V-Belt A50', quantity_to_return: 12, used_quantity: 0, total: 12, image: 'https://via.placeholder.com/48?text=4' },
-    { no: 5, product_id: 'ELE-SNS-0r4', request_id: 'Re-001', item_name: 'Gloves', quantity_to_return: 12, used_quantity: 0, total: 12, image: 'https://via.placeholder.com/48?text=5' },
-  ],
-  activities: [
-    { label: 'Request by', description: 'Request by Mr.Khun Meas - 20 days ago', date: 'Feb-01-2025', dot: 'default' },
-    { label: 'Approved by', description: 'Approved by Mr.Khun Meas - 20 days ago', date: 'Feb-01-2025', dot: 'default' },
-    { label: 'Waiting', description: 'Waiting', dot: 'pending' },
-  ],
-};
 
 /** Filter options for MySparePartList (radio: All / MRO-W / MRO-S / MRO-G) */
 export const SPARE_PART_RETURN_RADIO_OPTIONS = [
@@ -376,6 +366,7 @@ export const mapToFlattenedRowsMySparePartList = (
         type:                     line.type,
         pendingReturnQty:         line.pendingReturnQty ?? 0,
         returnedQty:              line.returnedQty ?? 0,
+        availableQty:             Math.max(0, line.deliveredQty - (line.pendingReturnQty ?? 0)),
       }))
     )
   );

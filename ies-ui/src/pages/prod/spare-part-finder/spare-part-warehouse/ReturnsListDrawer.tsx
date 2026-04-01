@@ -1,4 +1,4 @@
-import { DeleteOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DownOutlined, EyeOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
 import { ProColumns, ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
@@ -11,19 +11,24 @@ import {
   InputNumber,
   Space,
   Steps,
+  Table,
   Tag,
   Timeline,
   Typography,
   Upload,
+  message,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from '../spare-part-request/SparePartImage';
-import type { RequestDetailData, ReturnStatus } from '../spare-part-return/data';
+import type {
+  RequestDetailActivityItem,
+  RequestDetailData,
+  ReturnStatus,
+} from '../spare-part-return/data';
 import { SparePartReturnAPI } from '../spare-part-return/service';
 import { getUploadFileObjectUrlV2, RequestActions } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { SparePartWarehouseReturnAPI } from './service.return';
-import { message } from 'antd';
 
 const { Title } = Typography;
 const MAX_ATTACHMENTS = 3;
@@ -167,6 +172,23 @@ const getWorkflowStatus = (status?: string, state?: string): ReturnStatus => {
   return normalizedStatus === 'Partially Returned' ? 'Receiving' : normalizedStatus;
 };
 
+const getTimelineColor = (dot?: string, label?: string) => {
+  switch ((dot ?? '').toLowerCase()) {
+    case 'approved':
+      return 'blue';
+    case 'rejected':
+      return 'red';
+    case 'completed':
+      return 'green';
+    case 'warehouse':
+      return 'blue';
+    case 'pending':
+      return 'gray';
+    default:
+      return (label ?? '').toLowerCase() === 'rejected' ? 'red' : 'blue';
+  }
+};
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ReturnsListDrawerProps {
@@ -189,6 +211,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
     start: (name) => console.log(`Loading: ${name}`),
     end: (status) => console.log(status),
   };
+  const warehouseReturnService = SparePartWarehouseReturnAPI(requestAction);
 
   const [fetchedData, setFetchedData] = useState<RequestDetailData | null>(null);
 
@@ -269,6 +292,12 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
+  const [expandedActivities, setExpandedActivities] = useState<string[]>([]);
+  const toggleActivity = (key: string) => {
+    setExpandedActivities((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
 
   // Convert file to base64 (for preview)
   const getBase64 = (file: FileType): Promise<string> =>
@@ -329,7 +358,9 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             label: a.label,
             description: a.description,
             date: a.date,
-            dot: a.dot === 'pending' ? 'pending' : 'default',
+            dot: a.dot,
+            messages: a.messages,
+            items: a.items ?? null,
           })),
         };
         setFetchedData(mapped);
@@ -370,29 +401,85 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   };
   
   const handleAttachmentChange =
-    (itemId: string | number): UploadProps['onChange'] =>
+    (record: ReturnItem): UploadProps['onChange'] =>
     async ({ fileList: newFileList }) => {
       const normalizedFiles = await Promise.all(newFileList.map(enrichUploadFile));
+      const limitedFiles = normalizedFiles.slice(0, MAX_ATTACHMENTS);
+      setRowAttachmentFiles(record.id, limitedFiles);
 
-      setAttachmentMap((prev) => ({
-        ...prev,
-        [String(itemId)]: normalizedFiles.slice(0, MAX_ATTACHMENTS),
-      }));
+      if (!canPersistDamageImagesImmediately(record)) {
+        return;
+      }
+
+      const filesToUpload = limitedFiles.filter(
+        (file) => file.originFileObj && !isExistingImageFile(file),
+      );
+      if (filesToUpload.length === 0) {
+        return;
+      }
+
+      const hideLoading = message.loading('Uploading damage image...', 0);
+
+      try {
+        const uploadedImageIds = await uploadFilesToFileService(filesToUpload);
+        if (uploadedImageIds.length === 0) {
+          throw new Error('No image ids returned from file service');
+        }
+
+        await warehouseReturnService.update_damage_images_return([record.itemId!], uploadedImageIds);
+
+        setRowAttachmentFiles(record.id, markUploadedFilesAsPersisted(limitedFiles, uploadedImageIds));
+        updateFetchedItemImages(record.itemId!, (currentImages) => [
+          ...new Set([...currentImages, ...uploadedImageIds]),
+        ]);
+        message.success('Damage image uploaded');
+      } catch (error) {
+        console.error('Failed to upload damage image', error);
+        message.error('Failed to upload damage image');
+        await fetchDetail();
+        setAttachmentMap((prev) => {
+          const next = { ...prev };
+          delete next[String(record.id)];
+          return next;
+        });
+      } finally {
+        hideLoading();
+      }
     };
 
   const handleRemoveAttachment = (
-    itemId: string | number,
-    uid: string,
+    record: ReturnItem,
+    file: UploadFile,
     currentFiles: UploadFile[] = [],
   ) => {
-    setAttachmentMap((prev) => {
-      const itemKey = String(itemId);
-      const sourceFiles = prev[itemKey] ?? currentFiles;
-      return {
-        ...prev,
-        [itemKey]: sourceFiles.filter((file) => file.uid !== uid),
-      };
-    });
+    const sourceFiles = currentFiles.length > 0 ? currentFiles : getRowAttachmentFiles(record);
+    const nextFiles = sourceFiles.filter((currentFile) => currentFile.uid !== file.uid);
+    setRowAttachmentFiles(record.id, nextFiles);
+
+    const imageId = isExistingImageFile(file) ? String(file.response) : undefined;
+    if (!imageId || !record.itemId) {
+      return;
+    }
+
+    const hideLoading = message.loading('Deleting damage image...', 0);
+
+    warehouseReturnService
+      .delete_damage_images_return([record.itemId], [imageId])
+      .then(() => {
+        updateFetchedItemImages(record.itemId!, (currentImages) =>
+          currentImages.filter((currentImageId) => currentImageId !== imageId),
+        );
+        message.success('Damage image deleted');
+      })
+      .catch(async (error) => {
+        console.error('Failed to delete damage image', error);
+        message.error('Failed to delete damage image');
+        setRowAttachmentFiles(record.id, sourceFiles);
+        await fetchDetail();
+      })
+      .finally(() => {
+        hideLoading();
+      });
   };
 
   const getInitialAttachmentFiles = (record: ReturnItem): UploadFile[] =>
@@ -407,6 +494,59 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
     attachmentMap[String(record.id)] ?? getInitialAttachmentFiles(record);
 
   const isExistingImageFile = (file: UploadFile) => typeof file.response === 'string' && !file.originFileObj;
+  const canPersistDamageImagesImmediately = (record: ReturnItem) =>
+    !!record.itemId && (record.receivedQty ?? 0) > 0;
+
+  const setRowAttachmentFiles = (rowId: string | number, files: UploadFile[]) => {
+    setAttachmentMap((prev) => ({
+      ...prev,
+      [String(rowId)]: files.slice(0, MAX_ATTACHMENTS),
+    }));
+  };
+
+  const updateFetchedItemImages = (
+    returnItemId: number,
+    updater: (currentImages: string[]) => string[],
+  ) => {
+    setFetchedData((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        items: prev.items.map((item) =>
+          item.return_item_id === returnItemId
+            ? { ...item, images: updater(item.images ?? []) }
+            : item,
+        ),
+      };
+    });
+  };
+
+  const markUploadedFilesAsPersisted = (
+    files: UploadFile[],
+    uploadedImageIds: string[],
+  ): UploadFile[] => {
+    let uploadIndex = 0;
+
+    return files.map((file) => {
+      if (!file.originFileObj || isExistingImageFile(file)) {
+        return file;
+      }
+
+      const uploadedImageId = uploadedImageIds[uploadIndex++];
+      if (!uploadedImageId) {
+        return file;
+      }
+
+      return {
+        ...file,
+        uid: `existing-${uploadedImageId}`,
+        response: uploadedImageId,
+        status: 'done',
+        originFileObj: undefined,
+      };
+    });
+  };
 
   const areImageListsEqual = (current: string[], next: string[]) =>
     current.length === next.length && current.every((id, index) => id === next[index]);
@@ -486,8 +626,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
         return;
       }
 
-      const service = SparePartWarehouseReturnAPI(requestAction);
-      await service.warehouse_confirm_return(returnId, returnRemark, itemsToConfirm);
+      await warehouseReturnService.warehouse_confirm_return(returnId, returnRemark, itemsToConfirm);
       message.success('Return confirmed successfully');
 
       // ─── Refresh Logic ───
@@ -739,7 +878,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                           fileList={rowFiles}
                           maxCount={MAX_ATTACHMENTS}
                           onPreview={handlePreview}
-                          onChange={handleAttachmentChange(record.id)}
+                          onChange={handleAttachmentChange(record)}
                           itemRender={(originNode, file) => {
                             const src = file.thumbUrl || file.url || (file.preview as string) || '';
                             const existingFileId = isExistingImageFile(file) ? String(file.response) : undefined;
@@ -795,14 +934,14 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                                   />
                                   <DeleteOutlined
                                     style={{ color: '#fff', fontSize: 14, cursor: 'pointer' }}
-                                    onClick={() => handleRemoveAttachment(record.id, file.uid, rowFiles)}
+                                    onClick={() => handleRemoveAttachment(record, file, rowFiles)}
                                   />
                                 </div>
                               </div>
                             );
                           }}
                           onRemove={(file) => {
-                            handleRemoveAttachment(record.id, file.uid, rowFiles);
+                            handleRemoveAttachment(record, file, rowFiles);
                           }}
                         >
                           {rowFiles.length < MAX_ATTACHMENTS && (
@@ -985,19 +1124,81 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       </Title>
       <Timeline
         style={{ marginBottom: 24 }}
-        items={(fetchedData?.activities ?? []).map((a) => ({
-          color: a.dot === 'pending' ? 'gray' : 'blue',
-          children: (
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-              <div>
-                <Typography.Text strong>{a.label}</Typography.Text>
-                <br />
-                <Typography.Text type="secondary">{a.description}</Typography.Text>
-              </div>
-              {a.date && <Typography.Text type="secondary">{a.date}</Typography.Text>}
-            </div>
-          ),
-        }))}
+        items={(fetchedData?.activities ?? []).map((activity) => {
+            const activityKey = `${activity.label ?? ''}-${activity.date ?? ''}`;
+            const isExpanded = expandedActivities.includes(activityKey);
+            const activityItems = activity.items ?? [];
+            const hasItems = activityItems.length > 0;
+
+            return {
+              color: getTimelineColor(activity.dot, activity.label),
+              children: (
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 8,
+                      cursor: hasItems ? 'pointer' : undefined,
+                    }}
+                    onClick={hasItems ? () => toggleActivity(activityKey) : undefined}
+                    role={hasItems ? 'button' : undefined}
+                    aria-expanded={hasItems ? isExpanded : undefined}
+                  >
+                    <div>
+                      <Typography.Text strong>
+                        {hasItems && (
+                          <span style={{ marginRight: 6, color: '#8c8c8c' }}>
+                            {isExpanded ? <DownOutlined /> : <RightOutlined />}
+                          </span>
+                        )}
+                        {activity.label}
+                      </Typography.Text>
+                      <br />
+                      <Typography.Text type="secondary">{activity.description}</Typography.Text>
+                    </div>
+                    {activity.date && (
+                      <Typography.Text type="secondary">{activity.date}</Typography.Text>
+                    )}
+                  </div>
+
+                  {activity.messages && (
+                    <Typography.Text type="secondary" style={{ display: 'block', marginTop: 6 }}>
+                      {activity.messages}
+                    </Typography.Text>
+                  )}
+
+                  {isExpanded && hasItems && (
+                    <div style={{ marginTop: 8 }}>
+                      <Table<RequestDetailActivityItem>
+                        size="small"
+                        rowKey="itemId"
+                        pagination={false}
+                        dataSource={activityItems}
+                        columns={[
+                          { title: 'Product ID', dataIndex: 'itemId' },
+                          { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
+                          { title: 'UoM', dataIndex: 'uom' },
+                          { title: 'QTY Confirmed', dataIndex: 'qty_confirm', align: 'center' },
+                          { title: 'Good', dataIndex: 'good_qty', align: 'center' },
+                          { title: 'Damaged', dataIndex: 'damaged_qty', align: 'center' },
+                          {
+                            title: 'Message',
+                            dataIndex: 'damage_message',
+                            render: (_, record) => record.damage_message || record.remark || '-',
+                          },
+                          { title: 'From Warehouse', dataIndex: 'fromWarehouse' },
+                          { title: 'To Warehouse', dataIndex: 'toWarehouse' },
+                          { title: 'Business Unit', dataIndex: 'business_unit' },
+                        ]}
+                      />
+                    </div>
+                  )}
+                </div>
+              ),
+            };
+          })}
       />
     </Drawer>
   );

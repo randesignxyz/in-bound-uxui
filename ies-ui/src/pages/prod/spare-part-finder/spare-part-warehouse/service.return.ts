@@ -38,6 +38,30 @@ const SparePartReturnAction = {
             items,
         },
     }),
+    update_damage_images_return: (
+        returnItemIds: number[],
+        images: string[],
+    ): ServiceApiType<any> => ({
+        type: "EXEC",
+        actionName: "update-damages-images-return",
+        endpoint: "PROD",
+        payload: {
+            returnItemIds,
+            images,
+        },
+    }),
+    delete_damage_images_return: (
+        returnItemIds: number[],
+        images: string[],
+    ): ServiceApiType<any> => ({
+        type: "EXEC",
+        actionName: "delete-damages-images-return",
+        endpoint: "PROD",
+        payload: {
+            returnItemIds,
+            images,
+        },
+    }),
 };
 
 const SparePartWarehouseReturnAPI = (requestAction: RequestActions) => {
@@ -58,6 +82,24 @@ const SparePartWarehouseReturnAPI = (requestAction: RequestActions) => {
         ): Promise<any> => {
             const res = await singleRequest<any>(
                 SparePartReturnAction.warehouse_confirm_return(returnId, remark, items)
+            )(requestAction);
+            return res;
+        },
+        update_damage_images_return: async (
+            returnItemIds: number[],
+            images: string[],
+        ): Promise<any> => {
+            const res = await singleRequest<any>(
+                SparePartReturnAction.update_damage_images_return(returnItemIds, images)
+            )(requestAction);
+            return res;
+        },
+        delete_damage_images_return: async (
+            returnItemIds: number[],
+            images: string[],
+        ): Promise<any> => {
+            const res = await singleRequest<any>(
+                SparePartReturnAction.delete_damage_images_return(returnItemIds, images)
             )(requestAction);
             return res;
         },

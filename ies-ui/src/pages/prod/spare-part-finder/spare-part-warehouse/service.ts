@@ -49,6 +49,8 @@ type IssueHistoryDto = {
   fulfillmentStatus: string;
   issuedAt?: string | null;
   warehouseStaffId: string;
+  pickupConfirmedAt?: string | null;
+  pickupConfirmedBy?: string | null;
   note?: string | null;
   totalIssuedQty: number;
   items?: IssueHistoryLineDto[];
@@ -59,6 +61,9 @@ type IssueRequestDto = {
   requestNo: string;
   requesterId: string;
   approverId?: string | null;
+  approvedAt?: string | null;
+  warehouseAcceptedBy?: string | null;
+  warehouseAcceptedAt?: string | null;
   requestedDate?: string;
   requestStatus: BackendIssueStatus;
   type?: string | null;
@@ -97,6 +102,7 @@ type IssueRequestPayload = {
 };
 
 type SaveDraftPayload = IssueRequestPayload;
+type AcceptIssuePayload = { id: number };
 
 const SparePartWarehouseAction = {
   pageRequests: (params: PageIssueRequestsParams): ServiceApiType<any> => ({
@@ -120,6 +126,12 @@ const SparePartWarehouseAction = {
     actionName: 'get-spare-part-issue-request',
     endpoint: 'PROD',
     payload: { id },
+  }),
+  acceptRequest: (payload: AcceptIssuePayload): ServiceApiType<AcceptIssuePayload> => ({
+    type: 'EXEC',
+    actionName: 'accept-spare-part-issue-request',
+    endpoint: 'PROD',
+    payload,
   }),
   issueRequest: (payload: IssueRequestPayload): ServiceApiType<IssueRequestPayload> => ({
     type: 'EXEC',
@@ -291,7 +303,7 @@ const buildActivities = (
     activities.push({
       label: 'Approved',
       description: 'Request approved',
-      date: item.requestedDate,
+      date: item.approvedAt || item.requestedDate,
       by: item.approverId || undefined,
       dot: 'done',
     });
@@ -301,13 +313,14 @@ const buildActivities = (
     activities.push({
       label: 'Confirmed',
       description: 'Warehouse confirmed and started processing this request',
-      date: item.requestedDate,
-      by: item.history?.[0]?.warehouseStaffId || 'Warehouse',
+      date: item.warehouseAcceptedAt || orderedHistory[0]?.issuedAt || item.approvedAt || item.requestedDate,
+      by: item.warehouseAcceptedBy || item.history?.[0]?.warehouseStaffId || undefined,
       dot: 'done',
     });
   }
 
   orderedHistory.forEach((entry, index) => {
+    const shipmentNo = index + 1;
     const isPreviouslyPicked =
       String(item.pickupStatus || '').trim().toLowerCase() !== 'confirmed' &&
       String(item.requestStatus || '').trim().toUpperCase() === 'PARTIAL_ISSUE' &&
@@ -315,7 +328,7 @@ const buildActivities = (
 
     activities.push({
       label: 'Ready to Pick up',
-      description: `Shipment #${index + 1} is ready to pick up`,
+      description: `Shipment #${shipmentNo} is ready to pick up`,
       date: entry.issuedAt || item.requestedDate,
       by: entry.warehouseStaffId || 'Warehouse',
       dot:
@@ -326,10 +339,17 @@ const buildActivities = (
 
     if (isPreviouslyPicked) {
       activities.push({
-        label: `Partial Issue #${index + 1}`,
-        description: `Shipment #${index + 1} was picked up, but the request is still partially issued.`,
-        date: entry.issuedAt || item.requestedDate,
-        by: item.requesterId || 'Requester',
+        label: 'Confirm Pick up',
+        description: `Shipment #${shipmentNo} pickup confirmed`,
+        date: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate,
+        by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+        dot: 'done',
+      });
+      activities.push({
+        label: `Partial Issue #${shipmentNo}`,
+        description: `Shipment #${shipmentNo} was picked up, but the request is still partially issued.`,
+        date: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate,
+        by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
         dot: 'done',
       });
     }
@@ -338,20 +358,48 @@ const buildActivities = (
   if (String(item.pickupStatus || '').trim().toLowerCase() === 'confirmed') {
     if (status === 'partial') {
       orderedHistory.forEach((entry, index) => {
+        const shipmentNo = index + 1;
         activities.push({
-          label: `Partial Issue #${index + 1}`,
-          description: `Shipment #${index + 1} was picked up, but the request is still partially issued.`,
-          date: entry.issuedAt || item.requestedDate,
-          by: item.requesterId || 'Requester',
+          label: 'Confirm Pick up',
+          description: `Shipment #${shipmentNo} pickup confirmed`,
+          date: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate,
+          by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+          dot: 'done',
+        });
+        activities.push({
+          label: `Partial Issue #${shipmentNo}`,
+          description: `Shipment #${shipmentNo} was picked up, but the request is still partially issued.`,
+          date: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate,
+          by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
           dot: 'done',
         });
       });
     } else {
+      const lastShipmentNo = orderedHistory.length > 0 ? orderedHistory.length : 1;
+      activities.push({
+        label: 'Confirm Pick up',
+        description: `Shipment #${lastShipmentNo} pickup confirmed`,
+        date:
+          orderedHistory[orderedHistory.length - 1]?.pickupConfirmedAt ||
+          orderedHistory[orderedHistory.length - 1]?.issuedAt ||
+          item.requestedDate,
+        by:
+          orderedHistory[orderedHistory.length - 1]?.pickupConfirmedBy ||
+          orderedHistory[orderedHistory.length - 1]?.warehouseStaffId ||
+          undefined,
+        dot: 'done',
+      });
       activities.push({
         label: 'Completed',
         description: 'All issued items have been picked up.',
-        date: orderedHistory[orderedHistory.length - 1]?.issuedAt || item.requestedDate,
-        by: item.requesterId || 'Requester',
+        date:
+          orderedHistory[orderedHistory.length - 1]?.pickupConfirmedAt ||
+          orderedHistory[orderedHistory.length - 1]?.issuedAt ||
+          item.requestedDate,
+        by:
+          orderedHistory[orderedHistory.length - 1]?.pickupConfirmedBy ||
+          orderedHistory[orderedHistory.length - 1]?.warehouseStaffId ||
+          undefined,
         dot: 'done',
       });
     }
@@ -363,6 +411,11 @@ const buildActivities = (
 const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
   const rawStatus = String(item.requestStatus || '').trim().toUpperCase();
   const normalizedPickupStatus = String(item.pickupStatus || '').trim().toLowerCase();
+  const detailType =
+    normalizeSparePartType(item.type) ||
+    (item.items || [])
+      .map((line) => normalizeSparePartType(line.type))
+      .find((value): value is SparePartType => Boolean(value));
   const normalizedStatus: RequestDetailData['status'] =
     rawStatus === 'REJECTED'
       ? 'rejected'
@@ -388,7 +441,7 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
     requestDate: item.requestedDate || '',
     status: normalizedStatus,
     priority: normalizePriority(item.priority).toLowerCase() as RequestDetailData['priority'],
-    type: normalizeSparePartType(item.type),
+    type: detailType,
     totalItems: (item.items || []).length,
     receivedItems: Number(item.totalIssuedQty || 0),
     remark: item.remark || '',
@@ -446,6 +499,21 @@ export const SparePartWarehouseService = (requestAction: RequestActions) => ({
     return {
       record: mapIssueRequestRecord(response),
       detail: mapIssueRequestDetail(response),
+    };
+  },
+  acceptRequest: async (id: number): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {
+    const response = (await singleRequest<ExecResponseDto<IssueRequestDto>>(
+      SparePartWarehouseAction.acceptRequest({ id }),
+    )(requestAction)) as ExecResponseDto<IssueRequestDto>;
+
+    const data = unwrapExecPayload(response);
+    if (!data) {
+      throw new Error('Accept request response is missing data.');
+    }
+
+    return {
+      record: mapIssueRequestRecord(data),
+      detail: mapIssueRequestDetail(data),
     };
   },
   issueRequest: async (payload: IssueRequestPayload): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {

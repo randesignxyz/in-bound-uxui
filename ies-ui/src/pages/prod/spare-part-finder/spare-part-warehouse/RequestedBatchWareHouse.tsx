@@ -17,7 +17,7 @@ import {
 import { DownOutlined, RightOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useAccess } from '@umijs/max';
+import { useAccess, useModel } from '@umijs/max';
 import SpfDetails from '../spare-part-request/SpfDetails';
 import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../spare-part-request/data';
 import type { WarehouseRequestRecord } from './requestsWarehouse.shared';
@@ -175,9 +175,59 @@ const getActivityRank = (label?: string): number => {
   if (normalized === 'rejected') return 2;
   if (normalized === 'confirmed') return 3;
   if (normalized === 'ready to pick up') return 4;
-  if (/^partial issue #\d+$/i.test(normalized)) return 5;
-  if (normalized === 'completed') return 6;
-  return 7;
+  if (normalized === 'confirm pick up') return 5;
+  if (/^partial issue #\d+$/i.test(normalized)) return 6;
+  if (normalized === 'completed') return 7;
+  return 8;
+};
+
+const parseActivityShipmentNo = (label?: string, description?: string): number | undefined => {
+  const text = `${String(label || '')} ${String(description || '')}`;
+  const partialMatch = text.match(/partial\s+issue\s*#\s*(\d+)/i);
+  if (partialMatch) {
+    const value = Number(partialMatch[1]);
+    if (Number.isFinite(value) && value > 0) return value;
+  }
+
+  const shipmentMatch = text.match(/shipment\s*#\s*(\d+)/i);
+  if (shipmentMatch) {
+    const value = Number(shipmentMatch[1]);
+    if (Number.isFinite(value) && value > 0) return value;
+  }
+
+  return undefined;
+};
+
+const mergeActivities = (
+  base: RequestDetailActivity[],
+  extra: RequestDetailActivity[] = [],
+): RequestDetailActivity[] => {
+  const seen = new Set<string>();
+  const merged: RequestDetailActivity[] = [];
+  const singletonLabels = new Set(['requested', 'approved', 'rejected', 'confirmed', 'completed']);
+
+  [...base, ...extra].forEach((activity) => {
+    const normalized: RequestDetailActivity = {
+      ...activity,
+      label: String(activity.label || '').trim(),
+      description: String(activity.description || '').trim(),
+    };
+    const normalizedLabel = normalized.label.toLowerCase();
+
+    if (
+      singletonLabels.has(normalizedLabel) &&
+      merged.some((item) => String(item.label || '').trim().toLowerCase() === normalizedLabel)
+    ) {
+      return;
+    }
+
+    const key = `${normalized.label}|${normalized.description}|${normalized.date ?? ''}|${normalized.by ?? ''}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push(normalized);
+  });
+
+  return merged;
 };
 
 export default function RequestedBatchWareHouse({
@@ -191,6 +241,7 @@ export default function RequestedBatchWareHouse({
   onConfirmPickup,
 }: DrawerBatchReturnItemsProps) {
   const access = useAccess();
+  const currentUser = useModel('@@initialState');
   const initKeyRef = useRef<string>('');
 
   const [spfOpen, setSpfOpen] = useState(false);
@@ -288,6 +339,13 @@ export default function RequestedBatchWareHouse({
     return 'pending';
   }, [data.status, shipmentBatches, statusOverride, totals.totalRequested, totals.totalSent]);
 
+  const displayedStatusLabel =
+    effectiveStatus === 'approved' ? 'Pending' : statusLabelMap[effectiveStatus];
+  const displayedStatusColor =
+    effectiveStatus === 'approved' ? statusColorMap.pending : statusColorMap[effectiveStatus];
+  const currentActor =
+    currentUser.initialState?.currentUser?.login || data.warehouseBy || 'Warehouse';
+
   const currentStep = statusToCurrentStep(effectiveStatus);
 
   useEffect(() => {
@@ -330,24 +388,39 @@ export default function RequestedBatchWareHouse({
         : [
             {
               label: 'Requested',
-              description: `Requested by ${data.requestedBy ?? 'Requester'}`,
+              description: `Requested by ${data.requestedBy || '-'}`,
               date: data.requestDate,
-              by: data.requestedBy ?? 'Requester',
+              by: data.requestedBy || undefined,
               dot: 'done',
             },
-            {
-              label: 'Approved',
-              description: `Approved by ${data.approvedBy ?? 'Approver'}`,
-              date: data.requestDate,
-              by: data.approvedBy ?? 'Approver',
-              dot: data.status === 'pending' ? 'pending' : 'done',
-            },
+            ...(data.approvedBy || data.status !== 'pending'
+              ? [
+                  {
+                    label: 'Approved',
+                    description: 'Request approved',
+                    date: data.requestDate,
+                    by: data.approvedBy ?? undefined,
+                    dot: 'done' as const,
+                  },
+                ]
+              : []),
+            ...(data.status === 'in-progress'
+              ? [
+                  {
+                    label: 'Confirmed',
+                    description: 'Warehouse confirmed and started processing this request',
+                    date: data.requestDate,
+                    by: currentActor,
+                    dot: 'done' as const,
+                  },
+                ]
+              : []),
           ];
 
     const existingShipments = (data as any).shipments || [];
     setShipmentBatches(existingShipments);
 
-    setActivityLogs(baseLogs);
+    setActivityLogs((prev) => mergeActivities(baseLogs, prev));
   }, [data.approvedBy, data.draftItems, data.items, data.requestDate, data.requestId, data.requestedBy, data.status, open]);
 
   const handleClose = () => {
@@ -398,8 +471,7 @@ export default function RequestedBatchWareHouse({
       .map((activity) => {
         const rawLabel = String(activity.label || '').trim();
         const normalizedLabel = rawLabel.toLowerCase();
-        const shipmentMatch = rawLabel.match(/shipment\s*#\s*(\d+)/i);
-        const shipmentNo = shipmentMatch ? Number(shipmentMatch[1]) : undefined;
+        const shipmentNo = parseActivityShipmentNo(rawLabel, activity.description);
 
         if (normalizedLabel.includes('ready to pick')) {
           readyCount += 1;
@@ -415,6 +487,13 @@ export default function RequestedBatchWareHouse({
           return {
             ...activity,
             label: `Partial Issue #${shipmentNo ?? partialIssueCount}`,
+          };
+        }
+
+        if (normalizedLabel.includes('confirm pick')) {
+          return {
+            ...activity,
+            label: 'Confirm Pick up',
           };
         }
 
@@ -475,6 +554,45 @@ export default function RequestedBatchWareHouse({
 
     onConfirmPickup(data.id)
       .then(() => {
+        const confirmedBy =
+          currentUser.initialState?.currentUser?.login || data.warehouseBy || 'Warehouse';
+        const latestReadyShipment = [...shipmentBatches]
+          .sort((left, right) => right.shipmentNo - left.shipmentNo)
+          .find((shipment) => shipment.status !== 'completed');
+        const confirmedShipmentNo = latestReadyShipment?.shipmentNo ?? shipmentBatches.length;
+        const nextStatus =
+          totals.totalRequested > 0 && totals.totalSent >= totals.totalRequested ? 'completed' : 'partial';
+
+        setStatusOverride(nextStatus);
+        setActivityLogs((prev) => [
+          ...prev,
+          {
+            label: 'Confirm Pick up',
+            description: `Shipment #${Math.max(1, confirmedShipmentNo)} pickup confirmed`,
+            date: new Date().toISOString(),
+            by: confirmedBy,
+            dot: 'done',
+          },
+          ...(nextStatus === 'partial'
+            ? [
+                {
+                  label: `Partial Issue #${Math.max(1, confirmedShipmentNo)}`,
+                  description: `Shipment #${Math.max(1, confirmedShipmentNo)} was picked up, but the request is still partially issued.`,
+                  date: new Date().toISOString(),
+                  by: data.requestedBy ?? 'Requester',
+                  dot: 'done' as const,
+                },
+              ]
+            : [
+                {
+                  label: 'Completed',
+                  description: 'All issued items have been picked up.',
+                  date: new Date().toISOString(),
+                  by: data.requestedBy ?? 'Requester',
+                  dot: 'done' as const,
+                },
+              ]),
+        ]);
         message.success('Pickup confirmed successfully.');
       })
       .catch(() => {
@@ -496,7 +614,7 @@ export default function RequestedBatchWareHouse({
         label: 'Confirmed',
         description: 'Warehouse confirmed requester and started processing',
         date: new Date().toISOString(),
-        by: data.warehouseBy ?? 'Warehouse',
+        by: currentActor,
         dot: 'done',
       },
     ]);
@@ -672,7 +790,7 @@ export default function RequestedBatchWareHouse({
 
   // ─── Shipment Batch Cards ────────────────────────────────────────────────────
   const orderedShipmentBatches = useMemo(
-    () => [...shipmentBatches].sort((left, right) => left.shipmentNo - right.shipmentNo),
+    () => [...shipmentBatches].sort((left, right) => right.shipmentNo - left.shipmentNo),
     [shipmentBatches],
   );
 
@@ -830,8 +948,8 @@ export default function RequestedBatchWareHouse({
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Total Items">{data.totalItems}</Descriptions.Item>
           <Descriptions.Item label="Status">
-            <Tag color={statusColorMap[effectiveStatus]} bordered={false}>
-              {statusLabelMap[effectiveStatus]}
+            <Tag color={displayedStatusColor} bordered={false}>
+              {displayedStatusLabel}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Sent Qty">
@@ -900,9 +1018,7 @@ export default function RequestedBatchWareHouse({
         <Timeline
           style={{ marginBottom: 24 }}
           items={displayActivityLogs.map((a) => {
-            // Match 'Ready to Pick up (Shipment #N)' or 'Picked up (Shipment #N)' labels
-            const shipmentMatch = String(a.label || '').match(/shipment\s*#\s*(\d+)/i);
-            const shipmentNo = shipmentMatch ? Number(shipmentMatch[1]) : -1;
+            const shipmentNo = parseActivityShipmentNo(a.label, a.description) ?? -1;
             const matchedBatch = shipmentNo > 0
               ? orderedShipmentBatches.find((shipment) => shipment.shipmentNo === shipmentNo)
               : undefined;
@@ -974,7 +1090,7 @@ export default function RequestedBatchWareHouse({
                       <br />
                       <Text type="secondary">{a.description}</Text>
                       <br />
-                      <Text type="secondary">By: {a.by || 'System'}</Text>
+                      <Text type="secondary">By: {a.by || '-'}</Text>
                     </div>
                     <Text type="secondary">{formatSpfDateTime(a.date)}</Text>
                   </div>

@@ -59,6 +59,67 @@ type MyRequestDto = {
   items?: MyRequestLineDto[];
 };
 
+type IssueHistoryLineDto = {
+  requestLineId: string;
+  sparePartId: string;
+  sparePartCode: string;
+  sparePartName: string;
+  deliveredQty: number;
+  unit: string;
+};
+
+type IssueHistoryDto = {
+  fulfillmentId: string;
+  fulfillmentNo: string;
+  fulfillmentStatus: string;
+  issuedAt?: string | null;
+  warehouseStaffId: string;
+  pickupConfirmedAt?: string | null;
+  pickupConfirmedBy?: string | null;
+  note?: string | null;
+  totalIssuedQty: number;
+  items?: IssueHistoryLineDto[];
+};
+
+type IssueDetailLineDto = {
+  requestLineId: number;
+  sparePartId: string;
+  sparePartCode: string;
+  sparePartName: string;
+  type?: string | null;
+  requestedQty: number;
+  approvedQty: number;
+  issuedQty: number;
+  remainingQty: number;
+  unit: string;
+  toWarehouseCode?: string | null;
+  forLine?: string | null;
+  remark?: string | null;
+  imageId?: string | string[] | null;
+};
+
+type IssueDetailDto = {
+  id: number;
+  requestNo: string;
+  requesterId: string;
+  approverId?: string | null;
+  approvedAt?: string | null;
+  warehouseAcceptedBy?: string | null;
+  warehouseAcceptedAt?: string | null;
+  requestedDate?: string;
+  requestStatus: BackendRequestStatus;
+  type?: string | null;
+  remark?: string | null;
+  totalRequestedQty?: number;
+  totalApprovedQty?: number;
+  totalIssuedQty?: number;
+  totalRemainingQty?: number;
+  priority?: string | null;
+  pickupStatus?: string | null;
+  items?: IssueDetailLineDto[];
+  history?: IssueHistoryDto[];
+};
+
 type CreateRequestPayload = {
   items: Array<{
     item: SparePartRequestItem;
@@ -140,6 +201,12 @@ const SparePartRequestAction = {
     actionName: 'approve-spare-part-request',
     endpoint: 'PROD',
     payload,
+  }),
+  getRequestDetail: (id: number): ServiceApiType<{ id: number }> => ({
+    type: 'FETCH_QUERY',
+    actionName: 'get-spare-part-issue-request',
+    endpoint: 'PROD',
+    payload: { id },
   }),
   rejectRequest: (payload: RejectRequestPayload): ServiceApiType<any> => ({
     type: 'EXEC',
@@ -312,7 +379,7 @@ const buildRequestActivities = (request: MyRequestItem): RequestDetailActivity[]
       label: 'Partial Issue',
       description: 'Warehouse issued part of the approved quantity',
       date: request.requestDate,
-      by: 'Warehouse',
+      by: undefined,
       dot: 'done',
     });
   }
@@ -322,7 +389,7 @@ const buildRequestActivities = (request: MyRequestItem): RequestDetailActivity[]
       label: 'Ready to Pick up',
       description: 'Items are ready for pickup',
       date: request.requestDate,
-      by: 'Warehouse',
+      by: undefined,
       dot: 'pending',
     });
   }
@@ -378,6 +445,215 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
   };
 };
 
+const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailData => {
+  const rawStatus = String(item.requestStatus || '').trim().toUpperCase();
+  const normalizedPickupStatus = String(item.pickupStatus || '').trim().toLowerCase();
+  const confirmedPickedQtyByLineId = new Map<number, number>();
+  (item.history || []).forEach((entry) => {
+    if (!entry.pickupConfirmedAt) return;
+    (entry.items || []).forEach((historyLine) => {
+      const requestLineId = Number(historyLine.requestLineId || 0);
+      if (!requestLineId) return;
+      confirmedPickedQtyByLineId.set(
+        requestLineId,
+        (confirmedPickedQtyByLineId.get(requestLineId) || 0) + Number(historyLine.deliveredQty || 0),
+      );
+    });
+  });
+
+  const items: RequestDetailLineItem[] = (item.items || []).map((line, index) => ({
+    no: index + 1,
+    requestLineId: Number(line.requestLineId || 0),
+    imageId: Array.isArray(line.imageId) ? line.imageId[0] : line.imageId || undefined,
+    productId: line.sparePartId || line.sparePartCode,
+    requestId: item.requestNo || '',
+    itemName: line.sparePartName,
+    requestedQty: Number(line.requestedQty || line.approvedQty || 0),
+    quantityToReturn:
+      rawStatus === 'PENDING'
+        ? Number(line.requestedQty || line.approvedQty || 0)
+        : Number(line.approvedQty || line.requestedQty || 0),
+    usedQuantity: confirmedPickedQtyByLineId.get(Number(line.requestLineId || 0)) || 0,
+    total: Number(line.requestedQty || line.approvedQty || 0),
+    warehouseSentQuantity: Number(line.issuedQty || 0),
+    warehouse: line.toWarehouseCode || undefined,
+    sparePartType: normalizeSparePartType(line.type) || normalizeSparePartType(item.type),
+    businessUnit: line.unit || 'pcs',
+    uom: line.unit || 'pcs',
+    description: line.remark || undefined,
+  }));
+  const detailType =
+    normalizeSparePartType(item.type) || items.find((entry) => entry.sparePartType)?.sparePartType;
+
+  const status: RequestStatus =
+    rawStatus === 'REJECTED'
+      ? 'rejected'
+      : rawStatus === 'APPROVED'
+        ? 'approved'
+        : rawStatus === 'IN_PROGRESS'
+          ? 'in-progress'
+          : rawStatus === 'PARTIAL_ISSUE'
+            ? normalizedPickupStatus === 'confirmed'
+              ? 'partial'
+              : 'ready_to_Pickup'
+            : rawStatus === 'READY_TO_PICKUP'
+              ? 'ready_to_Pickup'
+              : rawStatus === 'COMPLETE'
+                ? normalizedPickupStatus === 'confirmed'
+                  ? 'completed'
+                  : 'ready_to_Pickup'
+                : 'pending';
+
+  const history = [...(item.history || [])].sort((left, right) => {
+    const leftTime = new Date(left.issuedAt || '').getTime();
+    const rightTime = new Date(right.issuedAt || '').getTime();
+    return leftTime - rightTime;
+  });
+  const confirmedPickedQty = history.reduce(
+    (sum, entry) => sum + (entry.pickupConfirmedAt ? Number(entry.totalIssuedQty || 0) : 0),
+    0,
+  );
+  const lineItemByRequestLineId = new Map(items.map((line) => [Number(line.requestLineId || 0), line]));
+
+  const activities: RequestDetailActivity[] = [
+    {
+      label: 'Requested',
+      description: 'Requester sent request (waiting for approval)',
+      date: item.requestedDate,
+      by: item.requesterId || undefined,
+      dot: 'done',
+    },
+  ];
+
+  if (rawStatus === 'REJECTED') {
+    activities.push({
+      label: 'Rejected',
+      description: 'Request rejected',
+      date: item.approvedAt || item.requestedDate,
+      by: item.approverId || undefined,
+      dot: 'done',
+    });
+  } else if (rawStatus !== 'PENDING') {
+    activities.push({
+      label: 'Approved',
+      description: 'Request approved',
+      date: item.approvedAt || item.requestedDate,
+      by: item.approverId || undefined,
+      dot: 'done',
+    });
+  }
+
+  if (item.warehouseAcceptedAt || rawStatus === 'IN_PROGRESS' || history.length > 0) {
+    activities.push({
+      label: 'In Progress',
+      description: 'Warehouse processing request',
+      date: item.warehouseAcceptedAt || history[0]?.issuedAt || item.approvedAt || item.requestedDate,
+      by: item.warehouseAcceptedBy || history[0]?.warehouseStaffId || undefined,
+      dot: history.length > 0 ? 'done' : 'pending',
+    });
+  }
+
+  history.forEach((entry, index) => {
+    const shipmentNo = index + 1;
+    activities.push({
+      label: 'Ready to Pick up',
+      description: `Shipment #${shipmentNo} is ready for pick up`,
+      date: entry.issuedAt || item.requestedDate,
+      by: entry.warehouseStaffId || undefined,
+      dot: entry.pickupConfirmedAt ? 'done' : 'pending',
+    });
+
+    if (entry.pickupConfirmedAt) {
+      activities.push({
+        label: 'Confirm Pick up',
+        description: 'Requester confirmed pickup',
+        date: entry.pickupConfirmedAt,
+        by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+        dot: 'done',
+      });
+
+      const isLastShipment = shipmentNo === history.length;
+      const hasMoreToIssue = Number(item.totalRemainingQty || 0) > 0;
+
+      if (hasMoreToIssue || !isLastShipment) {
+        activities.push({
+          label: `Partial Pick up #${shipmentNo}`,
+          description: `Picked ${Number(entry.totalIssuedQty || 0)} item(s)`,
+          date: entry.pickupConfirmedAt,
+          by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+          dot: 'done',
+        });
+      }
+    }
+  });
+
+  if (rawStatus === 'COMPLETE' && normalizedPickupStatus === 'confirmed' && history.length > 0) {
+    const lastHistory = history[history.length - 1];
+    activities.push({
+      label: 'Completed',
+      description: 'Picked up all requested items',
+      date: lastHistory.pickupConfirmedAt || lastHistory.issuedAt || item.requestedDate,
+      by: lastHistory.pickupConfirmedBy || lastHistory.warehouseStaffId || undefined,
+      dot: 'done',
+    });
+  }
+
+  const pickupBatches = history
+    .filter((entry) => entry.pickupConfirmedAt)
+    .map((entry, index) => ({
+      batchNo: index + 1,
+      createdAt: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate || '',
+      pickedBy: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+      pickedItemsCount: Number(entry.totalIssuedQty || 0),
+      items: (entry.items || []).map((historyLine, historyIndex) => {
+        const requestLineId = Number(historyLine.requestLineId || 0);
+        const baseLine = lineItemByRequestLineId.get(requestLineId);
+        return {
+          no: historyIndex + 1,
+          requestLineId,
+          imageId: baseLine?.imageId,
+          productId: historyLine.sparePartId || historyLine.sparePartCode,
+          requestId: item.requestNo || '',
+          itemName: historyLine.sparePartName,
+          requestedQty: baseLine?.requestedQty,
+          quantityToReturn: Number(historyLine.deliveredQty || 0),
+          usedQuantity: Number(historyLine.deliveredQty || 0),
+          total: Number(historyLine.deliveredQty || 0),
+          warehouseSentQuantity: Number(historyLine.deliveredQty || 0),
+          description: baseLine?.description,
+          stockQuantity: baseLine?.stockQuantity,
+          warehouse: baseLine?.warehouse,
+          zone: baseLine?.zone,
+          shelf: baseLine?.shelf,
+          level: baseLine?.level,
+          company: baseLine?.company,
+          category: baseLine?.category,
+          sparePartType: baseLine?.sparePartType,
+          businessUnit: baseLine?.businessUnit,
+          uom: historyLine.unit || baseLine?.uom,
+        };
+      }),
+    }));
+
+  return {
+    id: Number(item.id || 0),
+    requestId: item.requestNo || '',
+    requestDate: item.requestedDate || '',
+    status,
+    priority: normalizePriority(item.priority),
+    type: detailType,
+    totalItems: Number(item.totalRequestedQty || items.length),
+    receivedItems: confirmedPickedQty,
+    remark: item.remark || '',
+    requestedBy: item.requesterId || undefined,
+    approvedBy: item.approverId || undefined,
+    warehouseBy: history[history.length - 1]?.warehouseStaffId || history[0]?.warehouseStaffId || undefined,
+    items,
+    activities,
+    pickupBatches,
+  };
+};
+
 export const SparePartRequestService = (requestAction: RequestActions) => ({
   pageMyRequests: async (
     params: TableViewSearchParams<MyRequestSearch>,
@@ -409,6 +685,13 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
     )(requestAction)) as MyRequestDto;
 
     return mapMyRequestItem(response);
+  },
+  getRequestDetail: async (id: number): Promise<RequestDetailData> => {
+    const response = (await singleRequest<IssueDetailDto>(
+      SparePartRequestAction.getRequestDetail(id),
+    )(requestAction)) as IssueDetailDto;
+
+    return mapIssueDetailToRequestDetailData(response);
   },
   rejectRequest: async (payload: RejectRequestPayload): Promise<MyRequestItem> => {
     const response = (await singleRequest<MyRequestDto>(

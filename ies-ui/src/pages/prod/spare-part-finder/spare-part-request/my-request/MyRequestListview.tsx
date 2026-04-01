@@ -12,6 +12,7 @@ import { simpleRequestActions } from '@/services/model';
 import { formatSpfDateTime } from '../../shared/dateTime';
 import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../data';
 import RequestedBatchDrawer from '../RequestedBatchDrawer';
+import type { RequestDetailData } from '../RequestedBatchDrawer';
 import { buildRequestDetailData, SparePartRequestService } from '../service';
 
 dayjs.extend(isSameOrAfter);
@@ -113,6 +114,7 @@ export default function MyRequestListview() {
   const [searchValue, setSearchValue] = useState<string>('');
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<MyRequestItem | null>(null);
+  const [selectedRequestDetail, setSelectedRequestDetail] = useState<RequestDetailData | null>(null);
   const [filters, setFilters] = useState<{
     status: 'ALL' | RequestStatus;
     priority: 'ALL' | RequestPriority;
@@ -133,9 +135,16 @@ export default function MyRequestListview() {
     actionRef.current?.reload?.();
   };
 
-  const openDetail = (record: MyRequestItem) => {
+  const openDetail = async (record: MyRequestItem) => {
     setSelectedRequest(record);
+    setSelectedRequestDetail(buildRequestDetailData(record));
     setDetailOpen(true);
+    try {
+      const detail = await services.getRequestDetail(record.id);
+      setSelectedRequestDetail(detail);
+    } catch {
+      setSelectedRequestDetail(buildRequestDetailData(record));
+    }
   };
 
   const requestData = async (
@@ -215,6 +224,24 @@ export default function MyRequestListview() {
                   }}
                 />
 
+                <DatePicker
+                  allowClear
+                  style={{ width: 180 }}
+                  value={filters.dateRange ? dayjs(filters.dateRange[0]) : null}
+                  onChange={(value) => {
+                    if (value) {
+                      setFilters((prev) => ({
+                        ...prev,
+                        dateRange: [value.startOf('day').toISOString(), value.endOf('day').toISOString()],
+                      }));
+                    } else {
+                      setFilters((prev) => ({ ...prev, dateRange: undefined }));
+                    }
+                    reloadTable();
+                  }}
+                />
+
+                {/*
                 <RangePicker
                   placeholder={['Filter Date', 'End date']}
                   value={
@@ -234,6 +261,7 @@ export default function MyRequestListview() {
                     reloadTable();
                   }}
                 />
+                */}
               </Space>
 
               <Button icon={<ReloadOutlined />} onClick={refreshTable}>
@@ -393,7 +421,7 @@ export default function MyRequestListview() {
       <RequestedBatchDrawer
         open={detailOpen}
         request={selectedRequest}
-        data={selectedRequest ? buildRequestDetailData(selectedRequest) : undefined}
+        data={selectedRequestDetail || (selectedRequest ? buildRequestDetailData(selectedRequest) : undefined)}
         onApprove={async (payload) => {
           await services.approveRequest(payload);
           setSelectedRequest((prev) =>
@@ -401,6 +429,9 @@ export default function MyRequestListview() {
               ? { ...prev, requestStatus: 'approved' }
               : prev,
           );
+          if (selectedRequest?.id === payload.id) {
+            setSelectedRequestDetail(await services.getRequestDetail(payload.id));
+          }
           reloadTable();
         }}
         onReject={async ({ id }) => {
@@ -410,15 +441,22 @@ export default function MyRequestListview() {
               ? { ...prev, requestStatus: 'rejected' }
               : prev,
           );
+          if (selectedRequest?.id === id) {
+            setSelectedRequestDetail(await services.getRequestDetail(id));
+          }
           reloadTable();
         }}
         onConfirmPickup={async (id) => {
           await services.confirmPickup(id);
+          if (selectedRequest?.id === id) {
+            setSelectedRequestDetail(await services.getRequestDetail(id));
+          }
           reloadTable();
         }}
         onClose={() => {
           setDetailOpen(false);
           setSelectedRequest(null);
+          setSelectedRequestDetail(null);
         }}
       />
     </>

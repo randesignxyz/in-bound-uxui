@@ -1,6 +1,6 @@
-import { EyeOutlined } from '@ant-design/icons';
+import { CheckOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
-import { Button, Progress, Tag, Typography } from 'antd';
+import { Button, Progress, Space, Tag, Typography } from 'antd';
 import { formatSpfDateTime } from '../shared/dateTime';
 import {
   calcRequestTotals,
@@ -13,20 +13,9 @@ import {
 
 export const buildSummaryColumns = (options: {
   onViewRequest?: (request: WarehouseRequestRecord) => void;
+  onAcceptRequest?: (request: WarehouseRequestRecord) => void;
 }): ProColumns<WarehouseRequestRecord>[] => [
-  {
-    title: '',
-    key: 'view',
-    width: 42,
-    render: (_, record) => (
-      <Button
-        type="text"
-        icon={<EyeOutlined />}
-        onClick={() => options.onViewRequest?.(record)}
-        style={{ color: '#1677ff' }}
-      />
-    ),
-  },
+  
   {
     title: 'Request ID',
     dataIndex: 'requestId',
@@ -74,7 +63,7 @@ export const buildSummaryColumns = (options: {
       );
     },
   },
-  { title: 'BU', key: 'bu', width: 80, render: (_, record) => record.items[0]?.businessUnit || '-' },
+  { title: 'UOM', key: 'bu', width: 80, render: (_, record) => record.items[0]?.businessUnit || '-' },
   { title: 'Created By', dataIndex: 'requester', key: 'requester', width: 130 },
   {
     title: 'Created Date',
@@ -99,5 +88,34 @@ export const buildSummaryColumns = (options: {
         </Tag>
       );
     },
+  },
+  {
+    title: 'Action',
+    key: 'view',
+    width: 80,
+    render: (_, record) => (
+      <Space size={16}>
+        <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={(event) => {
+              event.stopPropagation();
+              options.onViewRequest?.(record);
+            }}
+            style={{ color: '#1677ff' }}
+          />
+        {deriveWarehouseDisplayStatus(record) === 'Pending' ? (
+          <Button
+              type="text"
+              icon={<CheckOutlined />}
+              onClick={(event) => {
+                event.stopPropagation();
+                options.onAcceptRequest?.(record);
+              }}
+              style={{ color: '#52c41a' }}
+            />
+           ) : null}         
+      </Space>
+    ),
   },
 ];

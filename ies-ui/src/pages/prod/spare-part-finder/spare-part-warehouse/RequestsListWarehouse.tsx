@@ -75,6 +75,21 @@ export default function RequestsListWarehouse() {
     setSelectedRequestData(null);
   }, []);
 
+  const acceptRequest = useCallback(async (record: WarehouseRequestRecord) => {
+    try {
+      const response = await services.acceptRequest(record.id);
+      setRequestRows((prev) => prev.map((row) => (row.id === record.id ? response.record : row)));
+      if (selectedRequest?.id === record.id) {
+        setSelectedRequest(response.record);
+        setSelectedRequestData(response.detail);
+      }
+      message.success('Request accepted successfully.');
+      await reloadRequests();
+    } catch (error) {
+      message.error('Failed to accept request.');
+    }
+  }, [reloadRequests, selectedRequest?.id, services]);
+
   const filteredRequests = useMemo(
     () =>
       requestRows.filter((request) => {
@@ -92,8 +107,8 @@ export default function RequestsListWarehouse() {
   );
 
   const summaryColumns = useMemo(
-    () => buildSummaryColumns({ onViewRequest: openDrawer }) as unknown as any[],
-    [openDrawer],
+    () => buildSummaryColumns({ onViewRequest: openDrawer, onAcceptRequest: acceptRequest }) as unknown as any[],
+    [acceptRequest, openDrawer],
   );
 
   return (

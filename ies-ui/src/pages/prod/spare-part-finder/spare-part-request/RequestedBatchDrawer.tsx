@@ -18,7 +18,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from './data';
 import SpfDetails from './SpfDetails';
-import { useAccess } from '@umijs/max';
+import { useAccess, useModel } from '@umijs/max';
 import SparePartImage from './SparePartImage';
 import { formatSpfDateTime } from '../shared/dateTime';
 
@@ -91,9 +91,80 @@ const getActivityRank = (label?: string): number => {
   if (normalized === 'rejected') return 2;
   if (normalized === 'in progress') return 3;
   if (normalized === 'ready to pick up') return 4;
-  if (/^partial pick up #\d+$/i.test(normalized)) return 5;
-  if (normalized === 'completed') return 6;
-  return 7;
+  if (normalized === 'confirm pick up') return 5;
+  if (/^partial pick up #\d+$/i.test(normalized)) return 6;
+  if (normalized === 'completed') return 7;
+  return 8;
+};
+
+const mergeActivities = (
+  base: RequestDetailActivity[],
+  extra: RequestDetailActivity[] = [],
+): RequestDetailActivity[] => {
+  const seen = new Set<string>();
+  const merged: RequestDetailActivity[] = [];
+  const singletonLabels = new Set(['requested', 'approved', 'rejected', 'in progress', 'completed']);
+
+  [...base, ...extra].forEach((activity) => {
+    const normalized: RequestDetailActivity = {
+      ...activity,
+      label: String(activity.label || '').trim(),
+      description: String(activity.description || '').trim(),
+    };
+    const normalizedLabel = normalized.label.toLowerCase();
+
+    if (
+      singletonLabels.has(normalizedLabel) &&
+      merged.some((item) => String(item.label || '').trim().toLowerCase() === normalizedLabel)
+    ) {
+      return;
+    }
+
+    const key = `${normalized.label}|${normalized.description}|${normalized.date ?? ''}|${normalized.by ?? ''}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push(normalized);
+  });
+
+  return merged;
+};
+
+interface PersistedRequestDrawerState {
+  activityLogs?: RequestDetailActivity[];
+  quantityOverrides?: Record<string, number>;
+  itemMarks?: Record<string, 'deleted' | 'canceled'>;
+  editedItems?: Record<string, boolean>;
+}
+
+const getPersistedDrawerStateKey = (requestId?: string) =>
+  requestId ? `spf-request-drawer:${requestId}` : null;
+
+const readPersistedDrawerState = (requestId?: string): PersistedRequestDrawerState | null => {
+  if (typeof window === 'undefined') return null;
+  const key = getPersistedDrawerStateKey(requestId);
+  if (!key) return null;
+
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as PersistedRequestDrawerState) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writePersistedDrawerState = (
+  requestId: string | undefined,
+  value: PersistedRequestDrawerState,
+) => {
+  if (typeof window === 'undefined') return;
+  const key = getPersistedDrawerStateKey(requestId);
+  if (!key) return;
+
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore storage errors
+  }
 };
 
 export interface RequestDetailLineItem {
@@ -154,6 +225,7 @@ export interface RequestDetailData {
   warehouseBy?: string;
   items: RequestDetailLineItem[];
   activities: RequestDetailActivity[];
+  pickupBatches?: PickupBatch[];
 }
 
 export interface DrawerBatchReturnItemsProps {
@@ -178,6 +250,7 @@ export default function RequestedBatchDrawer({
   onReject,
   onConfirmPickup,
 }: DrawerBatchReturnItemsProps) {
+  const currentUser = useModel('@@initialState');
   const [spfOpen, setSpfOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<RequestDetailLineItem | null>(null);
   const [pickedItems, setPickedItems] = useState<RequestDetailLineItem[]>([]);
@@ -194,6 +267,7 @@ export default function RequestedBatchDrawer({
   const lastServerStatusRef = useRef<RequestStatus | null>(null);
   const lastShipmentNoticeRef = useRef<number>(0);
   const initKeyRef = useRef<string>('');
+  const resetPersistRef = useRef(false);
   const access = useAccess();
   const data: RequestDetailData = useMemo(() => {
     if (propData) return propData;
@@ -256,10 +330,15 @@ export default function RequestedBatchDrawer({
     return data.status;
   }, [data.receivedItems, data.status, data.totalItems, statusOverride]);
   const currentStep = statusToCurrentStep(effectiveStatus);
+  const currentActor =
+    currentUser.initialState?.currentUser?.login ||
+    (access.canSpfApprover ? data.approvedBy : data.requestedBy) ||
+    (access.canSpfApprover ? 'Approver' : 'Requester');
 
   useEffect(() => {
     if (!open) {
       initKeyRef.current = '';
+      resetPersistRef.current = false;
       return;
     }
 
@@ -272,15 +351,13 @@ export default function RequestedBatchDrawer({
     setPickupSelection([]);
     setStatusOverride(null);
     setExpandedPickupBatchNos([]);
-    setQuantityOverrides({});
-    setItemMarks({});
-    setEditedItems({});
     setEditingItem(null);
     setEditingQuantity(1);
 
     const prePickedCount = typeof data.receivedItems === 'number' ? data.receivedItems : 0;
     const seededPicked =
-      prePickedCount > 0 ? data.items.slice(0, Math.min(data.items.length, prePickedCount)) : [];
+      data.pickupBatches?.flatMap((batch) => batch.items).filter((item) => Number(item.usedQuantity || item.quantityToReturn || 0) > 0) ||
+      [];
 
     const allowHistorySeed =
       data.status === 'ready_to_Pickup' || data.status === 'partial' || data.status === 'completed';
@@ -288,7 +365,10 @@ export default function RequestedBatchDrawer({
     let nextPickedItems: RequestDetailLineItem[] = [];
     let nextPickupBatches: PickupBatch[] = [];
 
-    if (data.status === 'completed') {
+    if (data.pickupBatches && data.pickupBatches.length > 0) {
+      nextPickedItems = seededPicked;
+      nextPickupBatches = [...data.pickupBatches].sort((a, b) => a.batchNo - b.batchNo);
+    } else if (data.status === 'completed') {
       nextPickedItems = data.items;
       nextPickupBatches = [
         {
@@ -353,22 +433,27 @@ export default function RequestedBatchDrawer({
       }
     }
 
+    const persistedState = readPersistedDrawerState(data.requestId);
+
     setPickedItems(nextPickedItems);
     setPickupBatches(nextPickupBatches);
+    setQuantityOverrides(persistedState?.quantityOverrides || {});
+    setItemMarks(persistedState?.itemMarks || {});
+    setEditedItems(persistedState?.editedItems || {});
 
     const seen = new Set<string>();
-    const logs: RequestDetailActivity[] = [];
+    const fallbackLogs: RequestDetailActivity[] = [];
     const pushOnce = (next: RequestDetailActivity) => {
       const normalized: RequestDetailActivity = {
         ...next,
         date: next.date ?? data.requestDate,
-        by: next.by ?? 'System',
+        by: next.by?.trim() ? next.by.trim() : undefined,
       };
 
       const k = `${normalized.label}|${normalized.description}|${normalized.date ?? ''}|${normalized.by ?? ''}`;
       if (seen.has(k)) return;
       seen.add(k);
-      logs.push(normalized);
+      fallbackLogs.push(normalized);
     };
 
     pushOnce({
@@ -403,85 +488,89 @@ export default function RequestedBatchDrawer({
           label: 'In Progress',
           description: 'Warehouse processing request',
           date: data.requestDate,
-          by: data.warehouseBy ?? 'Warehouse',
+          by: data.warehouseBy,
           dot: data.status === 'in-progress' ? 'pending' : 'done',
         });
       }
 
-      if (data.status === 'ready_to_Pickup' || data.status === 'partial' || data.status === 'completed') {
+      if (data.status === 'ready_to_Pickup') {
         pushOnce({
           label: 'Ready to Pick up',
           description: 'Shipment #1 is ready for pick up',
           date: data.requestDate,
-          by: data.warehouseBy ?? 'Warehouse',
-          dot: data.status === 'ready_to_Pickup' ? 'pending' : 'done',
+          by: data.warehouseBy,
+          dot: 'pending',
         });
       }
 
-      if (seededPicked.length > 0 && (data.status === 'partial' || data.status === 'ready_to_Pickup')) {
+      if (data.status === 'partial') {
         pushOnce({
-          label: 'Partial Pick up #1',
-          description: `Picked ${seededPicked.length} item(s)`,
+          label: 'Confirm Pick up',
+          description: 'Requester confirmed pickup',
           date: data.requestDate,
-          by: data.requestedBy ?? 'Requester',
+          by: data.requestedBy,
           dot: 'done',
         });
-
-        if (data.status === 'ready_to_Pickup') {
-          pushOnce({
-            label: 'Ready to Pick up',
-            description: 'Shipment #2 is ready for pick up',
-            date: data.requestDate,
-            by: data.warehouseBy ?? 'Warehouse',
-            dot: 'pending',
-          });
-        }
+        pushOnce({
+          label: 'Partial Pick up #1',
+          description: `Picked ${seededPicked.length || data.receivedItems || 0} item(s)`,
+          date: data.requestDate,
+          by: data.requestedBy,
+          dot: 'done',
+        });
       }
 
       if (data.status === 'completed') {
         pushOnce({
+          label: 'Confirm Pick up',
+          description: 'Requester confirmed pickup',
+          date: data.requestDate,
+          by: data.requestedBy,
+          dot: 'done',
+        });
+        pushOnce({
           label: 'Completed',
           description: 'Picked up all requested items',
           date: data.requestDate,
-          by: data.requestedBy ?? 'Requester',
+          by: data.requestedBy,
           dot: 'done',
         });
       }
     }
 
-    // append backend/activity logs that aren't already in our generated list
-    (data.activities || []).forEach((a) => {
-      const label = String(a?.label || '').toLowerCase();
-      const description = String(a?.description || '');
+    const serverLogs =
+      (data.activities || []).length > 0
+        ? (data.activities || []).map((activity) => ({
+            ...activity,
+            date: activity.date ?? data.requestDate,
+            by: activity.by?.trim() ? activity.by.trim() : undefined,
+          }))
+        : fallbackLogs;
 
-      // avoid confusing generic logs that duplicate our status timeline
-      if (label === 'requested') return;
-      if (label === 'processing' && /status updated/i.test(description)) return;
-
-      const byFallback =
-        label.includes('approve')
-          ? data.approvedBy ?? 'Approver'
-          : label.includes('reject')
-            ? data.rejectedBy ?? 'Approver'
-            : label.includes('ready') || label.includes('warehouse') || label.includes('progress')
-              ? data.warehouseBy ?? 'Warehouse'
-              : label.includes('pick')
-                ? data.requestedBy ?? 'Requester'
-                : data.requestedBy ?? 'System';
-
-      pushOnce({
-        ...a,
-        by: a.by ?? byFallback,
-        date: a.date ?? data.requestDate,
-      });
-    });
-
-    setActivityLogs(logs);
+    setActivityLogs(mergeActivities(serverLogs, persistedState?.activityLogs || []));
     lastServerStatusRef.current = data.status;
-    lastShipmentNoticeRef.current = data.status === 'ready_to_Pickup' && seededPicked.length > 0 ? 2 : 1;
+    lastShipmentNoticeRef.current = data.status === 'ready_to_Pickup' && seededPicked.length > 0 ? 1 : 0;
   }, [data.activities, data.items, data.receivedItems, data.requestDate, data.status, data.requestId, open]);
 
+  useEffect(() => {
+    if (!open || !data.requestId || resetPersistRef.current) return;
+
+    writePersistedDrawerState(data.requestId, {
+      activityLogs,
+      quantityOverrides,
+      itemMarks,
+      editedItems,
+    });
+  }, [activityLogs, data.requestId, editedItems, itemMarks, open, quantityOverrides]);
+
   const handleClose = () => {
+    resetPersistRef.current = true;
+    writePersistedDrawerState(data.requestId, {
+      activityLogs,
+      quantityOverrides,
+      itemMarks,
+      editedItems,
+    });
     setSpfOpen(false);
     setSelectedProduct(null);
     setPickupSelection([]);
@@ -573,7 +662,7 @@ export default function RequestedBatchDrawer({
         label: 'Item Edited',
         description: `${productId} requested quantity updated to ${nextQty}`,
         date: new Date().toISOString(),
-        by: data.requestedBy ?? 'Requester',
+        by: currentActor,
         dot: 'done',
       },
     ]);
@@ -624,7 +713,7 @@ export default function RequestedBatchDrawer({
         label: mark === 'deleted' ? 'Item Deleted' : 'Item Canceled',
         description: `${record.productId} (${record.itemName}) was ${mark}`,
         date: new Date().toISOString(),
-        by: data.requestedBy ?? 'Requester',
+        by: currentActor,
         dot: 'done',
       },
     ]);
@@ -742,7 +831,7 @@ export default function RequestedBatchDrawer({
       title: 'Received',
       align: 'center',
       width: '10%',
-      render: (_: unknown, record) => (pickedProductIds.has(record.productId) ? record.quantityToReturn : 0),
+      render: (_: unknown, record) => Number(record.usedQuantity || 0),
     },
      ...(access.canSpfApprover ? [
           {
@@ -799,8 +888,8 @@ export default function RequestedBatchDrawer({
   const displayedTotalItems = activeRequestItems.length;
 
   const displayedReceivedItems = useMemo(
-    () => pickedItems.filter((it) => !itemMarks[it.productId]).length,
-    [itemMarks, pickedItems],
+    () => activeRequestItems.reduce((sum, item) => sum + (Number(item.usedQuantity) || 0), 0),
+    [activeRequestItems],
   );
 
   const columnsForPickupTable: ColumnsType<RequestDetailLineItem> = [
@@ -814,8 +903,7 @@ export default function RequestedBatchDrawer({
     {
       title: 'Qty Received',
       align: 'right' as const,
-      render: (_: unknown, record) =>
-        pickedProductIds.has(record.productId) ? record.quantityToReturn : 0,
+      render: (_: unknown, record) => Number(record.usedQuantity || 0),
     },
   ];
 
@@ -849,20 +937,29 @@ export default function RequestedBatchDrawer({
     if (onConfirmPickup && data.id) {
       onConfirmPickup(data.id)
         .then(() => {
-          setStatusOverride(effectiveStatus === 'partial' ? 'partial' : 'completed');
+          const nextStatus =
+            requestedQtyTotal > 0 && receivedQtyTotal >= requestedQtyTotal ? 'completed' : 'partial';
+          setStatusOverride(nextStatus);
           setActivityLogs((prev) => [
             ...prev,
             {
+              label: 'Confirm Pick up',
+              description: 'Requester confirmed pickup',
+              date: new Date().toISOString(),
+              by: currentActor,
+              dot: 'done',
+            },
+            {
               label:
-                effectiveStatus === 'partial'
+                nextStatus === 'partial'
                   ? `Partial Pick up #${Math.max(1, pickupBatches.length)}`
                   : 'Completed',
               description:
-                effectiveStatus === 'partial'
+                nextStatus === 'partial'
                   ? 'Pickup confirmed for the latest shipment'
                   : 'Pickup confirmed for all issued items',
               date: new Date().toISOString(),
-              by: data.requestedBy ?? 'Requester',
+              by: currentActor,
               dot: 'done',
             },
           ]);
@@ -909,7 +1006,7 @@ export default function RequestedBatchDrawer({
           label: 'Completed',
           description: 'Picked up all requested items',
           date: new Date().toISOString(),
-          by: data.requestedBy ?? 'Requester',
+          by: currentActor,
           dot: 'done',
         },
       ]);
@@ -921,7 +1018,7 @@ export default function RequestedBatchDrawer({
           label: `Partial Pick up #${nextBatchNo}`,
           description: `Picked ${newlyPicked.length} item(s)`,
           date: new Date().toISOString(),
-          by: data.requestedBy ?? 'Requester',
+          by: currentActor,
           dot: 'done',
         },
       ]);
@@ -947,7 +1044,7 @@ export default function RequestedBatchDrawer({
             label: 'Ready to Pick up',
             description: `Shipment #${shipmentNo} is ready for pick up`,
             date: new Date().toISOString(),
-            by: data.warehouseBy ?? 'Warehouse',
+            by: data.warehouseBy,
             dot: 'pending',
           },
         ]);
@@ -975,11 +1072,10 @@ export default function RequestedBatchDrawer({
         const parsedBatchNo = parsePickupBatchNo(rawLabel);
 
         if (normalizedLabel.includes('partial issue')) {
-          readyCount += 1;
+          partialPickupCount += 1;
           return {
             ...activity,
-            label: 'Ready to Pick up',
-            description: `Shipment #${readyCount} is ready to pick up`,
+            label: `Partial Pick up #${parsedBatchNo ?? partialPickupCount}`,
           };
         }
 
@@ -998,6 +1094,13 @@ export default function RequestedBatchDrawer({
           return {
             ...activity,
             label: `Partial Pick up #${parsedBatchNo ?? partialPickupCount}`,
+          };
+        }
+
+        if (normalizedLabel.includes('confirm pick')) {
+          return {
+            ...activity,
+            label: 'Confirm Pick up',
           };
         }
 
@@ -1117,7 +1220,7 @@ export default function RequestedBatchDrawer({
                           label: 'Rejected',
                           description: 'Request rejected',
                           date: new Date().toISOString(),
-                          by: data.approvedBy ?? 'Approver',
+                          by: currentActor,
                           dot: 'done',
                         },
                       ]);
@@ -1133,7 +1236,7 @@ export default function RequestedBatchDrawer({
                             label: 'Rejected',
                             description: 'Request rejected',
                             date: new Date().toISOString(),
-                            by: data.approvedBy ?? 'Approver',
+                            by: currentActor,
                             dot: 'done',
                           },
                         ]);
@@ -1155,6 +1258,12 @@ export default function RequestedBatchDrawer({
                         requestLineId: Number(item.requestLineId),
                         approvedQty: Number(item.quantityToReturn || 0),
                       }));
+                    const hasAnyApprovedQty = lines.some((item) => item.approvedQty > 0);
+
+                    if (!hasAnyApprovedQty) {
+                      message.warning('At least one item must have approved quantity greater than 0. Otherwise, reject the request.');
+                      return;
+                    }
 
                     if (!onApprove || !data.id) {
                       setStatusOverride('approved');
@@ -1164,7 +1273,7 @@ export default function RequestedBatchDrawer({
                           label: 'Approved',
                           description: 'Request approved',
                           date: new Date().toISOString(),
-                          by: data.approvedBy ?? 'Approver',
+                          by: currentActor,
                           dot: 'done',
                         },
                       ]);
@@ -1180,7 +1289,7 @@ export default function RequestedBatchDrawer({
                             label: 'Approved',
                             description: 'Request approved',
                             date: new Date().toISOString(),
-                            by: data.approvedBy ?? 'Approver',
+                            by: currentActor,
                             dot: 'done',
                           },
                         ]);
@@ -1347,7 +1456,7 @@ export default function RequestedBatchDrawer({
                       <br />
                       <Text type="secondary">{a.description}</Text>
                       <br />
-                      <Text type="secondary">By: {a.by || 'System'}</Text>
+                      <Text type="secondary">By: {a.by || '-'}</Text>
                     </div>
                     <Text type="secondary">{formatSpfDateTime(a.date)}</Text>
                   </div>

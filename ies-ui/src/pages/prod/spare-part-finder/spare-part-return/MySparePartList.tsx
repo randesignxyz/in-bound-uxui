@@ -3,17 +3,17 @@ import { EyeOutlined, InfoCircleOutlined, MoreOutlined, ReloadOutlined } from '@
 import { ActionType, ProTable } from '@ant-design/pro-components';
 import type { Dayjs } from 'dayjs';
 import {
-  Avatar,
   Button,
   Card,
   DatePicker,
   Dropdown,
   Input,
   message,
+  Popconfirm,
   Radio,
   Select,
   Space,
-  Tag,
+  Switch,
   Tooltip,
   Typography,
 } from 'antd';
@@ -21,7 +21,11 @@ import { useRef, useState } from 'react';
 import DrawerViewItem from './DrawerViewItem';
 import FormModalSelectItems from './FormModalSelectItems';
 import type { SparePartReturnListItem } from './data';
-import { SPARE_PART_CATEGORY_OPTIONS, SPARE_PART_RETURN_RADIO_OPTIONS } from './data';
+import {
+  SPARE_PART_CATEGORY_OPTIONS,
+  SPARE_PART_PICKED_ITEM_STATE_OPTIONS,
+  SPARE_PART_RETURN_RADIO_OPTIONS,
+} from './data';
 import { SparePartReturnAPI } from './service';
 import SparePartImage from '../spare-part-request/SparePartImage';
 
@@ -32,6 +36,9 @@ export default function MySparePartList() {
   const [selectedCategory, setSelectedCategory] = useState<string>(
     SPARE_PART_CATEGORY_OPTIONS[0].value,
   );
+  const [pickedItemState, setPickedItemState] = useState<string>(
+    SPARE_PART_PICKED_ITEM_STATE_OPTIONS[0].value,
+  );
   const [selectedDateRange, setSelectedDateRange] = useState<[Dayjs, Dayjs] | undefined>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedItems, setSelectedItems] = useState<SparePartReturnListItem[]>([]);
@@ -41,16 +48,43 @@ export default function MySparePartList() {
   }>({ visible: false });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<SparePartReturnListItem | null>(null);
+  const [updatingFulfillmentLineId, setUpdatingFulfillmentLineId] = useState<number | null>(null);
   const radioOptions = SPARE_PART_RETURN_RADIO_OPTIONS;
 
   const requestAction: RequestActions = {
     start: (serviceName) => console.log(`Loading: ${serviceName}`),
     end: (status, reason) => console.log(status, reason),
   };
-
   const onDetailHandler = (data: SparePartReturnListItem) => {
     setDrawerOpen(true);
     setSelectedItem(data);
+  };
+
+  const handleTogglePickedItemState = async (record: SparePartReturnListItem) => {
+    if (!record.fulfillmentLineId) {
+      message.error('Fulfillment line id is missing');
+      return;
+    }
+
+    setUpdatingFulfillmentLineId(record.fulfillmentLineId);
+    try {
+      if (record.isClosed) {
+        await SparePartReturnAPI(requestAction).open_picked_item([record.fulfillmentLineId]);
+        message.success('Picked item opened successfully');
+      } else {
+        await SparePartReturnAPI(requestAction).close_picked_item([record.fulfillmentLineId]);
+        message.success('Picked item closed successfully');
+      }
+
+      setSelectedRowKeys((prev) => prev.filter((key) => key !== record.id));
+      setSelectedItems((prev) => prev.filter((item) => item.id !== record.id));
+      actionRef.current?.reload();
+    } catch (error) {
+      console.error('Failed to update picked item state', error);
+      message.error('Failed to update picked item state');
+    } finally {
+      setUpdatingFulfillmentLineId(null);
+    }
   };
 
   const handleReturnPart = () => {
@@ -71,7 +105,7 @@ export default function MySparePartList() {
         originalRequestLineId: item.requestLineId,
         fulfillmentLineId: item.fulfillmentLineId,
         quantity: item.return_quantity ?? 0,
-        uom: item.UoM ,
+        uom: item.UoM,
         quantityUsed: item.used_quantity ?? 0,
         conditionOnReturn: 'USABLE',
         remark: item.reason ?? '',
@@ -177,6 +211,17 @@ export default function MySparePartList() {
               actionRef.current?.reloadAndRest?.();
             }}
           />
+          <Select
+            value={pickedItemState}
+            style={{ width: 120 }}
+            options={[...SPARE_PART_PICKED_ITEM_STATE_OPTIONS]}
+            onChange={(value) => {
+              setPickedItemState(value);
+              setSelectedRowKeys([]);
+              setSelectedItems([]);
+              actionRef.current?.reloadAndRest?.();
+            }}
+          />
           <DatePicker.RangePicker
             onChange={(dates) => {
               setSelectedDateRange(dates ? ([dates[0], dates[1]] as [Dayjs, Dayjs]) : undefined);
@@ -224,6 +269,7 @@ export default function MySparePartList() {
                       : undefined,
                   warehouse: radioValue !== 'All' ? radioValue : undefined,
                   warehouseCode: radioValue !== 'All' ? radioValue : undefined,
+                  pickedItemState,
                   dateRange,
                 },
               },
@@ -240,11 +286,9 @@ export default function MySparePartList() {
               setSelectedRowKeys(keys);
               setSelectedItems(rows);
             },
-            getCheckboxProps: (record) => {
-              return {
-                disabled: (record.availableQty ?? 0) <= 0,
-              };
-            },
+            getCheckboxProps: (record) => ({
+              disabled: !!record.isClosed || (record.availableQty ?? 0) <= 0,
+            }),
           }}
           toolBarRender={() => [
             <Space key="spr-return-bar" size="small">
@@ -287,26 +331,19 @@ export default function MySparePartList() {
               dataIndex: 'imageId',
               render: (_, record) => (
                 <SparePartImage
-                imageId={record.imageId}
-                src={record.imageId}
-                alt={record.part_number || record.itemId}
-                size={48}
-              />
-             ),
+                  imageId={record.imageId}
+                  src={record.imageId}
+                  alt={record.part_number || record.itemId}
+                  size={48}
+                />
+              ),
             },
-            // {
-            //   key: 'fulfillmentLineId',
-            //   title: 'Fulfillment Line ID',
-            //   dataIndex: 'fulfillmentLineId',
-            // },
             {
               key: 'part_number',
               title: 'Product Number',
               dataIndex: 'part_number',
               render: (value, record) => (
-                <a
-                  onClick={() => console.log('Clicked part number:', value, 'with id:', record.id)}
-                >
+                <a onClick={() => console.log('Clicked part number:', value, 'with id:', record.id)}>
                   {value}
                 </a>
               ),
@@ -316,11 +353,7 @@ export default function MySparePartList() {
               title: 'Request ID',
               dataIndex: 'request_id',
               render: (_, record) => (
-                <Typography.Link
-                  onClick={(event) => {
-                    event.preventDefault();
-                  }}
-                >
+                <Typography.Link onClick={(e) => e.preventDefault()}>
                   {record.request_id}
                 </Typography.Link>
               ),
@@ -334,7 +367,6 @@ export default function MySparePartList() {
                 const returning = record.pendingReturnQty ?? 0;
                 const returned = record.returnedQty ?? 0;
                 const available = record.availableQty ?? 0;
-
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <span style={{ fontWeight: 500 }}>{available}</span>
@@ -358,6 +390,30 @@ export default function MySparePartList() {
               title: 'Requested Pickup Date',
               dataIndex: 'requested_pickup_date',
             },
+            {
+              key: 'close',
+              title: 'State',
+              width: 90,
+              align: 'center' as const,
+              render: (_, record) => (
+                <Popconfirm
+                  title={record.isClosed ? 'Open this picked item?' : 'Close this picked item?'}
+                  okText="Yes"
+                  cancelText="No"
+                  onConfirm={() => handleTogglePickedItemState(record)}
+                >
+                    <Tooltip title={record.isClosed ? 'Closed' : 'Open'}>
+                      <Switch
+                        checked={!record.isClosed}
+                        checkedChildren="Open"
+                        unCheckedChildren="Closed"
+                        loading={updatingFulfillmentLineId === record.fulfillmentLineId}
+                        disabled={updatingFulfillmentLineId === record.fulfillmentLineId}
+                      />
+                    </Tooltip>
+                  </Popconfirm>
+                ),
+            }
           ]}
         />
       </Card>

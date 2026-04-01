@@ -23,6 +23,7 @@ export interface SparePartPickedLine {
   itemId: string;
   requestLineId: number;
   fulfillmentLineId: number;
+  isClosed: boolean;
   partName: string;
   uom: string;
   type: string;
@@ -109,6 +110,7 @@ export interface SparePartReturnListItem {
   itemId?: string;
   type?: string;
   kind?: string;
+  isClosed?: boolean;
   deliveredQty?: number;
   pendingReturnQty?: number;
   returnedQty?: number;
@@ -184,6 +186,7 @@ export interface SparePartReturnAdvanceSearch {
   category?: string;
   uom?: string;
   productNumber?: string;
+  pickedItemState?: string;
   dateRange?: [string, string];
 }
 
@@ -309,6 +312,12 @@ export const SPARE_PART_CATEGORY_OPTIONS = [
   { value: 'Tools', label: 'Tools' },
 ] as const;
 
+export const SPARE_PART_PICKED_ITEM_STATE_OPTIONS = [
+  { value: 'OPEN', label: 'Open' },
+  { value: 'CLOSED', label: 'Closed' },
+  { value: 'ALL', label: 'All' },
+] as const;
+
 /**
  * Maps nested API response (SparePartPickedRequest[])
  * to flattened table rows (SparePartReturnListItem[]).
@@ -356,6 +365,7 @@ export const mapToFlattenedRowsMySparePartList = (
         approvedBy:               request.approvedBy,
         fulfillmentNo:            shipment.fulfillmentNo,
         fulfillmentLineId:        line.fulfillmentLineId,
+        isClosed:                 line.isClosed,
         warehouseCode:            shipment.warehouseCode,
         warehouseName:            shipment.warehouseName,
         pickupLocation:           shipment.pickupLocation,

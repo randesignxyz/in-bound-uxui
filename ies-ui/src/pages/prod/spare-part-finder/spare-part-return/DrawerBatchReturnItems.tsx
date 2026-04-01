@@ -7,6 +7,9 @@ import {
   Descriptions,
   Drawer,
   Image,
+  Input,
+  Modal,
+  Popconfirm,
   Space,
   Steps,
   Table,
@@ -272,10 +275,20 @@ export default function DrawerBatchReturnItems({
   const [previewImage, setPreviewImage] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
   const [expandedActivities, setExpandedActivities] = useState<string[]>([]);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState('');
+
   const toggleActivity = (key: string) => {
     setExpandedActivities((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
     );
+  };
+
+  const closeRejectModal = () => {
+    setRejectModalOpen(false);
+    setRejectReason('');
+    setRejectError('');
   };
 
   const requestAction: RequestActions = {
@@ -326,15 +339,29 @@ export default function DrawerBatchReturnItems({
 
     setFetchedData(null);
     setStepStatus(data?.status ?? 'Pending');
+    closeRejectModal();
   }, [open, returnId]);
 
   const handleDecision = async (action: 'APPROVE' | 'REJECT') => {
     if (!returnId) return;
 
+    const trimmedRejectReason = rejectReason.trim();
+    if (action === 'REJECT' && !trimmedRejectReason) {
+      setRejectError('Reject reason is required');
+      return;
+    }
+
     setLoading(true);
     try {
-      await SparePartReturnAPI(requestAction).warehouse_approve_spare_part_return(returnId, action);
+      await SparePartReturnAPI(requestAction).warehouse_approve_spare_part_return(
+        returnId,
+        action,
+        action === 'REJECT' ? trimmedRejectReason : undefined,
+      );
       message.success(action === 'APPROVE' ? 'Approved successfully' : 'Rejected successfully');
+      if (action === 'REJECT') {
+        closeRejectModal();
+      }
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -512,12 +539,20 @@ export default function DrawerBatchReturnItems({
       {access.canSpfApprover && effectiveStatus === 'Pending' && (
         <div style={{ marginBottom: 24, textAlign: 'right' }}>
           <Space>
-            <Button danger loading={loading} onClick={() => void handleDecision('REJECT')}>
+            <Button danger loading={loading} onClick={() => setRejectModalOpen(true)}>
               Reject
             </Button>
-            <Button type="primary" loading={loading} onClick={() => void handleDecision('APPROVE')}>
+            <Popconfirm
+              title="Confirm Approve"
+              description="Are you sure you want to approve this return request?"
+              onConfirm={() => void handleDecision('APPROVE')}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="primary" loading={loading} >
               Approve
             </Button>
+            </Popconfirm>
           </Space>
         </div>
       )}
@@ -656,7 +691,7 @@ export default function DrawerBatchReturnItems({
                           { title: 'Good', dataIndex: 'good_qty', align: 'center' },
                           { title: 'Damaged', dataIndex: 'damaged_qty', align: 'center' },
                           {
-                            title: 'Message',
+                            title: 'Damage Message',
                             dataIndex: 'damage_message',
                             render: (_, record) => record.damage_message || record.remark || '-',
                           },
@@ -690,6 +725,33 @@ export default function DrawerBatchReturnItems({
           style={{ display: 'none' }}
         />
       )}
+      <Modal
+        title="Reject Return Request"
+        open={rejectModalOpen}
+        onCancel={closeRejectModal}
+        onOk={() => void handleDecision('REJECT')}
+        okText="Submit"
+        confirmLoading={loading}
+      >
+        <p>Are you sure you want to reject this return request?</p>
+
+        <Input.TextArea
+          rows={4}
+          placeholder="Enter reason for rejection (required)"
+          value={rejectReason}
+          onChange={(e) => {
+            setRejectReason(e.target.value);
+            if (e.target.value.trim()) setRejectError('');
+          }}
+          status={rejectError ? 'error' : ''}
+        />
+
+        {rejectError && (
+          <div style={{ color: '#ff4d4f', marginTop: 4 }}>
+            {rejectError}
+          </div>
+        )}
+      </Modal>
     </Drawer>
   );
 }

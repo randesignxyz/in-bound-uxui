@@ -14,6 +14,7 @@ import {
   Input,
   Radio,
   DatePicker,
+  Select,
   Space,
   Tag,
   message,
@@ -24,17 +25,18 @@ import {
   HistoryOutlined,
   InboxOutlined,
   WarningOutlined,
-  CheckCircleOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useAccess } from '@umijs/max';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type GRItem,
   type GoodsReceiptSourceType,
+  type InboundHistoryStatus,
   type InboundProcessState,
   type POLinkStatus,
   getGoodsReceiptSourceColor,
+  getInboundHistoryStatus,
   getReceiptPOReferences,
   officialStateLabel,
   poLinkStatusLabel,
@@ -50,14 +52,12 @@ import type {
 } from './data';
 import { UpcomingInboundServiceAPI } from './service';
 import { ProCard } from '@ant-design/pro-components';
-import { POCardGrid } from './components/POCardGrid';
 import { POListTable } from './components/POListTable';
 import { PODetailSidebar } from './components/PODetailSidebar';
 import { GRCreationModal } from './components/GRCreationModal';
 import { GRDetailSidebar } from './components/GRDetailSidebar';
 import { RecentActivity } from './components/RecentActivity';
 import { InboundGRTable } from './components/InboundGRTable';
-import { GRQueueCardGrid } from './components/GRQueueCardGrid';
 import { GRQueueTable } from './components/GRQueueTable';
 import { QCVerificationModal } from './components/QCVerificationModal';
 import { SupervisorReviewModal } from './components/SupervisorReviewModal';
@@ -71,14 +71,23 @@ import {
 const { Text } = Typography;
 
 type InboundViewMode = 'operations' | 'history' | 'activity';
-type POViewMode = 'card' | 'list';
 type InboundWorkspaceRole = 'WAREHOUSE_STAFF' | 'QC' | 'WAREHOUSE_SUPERVISOR';
+type HistoryStatusFilter = 'ALL' | InboundHistoryStatus;
 
 const simulationRoleLabel: Record<InboundWorkspaceRole, string> = {
   WAREHOUSE_STAFF: 'Warehouse Staff',
   QC: 'QC',
   WAREHOUSE_SUPERVISOR: 'Warehouse Supervisor',
 };
+
+const historyStatusOptions: Array<{ label: string; value: HistoryStatusFilter }> = [
+  { label: 'All', value: 'ALL' },
+  { label: 'Draft', value: 'Draft' },
+  { label: 'Pending', value: 'Pending' },
+  { label: 'Complete', value: 'Complete' },
+  { label: 'Correction Required', value: 'Correction Required' },
+  { label: 'Rejected', value: 'Rejected' },
+];
 
 function normalizeReceiptForUI(receipt: GoodsReceipt): GoodsReceipt {
   const poReferences = getReceiptPOReferences(receipt);
@@ -104,20 +113,19 @@ export default function UpcomingInboundListview() {
   const requestActions = simpleRequestActions();
   const services = UpcomingInboundServiceAPI(requestActions);
   const [inboundView, setInboundView] = useState<InboundViewMode>('operations');
-  const [poViewMode, setPOViewMode] = useState<POViewMode>('list');
   const [simulationRole, setSimulationRole] = useState<InboundWorkspaceRole>('WAREHOUSE_STAFF');
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
 
-  // Shared PO filters (used by both card and list views)
+  // Shared PO filters
   const [poSearchValue, setPOSearchValue] = useState('');
-  const [poStatusFilter, setPOStatusFilter] = useState<'ALL' | PurchaseOrder['status']>('ALL');
+  const [poTypeFilter, setPOTypeFilter] = useState<'ALL' | PurchaseOrder['type']>('ALL');
   const [poDateFilter, setPODateFilter] = useState<string | undefined>();
   const [queueSearchValue, setQueueSearchValue] = useState('');
   const [queueTypeFilter, setQueueTypeFilter] = useState<'ALL' | GoodsReceipt['receiptType']>('ALL');
   const [queueSourceFilter, setQueueSourceFilter] =
     useState<'ALL' | 'STANDARD' | 'TEMP'>('ALL');
   const [historyTypeFilter, setHistoryTypeFilter] = useState<'ALL' | 'Planned' | 'Unplanned'>('ALL');
-  const [historyStatusFilter, setHistoryStatusFilter] = useState<'ALL' | 'pending' | 'completed'>('ALL');
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<HistoryStatusFilter>('ALL');
   const [dashboardSummaryRange, setDashboardSummaryRange] =
     useState<InboundDashboardSummaryRange>('OVERALL');
   const [inboundStats, setInboundStats] = useState<InboundDashboardSummaryApi>({
@@ -169,6 +177,29 @@ export default function UpcomingInboundListview() {
     { path: `${ProdPaths.inventoryInboundOutbound}/list`, label: 'Inventory Inbound Outbound' },
     { path: '', label: 'Upcoming Inbound' },
   ];
+
+  const filteredWarehousePurchaseOrders = useMemo(() => {
+    let data = [...purchaseOrders];
+
+    if (poSearchValue.trim()) {
+      const term = poSearchValue.trim().toUpperCase();
+      data = data.filter(
+        (po) =>
+          po.poNumber.toUpperCase().includes(term) ||
+          po.supplier.toUpperCase().includes(term),
+      );
+    }
+
+    if (poTypeFilter !== 'ALL') {
+      data = data.filter((po) => po.type === poTypeFilter);
+    }
+
+    if (poDateFilter) {
+      data = data.filter((po) => po.expectedDate === poDateFilter);
+    }
+
+    return data;
+  }, [poDateFilter, poSearchValue, poTypeFilter, purchaseOrders]);
 
   const loadInboundData = async () => {
     const [poResult, receiptResult, summaryResult] = await Promise.allSettled([
@@ -359,32 +390,6 @@ export default function UpcomingInboundListview() {
     supervisorQueueReceipts,
   ]);
 
-  // PO list filtered for both card and table views
-  const filteredPOs = useMemo(() => {
-    let data = [...purchaseOrders];
-
-    if (poSearchValue.trim()) {
-      const term = poSearchValue.trim().toUpperCase();
-      data = data.filter(
-        (po) =>
-          po.poNumber.toUpperCase().includes(term) ||
-          po.supplier.toUpperCase().includes(term),
-      );
-    }
-    if (poStatusFilter !== 'ALL') {
-      data = data.filter((po) => po.status === poStatusFilter);
-    }
-    if (poDateFilter) {
-      data = data.filter((po) => po.expectedDate === poDateFilter);
-    }
-
-    return data.sort((a, b) => {
-      const dateA = `${a.expectedDate || '9999-12-31'} ${a.expectedTime || '23:59'}`;
-      const dateB = `${b.expectedDate || '9999-12-31'} ${b.expectedTime || '23:59'}`;
-      return dateA.localeCompare(dateB);
-    });
-  }, [poDateFilter, poSearchValue, poStatusFilter, purchaseOrders]);
-
   // Handlers (mirrors WarehouseStaffUI)
   const hydratePurchaseOrder = async (po: PurchaseOrder): Promise<PurchaseOrder> => {
     if (!po.id) {
@@ -469,22 +474,6 @@ export default function UpcomingInboundListview() {
       handleCreateTempGR(value);
     }
   };
-
-  const togglePOSelection = (po: PurchaseOrder, checked?: boolean) => {
-    setSelectedPOs((prev) => {
-      const exists = prev.some((selected) => selected.poNumber === po.poNumber);
-      const shouldAdd = checked ?? !exists;
-      if (shouldAdd) {
-        return [po];
-      }
-      if (!shouldAdd && exists) {
-        return prev.filter((selected) => selected.poNumber !== po.poNumber);
-      }
-      return prev;
-    });
-  };
-
-  const clearPOSelection = () => setSelectedPOs([]);
 
   const handleRoleChange = (nextRole: InboundWorkspaceRole) => {
     if (!isRoleSimulationEnabled && !inboundRoleOptions.includes(nextRole)) {
@@ -811,69 +800,21 @@ export default function UpcomingInboundListview() {
     });
   };
 
-  const selectionSummaryText =
-    selectedPOs.length > 0
-      ? `${selectedPOs[0].poNumber} selected for one inbound receiving`
-      : 'Select one PO to create one inbound receiving';
-
-  const poViewToggle = (
-    <Segmented
-      size="small"
-      value={poViewMode}
-      onChange={(val) => setPOViewMode(val as POViewMode)}
-      options={[
-        { label: 'List', value: 'list', icon: <BarsOutlined /> },
-        { label: 'Cards', value: 'card', icon: <AppstoreOutlined /> },
-      ]}
-    />
-  );
-
   const poHeaderTitle = (
     <Space direction="vertical" size={0}>
-      <Text strong>
-        <InboxOutlined style={{ marginRight: 8 }} />
-        Purchase Orders
-      </Text>
+      <Text strong>Purchase Orders</Text>
       <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
-        {selectionSummaryText}
+        {filteredWarehousePurchaseOrders.length} purchase order
+        {filteredWarehousePurchaseOrders.length !== 1 ? 's' : ''}
       </Text>
     </Space>
   );
 
   const poHeaderActions = (
     <Space size={8} wrap>
-      {selectedPOs.length > 0 && <Button onClick={clearPOSelection}>Clear</Button>}
-      <Button onClick={() => handleCreateTempGR()}>Create Temporary Inbound Receiving</Button>
-      <Button
-        type="primary"
-        disabled={selectedPOs.length === 0}
-        onClick={() => void handleCreateGR(selectedPOs)}
-      >
-        {selectedPOs.length > 0 ? (
-          <Space size={8}>
-            <span>Create Inbound Receiving</span>
-            <span
-              style={{
-                minWidth: 22,
-                height: 22,
-                paddingInline: 7,
-                borderRadius: 999,
-                background: 'rgba(255, 255, 255, 0.24)',
-                color: '#fff',
-                fontSize: 12,
-                fontWeight: 700,
-                lineHeight: '22px',
-                textAlign: 'center',
-              }}
-            >
-              {selectedPOs.length}
-            </span>
-          </Space>
-        ) : (
-          'Create Inbound Receiving'
-        )}
+      <Button type="primary" onClick={() => handleCreateTempGR()}>
+        Receive Without PO
       </Button>
-      {poViewToggle}
     </Space>
   );
 
@@ -888,7 +829,16 @@ export default function UpcomingInboundListview() {
   const shouldShowRoleSelector = isRoleSimulationEnabled || inboundRoleOptions.length > 1;
   const activeQueueTitle = activeRole === 'QC' ? 'QC Queue' : 'Warehouse Supervisor Queue';
   const historyTabLabel =
-    activeRole === 'WAREHOUSE_SUPERVISOR' ? 'GR History' : 'Inbound Receiving History';
+    activeRole === 'WAREHOUSE_SUPERVISOR' ? 'GR History' : 'Inbound Receiving';
+  const inboundViewOptions: {
+    icon: ReactNode;
+    label: string;
+    value: InboundViewMode;
+  }[] = [
+    { label: 'Inbound Upcoming', value: 'operations', icon: <AppstoreOutlined /> },
+    { label: historyTabLabel, value: 'history', icon: <BarsOutlined /> },
+    { label: 'Recent Activity', value: 'activity', icon: <HistoryOutlined /> },
+  ];
   const historyReceipts = useMemo(() => {
     if (activeRole !== 'WAREHOUSE_SUPERVISOR') {
       return receipts;
@@ -904,6 +854,24 @@ export default function UpcomingInboundListview() {
       ].includes(receipt.processState),
     );
   }, [activeRole, receipts]);
+  const filteredHistoryReceiptCount = useMemo(() => {
+    let data = historyReceipts;
+    if (historyTypeFilter !== 'ALL') {
+      data = data.filter((receipt) => receipt.receiptType === historyTypeFilter);
+    }
+    if (historyStatusFilter !== 'ALL') {
+      data = data.filter((receipt) => getInboundHistoryStatus(receipt) === historyStatusFilter);
+    }
+    return data.length;
+  }, [historyReceipts, historyStatusFilter, historyTypeFilter]);
+  const inboundReceivingHeaderTitle = (
+    <Space direction="vertical" size={0}>
+      <Text strong>Inbound Receiving</Text>
+      <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
+        {filteredHistoryReceiptCount} receipt{filteredHistoryReceiptCount !== 1 ? 's' : ''}
+      </Text>
+    </Space>
+  );
 
   const workspaceContent =
     (warehouseCorrectionReceipt &&
@@ -1008,9 +976,6 @@ export default function UpcomingInboundListview() {
         <Row justify="space-between" align="middle" gutter={[12, 12]} style={{ marginBottom: 12 }}>
           <Col>
             <Text strong>Dashboard Summary</Text>
-            <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 2 }}>
-              Filter inbound dashboard cards by time range.
-            </div>
           </Col>
           <Col>
             <div
@@ -1030,9 +995,9 @@ export default function UpcomingInboundListview() {
                   setDashboardSummaryRange(value as InboundDashboardSummaryRange)
                 }
                 options={[
+                  { label: 'Overall', value: 'OVERALL' },
                   { label: 'Daily', value: 'DAILY' },
                   { label: 'Weekly', value: 'WEEKLY' },
-                  { label: 'Overall', value: 'OVERALL' },
                 ]}
               />
             </div>
@@ -1074,16 +1039,6 @@ export default function UpcomingInboundListview() {
           <Col xs={12} sm={8} lg={4}>
             <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
               <Statistic
-                title={<Text style={{ fontSize: 12 }}>Approved</Text>}
-                value={inboundStats.approved}
-                valueStyle={{ fontSize: 24, color: '#52c41a' }}
-                prefix={<CheckCircleOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} lg={4}>
-            <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
-              <Statistic
                 title={<Text style={{ fontSize: 12 }}>Exception Queue</Text>}
                 value={inboundStats.exceptions}
                 valueStyle={{ fontSize: 24, color: '#ff4d4f' }}
@@ -1115,15 +1070,39 @@ export default function UpcomingInboundListview() {
         <ProCard bordered style={{ marginBottom: 16 }}>
           <Row justify="space-between" align="middle" gutter={[12, 12]}>
             <Col>
-              <Segmented
-                value={inboundView}
-                onChange={(val) => setInboundView(val as InboundViewMode)}
-                options={[
-                  { label: 'Inbound Operations', value: 'operations', icon: <AppstoreOutlined /> },
-                  { label: historyTabLabel, value: 'history', icon: <BarsOutlined /> },
-                  { label: 'Recent Activity', value: 'activity', icon: <HistoryOutlined /> },
-                ]}
-              />
+              <Space
+                size={6}
+                wrap
+                style={{
+                  padding: 2,
+                  background: '#f5f5f5',
+                  border: '1px solid #e8e8e8',
+                  borderRadius: 14,
+                }}
+              >
+                {inboundViewOptions.map((option) => {
+                  const isActive = inboundView === option.value;
+
+                  return (
+                    <Button
+                      key={option.value}
+                      type={isActive ? 'primary' : 'default'}
+                      size="small"
+                      icon={option.icon}
+                      onClick={() => setInboundView(option.value)}
+                      style={{
+                        minHeight: 30,
+                        paddingInline: 10,
+                        borderRadius: 10,
+                        fontWeight: 600,
+                        boxShadow: isActive ? '0 4px 12px rgba(22, 119, 255, 0.16)' : 'none',
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  );
+                })}
+              </Space>
             </Col>
             <Col flex="auto">
               {inboundView === 'operations' ? (
@@ -1137,13 +1116,12 @@ export default function UpcomingInboundListview() {
                       style={{ width: 220 }}
                     />
                     <Radio.Group
-                      value={poStatusFilter}
-                      onChange={(e) => setPOStatusFilter(e.target.value)}
+                      value={poTypeFilter}
+                      onChange={(e) => setPOTypeFilter(e.target.value)}
                     >
                       <Radio.Button value="ALL">All</Radio.Button>
-                      <Radio.Button value="Expected">Expected</Radio.Button>
-                      <Radio.Button value="Partial">Partial</Radio.Button>
-                      <Radio.Button value="Fully Received">Received</Radio.Button>
+                      <Radio.Button value="Planned">Planned</Radio.Button>
+                      <Radio.Button value="Unplanned">Unplanned</Radio.Button>
                     </Radio.Group>
                     <DatePicker
                       style={{ width: 165 }}
@@ -1185,19 +1163,22 @@ export default function UpcomingInboundListview() {
                   <Radio.Group
                     value={historyTypeFilter}
                     onChange={(e) => setHistoryTypeFilter(e.target.value)}
-                  >
+                  > 
                     <Radio.Button value="ALL">All</Radio.Button>
                     <Radio.Button value="Planned">Planned</Radio.Button>
                     <Radio.Button value="Unplanned">Unplanned</Radio.Button>
                   </Radio.Group>
-                  <Radio.Group
-                    value={historyStatusFilter}
-                    onChange={(e) => setHistoryStatusFilter(e.target.value)}
-                  >
-                    <Radio.Button value="ALL">All</Radio.Button>
-                    <Radio.Button value="pending">Pending</Radio.Button>
-                    <Radio.Button value="completed">Completed</Radio.Button>
-                  </Radio.Group>
+                  <Space size={8}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Status
+                    </Text>
+                    <Select<HistoryStatusFilter>
+                      value={historyStatusFilter}
+                      onChange={(value) => setHistoryStatusFilter(value)}
+                      options={historyStatusOptions}
+                      style={{ width: 190 }}
+                    />
+                  </Space>
                 </Space>
               ) : null}
             </Col>
@@ -1209,33 +1190,12 @@ export default function UpcomingInboundListview() {
           <div>
             {activeRole === 'WAREHOUSE_STAFF' ? (
               <>
-                <Card
-                  size="small"
-                  style={{ marginBottom: 16 }}
-                  bodyStyle={{ padding: poViewMode === 'card' ? 16 : 0 }}
-                  title={poViewMode === 'card' ? poHeaderTitle : undefined}
-                  extra={poViewMode === 'card' ? poHeaderActions : undefined}
-                >
-                  {poViewMode === 'card' ? (
-                    <POCardGrid
-                      purchaseOrders={filteredPOs}
-                      onViewDetails={handleViewPODetail}
-                      selectedPONumbers={selectedPOs.map((po) => po.poNumber)}
-                      onToggleSelection={togglePOSelection}
-                    />
-                  ) : (
-                    <POListTable
-                      purchaseOrders={filteredPOs}
-                      onViewDetails={handleViewPODetail}
-                      selectedPONumbers={selectedPOs.map((po) => po.poNumber)}
-                      onSelectionChange={(nextPurchaseOrders) =>
-                        setSelectedPOs(nextPurchaseOrders.length > 0 ? [nextPurchaseOrders[0]] : [])
-                      }
-                      headerTitle={poHeaderTitle}
-                      toolbarExtra={poHeaderActions}
-                    />
-                  )}
-                </Card>
+                <POListTable
+                  purchaseOrders={filteredWarehousePurchaseOrders}
+                  onViewDetails={handleViewPODetail}
+                  headerTitle={poHeaderTitle}
+                  toolbarExtra={poHeaderActions}
+                />
 
                 {awaitingPOLinkReceipts.length > 0 && (
                   <Card
@@ -1349,84 +1309,37 @@ export default function UpcomingInboundListview() {
                 )}
               </>
             ) : (
-              <>
-                <Card
-                  size="small"
-                  style={{ marginBottom: 16 }}
-                  bodyStyle={{ padding: poViewMode === 'card' ? 16 : 0 }}
-                  title={
-                    poViewMode === 'card' ? (
-                      <Space size={8}>
-                        <Text strong>
-                          <InboxOutlined style={{ marginRight: 8 }} />
-                          {activeQueueTitle}
-                        </Text>
-                        <Text type="secondary">
-                          {filteredRoleQueue.length} receipt
-                          {filteredRoleQueue.length !== 1 ? 's' : ''}
-                        </Text>
-                      </Space>
-                    ) : undefined
-                  }
-                  extra={
-                    poViewMode === 'card' ? (
-                      <Segmented
-                        size="small"
-                        value={poViewMode}
-                        onChange={(val) => setPOViewMode(val as POViewMode)}
-                        options={[
-                          { label: 'List', value: 'list', icon: <BarsOutlined /> },
-                          { label: 'Cards', value: 'card', icon: <AppstoreOutlined /> },
-                        ]}
-                      />
-                    ) : undefined
-                  }
-                >
-                  {poViewMode === 'card' ? (
-                    <GRQueueCardGrid receipts={filteredRoleQueue} onViewDetails={handleOpenGRDetail} />
-                  ) : (
-                    <GRQueueTable
-                      receipts={filteredRoleQueue}
-                      onViewDetail={handleOpenGRDetail}
-                      headerTitle={
-                        <Space size={8}>
-                          <Text strong>
-                            <InboxOutlined style={{ marginRight: 8 }} />
-                            {activeQueueTitle}
-                          </Text>
-                          <Text type="secondary">
-                            {filteredRoleQueue.length} receipt
-                            {filteredRoleQueue.length !== 1 ? 's' : ''}
-                          </Text>
-                        </Space>
-                      }
-                      toolbarExtra={
-                        <Segmented
-                          size="small"
-                          value={poViewMode}
-                          onChange={(val) => setPOViewMode(val as POViewMode)}
-                          options={[
-                            { label: 'List', value: 'list', icon: <BarsOutlined /> },
-                            { label: 'Cards', value: 'card', icon: <AppstoreOutlined /> },
-                          ]}
-                        />
-                      }
-                    />
-                  )}
-                </Card>
-              </>
+              <GRQueueTable
+                receipts={filteredRoleQueue}
+                onViewDetail={handleOpenGRDetail}
+                headerTitle={
+                  <Space size={8}>
+                    <Text strong>
+                      <InboxOutlined style={{ marginRight: 8 }} />
+                      {activeQueueTitle}
+                    </Text>
+                    <Text type="secondary">
+                      {filteredRoleQueue.length} receipt
+                      {filteredRoleQueue.length !== 1 ? 's' : ''}
+                    </Text>
+                  </Space>
+                }
+              />
             )}
           </div>
         )}
 
         {/* ── GR History View ── */}
         {inboundView === 'history' && (
-          <InboundGRTable
-            receipts={historyReceipts}
-            onViewDetail={handleOpenGRDetail}
-            typeFilter={historyTypeFilter}
-            statusFilter={historyStatusFilter}
-          />
+          <Card size="small" style={{ marginBottom: 16 }} bodyStyle={{ padding: 0 }}>
+            <div style={{ padding: '16px 16px 0' }}>{inboundReceivingHeaderTitle}</div>
+            <InboundGRTable
+              receipts={historyReceipts}
+              onViewDetail={handleOpenGRDetail}
+              typeFilter={historyTypeFilter}
+              statusFilter={historyStatusFilter}
+            />
+          </Card>
         )}
 
         {/* ── Recent Activity View ── */}

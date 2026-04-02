@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   DeleteOutlined,
   DownloadOutlined,
@@ -30,6 +31,8 @@ interface SupportingDocsListProps {
   emptyText?: string;
   fallbackSource?: SupportingDocSource;
   onRemoveFile?: (uid: string) => void;
+  displayMode?: 'list' | 'grid';
+  collapsedLimit?: number;
 }
 
 function getDocumentIcon(fileName: string) {
@@ -57,7 +60,10 @@ export function SupportingDocsList({
   emptyText = 'No supporting documents attached.',
   fallbackSource,
   onRemoveFile,
+  displayMode = 'list',
+  collapsedLimit = 4,
 }: SupportingDocsListProps) {
+  const [expanded, setExpanded] = useState(false);
   const items = files
     ? files.map((file) => ({
         key: file.uid,
@@ -79,6 +85,146 @@ export function SupportingDocsList({
         onView: () => openSupportingDoc(doc),
         onRemove: undefined,
       }));
+
+  if (displayMode === 'grid') {
+    if (items.length === 0) {
+      return (
+        <Text type="secondary" style={{ lineHeight: '32px' }}>
+          {emptyText}
+        </Text>
+      );
+    }
+
+    const visibleItems = expanded ? items : items.slice(0, collapsedLimit);
+    const remainingItems = items.length - collapsedLimit;
+
+    return (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${collapsedLimit}, minmax(0, 1fr))`,
+          gap: 12,
+          alignItems: 'stretch',
+        }}
+      >
+        {visibleItems.map((item) => (
+          <div
+            key={item.key}
+            style={{
+              minWidth: 0,
+              border: '1px solid #f0f0f0',
+              borderRadius: 12,
+              padding: 10,
+              background: '#fff',
+              minHeight: 118,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: 52,
+                marginBottom: 8,
+                borderRadius: 10,
+                background: '#fafafa',
+              }}
+            >
+              {getDocumentIcon(item.fileName)}
+            </div>
+            <div style={{ flex: 1, marginBottom: 8 }}>
+              {item.isLegacy ? (
+                <Text
+                  style={{
+                    display: 'block',
+                    fontSize: 12,
+                    lineHeight: 1.3,
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {item.fileName}
+                </Text>
+              ) : (
+                <Link
+                  onClick={() => void item.onView()}
+                  style={{
+                    display: 'block',
+                    fontSize: 12,
+                    lineHeight: 1.3,
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {item.fileName}
+                </Link>
+              )}
+            </div>
+            <Space size={0} wrap>
+              <Button
+                size="small"
+                type="text"
+                icon={<EyeOutlined />}
+                onClick={() => void item.onView()}
+                disabled={item.isLegacy}
+              />
+              {item.fileId && (
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<DownloadOutlined />}
+                  onClick={() =>
+                    void downloadSupportingDoc({
+                      fileId: item.fileId,
+                      fileName: item.fileName,
+                      source: item.source,
+                    })
+                  }
+                />
+              )}
+              {item.onRemove && (
+                <Button
+                  size="small"
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={item.onRemove}
+                />
+              )}
+            </Space>
+          </div>
+        ))}
+        {remainingItems > 0 && !expanded && (
+          <Button
+            type="link"
+            style={{
+              gridColumn: '1 / -1',
+              justifySelf: 'start',
+              paddingInline: 0,
+              height: 'auto',
+            }}
+            onClick={() => setExpanded(true)}
+          >
+            See {remainingItems} more
+          </Button>
+        )}
+        {expanded && items.length > collapsedLimit && (
+          <Button
+            type="link"
+            style={{
+              gridColumn: '1 / -1',
+              justifySelf: 'start',
+              paddingInline: 0,
+              height: 'auto',
+            }}
+            onClick={() => setExpanded(false)}
+          >
+            See less
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return <Text type="secondary">{emptyText}</Text>;

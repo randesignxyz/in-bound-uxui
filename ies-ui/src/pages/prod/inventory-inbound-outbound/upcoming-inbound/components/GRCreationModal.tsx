@@ -331,7 +331,7 @@ export function GRCreationModal({
       .map((purchaseOrder) => purchaseOrder.poNumber)
       .join('-')}`;
     const barcodeValue = scannedValue.trim() || fallbackBarcode;
-    const autoProductDate = dayjs(actualReceiptDate || postingDate || undefined).format('YYYY-MM-DD');
+    const autoProductDate = dayjs(postingDate || undefined).format('YYYY-MM-DD');
     const autoExpiry = dayjs(autoProductDate || undefined)
       .add(12, 'month')
       .format('YYYY-MM-DD');
@@ -567,26 +567,9 @@ export function GRCreationModal({
         destroyOnClose
       >
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px 24px 0' }}>
-            <Descriptions column={4} size="small" style={{ marginTop: 10, marginBottom: 28 }}>
-            <Descriptions.Item label="PO References">
-              {selectedPOCount === 1 ? firstPO?.poNumber : `${selectedPOCount} selected`}
-            </Descriptions.Item>
-            <Descriptions.Item label="Suppliers">
-              {supplierNames.length === 1 ? supplierNames[0] : `${supplierNames.length} suppliers`}
-            </Descriptions.Item>
-            <Descriptions.Item label="Receipt Type">
-              <Tag color={receiptType === 'Planned' ? 'blue' : 'orange'}>
-                {receiptType}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Expected Date">
-              {firstPO?.expectedDate || 'N/A'}
-            </Descriptions.Item>
-          </Descriptions>
-
-          <div style={{ marginBottom: 24 }}>
-            <h4 style={{ marginBottom: 12 }}>Selected Purchase Orders</h4>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '14px 24px 0' }}>
+          <div style={{ marginBottom: 20 }}>
+            <h4 style={{ marginBottom: 8 }}>Selected Purchase Orders</h4>
             <Table
               size="small"
               rowKey="poNumber"
@@ -611,6 +594,24 @@ export function GRCreationModal({
                       ? `${record.expectedDate} ${record.expectedTime || ''}`.trim()
                       : 'Unplanned',
                 },
+                {
+                  title: 'Posting Date',
+                  key: 'postingDate',
+                  width: 150,
+                  render: (_: unknown, __: PurchaseOrder, index: number) => ({
+                    children:
+                      index === 0 ? (
+                        <DatePicker
+                          value={postingDate ? dayjs(postingDate) : null}
+                          onChange={(_, dateStr) => setPostingDate(dateStr as string)}
+                          style={{ width: 128 }}
+                        />
+                      ) : null,
+                    props: {
+                      rowSpan: index === 0 ? purchaseOrders.length : 0,
+                    },
+                  }),
+                },
                 { title: 'Items', dataIndex: 'totalItems', key: 'totalItems', width: 72 },
                 {
                   title: 'Total Qty',
@@ -623,34 +624,9 @@ export function GRCreationModal({
             />
           </div>
 
-          <Form layout="vertical" style={{ marginBottom: 24 }}>
+          <Form layout="vertical" style={{ marginBottom: 6 }}>
             <Row gutter={24}>
-              <Col span={8}>
-                <Form.Item label="Posting Date" required>
-                  <DatePicker
-                    value={postingDate ? dayjs(postingDate) : null}
-                    onChange={(_, dateStr) => setPostingDate(dateStr as string)}
-                    style={{ width: '100%' }}
-                  />
-                </Form.Item>
-                <div style={{ marginTop: -8 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    Receiver
-                  </Text>
-                  <br />
-                  <Text strong>{receiverWarehouseName}</Text>
-                </div>
-              </Col>
-              <Col span={8}>
-                <Form.Item label="Actual Receipt Date" required>
-                  <DatePicker
-                    value={actualReceiptDate ? dayjs(actualReceiptDate) : null}
-                    onChange={(_, dateStr) => setActualReceiptDate(dateStr as string)}
-                    style={{ width: '100%' }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
+              <Col span={6}>
                 <Form.Item
                   label="Delivery Note Number"
                   required
@@ -659,6 +635,8 @@ export function GRCreationModal({
                 >
                   <Input
                     placeholder="From truck paperwork"
+                    size="large"
+                    style={{ minHeight: 44 }}
                     value={deliveryNoteNumber}
                     onChange={(event) => {
                       setDeliveryNoteNumber(event.target.value);
@@ -667,16 +645,60 @@ export function GRCreationModal({
                   />
                 </Form.Item>
               </Col>
+              <Col span={18}>
+                <Form.Item
+                  label="Documents"
+                  validateStatus={errors.supportingDocs ? 'error' : undefined}
+                  help={errors.supportingDocs ? 'Remove failed files before continuing.' : undefined}
+                  style={{ marginBottom: 8 }}
+                >
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '140px minmax(0, 1fr)',
+                      gap: 12,
+                      alignItems: 'start',
+                    }}
+                  >
+                    <div>
+                      <Upload
+                        multiple
+                        beforeUpload={stageSupportingDocBeforeUpload}
+                        fileList={uploadedFiles}
+                        showUploadList={false}
+                        onChange={handleUploadChange}
+                        onRemove={(file) => removeFile(file.uid)}
+                        onPreview={(file) => previewSupportingUploadFile(file)}
+                        accept=".pdf,.doc,.docx,image/*"
+                        listType="text"
+                      >
+                        <Button icon={<InboxOutlined />} size="large" style={{ width: '100%', height: 44 }}>
+                          Upload Files
+                        </Button>
+                      </Upload>
+                    </div>
+                    <div>
+                      <SupportingDocsList
+                        files={uploadedFiles}
+                        fallbackSource="WAREHOUSE"
+                        onRemoveFile={removeFile}
+                        displayMode="grid"
+                        collapsedLimit={5}
+                      />
+                    </div>
+                  </div>
+                </Form.Item>
+              </Col>
             </Row>
           </Form>
 
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 14 }}>
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: 12,
+                marginBottom: 8,
               }}
             >
               <h4 style={{ margin: 0 }}>Item Receipt</h4>
@@ -745,11 +767,11 @@ export function GRCreationModal({
                             {group.shortCount} short
                           </Tag>
                         )}
-                        <Tag bordered={false} color="processing" style={{ paddingInline: 10 }}>
+                        {/* <Tag bordered={false} color="processing" style={{ paddingInline: 10 }}>
                           {group.expectedDate
                             ? `${group.expectedDate}${group.expectedTime ? ` ${group.expectedTime}` : ''}`
                             : 'Unplanned arrival'}
-                        </Tag>
+                        </Tag> */}
                       </Space>
                     </div>
                   }
@@ -765,39 +787,6 @@ export function GRCreationModal({
                 </Card>
               ))}
             </Space>
-          </div>
-
-          <div style={{ marginBottom: 24 }}>
-            <h4 style={{ marginBottom: 12 }}>Documents</h4>
-            <Form.Item
-              validateStatus={errors.supportingDocs ? 'error' : undefined}
-              help={errors.supportingDocs ? 'Remove failed files before continuing.' : undefined}
-              style={{ marginBottom: 8 }}
-            >
-              <Upload
-                multiple
-                beforeUpload={stageSupportingDocBeforeUpload}
-                fileList={uploadedFiles}
-                showUploadList={false}
-                onChange={handleUploadChange}
-                onRemove={(file) => removeFile(file.uid)}
-                onPreview={(file) => previewSupportingUploadFile(file)}
-                accept=".pdf,.doc,.docx,image/*"
-                listType="text"
-              >
-                <Button icon={<InboxOutlined />}>Upload Delivery Note / PDF / Photos</Button>
-              </Upload>
-            </Form.Item>
-            <div style={{ fontSize: 12, color: '#999', marginTop: 6 }}>
-              PDF, Word (.doc, .docx), or images. Files stay local until you save or submit this receipt.
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <SupportingDocsList
-                files={uploadedFiles}
-                fallbackSource="WAREHOUSE"
-                onRemoveFile={removeFile}
-              />
-            </div>
           </div>
 
             <Form.Item

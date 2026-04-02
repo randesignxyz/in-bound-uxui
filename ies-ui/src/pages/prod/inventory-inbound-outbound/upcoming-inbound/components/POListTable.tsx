@@ -7,8 +7,6 @@ import type { PurchaseOrder } from '../workflow';
 interface POListTableProps {
   purchaseOrders: PurchaseOrder[];
   onViewDetails: (po: PurchaseOrder) => void;
-  selectedPONumbers: string[];
-  onSelectionChange: (purchaseOrders: PurchaseOrder[]) => void;
   headerTitle?: ReactNode;
   toolbarExtra?: ReactNode;
 }
@@ -16,8 +14,6 @@ interface POListTableProps {
 export function POListTable({
   purchaseOrders,
   onViewDetails,
-  selectedPONumbers,
-  onSelectionChange,
   headerTitle,
   toolbarExtra,
 }: POListTableProps) {
@@ -127,11 +123,6 @@ export function POListTable({
       toolBarRender={() => (toolbarExtra ? [toolbarExtra] : [])}
       pagination={{ pageSize: 10, showSizeChanger: true }}
       tableLayout="fixed"
-      rowSelection={{
-        type: 'radio',
-        selectedRowKeys: selectedPONumbers,
-        onChange: (_keys, rows) => onSelectionChange(rows),
-      }}
       onRow={(record) => ({
         onClick: () => onViewDetails(record),
         style: { cursor: 'pointer' },

@@ -4,13 +4,14 @@ import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
 import {
   GoodsReceipt,
-  LegacyGRStatus,
+  InboundHistoryStatus,
   getGoodsReceiptWorkflowProgress,
+  getInboundHistoryStatus,
+  getInboundHistoryStatusColor,
   getGoodsReceiptSourceColor,
   getPOLinkStatusColor,
   getReceiptPOReferences,
   goodsReceiptSourceLabel,
-  officialStateLabel,
   poLinkStatusLabel,
   summarizePOReferences,
   summarizeSuppliers,
@@ -20,7 +21,7 @@ interface InboundGRTableProps {
   receipts: GoodsReceipt[];
   onViewDetail: (gr: GoodsReceipt) => void;
   typeFilter: 'ALL' | 'Planned' | 'Unplanned';
-  statusFilter: 'ALL' | 'pending' | 'completed';
+  statusFilter: 'ALL' | InboundHistoryStatus;
 }
 
 export function InboundGRTable({
@@ -36,30 +37,11 @@ export function InboundGRTable({
     if (typeFilter !== 'ALL') {
       data = data.filter((r) => r.receiptType === typeFilter);
     }
-    if (statusFilter === 'pending') {
-      data = data.filter((r) => r.status !== 'Posted');
-    } else if (statusFilter === 'completed') {
-      data = data.filter((r) => r.status === 'Posted');
+    if (statusFilter !== 'ALL') {
+      data = data.filter((r) => getInboundHistoryStatus(r) === statusFilter);
     }
     return data;
   }, [receipts, typeFilter, statusFilter]);
-
-  const statusColor = (status: LegacyGRStatus) => {
-    switch (status) {
-      case 'Draft':
-        return 'default';
-      case 'Pending Approval':
-        return 'gold';
-      case 'Approved':
-        return 'green';
-      case 'Posted':
-        return 'blue';
-      case 'Correction Required':
-        return 'red';
-      default:
-        return 'default';
-    }
-  };
 
   const columns: ProColumns<GoodsReceipt>[] = [
     {
@@ -144,21 +126,15 @@ export function InboundGRTable({
     {
       key: 'status',
       title: 'Status',
-      render: (_: any, r: GoodsReceipt) => (
-        <Tag color={statusColor(r.status)} bordered={false}>
-          {r.status}
-        </Tag>
-      ),
-    },
-    {
-      key: 'processState',
-      title: 'Step',
-      dataIndex: 'processState',
-      render: (_: any, r: GoodsReceipt) => (
-        <Tag color="processing" bordered={false}>
-          {officialStateLabel[r.processState]}
-        </Tag>
-      ),
+      render: (_: any, r: GoodsReceipt) => {
+        const historyStatus = getInboundHistoryStatus(r);
+
+        return (
+          <Tag color={getInboundHistoryStatusColor(historyStatus)} bordered={false}>
+            {historyStatus}
+          </Tag>
+        );
+      },
     },
   ];
 
@@ -171,7 +147,7 @@ export function InboundGRTable({
       bordered
       size="small"
       search={false}
-      options={{ density: false, setting: false }}
+      options={{ density: false, reload: false, setting: false }}
       pagination={{ pageSize: 10, showSizeChanger: true }}
       onRow={(record) => ({
         onClick: () => onViewDetail(record),

@@ -23,6 +23,13 @@ export type LegacyGRStatus =
   | 'Merged'
   | 'Correction Required';
 
+export type InboundHistoryStatus =
+  | 'Draft'
+  | 'Pending'
+  | 'Complete'
+  | 'Correction Required'
+  | 'Rejected';
+
 export type GRScenarioPath =
   | 'NORMAL'
   | 'MISMATCH_CORRECTION'
@@ -281,6 +288,45 @@ export function getSupportingDocSourceColor(source?: SupportingDocSource | null)
   }
 }
 
+export function getInboundHistoryStatus(receipt: GoodsReceipt): InboundHistoryStatus {
+  switch (receipt.processState) {
+    case 'GRPO_DRAFT':
+      return 'Draft';
+    case 'QC_PENDING':
+    case 'QC_PASSED':
+    case 'PENDING_SUPERVISOR_REVIEW':
+      return 'Pending';
+    case 'SUPERVISOR_APPROVED':
+    case 'TRANSFERRED_TO_PM_RM_WH':
+    case 'FIN_SUBMITTED':
+    case 'DAILY_CLOSED':
+    case 'MONTHLY_SUMMARY_READY':
+      return 'Complete';
+    case 'CORRECTION_REQUIRED':
+    case 'MISMATCH_EXCEPTION':
+      return isSupervisorRejectedCorrection(receipt) ? 'Rejected' : 'Correction Required';
+    default:
+      return 'Draft';
+  }
+}
+
+export function getInboundHistoryStatusColor(status: InboundHistoryStatus) {
+  switch (status) {
+    case 'Draft':
+      return 'default';
+    case 'Pending':
+      return 'gold';
+    case 'Complete':
+      return 'green';
+    case 'Rejected':
+      return 'red';
+    case 'Correction Required':
+      return 'orange';
+    default:
+      return 'default';
+  }
+}
+
 export function mapProcessStateToLegacyStatus(state: InboundProcessState): LegacyGRStatus {
   switch (state) {
     case 'GRPO_DRAFT':
@@ -304,6 +350,16 @@ export function mapProcessStateToLegacyStatus(state: InboundProcessState): Legac
     default:
       return 'Draft';
   }
+}
+
+function isSupervisorRejectedCorrection(receipt: GoodsReceipt) {
+  const latestCorrectionActivity = [...receipt.activities]
+    .reverse()
+    .find((activity) => activity.processState === receipt.processState);
+  const activityText =
+    `${latestCorrectionActivity?.title || ''} ${latestCorrectionActivity?.description || ''}`.toLowerCase();
+
+  return activityText.includes('supervisor rejected');
 }
 
 export const officialStateLabel: Record<InboundProcessState, string> = {

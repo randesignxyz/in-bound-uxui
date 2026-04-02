@@ -330,49 +330,6 @@ export function GRDetailSidebar({
             }))}
           />
 
-          {receipt.processState === 'QC_PENDING' && (
-            <>
-              <Divider />
-              <Alert
-                message="Waiting QC decision. Once QC passes, this receipt moves to warehouse supervisor review."
-                showIcon
-              />
-            </>
-          )}
-
-          {receipt.processState === 'QC_PASSED' && (
-            <>
-              <Divider />
-              <Alert
-                type="success"
-                message="QC passed. The receipt is ready to move to warehouse supervisor approval."
-                showIcon
-              />
-            </>
-          )}
-
-          {receipt.processState === 'PENDING_SUPERVISOR_REVIEW' && (
-            <>
-              <Divider />
-              <Alert message="Waiting warehouse supervisor decision after QC pass." showIcon />
-            </>
-          )}
-
-          {receipt.processState === 'SUPERVISOR_APPROVED' && (
-            <>
-              <Divider />
-              <Alert
-                type={receipt.poLinkStatus === 'WAITING_PO' ? 'warning' : 'success'}
-                message={
-                  receipt.poLinkStatus === 'WAITING_PO'
-                    ? 'Supervisor approved. Completion is blocked until a PO is linked.'
-                    : 'Supervisor approved. This inbound workflow is complete.'
-                }
-                showIcon
-              />
-            </>
-          )}
-
           {canLinkPO && receipt.linkBlockReason && (
             <>
               <Divider />

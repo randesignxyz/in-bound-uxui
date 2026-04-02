@@ -255,6 +255,7 @@ export function TempGRCreationModal({
       supplier: supplier.trim(),
     }));
     const hasDiscrepancy = hasReceiptDiscrepancy(normalizedItems);
+    const supplierNames = initialReceipt?.supplierNames ?? [];
 
     return {
       id: initialReceipt?.id,
@@ -263,10 +264,7 @@ export function TempGRCreationModal({
       poNumber: '',
       supplier: supplier.trim(),
       poReferences: initialReceipt?.poReferences || [],
-      supplierNames:
-        initialReceipt?.supplierNames?.length > 0
-          ? initialReceipt.supplierNames
-          : [supplier.trim()],
+      supplierNames: supplierNames.length > 0 ? supplierNames : [supplier.trim()],
       receiptType: 'Unplanned',
       receiptSourceType: initialReceipt?.receiptSourceType || 'TEMP_NO_PO',
       poLinkStatus: initialReceipt?.poLinkStatus || 'WAITING_PO',
@@ -535,7 +533,6 @@ export function TempGRCreationModal({
           <Descriptions.Item label="PO Link">
             <Tag color="warning">Waiting PO</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Receiver">{receiverWarehouseName}</Descriptions.Item>
         </Descriptions>
 
         <Alert
@@ -568,15 +565,6 @@ export function TempGRCreationModal({
                   style={{ width: '100%' }}
                   value={postingDate ? dayjs(postingDate) : null}
                   onChange={(_, dateStr) => setPostingDate(dateStr as string)}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="Actual Receipt Date" required>
-                <DatePicker
-                  style={{ width: '100%' }}
-                  value={actualReceiptDate ? dayjs(actualReceiptDate) : null}
-                  onChange={(_, dateStr) => setActualReceiptDate(dateStr as string)}
                 />
               </Form.Item>
             </Col>
@@ -655,33 +643,45 @@ export function TempGRCreationModal({
             help={errors.supportingDocs ? 'Remove failed files before continuing.' : undefined}
             style={{ marginBottom: 8 }}
           >
-            <Upload
-              multiple
-              beforeUpload={stageSupportingDocBeforeUpload}
-              fileList={uploadedFiles}
-              showUploadList={false}
-              onChange={handleUploadChange}
-              onRemove={(file) => {
-                removeFile(file.uid);
-                return true;
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '220px minmax(0, 1fr)',
+                gap: 12,
+                alignItems: 'start',
               }}
-              onPreview={(file) => previewSupportingUploadFile(file)}
-              accept=".pdf,.doc,.docx,image/*"
-              listType="text"
             >
-              <Button icon={<InboxOutlined />}>Upload Delivery Note / PDF / Photos</Button>
-            </Upload>
+              <div>
+                <Upload
+                  multiple
+                  beforeUpload={stageSupportingDocBeforeUpload}
+                  fileList={uploadedFiles}
+                  showUploadList={false}
+                  onChange={handleUploadChange}
+                  onRemove={(file) => {
+                    removeFile(file.uid);
+                    return true;
+                  }}
+                  onPreview={(file) => previewSupportingUploadFile(file)}
+                  accept=".pdf,.doc,.docx,image/*"
+                  listType="text"
+                >
+                  <Button icon={<InboxOutlined />} size="large" style={{ width: '100%', height: 44 }}>
+                    Upload Delivery Note / PDF / Photos
+                  </Button>
+                </Upload>
+              </div>
+              <div>
+                <SupportingDocsList
+                  files={uploadedFiles}
+                  fallbackSource="WAREHOUSE"
+                  onRemoveFile={removeFile}
+                  displayMode="grid"
+                  collapsedLimit={5}
+                />
+              </div>
+            </div>
           </Form.Item>
-          <div style={{ fontSize: 12, color: '#999', marginTop: 6 }}>
-            Files stay local until you save or submit this temporary receipt.
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <SupportingDocsList
-              files={uploadedFiles}
-              fallbackSource="WAREHOUSE"
-              onRemoveFile={removeFile}
-            />
-          </div>
         </div>
 
           <Form.Item

@@ -65,7 +65,7 @@ export const buildSummaryColumns = (options: {
       );
     },
   },
-  { title: 'UOM', key: 'bu', width: 80, render: (_, record) => record.items[0]?.businessUnit || '-' }, //value error here
+  // { title: 'UOM', key: 'bu', width: 80, render: (_, record) => record.items[0]?.businessUnit || '-' }, //value error here
   { title: 'Created By', dataIndex: 'requester', key: 'requester', width: 130 },
   {
     title: 'Created Date',

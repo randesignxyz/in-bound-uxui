@@ -1,18 +1,18 @@
 import { RequestActions } from '@/services/apiGateway';
-import { EyeOutlined, MoreOutlined, ReloadOutlined } from '@ant-design/icons';
+import { EyeOutlined, InfoCircleOutlined, MoreOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProTable } from '@ant-design/pro-components';
 import type { Dayjs } from 'dayjs';
 import {
-  Avatar,
   Button,
   Card,
   DatePicker,
   Dropdown,
   Input,
   message,
-  Radio,
+  Popconfirm,
   Select,
   Space,
+  Switch,
   Tooltip,
   Typography,
 } from 'antd';
@@ -20,16 +20,23 @@ import { useRef, useState } from 'react';
 import DrawerViewItem from './DrawerViewItem';
 import FormModalSelectItems from './FormModalSelectItems';
 import type { SparePartReturnListItem } from './data';
-import { SPARE_PART_CATEGORY_OPTIONS, SPARE_PART_RETURN_RADIO_OPTIONS } from './data';
+import {
+  SPARE_PART_CATEGORY_OPTIONS,
+  SPARE_PART_PICKED_ITEM_STATE_OPTIONS,
+  SPARE_PART_RETURN_RADIO_OPTIONS,
+} from './data';
 import { SparePartReturnAPI } from './service';
 import SparePartImage from '../spare-part-request/SparePartImage';
 
 export default function MySparePartList() {
   const actionRef = useRef<ActionType>();
-  const [radioValue, setRadioValue] = useState('All');
+  const [radioValue, setRadioValue] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>(
     SPARE_PART_CATEGORY_OPTIONS[0].value,
+  );
+  const [pickedItemState, setPickedItemState] = useState<string>(
+    SPARE_PART_PICKED_ITEM_STATE_OPTIONS[0].value,
   );
   const [selectedDateRange, setSelectedDateRange] = useState<[Dayjs, Dayjs] | undefined>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -40,16 +47,57 @@ export default function MySparePartList() {
   }>({ visible: false });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<SparePartReturnListItem | null>(null);
+  const [updatingFulfillmentLineId, setUpdatingFulfillmentLineId] = useState<number | null>(null);
   const radioOptions = SPARE_PART_RETURN_RADIO_OPTIONS;
+  const selectedWarehouseLabel =
+    radioValue.length === 0
+      ? 'Select warehouses...'
+      : radioOptions
+          .filter((opt) => radioValue.includes(opt.value))
+          .map((opt) => opt.label)
+          .join(', ');
+
+  const handleWarehousesChange = (values: string[]) => {
+    setRadioValue(values);
+    setSelectedRowKeys([]);
+    setSelectedItems([]);
+    actionRef.current?.reloadAndRest?.();
+  };
 
   const requestAction: RequestActions = {
     start: (serviceName) => console.log(`Loading: ${serviceName}`),
     end: (status, reason) => console.log(status, reason),
   };
-
   const onDetailHandler = (data: SparePartReturnListItem) => {
     setDrawerOpen(true);
     setSelectedItem(data);
+  };
+
+  const handleTogglePickedItemState = async (record: SparePartReturnListItem) => {
+    if (!record.fulfillmentLineId) {
+      message.error('Fulfillment line id is missing');
+      return;
+    }
+
+    setUpdatingFulfillmentLineId(record.fulfillmentLineId);
+    try {
+      if (record.isClosed) {
+        await SparePartReturnAPI(requestAction).open_picked_item([record.fulfillmentLineId]);
+        message.success('Picked item opened successfully');
+      } else {
+        await SparePartReturnAPI(requestAction).close_picked_item([record.fulfillmentLineId]);
+        message.success('Picked item closed successfully');
+      }
+
+      setSelectedRowKeys((prev) => prev.filter((key) => key !== record.id));
+      setSelectedItems((prev) => prev.filter((item) => item.id !== record.id));
+      actionRef.current?.reload();
+    } catch (error) {
+      console.error('Failed to update picked item state', error);
+      message.error('Failed to update picked item state');
+    } finally {
+      setUpdatingFulfillmentLineId(null);
+    }
   };
 
   const handleReturnPart = () => {
@@ -70,7 +118,7 @@ export default function MySparePartList() {
         originalRequestLineId: item.requestLineId,
         fulfillmentLineId: item.fulfillmentLineId,
         quantity: item.return_quantity ?? 0,
-        uom: item.UoM ,
+        uom: item.UoM,
         quantityUsed: item.used_quantity ?? 0,
         conditionOnReturn: 'USABLE',
         remark: item.reason ?? '',
@@ -108,6 +156,9 @@ export default function MySparePartList() {
     setModalOpen((prev) => ({ ...prev, visible: false }));
   };
 
+  const selectedWarehouseFilterValue =
+    radioValue.length > 0 && !radioValue.includes('All') ? radioValue.join(',') : undefined;
+
   return (
     <>
       <Card size="small" style={{ marginBottom: 10 }}>
@@ -124,22 +175,19 @@ export default function MySparePartList() {
 
           {/* Desktop: Radio Group */}
           <div className="radio-group-desktop">
-            <Radio.Group
-              value={radioValue}
-              onChange={(e) => {
-                setRadioValue(e.target.value);
-                setSelectedRowKeys([]);
-                setSelectedItems([]);
-                actionRef.current?.reloadAndRest?.();
-              }}
-            >
-              {radioOptions.map((opt) => (
-                <Radio.Button key={opt.value} value={opt.value}>
-                  {opt.label}
-                </Radio.Button>
-              ))}
-            </Radio.Group>
-          </div>
+          <Select
+            mode="multiple"
+            allowClear
+            style={{ minWidth: 250 }}
+            placeholder="Select warehouses..."
+            value={radioValue}
+            onChange={(values: string[]) => handleWarehousesChange(values)}
+            options={radioOptions.map((opt) => ({
+              label: opt.label,
+              value: opt.value,
+            }))}
+          />
+        </div>
 
           {/* Mobile: Dropdown */}
           <div className="radio-group-mobile">
@@ -149,18 +197,20 @@ export default function MySparePartList() {
                   key: opt.value,
                   label: opt.label,
                   onClick: () => {
-                    setRadioValue(opt.value);
-                    setSelectedRowKeys([]);
-                    setSelectedItems([]);
-                    actionRef.current?.reloadAndRest?.();
+                    const nextValues = radioValue.includes(opt.value)
+                      ? radioValue.filter((value) => value !== opt.value)
+                      : [...radioValue, opt.value];
+                    handleWarehousesChange(nextValues);
                   },
                 })),
-                selectedKeys: [radioValue],
+                selectable: true,
+                multiple: true,
+                selectedKeys: radioValue,
               }}
               trigger={['click']}
             >
               <Button>
-                {radioOptions.find((opt) => opt.value === radioValue)?.label} <MoreOutlined />
+                {selectedWarehouseLabel} <MoreOutlined />
               </Button>
             </Dropdown>
           </div>
@@ -171,6 +221,17 @@ export default function MySparePartList() {
             options={[...SPARE_PART_CATEGORY_OPTIONS]}
             onChange={(value) => {
               setSelectedCategory(value);
+              setSelectedRowKeys([]);
+              setSelectedItems([]);
+              actionRef.current?.reloadAndRest?.();
+            }}
+          />
+          <Select
+            value={pickedItemState}
+            style={{ width: 120 }}
+            options={[...SPARE_PART_PICKED_ITEM_STATE_OPTIONS]}
+            onChange={(value) => {
+              setPickedItemState(value);
               setSelectedRowKeys([]);
               setSelectedItems([]);
               actionRef.current?.reloadAndRest?.();
@@ -221,8 +282,9 @@ export default function MySparePartList() {
                     selectedCategory !== SPARE_PART_CATEGORY_OPTIONS[0].value
                       ? selectedCategory
                       : undefined,
-                  warehouse: radioValue !== 'All' ? radioValue : undefined,
-                  warehouseCode: radioValue !== 'All' ? radioValue : undefined,
+                  warehouse: selectedWarehouseFilterValue,
+                  warehouseCode: selectedWarehouseFilterValue,
+                  pickedItemState,
                   dateRange,
                 },
               },
@@ -239,6 +301,9 @@ export default function MySparePartList() {
               setSelectedRowKeys(keys);
               setSelectedItems(rows);
             },
+            getCheckboxProps: (record) => ({
+              disabled: !!record.isClosed || (record.availableQty ?? 0) <= 0,
+            }),
           }}
           toolBarRender={() => [
             <Space key="spr-return-bar" size="small">
@@ -281,26 +346,19 @@ export default function MySparePartList() {
               dataIndex: 'imageId',
               render: (_, record) => (
                 <SparePartImage
-                imageId={record.imageId}
-                src={record.imageId}
-                alt={record.part_number || record.itemId}
-                size={48}
-              />
-             ),
+                  imageId={record.imageId}
+                  src={record.imageId}
+                  alt={record.part_number || record.itemId}
+                  size={48}
+                />
+              ),
             },
-            // {
-            //   key: 'fulfillmentLineId',
-            //   title: 'Fulfillment Line ID',
-            //   dataIndex: 'fulfillmentLineId',
-            // },
             {
               key: 'part_number',
               title: 'Product Number',
               dataIndex: 'part_number',
               render: (value, record) => (
-                <a
-                  onClick={() => console.log('Clicked part number:', value, 'with id:', record.id)}
-                >
+                <a onClick={() => console.log('Clicked part number:', value, 'with id:', record.id)}>
                   {value}
                 </a>
               ),
@@ -310,17 +368,32 @@ export default function MySparePartList() {
               title: 'Request ID',
               dataIndex: 'request_id',
               render: (_, record) => (
-                <Typography.Link
-                  onClick={(event) => {
-                    event.preventDefault();
-                  }}
-                >
+                <Typography.Link onClick={(e) => e.preventDefault()}>
                   {record.request_id}
                 </Typography.Link>
               ),
             },
             { key: 'spare_part_name', title: 'Name', dataIndex: 'spare_part_name' },
-            { key: 'quantity', title: 'Quantity', dataIndex: 'deliveredQty' },
+            {
+              key: 'quantity',
+              title: 'Quantity',
+              align: 'center',
+              render: (_, record: SparePartReturnListItem) => {
+                const returning = record.pendingReturnQty ?? 0;
+                const returned = record.returnedQty ?? 0;
+                const available = record.availableQty ?? 0;
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <span style={{ fontWeight: 500 }}>{available}</span>
+                    {(returning > 0 || returned > 0) && (
+                      <Tooltip title={`Returning: ${returning} | Returned: ${returned}`}>
+                        <InfoCircleOutlined style={{ color: '#1890ff', fontSize: 13, cursor: 'pointer' }} />
+                      </Tooltip>
+                    )}
+                  </div>
+                );
+              },
+            },
             { key: 'UoM', title: 'UoM', dataIndex: 'UoM' },
             { key: 'spare_part_type', title: 'Type', dataIndex: 'type' },
             { key: 'category', title: 'Category', dataIndex: 'category' },
@@ -332,6 +405,30 @@ export default function MySparePartList() {
               title: 'Requested Pickup Date',
               dataIndex: 'requested_pickup_date',
             },
+            {
+              key: 'close',
+              title: 'State',
+              width: 90,
+              align: 'center' as const,
+              render: (_, record) => (
+                <Popconfirm
+                  title={record.isClosed ? 'Open this picked item?' : 'Close this picked item?'}
+                  okText="Yes"
+                  cancelText="No"
+                  onConfirm={() => handleTogglePickedItemState(record)}
+                >
+                    <Tooltip title={record.isClosed ? 'Closed' : 'Open'}>
+                      <Switch
+                        checked={!record.isClosed}
+                        checkedChildren="Open"
+                        unCheckedChildren="Closed"
+                        loading={updatingFulfillmentLineId === record.fulfillmentLineId}
+                        disabled={updatingFulfillmentLineId === record.fulfillmentLineId}
+                      />
+                    </Tooltip>
+                  </Popconfirm>
+                ),
+            }
           ]}
         />
       </Card>

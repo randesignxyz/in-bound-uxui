@@ -1,4 +1,4 @@
-import {  PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DownOutlined, EyeOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
 import { ProColumns, ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
@@ -9,23 +9,26 @@ import {
   Image,
   Input,
   InputNumber,
-  Popconfirm,
   Space,
   Steps,
+  Table,
   Tag,
   Timeline,
   Typography,
   Upload,
+  message,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from '../spare-part-request/SparePartImage';
-import type { RequestDetailData } from '../spare-part-return/data';
+import type {
+  RequestDetailActivityItem,
+  RequestDetailData,
+  ReturnStatus,
+} from '../spare-part-return/data';
 import { SparePartReturnAPI } from '../spare-part-return/service';
-import { RequestActions } from '@/services/apiGateway';
+import { getUploadFileObjectUrlV2, RequestActions } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { SparePartWarehouseReturnAPI } from './service.return';
-import { message } from 'antd';
-import { formatSpfDateTime } from '../shared/dateTime';
 
 const { Title } = Typography;
 const MAX_ATTACHMENTS = 3;
@@ -40,14 +43,15 @@ type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
  *         ↓ (if approved)
  *     in_progress → completed | partially_returned
  */
-export type ReturnStatus =
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'receiving'
-  | 'in_progress'
-  | 'completed'
-  | 'partially_returned';
+// Internal UI status for map keys (keeping these to avoid breaking UI logic)
+export type DrawerReturnStatus =
+  | 'Pending'
+  | 'Approved'
+  | 'Rejected'
+  | 'Receiving'
+  | 'In Progress'
+  | 'Completed'
+  | 'Partially Returned';
 
 interface ReturnItem {
   id: string | number;
@@ -68,17 +72,6 @@ interface ReturnItem {
   images?: string[];  // file IDs
 }
 
-interface ReturnData {
-  id?: string;
-  requestId?: string;
-  type?: string;
-  requestDate?: string;
-  status?: ReturnStatus;
-  totalItems?: number;
-  approvedBy?: string;
-  items?: ReturnItem[];
-}
-
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /**
@@ -93,44 +86,35 @@ const STATUS_STEPS = ['Return', 'Approved', 'Receiving', 'Completed'];
 /**
  * Maps each status to which step index it sits on.
  */
-const STATUS_STEP_MAP: Record<ReturnStatus, number> = {
-  pending: 0,
-  approved: 1,
-  rejected: 1,
-  receiving: 2,
-  in_progress: 2,
-  completed: 3,
-  partially_returned: 3,
+const STATUS_STEP_MAP: Record<ReturnStatus | string, number> = {
+  Pending: 0,
+  Approved: 1,
+  Rejected: 1,
+  Receiving: 2,
+  'In Progress': 2,
+  Completed: 3,
+  'Partially Returned': 3,
 };
 
-const statusColorMap: Record<ReturnStatus, string> = {
-  pending:           'processing',
-  approved:          'warning',
-  rejected:          'error',
-  receiving:         'processing',
-  in_progress:       'processing',
-  completed:         'success',
-  partially_returned:'warning',
+const statusColorMap: Record<ReturnStatus | string, string> = {
+  Pending: 'processing',
+  Approved: 'warning',
+  Rejected: 'error',
+  Receiving: 'processing',
+  'In Progress': 'processing',
+  Completed: 'success',
+  'Partially Returned': 'processing',
 };
 
-const statusLabelMap: Record<ReturnStatus, string> = {
-  pending: 'Return',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  receiving: 'Receiving',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  partially_returned: 'Partially Returned',
+const statusLabelMap: Record<ReturnStatus | string, string> = {
+  Pending: 'Return',
+  Approved: 'Approved',
+  Rejected: 'Rejected',
+  Receiving: 'Receiving',
+  'In Progress': 'In Progress',
+  Completed: 'Completed',
+  'Partially Returned': 'Partially Returned',
 };
-interface ReturnDetailActivity {
-  id: string | number;
-  action?: 'submitted' | 'approved' | 'rejected' | 'receiving' | 'completed' | 'partially_returned';
-  label: string;
-  description?: string;
-  by?: string; // who performed the action
-  date: string; // ISO date string
-  dot?: 'pending' | 'done';
-}
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const formatDateTime = (date?: string) => {
@@ -153,10 +137,56 @@ const getStepStatus = (
   stepIndex: number,
   currentStep: number,
 ): 'finish' | 'process' | 'wait' | 'error' => {
-  if (effectiveStatus === 'rejected' && stepIndex === 1) return 'error';
+  if (effectiveStatus === 'Rejected' && stepIndex === 1) return 'error';
   if (stepIndex < currentStep) return 'finish';
   if (stepIndex === currentStep) return 'process';
   return 'wait';
+};
+
+const mapApiValueToStatus = (value?: string): ReturnStatus => {
+  switch ((value ?? '').toUpperCase()) {
+    case 'APPROVED':
+      return 'Approved';
+    case 'REJECTED':
+      return 'Rejected';
+    case 'COMPLETE':
+    case 'COMPLETED':
+      return 'Completed';
+    case 'RECEIVING':
+      return 'Receiving';
+    case 'PARTIAL_RETURN':
+    case 'PARTIALLY_RETURNED':
+      return 'Partially Returned';
+    default:
+      return 'Pending';
+  }
+};
+
+const getWorkflowStatus = (status?: string, state?: string): ReturnStatus => {
+  const normalizedState = mapApiValueToStatus(state);
+  if (normalizedState !== 'Pending') {
+    return normalizedState;
+  }
+
+  const normalizedStatus = mapApiValueToStatus(status);
+  return normalizedStatus === 'Partially Returned' ? 'Receiving' : normalizedStatus;
+};
+
+const getTimelineColor = (dot?: string, label?: string) => {
+  switch ((dot ?? '').toLowerCase()) {
+    case 'approved':
+      return 'blue';
+    case 'rejected':
+      return 'red';
+    case 'completed':
+      return 'green';
+    case 'warehouse':
+      return 'blue';
+    case 'pending':
+      return 'gray';
+    default:
+      return (label ?? '').toLowerCase() === 'rejected' ? 'red' : 'blue';
+  }
 };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -165,7 +195,7 @@ interface ReturnsListDrawerProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void; // call parent reload after successful record
-  data: ReturnData | null;
+  data: RequestDetailData | null;
   returnId?: number | null;
 }
 
@@ -174,31 +204,42 @@ interface ReturnsListDrawerProps {
 export default function ReturnsListDrawer({ open, onClose, onSuccess, data, returnId }: ReturnsListDrawerProps) {
   const access = useAccess();
   const [loading, setLoading] = useState(false);
-  const [statusOverride, setStatusOverride] = useState<ReturnStatus | null>(null);
+  const [statusOverride] = useState<ReturnStatus | null>(null);
+  const [workflowStatus, setWorkflowStatus] = useState<ReturnStatus>(data?.status ?? 'Pending');
 
   const requestAction: RequestActions = {
     start: (name) => console.log(`Loading: ${name}`),
     end: (status) => console.log(status),
   };
+  const warehouseReturnService = SparePartWarehouseReturnAPI(requestAction);
 
   const [fetchedData, setFetchedData] = useState<RequestDetailData | null>(null);
 
   const effectiveStatus: ReturnStatus = useMemo(() => {
-    if (statusOverride) return statusOverride;
-    // fetchedData.status is 'Pending' | 'Approved' | 'Rejected' | 'Completed'
+    if (statusOverride) return statusOverride as any;
     if (fetchedData?.status) {
-      return fetchedData.status.toLowerCase() as ReturnStatus;
+      return fetchedData.status;
     }
-    return data?.status ?? 'pending';
+    return (data?.status as any) ?? 'Pending';
   }, [statusOverride, fetchedData?.status, data?.status]);
 
   const isGlobalReadOnly = useMemo(() => {
-    return ['completed', 'rejected', 'pending'].includes(effectiveStatus);
-  }, [effectiveStatus]);
+    return ['Completed', 'Rejected', 'Pending'].includes(workflowStatus);
+  }, [workflowStatus]);
+
+  const canEditAttachments = useMemo(() => {
+    return ['Receiving', 'Completed', 'Approved'].includes(workflowStatus);
+  }, [workflowStatus]);
+
+  const canSubmitChanges = useMemo(() => {
+    return access.canSpfWarehouseStaff && canEditAttachments;
+  }, [access.canSpfWarehouseStaff, canEditAttachments]);
+
+  const shouldShowReceivedButton = access.canSpfWarehouseStaff && workflowStatus !== 'Completed';
 
   const checkReadOnly = (record: ReturnItem) => {
     if (isGlobalReadOnly) return true;
-    if (effectiveStatus === 'receiving') {
+    if (workflowStatus === 'Receiving') {
       return (record.receivedQty ?? 0) >= record.qtyToReturn;
     }
     return false;
@@ -227,10 +268,19 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
         };
       });
     }
-    return data?.items ?? [];
+    // Fallback to data?.items if no fetchedData
+    const items = data?.items ?? [];
+    return items.map((i: any, idx: number) => ({
+      ...i,
+      id: i.id ?? idx + 1,
+      qtyToReturn: i.qtyToReturn ?? i.quantity_to_return ?? 0,
+      usedQty: i.usedQty ?? i.used_quantity ?? 0,
+      productId: i.productId ?? i.product_id ?? '',
+      name: i.name ?? i.item_name ?? '',
+    }));
   }, [fetchedData, data?.items]);
 
-  const currentStep = STATUS_STEP_MAP[effectiveStatus];
+  const currentStep = STATUS_STEP_MAP[workflowStatus];
   // ─── Upload State ─────────────────────────────────
   const [attachmentMap, setAttachmentMap] = useState<Record<string, UploadFile[]>>({});
   // ─── Per-row inspection state ─────────────────────
@@ -242,6 +292,12 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [previewTitle, setPreviewTitle] = useState('');
+  const [expandedActivities, setExpandedActivities] = useState<string[]>([]);
+  const toggleActivity = (key: string) => {
+    setExpandedActivities((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
 
   // Convert file to base64 (for preview)
   const getBase64 = (file: FileType): Promise<string> =>
@@ -279,16 +335,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           request_id: item.request_id ?? '',
           total_items: item.total_items ?? 0,
           request_date: item.request_date ?? '',
-          status:
-            item.state === 'APPROVED'
-              ? 'Approved'
-              : item.state === 'REJECTED'
-                ? 'Rejected'
-                : item.state === 'COMPLETED'
-                  ? 'Completed'
-                  : item.state === 'RECEIVING'
-                    ? 'Receiving'
-                    : 'Pending',
+          status: mapApiValueToStatus(item.status || item.state),
           remarks: item.remarks ?? '',
           items: (item.items ?? []).map((i: any) => ({
             no: i.no,
@@ -311,10 +358,13 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             label: a.label,
             description: a.description,
             date: a.date,
-            dot: a.dot === 'pending' ? 'pending' : 'default',
+            dot: a.dot,
+            messages: a.messages,
+            items: a.items ?? null,
           })),
         };
         setFetchedData(mapped);
+        setWorkflowStatus(getWorkflowStatus(item.status, item.state));
       }
     } catch (err) {
       console.error('Failed to fetch return detail', err);
@@ -328,12 +378,21 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       fetchDetail();
     } else {
       setFetchedData(null);
+      setWorkflowStatus(data?.status === 'Partially Returned' ? 'Receiving' : data?.status ?? 'Pending');
     }
-  }, [open, returnId]);
+  }, [open, returnId, data?.status]);
   // Preview handler
   const handlePreview = async (file: UploadFile) => {
     if (!file.url && !file.preview && file.originFileObj) {
       file.preview = await getBase64(file.originFileObj as FileType);
+    }
+
+    if (!file.url && !file.preview && typeof file.response === 'string') {
+      try {
+        file.url = await getUploadFileObjectUrlV2()(file.response);
+      } catch (error) {
+        console.error('Failed to preview uploaded image', error);
+      }
     }
 
     setPreviewImage(file.url || file.thumbUrl || (file.preview as string) || '');
@@ -342,52 +401,155 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   };
   
   const handleAttachmentChange =
-    (itemId: string | number): UploadProps['onChange'] =>
+    (record: ReturnItem): UploadProps['onChange'] =>
     async ({ fileList: newFileList }) => {
       const normalizedFiles = await Promise.all(newFileList.map(enrichUploadFile));
+      const limitedFiles = normalizedFiles.slice(0, MAX_ATTACHMENTS);
+      setRowAttachmentFiles(record.id, limitedFiles);
 
-      setAttachmentMap((prev) => ({
-        ...prev,
-        [String(itemId)]: normalizedFiles.slice(0, MAX_ATTACHMENTS),
-      }));
+      if (!canPersistDamageImagesImmediately(record)) {
+        return;
+      }
+
+      const filesToUpload = limitedFiles.filter(
+        (file) => file.originFileObj && !isExistingImageFile(file),
+      );
+      if (filesToUpload.length === 0) {
+        return;
+      }
+
+      const hideLoading = message.loading('Uploading damage image...', 0);
+
+      try {
+        const uploadedImageIds = await uploadFilesToFileService(filesToUpload);
+        if (uploadedImageIds.length === 0) {
+          throw new Error('No image ids returned from file service');
+        }
+
+        await warehouseReturnService.update_damage_images_return([record.itemId!], uploadedImageIds);
+
+        setRowAttachmentFiles(record.id, markUploadedFilesAsPersisted(limitedFiles, uploadedImageIds));
+        updateFetchedItemImages(record.itemId!, (currentImages) => [
+          ...new Set([...currentImages, ...uploadedImageIds]),
+        ]);
+        message.success('Damage image uploaded');
+      } catch (error) {
+        console.error('Failed to upload damage image', error);
+        message.error('Failed to upload damage image');
+        await fetchDetail();
+        setAttachmentMap((prev) => {
+          const next = { ...prev };
+          delete next[String(record.id)];
+          return next;
+        });
+      } finally {
+        hideLoading();
+      }
     };
 
-  const uploadButton = (
-    <button style={{ border: 0, background: 'none' }} type="button">
-      <PlusOutlined />
-      <div style={{ marginTop: 8 }}>Upload</div>
-    </button>
-  );
-
-  const handleReplaceAttachment = async (
-    itemId: string | number,
-    fileIndex: number,
-    nextFile: UploadFile,
+  const handleRemoveAttachment = (
+    record: ReturnItem,
+    file: UploadFile,
+    currentFiles: UploadFile[] = [],
   ) => {
-    const normalizedFile = await enrichUploadFile(nextFile);
+    const sourceFiles = currentFiles.length > 0 ? currentFiles : getRowAttachmentFiles(record);
+    const nextFiles = sourceFiles.filter((currentFile) => currentFile.uid !== file.uid);
+    setRowAttachmentFiles(record.id, nextFiles);
 
-    setAttachmentMap((prev) => {
-      const itemKey = String(itemId);
-      const currentFiles = prev[itemKey] ?? [];
-      const updatedFiles = [...currentFiles];
-      updatedFiles[fileIndex] = normalizedFile;
+    const imageId = isExistingImageFile(file) ? String(file.response) : undefined;
+    if (!imageId || !record.itemId) {
+      return;
+    }
+
+    const hideLoading = message.loading('Deleting damage image...', 0);
+
+    warehouseReturnService
+      .delete_damage_images_return([record.itemId], [imageId])
+      .then(() => {
+        updateFetchedItemImages(record.itemId!, (currentImages) =>
+          currentImages.filter((currentImageId) => currentImageId !== imageId),
+        );
+        message.success('Damage image deleted');
+      })
+      .catch(async (error) => {
+        console.error('Failed to delete damage image', error);
+        message.error('Failed to delete damage image');
+        setRowAttachmentFiles(record.id, sourceFiles);
+        await fetchDetail();
+      })
+      .finally(() => {
+        hideLoading();
+      });
+  };
+
+  const getInitialAttachmentFiles = (record: ReturnItem): UploadFile[] =>
+    (record.images ?? []).map((fileId, index) => ({
+      uid: `existing-${record.id}-${fileId}-${index}`,
+      name: `image-${index + 1}`,
+      status: 'done',
+      response: fileId,
+    }));
+
+  const getRowAttachmentFiles = (record: ReturnItem): UploadFile[] =>
+    attachmentMap[String(record.id)] ?? getInitialAttachmentFiles(record);
+
+  const isExistingImageFile = (file: UploadFile) => typeof file.response === 'string' && !file.originFileObj;
+  const canPersistDamageImagesImmediately = (record: ReturnItem) =>
+    !!record.itemId && (record.receivedQty ?? 0) > 0;
+
+  const setRowAttachmentFiles = (rowId: string | number, files: UploadFile[]) => {
+    setAttachmentMap((prev) => ({
+      ...prev,
+      [String(rowId)]: files.slice(0, MAX_ATTACHMENTS),
+    }));
+  };
+
+  const updateFetchedItemImages = (
+    returnItemId: number,
+    updater: (currentImages: string[]) => string[],
+  ) => {
+    setFetchedData((prev) => {
+      if (!prev) return prev;
 
       return {
         ...prev,
-        [itemKey]: updatedFiles,
+        items: prev.items.map((item) =>
+          item.return_item_id === returnItemId
+            ? { ...item, images: updater(item.images ?? []) }
+            : item,
+        ),
       };
     });
   };
 
-  const handleRemoveAttachment = (itemId: string | number, uid: string) => {
-    setAttachmentMap((prev) => {
-      const itemKey = String(itemId);
+  const markUploadedFilesAsPersisted = (
+    files: UploadFile[],
+    uploadedImageIds: string[],
+  ): UploadFile[] => {
+    let uploadIndex = 0;
+
+    return files.map((file) => {
+      if (!file.originFileObj || isExistingImageFile(file)) {
+        return file;
+      }
+
+      const uploadedImageId = uploadedImageIds[uploadIndex++];
+      if (!uploadedImageId) {
+        return file;
+      }
+
       return {
-        ...prev,
-        [itemKey]: (prev[itemKey] ?? []).filter((file) => file.uid !== uid),
+        ...file,
+        uid: `existing-${uploadedImageId}`,
+        response: uploadedImageId,
+        status: 'done',
+        originFileObj: undefined,
       };
     });
   };
+
+  const areImageListsEqual = (current: string[], next: string[]) =>
+    current.length === next.length && current.every((id, index) => id === next[index]);
 
   // ─── Upload damage images to FILE microservice ───────────────────
   const uploadFilesToFileService = async (files: UploadFile[]): Promise<string[]> => {
@@ -431,10 +593,10 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       const itemsWithImages = await Promise.all(
         tableItems.map(async (item) => {
           const key = String(item.id);
-          const files = attachmentMap[key] ?? [];
-          const damageImage = files.length > 0
-            ? await uploadFilesToFileService(files)
-            : [];
+          const files = getRowAttachmentFiles(item);
+          const existingImages = item.images ?? [];
+          const damageImage = files.length > 0 ? await uploadFilesToFileService(files) : [];
+          const imageChanged = areImageListsEqual(existingImages, damageImage) === false;
 
           // Resolve defaults the same way the InputNumber columns do
           const alreadyReceived = item.receivedQty ?? 0;
@@ -442,30 +604,29 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           const goodQty    = goodQtyMap[key]    ?? remaining;
           const damagedQty = damagedQtyMap[key] ?? 0;
 
-          if (goodQty + damagedQty <= 0) return null as any; // Skip items with no additions in this batch
+          if (goodQty + damagedQty <= 0 && !imageChanged) return null as any;
 
           return {
             returnItemId: item.itemId ?? Number(item.id),
             receivedProductId: item.productId,
-            receivedQty: goodQty + damagedQty,   // always > 0 when qty > 0
+            receivedQty: goodQty + damagedQty,
             goodQty,
             damagedQty,
             remark: remarkMap[key] ?? '',
             damageMessages: damagedQty > 0 ? (remarkMap[key] ?? '') : undefined,
-            damageImage: damageImage.length > 0 ? damageImage : undefined,
+            damageImage: imageChanged || damageImage.length > 0 ? damageImage : undefined,
           };
         })
       );
 
       const itemsToConfirm = itemsWithImages.filter(i => i !== null);
       if (!itemsToConfirm.length) {
-        message.warning('No quantities entered for receipt');
+        message.warning('No quantities or image changes to save');
         setLoading(false);
         return;
       }
 
-      const service = SparePartWarehouseReturnAPI(requestAction);
-      await service.warehouse_confirm_return(returnId, returnRemark, itemsToConfirm);
+      await warehouseReturnService.warehouse_confirm_return(returnId, returnRemark, itemsToConfirm);
       message.success('Return confirmed successfully');
 
       // ─── Refresh Logic ───
@@ -541,7 +702,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       key: 'qty_key_return',
       align: 'center' as const,
       render: (_: unknown, record: ReturnItem) => {
-        const isPartial = effectiveStatus === 'receiving';
+        const isPartial = workflowStatus === 'Receiving';
         const received = record.receivedQty ?? 0;
         const total = record.qtyToReturn;
 
@@ -566,10 +727,10 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             key: 'good_amount',
             render: (_: unknown, record: ReturnItem) => {
               const key = String(record.id);
-              const isCompleted = effectiveStatus === 'completed';
               const alreadyReceived = record.receivedQty ?? 0;
               const remaining = record.qtyToReturn - alreadyReceived;
               const defaultVal = remaining; // Default to remaining for partial receipts
+              const prev = record.goodQty ?? 0;
               
               if (checkReadOnly(record)) {
                 return (
@@ -579,27 +740,34 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                 );
               }
               return (
-                <InputNumber
-                  min={0}
-                  max={remaining}
-                  defaultValue={defaultVal}
-                  value={goodQtyMap[key] ?? defaultVal}
-                  style={{ width: '100%' }}
-                  onChange={(v) => setGoodQtyMap((prev) => ({ ...prev, [key]: v ?? 0 }))}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {prev > 0 && (
+                    <span style={{ color: '#8c8c8c', fontSize: 13, whiteSpace: 'nowrap' }}>
+                      {prev} +
+                    </span>
+                  )}
+                  <InputNumber
+                    min={0}
+                    max={remaining}
+                    defaultValue={defaultVal}
+                    value={goodQtyMap[key] ?? defaultVal}
+                    style={{ width: '100%', minWidth: 60 }}
+                    onChange={(v) => setGoodQtyMap((prevMap) => ({ ...prevMap, [key]: v ?? 0 }))}
+                  />
+                </div>
               );
             },
-            width: 90,
+            width: 100,
           },
           {
             title: 'Damaged',
             key: 'damaged_amount',
             render: (_: unknown, record: ReturnItem) => {
               const key = String(record.id);
-              const isCompleted = effectiveStatus === 'completed';
               const alreadyReceived = record.receivedQty ?? 0;
               const remaining = record.qtyToReturn - alreadyReceived;
               const defaultVal = 0; // Default damaged to 0 for partial receipts
+              const prev = record.damagedQty ?? 0;
               
               if (checkReadOnly(record)) {
                 return (
@@ -609,17 +777,24 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                 );
               }
               return (
-                <InputNumber
-                  min={0}
-                  max={remaining}
-                  defaultValue={defaultVal}
-                  value={damagedQtyMap[key] ?? defaultVal}
-                  style={{ width: '100%' }}
-                  onChange={(v) => setDamagedQtyMap((prev) => ({ ...prev, [key]: v ?? 0 }))}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {prev > 0 && (
+                    <span style={{ color: '#8c8c8c', fontSize: 13, whiteSpace: 'nowrap' }}>
+                      {prev} +
+                    </span>
+                  )}
+                  <InputNumber
+                    min={0}
+                    max={remaining}
+                    defaultValue={defaultVal}
+                    value={damagedQtyMap[key] ?? defaultVal}
+                    style={{ width: '100%', minWidth: 60 }}
+                    onChange={(v) => setDamagedQtyMap((prevMap) => ({ ...prevMap, [key]: v ?? 0 }))}
+                  />
+                </div>
               );
             },
-            width: 90,
+            width: 100,
           },
           {
             title: 'Remarks',
@@ -644,145 +819,155 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             title: 'Attachments',
             key: 'broken_image',
             render: (_: unknown, record: ReturnItem) => {
-              // COMPLETED / REJECTED / PENDING / FULLY RECEIVED: show server images
-              if (checkReadOnly(record)) {
-                const imgs = record.images ?? [];
-                if (!imgs.length) return <Typography.Text type="secondary">—</Typography.Text>;
-                return (
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    {imgs.map((fileId) => (
-                      <SparePartImage
-                        key={fileId}
-                        imageId={fileId}
-                        alt={record.name}
-                        size={ATTACHMENT_CARD_SIZE}
-                      />
-                    ))}
-                  </div>
-                );
+              const canEditLineAttachments = canEditAttachments;
+              const rowFiles = getRowAttachmentFiles(record);
+
+              if (!canEditLineAttachments && rowFiles.length === 0) {
+                return <Typography.Text type="secondary">—</Typography.Text>;
               }
 
-              const rowFiles = attachmentMap[String(record.id)] ?? [];
-
               return (
-                <>
-                  <style>{`
-                    .compact-attachment-upload .ant-upload-select,
-                    .compact-attachment-upload .ant-upload-list-item-container {
-                      width: ${ATTACHMENT_CARD_SIZE}px !important;
-                      height: ${ATTACHMENT_CARD_SIZE}px !important;
-                    }
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+                  {canEditLineAttachments ? (
+                    <>
+                      <style>{`
+                        .compact-attachment-upload .ant-upload-select,
+                        .compact-attachment-upload .ant-upload-list-item-container {
+                          width: ${ATTACHMENT_CARD_SIZE}px !important;
+                          height: ${ATTACHMENT_CARD_SIZE}px !important;
+                        }
 
-                    .compact-attachment-upload .ant-upload-list-item {
-                      padding: 3px !important;
-                      border-radius: 10px !important;
-                    }
+                        .compact-attachment-upload .ant-upload-list-item {
+                          padding: 3px !important;
+                          border-radius: 10px !important;
+                        }
 
-                    .compact-attachment-upload .ant-upload-list-item-thumbnail img {
-                      object-fit: cover;
-                    }
+                        .compact-attachment-upload .ant-upload-list-item-thumbnail img {
+                          object-fit: cover;
+                        }
 
-                    .compact-attachment-upload .ant-upload-list {
-                      display: flex;
-                      flex-wrap: wrap;
-                      gap: 8px;
-                      margin: 0;
-                    }
+                        .compact-attachment-upload .ant-upload-list {
+                          display: flex;
+                          flex-wrap: wrap;
+                          gap: 8px;
+                          margin: 0;
+                        }
 
-                    .compact-attachment-upload .ant-upload-list-item-container {
-                      margin: 0 !important;
-                    }
+                        .compact-attachment-upload .ant-upload-list-item-container {
+                          margin: 0 !important;
+                        }
 
-                    .compact-attachment-upload .ant-upload.ant-upload-select {
-                      border-radius: 10px !important;
-                    }
-                  `}</style>
-                  <div
-                    className="compact-attachment-upload"
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: 4,
-                    }}
-                  >
-                    <Upload
-                      accept="image/*"
-                      beforeUpload={() => false}
-                      listType="picture-card"
-                      fileList={rowFiles}
-                      maxCount={MAX_ATTACHMENTS}
-                      onPreview={handlePreview}
-                      onChange={handleAttachmentChange(record.id)}
-                      onRemove={(file) => {
-                        handleRemoveAttachment(record.id, file.uid);
-                        return false;
-                      }}
-                      itemRender={(originNode, file) => {
-                        const fileIndex = rowFiles.findIndex((item) => item.uid === file.uid);
+                        .compact-attachment-upload .ant-upload.ant-upload-select {
+                          border-radius: 10px !important;
+                        }
+                      `}</style>
+                      <div
+                        className="compact-attachment-upload"
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          padding: 4,
+                        }}
+                      >
+                        <Upload
+                          accept="image/*"
+                          beforeUpload={() => false}
+                          listType="picture-card"
+                          fileList={rowFiles}
+                          maxCount={MAX_ATTACHMENTS}
+                          onPreview={handlePreview}
+                          onChange={handleAttachmentChange(record)}
+                          itemRender={(originNode, file) => {
+                            const src = file.thumbUrl || file.url || (file.preview as string) || '';
+                            const existingFileId = isExistingImageFile(file) ? String(file.response) : undefined;
 
-                        return (
-                          <div
-                            style={{
-                              position: 'relative',
-                              width: ATTACHMENT_CARD_SIZE,
-                              height: ATTACHMENT_CARD_SIZE,
-                              borderRadius: 8,
-                              overflow: 'hidden',
-                            }}
-                          >
-                            <div style={{ width: '100%', height: '100%' }}>{originNode}</div>
-                            <div
-                              style={{
-                                position: 'absolute',
-                                top: 4,
-                                right: 4,
-                                display: 'flex',
-                                gap: 4,
-                                zIndex: 1,
-                              }}
-                            >
-                              <Upload
-                                accept="image/*"
-                                beforeUpload={() => false}
-                                showUploadList={false}
-                                maxCount={1}
-                                onChange={({ file: nextFile }) => {
-                                  if (fileIndex >= 0) {
-                                    handleReplaceAttachment(record.id, fileIndex, nextFile);
-                                  }
+                            return (
+                              <div
+                                style={{
+                                  position: 'relative',
+                                  width: ATTACHMENT_CARD_SIZE,
+                                  height: ATTACHMENT_CARD_SIZE,
+                                  borderRadius: 8,
+                                  overflow: 'hidden',
+                                  border: '1px solid #d9d9d9',
+                                  background: '#fafafa',
                                 }}
-                              ></Upload>
-                              <Popconfirm
-                                title="Delete image?"
-                                okText="Delete"
-                                cancelText="Cancel"
-                                onConfirm={() => handleRemoveAttachment(record.id, file.uid)}
-                              ></Popconfirm>
+                              >
+                                {src ? (
+                                  <img
+                                    src={src}
+                                    alt={file.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                  />
+                                ) : existingFileId ? (
+                                  <div style={{ width: '100%', height: '100%' }}>
+                                    <SparePartImage
+                                      imageId={existingFileId}
+                                      alt={record.name}
+                                      size={ATTACHMENT_CARD_SIZE}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div style={{ width: '100%', height: '100%' }}>{originNode}</div>
+                                )}
+
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    background: 'rgba(0,0,0,0.45)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 8,
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s',
+                                  }}
+                                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+                                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0')}
+                                >
+                                  <EyeOutlined
+                                    style={{ color: '#fff', fontSize: 14, cursor: 'pointer' }}
+                                    onClick={() => handlePreview(file)}
+                                  />
+                                  <DeleteOutlined
+                                    style={{ color: '#fff', fontSize: 14, cursor: 'pointer' }}
+                                    onClick={() => handleRemoveAttachment(record, file, rowFiles)}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          }}
+                          onRemove={(file) => {
+                            handleRemoveAttachment(record, file, rowFiles);
+                          }}
+                        >
+                          {rowFiles.length < MAX_ATTACHMENTS && (
+                            <div style={{ textAlign: 'center' }}>
+                              <PlusOutlined style={{ fontSize: 16 }} />
+                              <div style={{ marginTop: 4, fontSize: 10 }}>Add</div>
                             </div>
-                          </div>
-                        );
-                      }}
-                    >
-                      {rowFiles.length >= MAX_ATTACHMENTS ? null : uploadButton}
-                    </Upload>
-                    {/* <Button
-                      size="small"
-                      type="text"
-                      icon={<EditOutlined />}
-                      style={{
-                        color: '#fff',
-                        background: 'rgba(0, 0, 0, 0.45)',
-                        borderRadius: 999,
-                        width: 20,
-                        height: 20,
-                        minWidth: 20,
-                        padding: 0,
-                        marginLeft: 12,
-                      }}
-                    /> */}
-                  </div>
+                          )}
+                        </Upload>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      {rowFiles.map((file) => {
+                        const existingFileId = isExistingImageFile(file) ? String(file.response) : undefined;
+                        return existingFileId ? (
+                          <SparePartImage
+                            key={file.uid}
+                            imageId={existingFileId}
+                            alt={record.name}
+                            size={ATTACHMENT_CARD_SIZE}
+                          />
+                        ) : null;
+                      })}
+                    </div>
+                  )}
 
                   {previewImage && (
                     <Image
@@ -796,24 +981,11 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                       style={{ display: 'none' }}
                     />
                   )}
-                </>
+                </div>
               );
             },
             align: 'center' as const,
             width: 260,
-          },
-          {
-            title: 'Action',
-            key: 'action',
-            render: (_: unknown, record: ReturnItem) =>
-              !checkReadOnly(record) ? (
-                <Space>
-                  <Button type="primary" size="small" onClick={handleSave}>
-                    Save
-                  </Button>
-                </Space>
-              ) : null,
-            width: 100,
           },
         ]
       : []),
@@ -836,11 +1008,16 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       onClose={onClose}
       styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
       footer={
-        !isGlobalReadOnly ? (
+        shouldShowReceivedButton ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
               <Button onClick={onClose}>Close</Button>
-              <Button type="primary" loading={loading} onClick={handleReceived}>
+              <Button
+                type="primary"
+                loading={loading}
+                disabled={!canSubmitChanges}
+                onClick={handleReceived}
+              >
                 Received
               </Button>
             </Space>
@@ -867,11 +1044,11 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           }}
           contentStyle={{ fontWeight: 500, color: '#262626' }}
         >
-          <Descriptions.Item label="No">{fetchedData?.no ?? data?.id ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Return ID">{fetchedData?.request_id ?? data?.requestId ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Total Items">{fetchedData?.total_items ?? data?.totalItems ?? 0}</Descriptions.Item>
+          <Descriptions.Item label="No">{fetchedData?.no ?? data?.no ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Return ID">{fetchedData?.request_id ?? data?.request_id ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Total Items">{fetchedData?.total_items ?? data?.total_items ?? 0}</Descriptions.Item>
           <Descriptions.Item label="Return Date">
-            {formatSpfDateTime(fetchedData?.request_date ?? data?.requestDate)}
+            {formatDateTime(fetchedData?.request_date ?? data?.request_date)}
           </Descriptions.Item>
           <Descriptions.Item label="Status">
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}>{statusLabelMap[effectiveStatus]}</Tag>
@@ -890,7 +1067,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           current={currentStep}
           size="default"
           items={STATUS_STEPS.map((title, index) => {
-            const stepStatus = getStepStatus(effectiveStatus, index, currentStep);
+            const stepStatus = getStepStatus(workflowStatus, index, currentStep);
 
             // For the last step (index 3), show the precise label
             const label =
@@ -900,10 +1077,8 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
 
             // Description hint shown below each step node
             const description =
-              index === 1 && effectiveStatus === 'rejected'
+              index === 1 && effectiveStatus === 'Rejected'
                 ? 'Rejected'
-                : index === STATUS_STEPS.length - 1 && effectiveStatus === 'partially_returned'
-                ? 'Some items were not returned'
                 : undefined;
 
             return {
@@ -949,19 +1124,81 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       </Title>
       <Timeline
         style={{ marginBottom: 24 }}
-        items={(fetchedData?.activities ?? []).map((a) => ({
-          color: a.dot === 'pending' ? 'gray' : 'blue',
-          children: (
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-              <div>
-                <Typography.Text strong>{a.label}</Typography.Text>
-                <br />
-                <Typography.Text type="secondary">{a.description}</Typography.Text>
-              </div>
-              {a.date && <Typography.Text type="secondary">{a.date}</Typography.Text>}
-            </div>
-          ),
-        }))}
+        items={(fetchedData?.activities ?? []).map((activity) => {
+            const activityKey = `${activity.label ?? ''}-${activity.date ?? ''}`;
+            const isExpanded = expandedActivities.includes(activityKey);
+            const activityItems = activity.items ?? [];
+            const hasItems = activityItems.length > 0;
+
+            return {
+              color: getTimelineColor(activity.dot, activity.label),
+              children: (
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 8,
+                      cursor: hasItems ? 'pointer' : undefined,
+                    }}
+                    onClick={hasItems ? () => toggleActivity(activityKey) : undefined}
+                    role={hasItems ? 'button' : undefined}
+                    aria-expanded={hasItems ? isExpanded : undefined}
+                  >
+                    <div>
+                      <Typography.Text strong>
+                        {hasItems && (
+                          <span style={{ marginRight: 6, color: '#8c8c8c' }}>
+                            {isExpanded ? <DownOutlined /> : <RightOutlined />}
+                          </span>
+                        )}
+                        {activity.label}
+                      </Typography.Text>
+                      <br />
+                      <Typography.Text type="secondary">{activity.description}</Typography.Text>
+                    </div>
+                    {activity.date && (
+                      <Typography.Text type="secondary">{activity.date}</Typography.Text>
+                    )}
+                  </div>
+
+                  {activity.messages && (
+                    <Typography.Text type="secondary" style={{ display: 'block', marginTop: 6 }}>
+                      {activity.messages}
+                    </Typography.Text>
+                  )}
+
+                  {isExpanded && hasItems && (
+                    <div style={{ marginTop: 8 }}>
+                      <Table<RequestDetailActivityItem>
+                        size="small"
+                        rowKey="itemId"
+                        pagination={false}
+                        dataSource={activityItems}
+                        columns={[
+                          { title: 'Product ID', dataIndex: 'itemId' },
+                          { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
+                          { title: 'UoM', dataIndex: 'uom' },
+                          { title: 'QTY Confirmed', dataIndex: 'qty_confirm', align: 'center' },
+                          { title: 'Good', dataIndex: 'good_qty', align: 'center' },
+                          { title: 'Damaged', dataIndex: 'damaged_qty', align: 'center' },
+                          {
+                            title: 'Message',
+                            dataIndex: 'damage_message',
+                            render: (_, record) => record.damage_message || record.remark || '-',
+                          },
+                          { title: 'From Warehouse', dataIndex: 'fromWarehouse' },
+                          { title: 'To Warehouse', dataIndex: 'toWarehouse' },
+                          { title: 'Business Unit', dataIndex: 'business_unit' },
+                        ]}
+                      />
+                    </div>
+                  )}
+                </div>
+              ),
+            };
+          })}
       />
     </Drawer>
   );

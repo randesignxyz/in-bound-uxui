@@ -3,6 +3,7 @@ import { EditableProTable, ProColumns } from "@ant-design/pro-components";
 import { useState, useEffect } from "react";
 import TextArea from "antd/es/input/TextArea";
 import SparePartImage from "../spare-part-request/SparePartImage";
+import { Form, Modal } from "antd";
 
 interface FormModalProps {
   open: boolean;
@@ -22,6 +23,7 @@ export default function FormModalSelectItems({
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [dataSource, setDataSource] = useState<any[]>([]);
   const [remark, setRemark] = useState<string>("");
+  const [remarkError, setRemarkError] = useState<string>("");
 
   const normalizeItems = (items: any[] = []) =>
     items.map((item) => ({
@@ -41,6 +43,8 @@ export default function FormModalSelectItems({
     const nextItems = normalizeItems(data ?? []);
     setDataSource(nextItems);
     setEditableRowKeys(nextItems.map((item) => item.id));
+    setRemark("");
+    setRemarkError("");
   }, [open, data]);
 
   const updateItems = (items: any[]) => {
@@ -55,13 +59,13 @@ export default function FormModalSelectItems({
       editable: false,
       width: 80,
       render: (_, record) => (
-      <SparePartImage
+        <SparePartImage
           imageId={record.imageId}
           src={record.image}
           alt={record.partName || record.productId}
           size={48}
-          />
-     ),
+        />
+      ),
     },
     {
       title: "Product Number",
@@ -84,13 +88,12 @@ export default function FormModalSelectItems({
       editable: false,
     },
     {
-       title: "QTY to Pick",
-      dataIndex: "quantity",
+      title: "Available Qty",
+      dataIndex: "availableQty",
       width: 120,
       valueType: "digit",
       editable: false,
     },
-
     {
       title: "QTY to Return",
       dataIndex: "return_quantity",
@@ -109,23 +112,23 @@ export default function FormModalSelectItems({
       width: 120,
       editable: false,
     },
-  {
-  title: "Remark",
-  dataIndex: "reason",
-  width: 200,
-  render: (_, record) => {
-    return record.reason;
-  },
-  renderFormItem: (_, { record }) => {
-    return (
-      <TextArea
-        rows={1}
-        defaultValue={record?.reason}
-        placeholder="Enter reason for return"
-      />
-    );
-  },
-},
+    {
+      title: "Remark",
+      dataIndex: "reason",
+      width: 200,
+      render: (_, record) => {
+        return record.reason;
+      },
+      renderFormItem: (_, { record }) => {
+        return (
+          <TextArea
+            rows={1}
+            defaultValue={record?.reason}
+            placeholder="Enter reason for return"
+          />
+        );
+      },
+    },
     {
       title: "Action",
       valueType: "option",
@@ -146,14 +149,31 @@ export default function FormModalSelectItems({
   ];
 
   const handleCancel = () => {
+    setRemarkError("");
     onCancel();
   };
 
   const handleSubmit = () => {
-    onSubmit({
-      remark,
-      items: dataSource,
-    });
+    // Validate remark is not empty
+    if (!remark || remark.trim() === "") {
+      setRemarkError("Remark is required");
+      return;
+    }
+
+    setRemarkError("");
+    Modal.confirm({
+    title: "Submit return request",
+    content: "Are you sure you want to submit this return request?",
+    okText: "Yes",
+    cancelText: "No",
+    okType: "primary",
+    onOk: () => {
+      onSubmit({
+        remark,
+        items: dataSource,
+      });
+    },
+  });
   };
 
   return (
@@ -201,13 +221,39 @@ export default function FormModalSelectItems({
         }}
       />
 
-      <label>Remark (optional)</label>
-      <TextArea
-        rows={4}
-        maxLength={200}
-        value={remark}
-        onChange={(e) => setRemark(e.target.value)}
-      />
+      <Form.Item
+        label={
+          <span>
+            Remark Required{" "}
+            <span style={{ color: "#ff4d4f" }}>*</span>
+          </span>
+        }
+        validateStatus={remarkError ? "error" : ""}
+        help={remarkError || ""}
+        style={{ marginTop: 16 }}
+        labelCol={{ span: 24 }}
+        wrapperCol={{ span: 24 }}
+      >
+        <TextArea
+          rows={4}
+          maxLength={200}
+          value={remark}
+          onChange={(e) => {
+            setRemark(e.target.value);
+            // Clear error as soon as user starts typing
+            if (e.target.value.trim() !== "") {
+              setRemarkError("");
+            }
+          }}
+          onBlur={() => {
+            if (!remark || remark.trim() === "") {
+              setRemarkError("Remark is required");
+            }
+          }}
+          status={remarkError ? "error" : ""}
+          placeholder="Enter remark (required)"
+        />
+      </Form.Item>
     </FormModalComp>
   );
 }

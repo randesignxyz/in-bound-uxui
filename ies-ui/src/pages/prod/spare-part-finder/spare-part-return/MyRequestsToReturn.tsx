@@ -17,8 +17,9 @@ import { SparePartReturnAPI } from './service';
 const mapStatusToApiValue = (status: string) => {
   if (status === 'Approved') return 'APPROVED';
   if (status === 'Rejected') return 'REJECTED';
-  if (status === 'Completed') return 'COMPLETED';
+  if (status === 'Completed') return 'COMPLETE';
   if (status === 'Pending') return 'PENDING';
+  if (status === 'Partially Returned') return 'PARTIAL_RETURN';
   return '';
 };
 
@@ -235,22 +236,27 @@ export default function MyRequestsToReturn() {
               key: 'status',
               title: 'Status',
               dataIndex: 'status',
-              render: (_, record) =>
-                record.status === 'Pending' ? (
+              render: (status) =>
+                status === 'Pending' ? (
                   <Tag color="processing" bordered={false}>
                     Pending
                   </Tag>
-                ) : record.status === 'Rejected' ? (
+                ) : status === 'Rejected' ? (
                   <Tag color="error" bordered={false}>
                     Rejected
                   </Tag>
-                ) : record.status === 'Completed' ? (
+                ) : status === 'Completed' ? (
                   <Tag color="success" bordered={false}>
                     Completed
                   </Tag>
-                ) : record.status === 'Approved' ? (
+                ) : status === 'Approved' ? (
                   <Tag color="warning" bordered={false}>
                     Approved
+                  </Tag>
+                ) 
+                 : status === 'Partially Returned' ? (
+                  <Tag color="processing" bordered={false}>
+                    Partially Returned
                   </Tag>
                 ) : (
                   ''
@@ -270,6 +276,9 @@ export default function MyRequestsToReturn() {
         open={detailOpen}
         data={detailData}
         returnId={detailReturnId}
+        onSuccess={() => {
+          actionRef.current?.reloadAndRest?.();
+        }}
         onClose={() => {
           setDetailOpen(false);
           setDetailData(null);

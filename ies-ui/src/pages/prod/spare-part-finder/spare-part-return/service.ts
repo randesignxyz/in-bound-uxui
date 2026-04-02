@@ -56,11 +56,31 @@ const SparePartReturnAction = {
     endpoint: "PROD",
     payload: { returnId }
   }),
-  warehouse_approve_spare_part_return: (requestToReturnId: number, action: string): ServiceApiType<any> => ({
+  warehouse_approve_spare_part_return: (
+    requestToReturnId: number,
+    action: string,
+    rejectReason?: string,
+  ): ServiceApiType<any> => ({
     type: "EXEC",
     actionName: "approve-or-reject-to-return",
     endpoint: "PROD",
-    payload: { requestToReturnId, action }
+    payload: {
+      requestToReturnId,
+      action,
+      ...(rejectReason ? { rejectReason } : {}),
+    },
+  }),
+  close_picked_item: (fulfillmentLineIds: number[]): ServiceApiType<any> => ({
+    type: "EXEC",
+    actionName: "close-items-that-picked",
+    endpoint: "PROD",
+    payload: { fulfillmentLineIds },
+  }),
+  open_picked_item: (fulfillmentLineIds: number[]): ServiceApiType<any> => ({
+    type: "EXEC",
+    actionName: "open-items-that-picked",
+    endpoint: "PROD",
+    payload: { fulfillmentLineIds },
   }),
   fetch_batch_spare_parts_return: (
     params: TableViewSearchParams<TableViewSearchReturnsParam>
@@ -130,9 +150,29 @@ const SparePartReturnAPI = (requestAction: RequestActions) => {
       )(requestAction)) as any;
       return res;
     },
-    warehouse_approve_spare_part_return: async (requestToReturnId: number, action: string): Promise<any> => {
+    warehouse_approve_spare_part_return: async (
+      requestToReturnId: number,
+      action: string,
+      rejectReason?: string,
+    ): Promise<any> => {
       const res = await singleRequest<any>(
-        SparePartReturnAction.warehouse_approve_spare_part_return(requestToReturnId, action)
+        SparePartReturnAction.warehouse_approve_spare_part_return(
+          requestToReturnId,
+          action,
+          rejectReason,
+        )
+      )(requestAction);
+      return res;
+    },
+    close_picked_item: async (fulfillmentLineIds: number[]): Promise<any> => {
+      const res = await singleRequest<any>(
+        SparePartReturnAction.close_picked_item(fulfillmentLineIds)
+      )(requestAction);
+      return res;
+    },
+    open_picked_item: async (fulfillmentLineIds: number[]): Promise<any> => {
+      const res = await singleRequest<any>(
+        SparePartReturnAction.open_picked_item(fulfillmentLineIds)
       )(requestAction);
       return res;
     },

@@ -5,7 +5,8 @@ import { Space } from 'antd/lib';
 import { useRef, useState } from 'react';
 import { RequestActions } from '@/services/apiGateway';
 import { SparePartWarehouseReturnAPI } from './service.return';
-import ReturnsListDrawer, { type ReturnStatus } from './ReturnsListDrawer';
+import type { RequestDetailData, ReturnStatus } from '../spare-part-return/data';
+import ReturnsListDrawer from './ReturnsListDrawer';
 import { formatSpfDateTime } from '../shared/dateTime';
 
 const { RangePicker } = DatePicker;
@@ -15,7 +16,7 @@ const { RangePicker } = DatePicker;
 export type WarehouseReturnRow = {
   returnId: number;
   returnNo: string;
-  returnStatus: string;          // "APPROVED" | "REJECTED" | "PENDING" | "COMPLETED"
+  returnStatus: string;          // "APPROVED" | "REJECTED" | "PENDING" | "COMPLETED" | "PARTIAL_RETURN"
   returnByUser: string;
   returnDate: string;
   remark?: string;
@@ -34,6 +35,8 @@ const STATUS_COLOR: Record<string, string> = {
   REJECTED:   'error',
   RECEIVING:  'processing',
   COMPLETED:  'success',
+  COMPLETE:   'success',
+  PARTIAL_RETURN: 'processing',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -42,6 +45,25 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED:  'Rejected',
   RECEIVING: 'Receiving',
   COMPLETED: 'Completed',
+  COMPLETE:  'Completed',
+  PARTIAL_RETURN: 'Partially Returned',
+};
+
+const mapReturnStatusToUiStatus = (status?: string): ReturnStatus => {
+  const normalized = String(status ?? '').trim().toUpperCase();
+
+  if (normalized === 'APPROVED') return 'Approved';
+  if (normalized === 'REJECTED') return 'Rejected';
+  if (normalized === 'RECEIVING') return 'Receiving';
+  if (normalized === 'COMPLETE' || normalized === 'COMPLETED') return 'Completed';
+  if (normalized === 'PARTIAL_RETURN') return 'Partially Returned';
+  return 'Pending';
+};
+
+const normalizeWarehouseReturnStatus = (status?: string) => {
+  const normalized = String(status ?? '').trim().toUpperCase();
+  if (normalized === 'COMPLETE') return 'COMPLETED';
+  return normalized;
 };
 
 const formatDate = (iso?: string | null) =>
@@ -77,7 +99,7 @@ export default function ReturnsListWarehouse() {
     // client-side status filter
     const filtered = statusFilter === 'all'
       ? items
-      : items.filter((r) => r.returnStatus === statusFilter);
+      : items.filter((r) => normalizeWarehouseReturnStatus(r.returnStatus) === statusFilter);
 
     return { data: filtered, success: true, total };
   };
@@ -128,7 +150,7 @@ export default function ReturnsListWarehouse() {
       dataIndex: 'returnStatus',
       key: 'returnStatus',
       render: (_dom, record) => {
-        const statusKey = record.returnStatus?.toUpperCase() || '';
+        const statusKey = normalizeWarehouseReturnStatus(record.returnStatus);
         return (
           <Tag bordered={false} color={STATUS_COLOR[statusKey] ?? 'success'}>
             {STATUS_LABEL[statusKey] ?? record.returnStatus}
@@ -139,6 +161,8 @@ export default function ReturnsListWarehouse() {
     {
       title: 'Action',
       key: 'action',
+      align: 'center',
+      
       width: 110,
       render: (_dom, record) => (
         <Button
@@ -146,7 +170,7 @@ export default function ReturnsListWarehouse() {
           icon={<EyeOutlined />}
           onClick={() => { setSelectedReturn(record); setDetailOpen(true); }}
         >
-          View Detail
+         
         </Button>
       ),
     },
@@ -179,9 +203,8 @@ export default function ReturnsListWarehouse() {
             style={{ width: 180 }}
             options={[
               { value: 'all',       label: 'All Status' },
-              { value: 'PENDING',   label: 'Pending' },
               { value: 'APPROVED',  label: 'Approved' },
-              { value: 'REJECTED',  label: 'Rejected' },
+              { value: 'PARTIAL_RETURN', label: 'Partially Returned' },
               { value: 'COMPLETED', label: 'Completed' },
             ]}
           />
@@ -199,6 +222,16 @@ export default function ReturnsListWarehouse() {
           tableLayout="fixed"
           size="small"
           bordered
+            toolBarRender={() => [
+            <Space key="toolbar" size="small">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => actionRef.current?.reloadAndRest?.()}
+              >
+                Refresh
+              </Button>
+            </Space>,
+          ]}
           search={false}
           options={false}
           pagination={{
@@ -215,7 +248,16 @@ export default function ReturnsListWarehouse() {
         open={detailOpen}
         onClose={() => { setDetailOpen(false); setSelectedReturn(null); }}
         onSuccess={() => actionRef.current?.reload()}
-        data={selectedReturn as any}
+        data={selectedReturn ? {
+          no: selectedReturn.returnId,
+          request_id: selectedReturn.returnNo,
+          total_items: selectedReturn.totalItems,
+          request_date: selectedReturn.returnDate,
+          status: mapReturnStatusToUiStatus(selectedReturn.returnStatus),
+          remarks: selectedReturn.remark,
+          items: [],
+          activities: [],
+        } : null}
         returnId={selectedReturn?.returnId}
       />
     </>

@@ -1,3 +1,5 @@
+import { formatSpfDateTime } from "../shared/dateTime";
+
 /** Spare part master data */
 export interface SparePart {
   id: number;
@@ -23,6 +25,7 @@ export interface SparePartPickedLine {
   itemId: string;
   requestLineId: number;
   fulfillmentLineId: number;
+  isClosed: boolean;
   partName: string;
   uom: string;
   type: string;
@@ -30,8 +33,10 @@ export interface SparePartPickedLine {
   deliveredQty: number;
   category: string;
   businessUnit: string;
-   kind: string;
-   imageId?: string;
+  kind: string;
+  imageId?: string;
+  pendingReturnQty?: number;
+  returnedQty?: number;
 }
 
 export interface SparePartShipment {
@@ -107,12 +112,22 @@ export interface SparePartReturnListItem {
   itemId?: string;
   type?: string;
   kind?: string;
+  isClosed?: boolean;
   deliveredQty?: number;
+  pendingReturnQty?: number;
+  returnedQty?: number;
+  availableQty?: number;
   // Fields for My Requests to Return
   return_id?: string;
   return_date?: string;
   total_items?: number;
-  status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Receiving';
+  status?:
+    | 'Pending'
+    | 'Approved'
+    | 'Rejected'
+    | 'Completed'
+    | 'Receiving'
+    | 'Partially Returned';
   remarks?: string;
   return_quantity?: number;
   used_quantity?: number;
@@ -173,6 +188,7 @@ export interface SparePartReturnAdvanceSearch {
   category?: string;
   uom?: string;
   productNumber?: string;
+  pickedItemState?: string;
   dateRange?: [string, string];
 }
 
@@ -181,6 +197,15 @@ export interface SparePartReturnItemSearch {
   advanceSearch?: SparePartReturnAdvanceSearch;
 }
 
+/** Status for My Requests to Return */
+export type ReturnStatus =
+  | 'Pending'
+  | 'Approved'
+  | 'Rejected'
+  | 'Completed'
+  | 'Receiving'
+  | 'Partially Returned';
+
 /** One row in "My Requests to Return" table */
 export interface MyRequestToReturnItem {
   id: number;
@@ -188,7 +213,7 @@ export interface MyRequestToReturnItem {
   return_date: string;
   manager_decide_date?: string;
   total_items: number;
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed' | 'Receiving';
+  status: ReturnStatus;
   remarks?: string;
 }
 
@@ -197,7 +222,7 @@ export const MY_REQUESTS_TO_RETURN_STATUS_OPTIONS = [
   { value: 'Status', label: 'Status' },
   { value: 'Pending', label: 'Pending' },
   { value: 'Approved', label: 'Approved' },
-  { value: 'Receiving', label: 'Receiving' },
+  { value: 'Partially Returned', label: 'Partially Returned' },
   { value: 'Rejected', label: 'Rejected' },
   { value: 'Completed', label: 'Completed' },
 ] as const;
@@ -206,6 +231,7 @@ export const MY_REQUESTS_TO_RETURN_STATUS_OPTIONS = [
 export interface RequestDetailLineItem {
   no: number;
   return_item_id?: number;
+  imageId?: string;
   image?: string;
   product_id: string;
   request_id: string;
@@ -219,7 +245,23 @@ export interface RequestDetailLineItem {
   good_qty?: number;
   damaged_qty?: number;
   remark?: string;
-  images?: string[];  // file IDs from FILE microservice
+  images?: string[]; // file IDs from FILE microservice
+}
+
+export interface RequestDetailActivityItem {
+  itemId: string;
+  itemName: string;
+  qty_confirm: number;
+  from_request?: number;
+  uom: string;
+  image?: string[];
+  business_unit?: string;
+  fromWarehouse?: string;
+  toWarehouse?: string;
+  damaged_qty?: number;
+  good_qty?: number;
+  damage_message?: string | null;
+  remark?: string;
 }
 
 /** One activity in Recent Activities timeline */
@@ -227,7 +269,9 @@ export interface RequestDetailActivity {
   label: string;
   description: string;
   date?: string;
-  dot?: 'default' | 'pending';
+  dot?: string;
+  messages?: string;
+  items?: RequestDetailActivityItem[] | null;
 }
 
 /** Full request detail for DrawerBatchReturnItems (Details Request) */
@@ -241,6 +285,7 @@ export interface RequestDetailData {
   activities: RequestDetailActivity[];
   remarks?: string;
 }
+
 export interface TableViewSearchReturnsParam{
   status?: string;
   approvedDateFrom?: string;
@@ -250,39 +295,9 @@ export interface TableViewSearchReturnsParam{
   returnDateFrom?: string;
   returnDateTo?: string;
 }
-/** Mock list for My Requests to Return */
-export const MOCK_MY_REQUESTS_TO_RETURN: MyRequestToReturnItem[] = [
-  { id: 1, return_id: 'RET-001', return_date: '2025-03-01', total_items: 3, status: 'Pending', remarks: 'Urgent' },
-  { id: 2, return_id: 'RET-002', return_date: '2025-03-02', total_items: 5, status: 'Approved', remarks: '' },
-  { id: 3, return_id: 'RET-003', return_date: '2025-03-03', total_items: 2, status: 'Completed' },
-  { id: 4, return_id: 'RET-004', return_date: '2025-03-04', total_items: 8, status: 'Rejected', remarks: 'Missing docs' },
-  { id: 5, return_id: 'RET-005', return_date: '2025-03-05', total_items: 1, status: 'Pending' },
-];
-
-/** Mock request detail for drawer */
-export const MOCK_REQUEST_DETAIL: RequestDetailData = {
-  no: 2,
-  request_id: 'PRD-0001',
-  total_items: 6,
-  request_date: '2025-Dec-01 8:05AM',
-  status: 'Pending',
-  items: [
-    { no: 1, product_id: 'ELE-SNS-0r4', request_id: 'Re-001', item_name: 'Gloves', quantity_to_return: 12, used_quantity: 5, total: 17, image: 'https://via.placeholder.com/48?text=1' },
-    { no: 2, product_id: 'ELE-SNS-0r4', request_id: '2e-001', item_name: 'V-Belt A-42', quantity_to_return: 12, used_quantity: 0, total: 12, image: 'https://via.placeholder.com/48?text=2' },
-    { no: 3, product_id: 'ELE-SNS-0r4', request_id: 'Re-002', item_name: 'Gear Coupling Assembly', quantity_to_return: 12, used_quantity: 0, total: 12, image: 'https://via.placeholder.com/48?text=3' },
-    { no: 4, product_id: 'ELE-SNS-0r4', request_id: 'Re-0032', item_name: 'V-Belt A50V-Belt A50V-Belt A50', quantity_to_return: 12, used_quantity: 0, total: 12, image: 'https://via.placeholder.com/48?text=4' },
-    { no: 5, product_id: 'ELE-SNS-0r4', request_id: 'Re-001', item_name: 'Gloves', quantity_to_return: 12, used_quantity: 0, total: 12, image: 'https://via.placeholder.com/48?text=5' },
-  ],
-  activities: [
-    { label: 'Request by', description: 'Request by Mr.Khun Meas - 20 days ago', date: 'Feb-01-2025', dot: 'default' },
-    { label: 'Approved by', description: 'Approved by Mr.Khun Meas - 20 days ago', date: 'Feb-01-2025', dot: 'default' },
-    { label: 'Waiting', description: 'Waiting', dot: 'pending' },
-  ],
-};
 
 /** Filter options for MySparePartList (radio: All / MRO-W / MRO-S / MRO-G) */
 export const SPARE_PART_RETURN_RADIO_OPTIONS = [
-  { value: 'All', label: 'ALL' },
   { value: 'MRO-W', label: 'MRO-W' },
   { value: 'MRO-S', label: 'MRO-S' },
   { value: 'MRO-G', label: 'MRO-G' },
@@ -295,6 +310,12 @@ export const SPARE_PART_CATEGORY_OPTIONS = [
   { value: 'Electrical', label: 'Electrical' },
   { value: 'Hydraulic', label: 'Hydraulic' },
   { value: 'Tools', label: 'Tools' },
+] as const;
+
+export const SPARE_PART_PICKED_ITEM_STATE_OPTIONS = [
+  { value: 'OPEN', label: 'Open' },
+  { value: 'CLOSED', label: 'Closed' },
+  { value: 'ALL', label: 'All' },
 ] as const;
 
 /**
@@ -331,6 +352,7 @@ export const mapToFlattenedRowsMySparePartList = (
         approvedBy:               request.approvedBy,
         fulfillmentNo:            shipment.fulfillmentNo,
         fulfillmentLineId:        line.fulfillmentLineId,
+        isClosed:                 line.isClosed,
         warehouseCode:            shipment.warehouseCode,
         warehouseName:            shipment.warehouseName,
         pickupLocation:           shipment.pickupLocation,
@@ -339,6 +361,9 @@ export const mapToFlattenedRowsMySparePartList = (
         deliveredQty:             line.deliveredQty,
         category:                 line.category,
         type:                     line.type,
+        pendingReturnQty:         line.pendingReturnQty ?? 0,
+        returnedQty:              line.returnedQty ?? 0,
+        availableQty:             Math.max(0, line.deliveredQty - (line.pendingReturnQty ?? 0)),
       }))
     )
   );
@@ -346,20 +371,23 @@ export const mapToFlattenedRowsMySparePartList = (
 
 export const mapToMyRequestToReturn = (
   item: SparePartReturnBatchResponseItem
-): MyRequestToReturnItem => ({
-  id: item.returnId,
-  return_id: item.returnNo ?? `RET-${item.returnId}`,
-  return_date: formatDate(item.returnDate ?? ''),
-  manager_decide_date: formatDate(item.approvedDate ?? item.rejectedDate ?? ''),
-  total_items: item.totalItems ?? 0,
-  status:
-    item.returnStatus === 'APPROVED'
-      ? 'Approved'
-      : item.returnStatus === 'REJECTED'
-        ? 'Rejected'
-        : item.returnStatus === 'COMPLETED'
-          ? 'Completed'
-          : 'Pending',
-  remarks: item.remark ?? '',
-});
-import { formatSpfDateTime } from '../shared/dateTime';
+): MyRequestToReturnItem => {
+  const s = (item.returnStatus || '').toString().trim().toUpperCase();
+  let status: MyRequestToReturnItem['status'] = 'Pending';
+  
+  if (s === 'APPROVED') status = 'Approved';
+  else if (s === 'REJECTED') status = 'Rejected';
+  else if (s === 'COMPLETE' || s === 'COMPLETED') status = 'Completed';
+  else if (s === 'RECEIVING') status = 'Receiving';
+  else if (s === 'PARTIAL_RETURN') status = 'Partially Returned';
+
+  return {
+    id: item.returnId,
+    return_id: item.returnNo ?? `RET-${item.returnId}`,
+    return_date: formatDate(item.returnDate ?? ''),
+    manager_decide_date: formatDate(item.approvedDate ?? item.rejectedDate ?? ''),
+    total_items: item.totalItems ?? 0,
+    status,
+    remarks: item.remark ?? '',
+  };
+};

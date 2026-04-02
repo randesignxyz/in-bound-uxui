@@ -21,6 +21,7 @@ export default function ListView() {
   <>
     <BreadCrumbCom separator=">" routes={routes} />
     <Tabs
+    destroyInactiveTabPane={true}
     items={[
         {
             label: 'My Spare Parts List',

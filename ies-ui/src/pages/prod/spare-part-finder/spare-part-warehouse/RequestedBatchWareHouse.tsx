@@ -12,6 +12,8 @@ import {
   InputNumber,
   message,
   Badge,
+  Modal,
+  QRCode,
 } from 'antd';
 import { DownOutlined, RightOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -157,6 +159,7 @@ export interface DrawerBatchReturnItemsProps {
     lines: Array<{ requestLineId: number; issueQty: number }>;
   }) => Promise<void>;
   onConfirmPickup?: (id: number) => Promise<void>;
+  onGeneratePickupQr?: (id: number) => Promise<void>;
 }
 
 type SendingMap = Record<string, number>;
@@ -239,6 +242,7 @@ export default function RequestedBatchWareHouse({
   onIssueRequest,
   onSaveDraft,
   onConfirmPickup,
+  onGeneratePickupQr,
 }: DrawerBatchReturnItemsProps) {
   const access = useAccess();
   const currentUser = useModel('@@initialState');
@@ -257,6 +261,8 @@ export default function RequestedBatchWareHouse({
   const [shipmentBatches, setShipmentBatches] = useState<Shipment[]>([]);
   const [confirmPickupPopupOpen, setConfirmPickupPopupOpen] = useState(false);
   const [confirmPickupLoading, setConfirmPickupLoading] = useState(false);
+  const [pickupQrModalOpen, setPickupQrModalOpen] = useState(false);
+  const [pickupQrLoading, setPickupQrLoading] = useState(false);
   const [expandedShipmentBatchNos, setExpandedShipmentBatchNos] = useState<number[]>([]);
 
   const data: RequestDetailData = useMemo(() => {
@@ -434,6 +440,7 @@ export default function RequestedBatchWareHouse({
     setSendingByProductId({});
     setDraftByProductId({});
     setExpandedShipmentBatchNos([]);
+    setPickupQrModalOpen(false);
     onClose?.();
   };
 
@@ -506,6 +513,7 @@ export default function RequestedBatchWareHouse({
   const canWarehouseOperate = access.canSpfWarehouseStaff || access.canAdmin;
   const isReadyForWarehouseWork = effectiveStatus !== 'rejected' && effectiveStatus !== 'completed';
   const showConfirmPickup = canWarehouseOperate && !!data.id && effectiveStatus === 'ready_to_Pickup';
+  const showGeneratePickupQr = showConfirmPickup;
   const showSaveDraft = canWarehouseOperate && isReadyForWarehouseWork && effectiveStatus !== 'ready_to_Pickup' && currentSelectionTotal > 0;
   const showSaveAndPickUp =
     canWarehouseOperate &&
@@ -586,6 +594,38 @@ export default function RequestedBatchWareHouse({
       message.error('Failed to confirm pickup.');
     } finally {
       setConfirmPickupLoading(false);
+    }
+  };
+
+  const handleGeneratePickupQr = async () => {
+    if (!canWarehouseOperate) {
+      message.error('You are not allowed to generate pickup QR.');
+      return;
+    }
+
+    if (!data.id) {
+      message.warning('Pickup QR is not available.');
+      return;
+    }
+
+    if (!onGeneratePickupQr) {
+      if (data.pickupQrToken) {
+        setPickupQrModalOpen(true);
+      } else {
+        message.warning('Pickup QR generation is not available.');
+      }
+      return;
+    }
+
+    setPickupQrLoading(true);
+    try {
+      await onGeneratePickupQr(data.id);
+      setPickupQrModalOpen(true);
+      message.success('Pickup QR generated successfully.');
+    } catch (_error) {
+      message.error('Failed to generate pickup QR.');
+    } finally {
+      setPickupQrLoading(false);
     }
   };
 
@@ -901,6 +941,11 @@ export default function RequestedBatchWareHouse({
                   Confirm Pick up
                 </Button>
               ) : null}
+              {showGeneratePickupQr ? (
+                <Button loading={pickupQrLoading} onClick={() => handleGeneratePickupQr()}>
+                  Generate QR
+                </Button>
+              ) : null}
               {showSaveDraft ? (
                 <Button onClick={handleSave}>
                   Save (Draft)
@@ -1093,6 +1138,34 @@ export default function RequestedBatchWareHouse({
         onCancel={() => setConfirmPickupPopupOpen(false)}
         onConfirm={() => handleConfirmPickupRequest()}
       />
+
+      <Modal
+        title="Pickup QR Code"
+        open={pickupQrModalOpen}
+        centered
+        footer={null}
+        onCancel={() => setPickupQrModalOpen(false)}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          {data.pickupQrToken ? (
+            <QRCode value={data.pickupQrToken} size={220} />
+          ) : (
+            <Text type="secondary">No pickup QR code is available yet.</Text>
+          )}
+          <Text strong>{data.requestId}</Text>
+          {data.pickupQrToken ? (
+            <Text copyable style={{ textAlign: 'center', wordBreak: 'break-all' }}>
+              {data.pickupQrToken}
+            </Text>
+          ) : null}
+          <Text type="secondary">
+            Generated: {formatDateTime(data.pickupQrGeneratedAt)}
+          </Text>
+          <Text type="secondary">
+            Expires: {formatDateTime(data.pickupQrExpiredAt)}
+          </Text>
+        </div>
+      </Modal>
 
       <SpfDetails
         open={open && spfOpen}

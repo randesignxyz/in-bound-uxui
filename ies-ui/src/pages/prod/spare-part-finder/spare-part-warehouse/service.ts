@@ -103,6 +103,7 @@ type IssueRequestPayload = {
 
 type SaveDraftPayload = IssueRequestPayload;
 type AcceptIssuePayload = { id: number };
+type GeneratePickupQrPayload = { id: number };
 
 const SparePartWarehouseAction = {
   pageRequests: (params: PageIssueRequestsParams): ServiceApiType<any> => ({
@@ -150,6 +151,12 @@ const SparePartWarehouseAction = {
     actionName: 'confirm-spare-part-pickup',
     endpoint: 'PROD',
     payload: { id },
+  }),
+  generatePickupQr: (payload: GeneratePickupQrPayload): ServiceApiType<GeneratePickupQrPayload> => ({
+    type: 'EXEC',
+    actionName: 'generate-spare-part-pickup-qr',
+    endpoint: 'PROD',
+    payload,
   }),
 };
 
@@ -554,6 +561,21 @@ export const SparePartWarehouseService = (requestAction: RequestActions) => ({
     const data = unwrapExecPayload(response);
     if (!data) {
       throw new Error('Confirm pickup response is missing data.');
+    }
+
+    return {
+      record: mapIssueRequestRecord(data),
+      detail: mapIssueRequestDetail(data),
+    };
+  },
+  generatePickupQr: async (id: number): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {
+    const response = (await singleRequest<ExecResponseDto<IssueRequestDto>>(
+      SparePartWarehouseAction.generatePickupQr({ id }),
+    )(requestAction)) as ExecResponseDto<IssueRequestDto>;
+
+    const data = unwrapExecPayload(response);
+    if (!data) {
+      throw new Error('Generate pickup QR response is missing data.');
     }
 
     return {

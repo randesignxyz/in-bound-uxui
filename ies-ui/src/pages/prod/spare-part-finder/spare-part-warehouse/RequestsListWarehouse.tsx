@@ -239,6 +239,12 @@ export default function RequestsListWarehouse() {
           setSelectedRequestData(response.detail);
           await reloadRequests();
         }}
+        onGeneratePickupQr={async (id) => {
+          const response = await services.generatePickupQr(id);
+          setSelectedRequest(response.record);
+          setSelectedRequestData(response.detail);
+          await reloadRequests();
+        }}
       />
     </>
   );

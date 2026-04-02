@@ -1301,20 +1301,19 @@ export default function RequestedBatchDrawer({
   return (
     <>
       <Drawer
-        title={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Request Details</span>
-          </div>
-        }
-        width="60%"
-        placement="right"
-        onClose={handleClose}
-        open={open}
-        bodyStyle={{ padding: 16, backgroundColor: '#fafafa' }}
-        headerStyle={{ borderBottom: '1px solid #f0f0f0' }}
-      >
-        {
-          access.canSpfApprover && effectiveStatus === 'pending' && (
+      title={
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Request Details</span>
+        </div>
+          }
+          width="60%"
+          placement="right"
+          onClose={handleClose}
+          open={open}
+          bodyStyle={{ padding: 16, backgroundColor: '#fafafa' }}
+          headerStyle={{ borderBottom: '1px solid #f0f0f0' }}
+        >
+          {access.canSpfApprover && effectiveStatus === 'pending' && (
             <div style={{ marginBottom: 24, textAlign: 'right' }}>
               <Space>
                 <Button
@@ -1331,8 +1330,8 @@ export default function RequestedBatchDrawer({
                 </Button>
               </Space>
             </div>
-          )
-        }
+          )}
+
         <Descriptions
           column={3}
           size="small"

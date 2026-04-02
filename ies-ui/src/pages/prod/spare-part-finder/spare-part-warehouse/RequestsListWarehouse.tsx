@@ -17,6 +17,7 @@ import { SparePartWarehouseService } from './service';
 export default function RequestsListWarehouse() {
   const requestActions = simpleRequestActions();
   const services = SparePartWarehouseService(requestActions);
+  const [searchInput, setSearchInput] = useState('');
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | WarehouseDisplayStatus>('All');
   const [priorityFilter, setPriorityFilter] = useState<string>('All');
@@ -75,20 +76,24 @@ export default function RequestsListWarehouse() {
     setSelectedRequestData(null);
   }, []);
 
+  const applyResponseUpdate = useCallback(
+    (response: { record: WarehouseRequestRecord; detail: RequestDetailData }) => {
+      setRequestRows((prev) => prev.map((row) => (row.id === response.record.id ? response.record : row)));
+      setSelectedRequest((prev) => (prev?.id === response.record.id ? response.record : prev));
+      setSelectedRequestData((prev) => (prev?.id === response.detail.id ? response.detail : response.detail));
+    },
+    [],
+  );
+
   const acceptRequest = useCallback(async (record: WarehouseRequestRecord) => {
     try {
       const response = await services.acceptRequest(record.id);
-      setRequestRows((prev) => prev.map((row) => (row.id === record.id ? response.record : row)));
-      if (selectedRequest?.id === record.id) {
-        setSelectedRequest(response.record);
-        setSelectedRequestData(response.detail);
-      }
+      applyResponseUpdate(response);
       message.success('Request accepted successfully.');
-      await reloadRequests();
     } catch (error) {
       message.error('Failed to accept request.');
     }
-  }, [reloadRequests, selectedRequest?.id, services]);
+  }, [applyResponseUpdate, services]);
 
   const filteredRequests = useMemo(
     () =>
@@ -127,10 +132,17 @@ export default function RequestsListWarehouse() {
             <Input.Search
               allowClear
               enterButton={<SearchOutlined />}
-              value={searchText}
+              value={searchInput}
               placeholder="Search Request ID"
               style={{ width: 280 }}
-              onChange={(event) => setSearchText(event.target.value || '')}
+              onChange={(event) => {
+                const nextValue = event.target.value || '';
+                setSearchInput(nextValue);
+                if (!nextValue) {
+                  setSearchText('');
+                }
+              }}
+              onSearch={(value) => setSearchText(value || '')}
             />
             <Select
               placeholder="All Status"
@@ -220,30 +232,37 @@ export default function RequestsListWarehouse() {
         onChange={(updated) => {
           setRequestRows((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
           setSelectedRequest(updated);
+          setSelectedRequestData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  status:
+                    updated.rawRequestStatus === 'PARTIAL_ISSUE' && updated.pickupStatus !== 'confirmed'
+                      ? 'ready_to_Pickup'
+                      : prev.status,
+                }
+              : prev,
+          );
         }}
         onIssueRequest={async (payload) => {
           const response = await services.issueRequest(payload);
-          setSelectedRequest(response.record);
-          setSelectedRequestData(response.detail);
-          await reloadRequests();
+          applyResponseUpdate(response);
         }}
         onSaveDraft={async (payload) => {
           const response = await services.saveDraft(payload);
-          setSelectedRequest(response.record);
-          setSelectedRequestData(response.detail);
-          await reloadRequests();
+          applyResponseUpdate(response);
         }}
         onConfirmPickup={async (id) => {
           const response = await services.confirmPickup(id);
-          setSelectedRequest(response.record);
-          setSelectedRequestData(response.detail);
-          await reloadRequests();
+          applyResponseUpdate(response);
         }}
         onGeneratePickupQr={async (id) => {
           const response = await services.generatePickupQr(id);
-          setSelectedRequest(response.record);
-          setSelectedRequestData(response.detail);
-          await reloadRequests();
+          applyResponseUpdate(response);
+        }}
+        onAcceptRequest={async (id) => {
+          const response = await services.acceptRequest(id);
+          applyResponseUpdate(response);
         }}
       />
     </>

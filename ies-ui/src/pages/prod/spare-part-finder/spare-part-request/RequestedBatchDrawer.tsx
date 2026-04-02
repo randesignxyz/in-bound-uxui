@@ -22,6 +22,8 @@ import { useAccess, useModel } from '@umijs/max';
 import SparePartImage from './SparePartImage';
 import { formatSpfDateTime } from '../shared/dateTime';
 import ValidationPopup from './validatePopup';
+import { SparePartRequestAPI } from './service.api';
+import { simpleRequestActions } from '@/services/model';
 
 const { Title, Text } = Typography;
 
@@ -261,8 +263,11 @@ export default function RequestedBatchDrawer({
   onConfirmPickup,
 }: DrawerBatchReturnItemsProps) {
   const currentUser = useModel('@@initialState');
+  const detailRequestActions = simpleRequestActions();
+  const sparePartServices = SparePartRequestAPI(detailRequestActions);
   const [spfOpen, setSpfOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<RequestDetailLineItem | null>(null);
+  const [selectedProductDetail, setSelectedProductDetail] = useState<any>(null);
   const [pickedItems, setPickedItems] = useState<RequestDetailLineItem[]>([]);
   const [pickupSelection, setPickupSelection] = useState<string[]>([]);
   const [statusOverride, setStatusOverride] = useState<RequestStatus | null>(null);
@@ -600,6 +605,7 @@ export default function RequestedBatchDrawer({
     });
     setSpfOpen(false);
     setSelectedProduct(null);
+    setSelectedProductDetail(null);
     setPickupSelection([]);
     setStatusOverride(null);
     setPickedItems([]);
@@ -618,10 +624,11 @@ export default function RequestedBatchDrawer({
   };
 
   const canEditOrDelete = effectiveStatus === 'pending';
-  const canCancel =
-    effectiveStatus === 'approved' ||
-    effectiveStatus === 'ready_to_Pickup' ||
-    effectiveStatus === 'partial';
+  // const canCancel =
+  //   effectiveStatus === 'approved' ||
+  //   effectiveStatus === 'ready_to_Pickup' ||
+  //   effectiveStatus === 'partial';
+  const canCancel = false;
 
   const requestItems = useMemo(
     () =>
@@ -668,6 +675,17 @@ export default function RequestedBatchDrawer({
   const openEditQuantity = (record: RequestDetailLineItem) => {
     setEditingItem(record);
     setEditingQuantity(Math.max(1, Number(record.quantityToReturn) || 1));
+  };
+
+  const openProductDetails = async (record: RequestDetailLineItem) => {
+    try {
+      const detail = await sparePartServices.detail({ productId: record.productId });
+      setSelectedProduct(record);
+      setSelectedProductDetail(detail);
+      setSpfOpen(true);
+    } catch (_error) {
+      message.error('Failed to load item details.');
+    }
   };
 
   const confirmEditQuantity = () => {
@@ -782,8 +800,7 @@ export default function RequestedBatchDrawer({
           <Typography.Link
             onClick={(event) => {
               event.preventDefault();
-              setSelectedProduct(record);
-              setSpfOpen(true);
+              openProductDetails(record);
             }}
           >
             {record.productId}
@@ -935,6 +952,24 @@ export default function RequestedBatchDrawer({
   ];
 
   const spfData = useMemo(() => {
+    if (selectedProductDetail) {
+      return {
+        image: selectedProductDetail.image,
+        imageId: selectedProductDetail.imageId,
+        locations: selectedProductDetail.locations,
+        spare_part_name: selectedProductDetail.partName,
+        part_number: selectedProductDetail.productId,
+        description: selectedProductDetail.description,
+        stock_quantity: selectedProductDetail.stock,
+        receiving_from_warehouse: selectedProductDetail.warehouse,
+        company: selectedProductDetail.company,
+        category: selectedProductDetail.category,
+        spare_part_type: selectedProductDetail.type,
+        business_unit: selectedProductDetail.businessUnit,
+        requested_date: selectedProductDetail.createdDate,
+      };
+    }
+
     if (!selectedProduct) return undefined;
     return {
       image: selectedProduct.image,
@@ -953,7 +988,7 @@ export default function RequestedBatchDrawer({
       business_unit: selectedProduct.businessUnit,
       requested_date: formatSpfDateTime(data.requestDate),
     };
-  }, [data.requestDate, selectedProduct]);
+  }, [data.requestDate, selectedProduct, selectedProductDetail]);
 
   // const receivedItemsDisplay = useMemo(() => {
   //   if (pickedItems.length > 0 || statusOverride) return `${receivedQtyTotal} / ${requestedQtyTotal}`;
@@ -1500,10 +1535,11 @@ export default function RequestedBatchDrawer({
         open={open && spfOpen}
         data={spfData}
         onClose={() => {
-          setSpfOpen(false);
-          setSelectedProduct(null);
-        }}
-      />
+      setSpfOpen(false);
+      setSelectedProduct(null);
+      setSelectedProductDetail(null);
+    }}
+  />
 
       <ValidationPopup
         open={actionPopup === 'approve'}

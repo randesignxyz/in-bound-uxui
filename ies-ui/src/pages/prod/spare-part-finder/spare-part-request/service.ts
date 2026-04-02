@@ -348,13 +348,39 @@ const normalizeRequestStatus = (
     case 'CANCELLED':
       return 'rejected';
     case 'PARTIAL_ISSUE':
-      return 'partial';
+      return totalIssuedQty > totalPickedQty ? 'ready_to_Pickup' : 'partial';
     case 'IN_PROGRESS':
       return 'in-progress';
     case 'READY_TO_PICKUP':
       return 'ready_to_Pickup';
     case 'COMPLETE':
       return totalIssuedQty > 0 && totalPickedQty >= totalIssuedQty ? 'completed' : 'ready_to_Pickup';
+    case 'PENDING':
+    default:
+      return 'pending';
+  }
+};
+
+const deriveIssueDetailStatus = (
+  rawStatus: string,
+  normalizedPickupStatus: string,
+  totalIssuedQty: number,
+  confirmedPickedQty: number,
+): RequestStatus => {
+  switch (rawStatus) {
+    case 'REJECTED':
+    case 'CANCELLED':
+      return 'rejected';
+    case 'APPROVED':
+      return 'approved';
+    case 'IN_PROGRESS':
+      return confirmedPickedQty > 0 ? 'partial' : 'in-progress';
+    case 'PARTIAL_ISSUE':
+      return normalizedPickupStatus === 'confirmed' ? 'partial' : 'ready_to_Pickup';
+    case 'READY_TO_PICKUP':
+      return 'ready_to_Pickup';
+    case 'COMPLETE':
+      return totalIssuedQty > 0 && confirmedPickedQty >= totalIssuedQty ? 'completed' : 'ready_to_Pickup';
     case 'PENDING':
     default:
       return 'pending';
@@ -557,6 +583,12 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     });
   });
 
+  const totalIssuedQty = Number(item.totalIssuedQty || 0);
+  const confirmedPickedQty = (item.history || []).reduce(
+    (sum, entry) => sum + (entry.pickupConfirmedAt ? Number(entry.totalIssuedQty || 0) : 0),
+    0,
+  );
+
   const items: RequestDetailLineItem[] = (item.items || []).map((line, index) => ({
     no: index + 1,
     requestLineId: Number(line.requestLineId || 0),
@@ -581,34 +613,18 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
   const detailType =
     normalizeSparePartType(item.type) || items.find((entry) => entry.sparePartType)?.sparePartType;
 
-  const status: RequestStatus =
-    rawStatus === 'REJECTED'
-      ? 'rejected'
-      : rawStatus === 'APPROVED'
-        ? 'approved'
-        : rawStatus === 'IN_PROGRESS'
-          ? 'in-progress'
-          : rawStatus === 'PARTIAL_ISSUE'
-            ? normalizedPickupStatus === 'confirmed'
-              ? 'partial'
-              : 'ready_to_Pickup'
-            : rawStatus === 'READY_TO_PICKUP'
-              ? 'ready_to_Pickup'
-              : rawStatus === 'COMPLETE'
-                ? normalizedPickupStatus === 'confirmed'
-                  ? 'completed'
-                  : 'ready_to_Pickup'
-                : 'pending';
+  const status: RequestStatus = deriveIssueDetailStatus(
+    rawStatus,
+    normalizedPickupStatus,
+    totalIssuedQty,
+    confirmedPickedQty,
+  );
 
   const history = [...(item.history || [])].sort((left, right) => {
     const leftTime = new Date(left.issuedAt || '').getTime();
     const rightTime = new Date(right.issuedAt || '').getTime();
     return leftTime - rightTime;
   });
-  const confirmedPickedQty = history.reduce(
-    (sum, entry) => sum + (entry.pickupConfirmedAt ? Number(entry.totalIssuedQty || 0) : 0),
-    0,
-  );
   const lineItemByRequestLineId = new Map(items.map((line) => [Number(line.requestLineId || 0), line]));
 
   const activities: RequestDetailActivity[] = [

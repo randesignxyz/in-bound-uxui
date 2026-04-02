@@ -186,28 +186,47 @@ const normalizeSparePartType = (value?: string | null): SparePartType | undefine
 const deriveRecordStatus = (
   requestStatus?: string | null,
   pickupStatus?: string | null,
+  totalIssuedQty: number = 0,
 ): WarehouseRequestRecord['status'] => {
   const normalizedRequestStatus = String(requestStatus || '').trim().toUpperCase();
   const normalizedPickupStatus = String(pickupStatus || '').trim().toLowerCase();
-
-  if (normalizedPickupStatus === 'confirmed') {
-    return normalizedRequestStatus === 'PARTIAL_ISSUE' ? 'Partial' : 'Completed';
-  }
 
   switch (normalizedRequestStatus) {
     case 'REJECTED':
       return 'Rejected';
     case 'IN_PROGRESS':
-      return 'In Progress';
+      return normalizedPickupStatus === 'confirmed' && totalIssuedQty > 0 ? 'Partial' : 'In Progress';
     case 'PARTIAL_ISSUE':
-      return 'Ready To Pick Up';
+      return normalizedPickupStatus === 'confirmed' ? 'Partial' : 'Ready To Pick Up';
     case 'READY_TO_PICKUP':
-    case 'COMPLETE':
       return 'Ready To Pick Up';
+    case 'COMPLETE':
+      return normalizedPickupStatus === 'confirmed' ? 'Completed' : 'Ready To Pick Up';
     case 'APPROVED':
       return 'Pending';
     default:
       return 'Pending';
+  }
+};
+
+const mapRecordStatusToDetailStatus = (
+  status: WarehouseRequestRecord['status'],
+): RequestDetailData['status'] => {
+  switch (status) {
+    case 'Rejected':
+      return 'rejected';
+    case 'Pending':
+      return 'pending';
+    case 'In Progress':
+      return 'in-progress';
+    case 'Ready To Pick Up':
+      return 'ready_to_Pickup';
+    case 'Partial':
+      return 'partial';
+    case 'Completed':
+      return 'completed';
+    default:
+      return 'pending';
   }
 };
 
@@ -221,17 +240,22 @@ const mapIssueLineToWarehouseLine = (item: IssueLineDto) => ({
   uom: item.unit || 'pcs',
 });
 
-const mapIssueRequestRecord = (item: IssueRequestDto): WarehouseRequestRecord => ({
-  id: Number(item.id || 0),
-  requestId: item.requestNo || '',
-  requestDate: item.requestedDate || '',
-  requester: item.requesterId || '',
-  priority: normalizePriority(item.priority),
-  status: deriveRecordStatus(item.requestStatus, item.pickupStatus),
-  items: (item.items || []).map(mapIssueLineToWarehouseLine),
-  rawRequestStatus: item.requestStatus,
-  pickupStatus: item.pickupStatus || undefined,
-});
+const mapIssueRequestRecord = (item: IssueRequestDto): WarehouseRequestRecord => {
+  const items = (item.items || []).map(mapIssueLineToWarehouseLine);
+  const totalIssuedQty = items.reduce((sum, entry) => sum + Number(entry.receivedQuantity || 0), 0);
+
+  return {
+    id: Number(item.id || 0),
+    requestId: item.requestNo || '',
+    requestDate: item.requestedDate || '',
+    requester: item.requesterId || '',
+    priority: normalizePriority(item.priority),
+    status: deriveRecordStatus(item.requestStatus, item.pickupStatus, totalIssuedQty),
+    items,
+    rawRequestStatus: item.requestStatus,
+    pickupStatus: item.pickupStatus || undefined,
+  };
+};
 
 const mapIssueLineDetail = (item: IssueLineDto, requestId: string, index: number): RequestDetailLineItem => ({
   no: index + 1,
@@ -253,38 +277,28 @@ const mapIssueLineDetail = (item: IssueLineDto, requestId: string, index: number
 
 const buildShipments = (
   history: IssueHistoryDto[],
-  pickupStatus?: string | null,
-  requestStatus?: string | null,
 ): Shipment[] => {
-  const isConfirmed = String(pickupStatus || '').trim().toLowerCase() === 'confirmed';
-  const normalizedRequestStatus = String(requestStatus || '').trim().toUpperCase();
   const orderedHistory = [...history].sort((left, right) => {
     const leftTime = new Date(left.issuedAt || '').getTime();
     const rightTime = new Date(right.issuedAt || '').getTime();
     return leftTime - rightTime;
   });
 
-  return orderedHistory.map((entry, index) => {
-    const isPreviouslyPicked =
-      !isConfirmed &&
-      normalizedRequestStatus === 'PARTIAL_ISSUE' &&
-      index < orderedHistory.length - 1;
-
-    return ({
+  return orderedHistory.map((entry, index) => ({
     id: entry.fulfillmentId,
     shipmentNo: index + 1,
     createdAt: entry.issuedAt || '',
     createdBy: entry.warehouseStaffId || 'Warehouse',
-    status: isConfirmed || isPreviouslyPicked ? 'completed' : 'ready_to_pickup',
-    confirmedAt: isConfirmed || isPreviouslyPicked ? entry.issuedAt || '' : undefined,
-    confirmedBy: isConfirmed || isPreviouslyPicked ? entry.warehouseStaffId || 'Warehouse' : undefined,
+    status: entry.pickupConfirmedAt ? 'completed' : 'ready_to_pickup',
+    confirmedAt: entry.pickupConfirmedAt || undefined,
+    confirmedBy: entry.pickupConfirmedBy || undefined,
     lines: (entry.items || []).map((line) => ({
       productId: line.sparePartId || line.sparePartCode,
       itemName: line.sparePartName,
       quantity: Number(line.deliveredQty || 0),
       uom: line.unit || 'pcs',
     })),
-  })});
+  }));
 };
 
 const buildActivities = (
@@ -328,23 +342,22 @@ const buildActivities = (
 
   orderedHistory.forEach((entry, index) => {
     const shipmentNo = index + 1;
-    const isPreviouslyPicked =
-      String(item.pickupStatus || '').trim().toLowerCase() !== 'confirmed' &&
-      String(item.requestStatus || '').trim().toUpperCase() === 'PARTIAL_ISSUE' &&
-      index < orderedHistory.length - 1;
+    const isLastShipment = shipmentNo === orderedHistory.length;
+    const hasPickupConfirmation = Boolean(entry.pickupConfirmedAt);
+    const isFinalCompleted =
+      String(item.requestStatus || '').trim().toUpperCase() === 'COMPLETE' &&
+      String(item.pickupStatus || '').trim().toLowerCase() === 'confirmed' &&
+      isLastShipment;
 
     activities.push({
       label: 'Ready to Pick up',
       description: `Shipment #${shipmentNo} is ready to pick up`,
       date: entry.issuedAt || item.requestedDate,
       by: entry.warehouseStaffId || 'Warehouse',
-      dot:
-        String(item.pickupStatus || '').trim().toLowerCase() === 'confirmed' || isPreviouslyPicked
-          ? 'done'
-          : 'pending',
+      dot: hasPickupConfirmation ? 'done' : 'pending',
     });
 
-    if (isPreviouslyPicked) {
+    if (hasPickupConfirmation) {
       activities.push({
         label: 'Confirm Pick up',
         description: `Shipment #${shipmentNo} pickup confirmed`,
@@ -352,27 +365,16 @@ const buildActivities = (
         by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
         dot: 'done',
       });
-      activities.push({
-        label: `Partial Issue #${shipmentNo}`,
-        description: `Shipment #${shipmentNo} was picked up, but the request is still partially issued.`,
-        date: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate,
-        by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
-        dot: 'done',
-      });
-    }
-  });
 
-  if (String(item.pickupStatus || '').trim().toLowerCase() === 'confirmed') {
-    if (status === 'partial') {
-      orderedHistory.forEach((entry, index) => {
-        const shipmentNo = index + 1;
+      if (isFinalCompleted) {
         activities.push({
-          label: 'Confirm Pick up',
-          description: `Shipment #${shipmentNo} pickup confirmed`,
+          label: 'Completed',
+          description: 'All issued items have been picked up.',
           date: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate,
           by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
           dot: 'done',
         });
+      } else {
         activities.push({
           label: `Partial Issue #${shipmentNo}`,
           description: `Shipment #${shipmentNo} was picked up, but the request is still partially issued.`,
@@ -380,67 +382,21 @@ const buildActivities = (
           by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
           dot: 'done',
         });
-      });
-    } else {
-      const lastShipmentNo = orderedHistory.length > 0 ? orderedHistory.length : 1;
-      activities.push({
-        label: 'Confirm Pick up',
-        description: `Shipment #${lastShipmentNo} pickup confirmed`,
-        date:
-          orderedHistory[orderedHistory.length - 1]?.pickupConfirmedAt ||
-          orderedHistory[orderedHistory.length - 1]?.issuedAt ||
-          item.requestedDate,
-        by:
-          orderedHistory[orderedHistory.length - 1]?.pickupConfirmedBy ||
-          orderedHistory[orderedHistory.length - 1]?.warehouseStaffId ||
-          undefined,
-        dot: 'done',
-      });
-      activities.push({
-        label: 'Completed',
-        description: 'All issued items have been picked up.',
-        date:
-          orderedHistory[orderedHistory.length - 1]?.pickupConfirmedAt ||
-          orderedHistory[orderedHistory.length - 1]?.issuedAt ||
-          item.requestedDate,
-        by:
-          orderedHistory[orderedHistory.length - 1]?.pickupConfirmedBy ||
-          orderedHistory[orderedHistory.length - 1]?.warehouseStaffId ||
-          undefined,
-        dot: 'done',
-      });
+      }
     }
-  }
+  });
 
   return activities;
 };
 
 const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
-  const rawStatus = String(item.requestStatus || '').trim().toUpperCase();
-  const normalizedPickupStatus = String(item.pickupStatus || '').trim().toLowerCase();
   const detailType =
     normalizeSparePartType(item.type) ||
     (item.items || [])
       .map((line) => normalizeSparePartType(line.type))
       .find((value): value is SparePartType => Boolean(value));
-  const normalizedStatus: RequestDetailData['status'] =
-    rawStatus === 'REJECTED'
-      ? 'rejected'
-      : rawStatus === 'APPROVED'
-        ? 'approved'
-        : rawStatus === 'IN_PROGRESS'
-          ? 'in-progress'
-        : rawStatus === 'PARTIAL_ISSUE'
-          ? normalizedPickupStatus === 'confirmed'
-            ? 'partial'
-            : 'ready_to_Pickup'
-          : rawStatus === 'READY_TO_PICKUP'
-            ? 'ready_to_Pickup'
-            : rawStatus === 'COMPLETE'
-              ? normalizedPickupStatus === 'confirmed'
-                ? 'completed'
-                : 'ready_to_Pickup'
-              : 'pending';
+  const mappedRecord = mapIssueRequestRecord(item);
+  const normalizedStatus = mapRecordStatusToDetailStatus(mappedRecord.status);
 
   return {
     id: Number(item.id || 0),
@@ -457,7 +413,7 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
     warehouseBy: item.history?.[item.history.length - 1]?.warehouseStaffId || 'Warehouse',
     items: (item.items || []).map((line, index) => mapIssueLineDetail(line, item.requestNo || '', index)),
     activities: buildActivities(item, normalizedStatus),
-    shipments: buildShipments(item.history || [], item.pickupStatus, item.requestStatus),
+    shipments: buildShipments(item.history || []),
     draftItems: (item.draftItems || []).map((entry) => ({
       requestLineId: Number(entry.requestLineId || 0),
       draftQty: Number(entry.draftQty || 0),

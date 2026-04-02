@@ -87,9 +87,9 @@ const deriveDisplayStatus = (
   const approved = clampNonNegativeInt(row.totalApprovedQty);
   const received = clampNonNegativeInt(row.receivedItems);
 
+  if (row.requestStatus === 'ready_to_Pickup') return 'ready_to_Pickup';
   if (approved > 0 && received >= approved) return 'completed';
   if (approved > 0 && received > 0 && received < approved) return 'partial';
-  if (row.requestStatus === 'ready_to_Pickup') return 'ready_to_Pickup';
   return row.requestStatus;
 };
 
@@ -111,6 +111,7 @@ export default function MyRequestListview() {
   const requestActions = simpleRequestActions();
   const services = SparePartRequestService(requestActions);
 
+  const [searchInputValue, setSearchInputValue] = useState<string>('');
   const [searchValue, setSearchValue] = useState<string>('');
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<MyRequestItem | null>(null);
@@ -191,13 +192,17 @@ export default function MyRequestListview() {
                   allowClear
                   style={{ width: 300 }}
                   placeholder="Search Request ID or Remark"
-                  value={searchValue}
+                  value={searchInputValue}
                   onChange={(event) => {
                     const nextValue = event.target.value;
-                    setSearchValue(nextValue);
-                    reloadTable();
+                    setSearchInputValue(nextValue);
+                    if (!nextValue) {
+                      setSearchValue('');
+                      reloadTable();
+                    }
                   }}
                   onSearch={(v) => {
+                    setSearchInputValue(v || '');
                     setSearchValue(v || '');
                     reloadTable();
                   }}
@@ -368,28 +373,28 @@ export default function MyRequestListview() {
                   width: 'fit-content',
                 },
 
-                ...(access.canSpfApprover ? [
-                  {
-                  title: 'Action',
-                  key: 'action',
-                  width: 120,
-                  render: (_: unknown, record: MyRequestItem) => (
-                    <Button
-                      size="small"
-                      style={{
-                        background: '#b59a30',
-                        borderColor: '#b59a30',
-                        color: '#fff',
-                        minWidth: 84,
-                      }}
-                      onClick={() => openDetail(record)}
-                    >
-                      View Detail
-                    </Button>
-                  ),
+                // ...(access.canSpfApprover ? [
+                //   {
+                //   title: 'Action',
+                //   key: 'action',
+                //   width: 120,
+                //   render: (_: unknown, record: MyRequestItem) => (
+                //     <Button
+                //       size="small"
+                //       style={{
+                //         background: '#b59a30',
+                //         borderColor: '#b59a30',
+                //         color: '#fff',
+                //         minWidth: 84,
+                //       }}
+                //       onClick={() => openDetail(record)}
+                //     >
+                //       View Detail
+                //     </Button>
+                //   ),
                   
-                },
-                ]: []),
+                // },
+                // ]: []),
 
                 ...(access.canSpfRequester ? [
                 {

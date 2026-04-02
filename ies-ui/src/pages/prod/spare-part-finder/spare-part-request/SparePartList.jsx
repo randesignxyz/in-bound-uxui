@@ -593,6 +593,7 @@ export default function SparePartListView() {
             reloadTable(true);
           } catch (error) {
             message.error('Failed to submit request.');
+            throw error;
           }
         }}
         onAddMore={() => {

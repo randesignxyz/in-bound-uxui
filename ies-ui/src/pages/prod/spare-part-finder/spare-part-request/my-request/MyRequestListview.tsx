@@ -295,24 +295,7 @@ export default function MyRequestListview() {
               
               columns={
                 [
-                ...(access.canSpfRequester ? [
-                {
-                  title: '',
-                  dataIndex: 'action',
-                  width: 48,
-                  align: 'center' as const,
-                  render: (_: unknown,r: MyRequestItem) => (
-                    <Tooltip title="View details">
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<EyeOutlined style={{ color: '#999' }} />}
-                        onClick={() => openDetail(r)}
-                      />
-                    </Tooltip>
-                  ),
-                }
-                ]: []),
+                
                 {
                   title: 'Request ID',
                   dataIndex: 'requestId',
@@ -342,14 +325,14 @@ export default function MyRequestListview() {
                   render: (_, r) => formatSpfDateTime(r.requestDate),
                 },
                 {
-                  title: 'Total Items',
+                  title: 'Requested QTY',
                   dataIndex: 'totalItems',
-                  width: 110,
+                  width: 130,
                   align: 'center',
                   sorter: true,
                 },
                 {
-                  title: 'Approved Items',
+                  title: 'Approved QTY',
                   dataIndex: 'totalApprovedQty',
                   width: 130,
                   align: 'center',
@@ -357,7 +340,7 @@ export default function MyRequestListview() {
                   render: (_: unknown, r) => clampNonNegativeInt(r.totalApprovedQty),
                 },
                 {
-                  title: 'Received Items',
+                  title: 'Received QTY',
                   dataIndex: 'receivedItems',
                   width: 130,
                   align: 'center',
@@ -365,7 +348,7 @@ export default function MyRequestListview() {
                   render: (_: unknown, r) => deriveDisplayReceived(r),
                 },
                 {
-                  title: 'Request Status',
+                  title: 'Status',
                   dataIndex: 'requestStatus',
                   width: 140,
                   align: 'center',
@@ -404,8 +387,29 @@ export default function MyRequestListview() {
                       View Detail
                     </Button>
                   ),
+                  
                 },
                 ]: []),
+
+                ...(access.canSpfRequester ? [
+                {
+                  title: '',
+                  dataIndex: 'action',
+                  width: 48,
+                  align: 'center' as const,
+                  render: (_: unknown,r: MyRequestItem) => (
+                    <Tooltip title="View details">
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<EyeOutlined style={{ color: '#999' }} />}
+                        onClick={() => openDetail(r)}
+                      />
+                    </Tooltip>
+                  ),
+                }
+                ]: []),
+                
               ] as import('@ant-design/pro-components').ProColumns<MyRequestItem>[]
               }
               onRow={(record) => ({
@@ -443,8 +447,8 @@ export default function MyRequestListview() {
           }
           reloadTable();
         }}
-        onReject={async ({ id }) => {
-          await services.rejectRequest({ id });
+        onReject={async ({ id, remark }) => {
+          await services.rejectRequest({ id, remark });
           setSelectedRequest((prev) =>
             prev && prev.id === id
               ? { ...prev, requestStatus: 'rejected' }

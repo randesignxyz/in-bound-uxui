@@ -13,6 +13,7 @@ import {
 import React, { useEffect, useRef, useState } from 'react';
 import type { SparePartRequestItem } from './data';
 import SparePartImage from './SparePartImage';
+import ValidationPopup from './validatePopup';
 
 type PriorityLevel = 'normal' | 'high' | 'urgent';
 
@@ -49,7 +50,7 @@ interface RequestItemModalProps {
     }[];
     remark: string;
     priority: PriorityLevel;
-  }) => void;
+  }) => void | Promise<void>;
   onAddMore?: () => void;
 }
 
@@ -108,6 +109,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   const [remark, setRemark] = useState<string>('');
   const [priority, setPriority] = useState<PriorityLevel>('normal');
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [submitPopupOpen, setSubmitPopupOpen] = useState(false);
   const wasOpenRef = useRef(false);
 
   useEffect(() => {
@@ -203,9 +205,13 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       return;
     }
 
+    setSubmitPopupOpen(true);
+  };
+
+  const handleConfirmSubmit = async () => {
     setConfirmLoading(true);
     try {
-      onSubmit({
+      await onSubmit({
         items: rows.map((r) => ({
           item: r.item,
           quantity: r.quantity,
@@ -217,6 +223,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
         remark,
         priority,
       });
+      setSubmitPopupOpen(false);
     } finally {
       setConfirmLoading(false);
     }
@@ -419,23 +426,24 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   );
 
   return (
-    <Modal
-      title={modalTitle}
-      open={open}
-      onCancel={onCancel}
-      confirmLoading={confirmLoading}
-      width="fit-content"
-      style={{ maxWidth: 'calc(100vw - 48px)' }}
-      footer={modalFooter}
-      maskClosable={false}
-      centered
-      styles={{
-        body: {
-          background: '#fafafa',
-          paddingTop: 16,
-        },
-      }}
-    >
+    <>
+      <Modal
+        title={modalTitle}
+        open={open}
+        onCancel={onCancel}
+        confirmLoading={confirmLoading}
+        width="fit-content"
+        style={{ maxWidth: 'calc(100vw - 48px)' }}
+        footer={modalFooter}
+        maskClosable={false}
+        centered
+        styles={{
+          body: {
+            background: '#fafafa',
+            paddingTop: 16,
+          },
+        }}
+      >
       <div
         style={{
           maxHeight: '45vh',
@@ -501,7 +509,17 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           ))}
         </Space>
       </div>
-    </Modal>
+      </Modal>
+      <ValidationPopup
+        open={submitPopupOpen}
+        title="Submit Request"
+        description={`Submit this spare part request with ${rows.length} item(s)?`}
+        confirmText="Submit"
+        loading={confirmLoading}
+        onCancel={() => setSubmitPopupOpen(false)}
+        onConfirm={handleConfirmSubmit}
+      />
+    </>
   );
 };
 

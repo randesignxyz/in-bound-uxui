@@ -21,6 +21,7 @@ import SpfDetails from './SpfDetails';
 import { useAccess, useModel } from '@umijs/max';
 import SparePartImage from './SparePartImage';
 import { formatSpfDateTime } from '../shared/dateTime';
+import ValidationPopup from './validatePopup';
 
 const { Title, Text } = Typography;
 
@@ -246,7 +247,7 @@ export interface DrawerBatchReturnItemsProps {
     id: number;
     lines: Array<{ requestLineId: number; approvedQty: number }>;
   }) => Promise<void>;
-  onReject?: (payload: { id: number }) => Promise<void>;
+  onReject?: (payload: { id: number; remark?: string }) => Promise<void>;
   onConfirmPickup?: (id: number) => Promise<void>;
 }
 
@@ -268,6 +269,8 @@ export default function RequestedBatchDrawer({
   const [pickupBatches, setPickupBatches] = useState<PickupBatch[]>([]);
   const [expandedPickupBatchNos, setExpandedPickupBatchNos] = useState<number[]>([]);
   const [activityLogs, setActivityLogs] = useState<RequestDetailActivity[]>([]);
+  const [actionPopup, setActionPopup] = useState<null | 'approve' | 'reject' | 'confirm-pickup'>(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const [quantityOverrides, setQuantityOverrides] = useState<Record<string, number>>({});
   const [itemMarks, setItemMarks] = useState<Record<string, 'deleted' | 'canceled'>>({});
   const [editedItems, setEditedItems] = useState<Record<string, boolean>>({});
@@ -1049,6 +1052,95 @@ export default function RequestedBatchDrawer({
     }
   };
 
+  const handleApproveRequest = async () => {
+    const lines = activeRequestItems
+      .filter((item) => typeof item.requestLineId === 'number')
+      .map((item) => ({
+        requestLineId: Number(item.requestLineId),
+        approvedQty: Number(item.quantityToReturn || 0),
+      }));
+    const hasAnyApprovedQty = lines.some((item) => item.approvedQty > 0);
+
+    if (!hasAnyApprovedQty) {
+      message.warning('At least one item must have approved quantity greater than 0. Otherwise, reject the request.');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (!onApprove || !data.id) {
+        setStatusOverride('approved');
+        setActivityLogs((prev) => [
+          ...prev,
+          {
+            label: 'Approved',
+            description: 'Request approved',
+            date: new Date().toISOString(),
+            by: currentActor,
+            dot: 'done',
+          },
+        ]);
+      } else {
+        await onApprove({ id: data.id, lines });
+        setStatusOverride('approved');
+        setActivityLogs((prev) => [
+          ...prev,
+          {
+            label: 'Approved',
+            description: 'Request approved',
+            date: new Date().toISOString(),
+            by: currentActor,
+            dot: 'done',
+          },
+        ]);
+        message.success('Request approved successfully.');
+      }
+      setActionPopup(null);
+    } catch (_error) {
+      message.error('Failed to approve request.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectRequest = async (remark?: string) => {
+    setActionLoading(true);
+    try {
+      if (!onReject || !data.id) {
+        setStatusOverride('rejected');
+        setActivityLogs((prev) => [
+          ...prev,
+          {
+            label: 'Rejected',
+            description: 'Request rejected',
+            date: new Date().toISOString(),
+            by: currentActor,
+            dot: 'done',
+          },
+        ]);
+      } else {
+        await onReject({ id: data.id, remark });
+        setStatusOverride('rejected');
+        setActivityLogs((prev) => [
+          ...prev,
+          {
+            label: 'Rejected',
+            description: 'Request rejected',
+            date: new Date().toISOString(),
+            by: currentActor,
+            dot: 'done',
+          },
+        ]);
+        message.success('Request rejected successfully.');
+      }
+      setActionPopup(null);
+    } catch (_error) {
+      message.error('Failed to reject request.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!open) return;
     if ((data.activities || []).length > 0 || (data.pickupBatches || []).length > 0) return;
@@ -1227,94 +1319,13 @@ export default function RequestedBatchDrawer({
               <Space>
                 <Button
                   danger
-                  onClick={() => {
-                    if (!onReject || !data.id) {
-                      setStatusOverride('rejected');
-                      setActivityLogs((prev) => [
-                        ...prev,
-                        {
-                          label: 'Rejected',
-                          description: 'Request rejected',
-                          date: new Date().toISOString(),
-                          by: currentActor,
-                          dot: 'done',
-                        },
-                      ]);
-                      return;
-                    }
-
-                    onReject({ id: data.id })
-                      .then(() => {
-                        setStatusOverride('rejected');
-                        setActivityLogs((prev) => [
-                          ...prev,
-                          {
-                            label: 'Rejected',
-                            description: 'Request rejected',
-                            date: new Date().toISOString(),
-                            by: currentActor,
-                            dot: 'done',
-                          },
-                        ]);
-                        message.success('Request rejected successfully.');
-                      })
-                      .catch(() => {
-                        message.error('Failed to reject request.');
-                      });
-                  }}
+                  onClick={() => setActionPopup('reject')}
                 >
                   Reject
                 </Button>
                 <Button
                   type="primary"
-                  onClick={() => {
-                    const lines = activeRequestItems
-                      .filter((item) => typeof item.requestLineId === 'number')
-                      .map((item) => ({
-                        requestLineId: Number(item.requestLineId),
-                        approvedQty: Number(item.quantityToReturn || 0),
-                      }));
-                    const hasAnyApprovedQty = lines.some((item) => item.approvedQty > 0);
-
-                    if (!hasAnyApprovedQty) {
-                      message.warning('At least one item must have approved quantity greater than 0. Otherwise, reject the request.');
-                      return;
-                    }
-
-                    if (!onApprove || !data.id) {
-                      setStatusOverride('approved');
-                      setActivityLogs((prev) => [
-                        ...prev,
-                        {
-                          label: 'Approved',
-                          description: 'Request approved',
-                          date: new Date().toISOString(),
-                          by: currentActor,
-                          dot: 'done',
-                        },
-                      ]);
-                      return;
-                    }
-
-                    onApprove({ id: data.id, lines })
-                      .then(() => {
-                        setStatusOverride('approved');
-                        setActivityLogs((prev) => [
-                          ...prev,
-                          {
-                            label: 'Approved',
-                            description: 'Request approved',
-                            date: new Date().toISOString(),
-                            by: currentActor,
-                            dot: 'done',
-                          },
-                        ]);
-                        message.success('Request approved successfully.');
-                      })
-                      .catch(() => {
-                        message.error('Failed to approve request.');
-                      });
-                  }}
+                  onClick={() => setActionPopup('approve')}
                 >
                   Approve
                 </Button>
@@ -1493,6 +1504,29 @@ export default function RequestedBatchDrawer({
           setSpfOpen(false);
           setSelectedProduct(null);
         }}
+      />
+
+      <ValidationPopup
+        open={actionPopup === 'approve'}
+        title="Approve Request"
+        description="Approve this spare part request?"
+        confirmText="Approve"
+        loading={actionLoading}
+        onCancel={() => setActionPopup(null)}
+        onConfirm={() => handleApproveRequest()}
+      />
+
+      <ValidationPopup
+        open={actionPopup === 'reject'}
+        title="Reject Request"
+        description="Reject this spare part request?"
+        confirmText="Reject"
+        danger
+        requireRemark
+        remarkPlaceholder="Please enter rejection remark"
+        loading={actionLoading}
+        onCancel={() => setActionPopup(null)}
+        onConfirm={(payload) => handleRejectRequest(payload?.remark)}
       />
 
       <Modal

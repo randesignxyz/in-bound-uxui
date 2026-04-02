@@ -11,7 +11,6 @@ import {
   Space,
   InputNumber,
   message,
-  Popconfirm,
   Badge,
 } from 'antd';
 import { DownOutlined, RightOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
@@ -23,6 +22,7 @@ import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } fro
 import type { WarehouseRequestRecord } from './requestsWarehouse.shared';
 import type { Shipment, ShipmentLine } from '../shipmentsStore';
 import { formatSpfDateTime } from '../shared/dateTime';
+import ValidationPopup from '../spare-part-request/validatePopup';
 
 const { Title, Text } = Typography;
 
@@ -255,6 +255,8 @@ export default function RequestedBatchWareHouse({
   const [workingItems, setWorkingItems] = useState<RequestDetailLineItem[]>([]);
   // Committed shipment batches (each one is a Save & Pick up result)
   const [shipmentBatches, setShipmentBatches] = useState<Shipment[]>([]);
+  const [confirmPickupPopupOpen, setConfirmPickupPopupOpen] = useState(false);
+  const [confirmPickupLoading, setConfirmPickupLoading] = useState(false);
   const [expandedShipmentBatchNos, setExpandedShipmentBatchNos] = useState<number[]>([]);
 
   const data: RequestDetailData = useMemo(() => {
@@ -541,7 +543,7 @@ export default function RequestedBatchWareHouse({
     });
   };
 
-  const handleConfirmPickupRequest = () => {
+  const handleConfirmPickupRequest = async () => {
     if (!canWarehouseOperate) {
       message.error('You are not allowed to confirm pickup.');
       return;
@@ -552,36 +554,39 @@ export default function RequestedBatchWareHouse({
       return;
     }
 
-    onConfirmPickup(data.id)
-      .then(() => {
-        const latestReadyShipment = [...shipmentBatches]
-          .sort((left, right) => right.shipmentNo - left.shipmentNo)
-          .find((shipment) => shipment.status !== 'completed');
-        const nextStatus =
-          totals.totalRequested > 0 && totals.totalSent >= totals.totalRequested ? 'completed' : 'partial';
+    setConfirmPickupLoading(true);
+    try {
+      await onConfirmPickup(data.id);
+      const latestReadyShipment = [...shipmentBatches]
+        .sort((left, right) => right.shipmentNo - left.shipmentNo)
+        .find((shipment) => shipment.status !== 'completed');
+      const nextStatus =
+        totals.totalRequested > 0 && totals.totalSent >= totals.totalRequested ? 'completed' : 'partial';
 
-        setStatusOverride(nextStatus);
-        setShipmentBatches((prev) =>
-          prev.map((shipment) =>
-            shipment.shipmentNo === (latestReadyShipment?.shipmentNo ?? shipment.shipmentNo)
-              ? {
-                  ...shipment,
-                  status: 'completed',
-                  confirmedAt: shipment.confirmedAt || new Date().toISOString(),
-                  confirmedBy:
-                    shipment.confirmedBy ||
-                    currentUser.initialState?.currentUser?.login ||
-                    data.warehouseBy ||
-                    undefined,
-                }
-              : shipment,
-          ),
-        );
-        message.success('Pickup confirmed successfully.');
-      })
-      .catch(() => {
-        message.error('Failed to confirm pickup.');
-      });
+      setStatusOverride(nextStatus);
+      setShipmentBatches((prev) =>
+        prev.map((shipment) =>
+          shipment.shipmentNo === (latestReadyShipment?.shipmentNo ?? shipment.shipmentNo)
+            ? {
+                ...shipment,
+                status: 'completed',
+                confirmedAt: shipment.confirmedAt || new Date().toISOString(),
+                confirmedBy:
+                  shipment.confirmedBy ||
+                  currentUser.initialState?.currentUser?.login ||
+                  data.warehouseBy ||
+                  undefined,
+              }
+            : shipment,
+        ),
+      );
+      setConfirmPickupPopupOpen(false);
+      message.success('Pickup confirmed successfully.');
+    } catch (_error) {
+      message.error('Failed to confirm pickup.');
+    } finally {
+      setConfirmPickupLoading(false);
+    }
   };
 
   const handleConfirmRequester = () => {
@@ -892,18 +897,9 @@ export default function RequestedBatchWareHouse({
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
               {showConfirmPickup ? (
-                <Popconfirm
-                  title="Confirm Pick up"
-                  description="Confirm that the requester has picked up the prepared spare parts?"
-                  okText="Confirm"
-                  cancelText="Cancel"
-                  onConfirm={handleConfirmPickupRequest}
-                >
-        
-                  <Button type="primary">
-                    Confirm Pick up
-                  </Button>
-                </Popconfirm>
+                <Button type="primary" onClick={() => setConfirmPickupPopupOpen(true)}>
+                  Confirm Pick up
+                </Button>
               ) : null}
               {showSaveDraft ? (
                 <Button onClick={handleSave}>
@@ -1087,6 +1083,16 @@ export default function RequestedBatchWareHouse({
 
         
       </Drawer>
+
+      <ValidationPopup
+        open={confirmPickupPopupOpen}
+        title="Confirm Pick up"
+        description="Confirm that the requester has picked up the prepared spare parts?"
+        confirmText="Confirm"
+        loading={confirmPickupLoading}
+        onCancel={() => setConfirmPickupPopupOpen(false)}
+        onConfirm={() => handleConfirmPickupRequest()}
+      />
 
       <SpfDetails
         open={open && spfOpen}

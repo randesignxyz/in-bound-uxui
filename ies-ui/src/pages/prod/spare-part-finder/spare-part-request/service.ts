@@ -135,6 +135,42 @@ type CreateRequestPayload = {
   priority: 'normal' | 'high' | 'urgent';
 };
 
+const normalizeUomOptions = (value?: string | string[] | null) => {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.map((item) => String(item || '').trim()).filter(Boolean)));
+  }
+
+  const normalized = String(value || '').trim();
+  if (!normalized) return [];
+
+  try {
+    const parsed = JSON.parse(normalized);
+    if (Array.isArray(parsed)) {
+      return Array.from(new Set(parsed.map((item) => String(item || '').trim()).filter(Boolean)));
+    }
+  } catch (error) {
+    // Fall back to parsing comma-delimited values such as "[PCS,BOX]".
+  }
+
+  const flattened = normalized
+    .replace(/^\[/, '')
+    .replace(/\]$/, '')
+    .split(',')
+    .map((item) => item.trim().replace(/^"+|"+$/g, ''))
+    .filter(Boolean);
+
+  return Array.from(new Set(flattened.length > 0 ? flattened : [normalized]));
+};
+
+const resolveRequestLineUom = (line: CreateRequestPayload['items'][number]) => {
+  const explicitUom = String(line.uom || '').trim();
+  if (explicitUom) return explicitUom;
+
+  const itemUomOptions = Array.isArray(line.item.uomOptions) ? line.item.uomOptions : [];
+  const normalizedOptions = itemUomOptions.length > 0 ? itemUomOptions : normalizeUomOptions(line.item.uom);
+  return normalizedOptions[0] || '';
+};
+
 type ApproveRequestPayload = {
   id: number;
   lines: Array<{
@@ -192,7 +228,7 @@ const SparePartRequestAction = {
         toWarehouseCode: line.toWarehouseCode,
         forLine: line.forLine,
         productId: line.item.productId,
-        uom: line.uom,
+        uom: resolveRequestLineUom(line),
       })),
       remark: payload.remark,
       priority: payload.priority,

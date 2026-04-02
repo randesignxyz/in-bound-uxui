@@ -27,9 +27,11 @@ import type { UploadFile, UploadProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   CameraOutlined,
+  CloseCircleFilled,
   InboxOutlined,
   MobileOutlined,
   QrcodeOutlined,
+  WarningFilled,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { buildReceiptExceptionReason, hasReceiptDiscrepancy } from '../workflow';
@@ -90,6 +92,15 @@ function deriveReceiptType(purchaseOrders: PurchaseOrder[]) {
 
 function requiresTraceabilityFields(item: GRItem) {
   return !item.isMissing && item.receiveQty > 0;
+}
+
+function renderRequiredLabel(label: string) {
+  return (
+    <span>
+      <span style={{ color: '#ff4d4f', marginInlineEnd: 4 }}>*</span>
+      {label}
+    </span>
+  );
 }
 
 export function GRCreationModal({
@@ -203,6 +214,7 @@ export function GRCreationModal({
 
   const validate = (): boolean => {
     const nextErrors: Record<string, boolean> = {};
+    if (!postingDate) nextErrors.postingDate = true;
     if (!deliveryNoteNumber.trim()) nextErrors.deliveryNote = true;
     if (!storedOnHoldConfirmed) nextErrors.onHoldConfirm = true;
 
@@ -211,6 +223,7 @@ export function GRCreationModal({
         if (!item.missingRemark?.trim()) nextErrors[`missingRemark-${index}`] = true;
         return;
       }
+      if (item.receiveQty <= 0) nextErrors[`receiveQty-${index}`] = true;
       if (requiresTraceabilityFields(item)) {
         if (!item.productDate) nextErrors[`productDate-${index}`] = true;
         if (!item.expiryDate) nextErrors[`expiryDate-${index}`] = true;
@@ -419,6 +432,8 @@ export function GRCreationModal({
   const shortItemsCount = items.filter((item) => !item.isMissing && item.receiveQty < item.poQty)
     .length;
   const hasDiscrepancy = missingItemsCount > 0 || shortItemsCount > 0;
+  const hasMissingItems = items.some((item) => item.isMissing);
+  const hasAvailableItems = items.some((item) => !item.isMissing);
 
   const itemColumns: ColumnsType<GRItem & { index: number }> = [
     {
@@ -426,12 +441,23 @@ export function GRCreationModal({
       dataIndex: 'code',
       key: 'code',
       width: 124,
-      render: (_, record) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>{record.code}</div>
-          <div style={{ fontSize: 12, color: '#666' }}>{record.name}</div>
-        </div>
-      ),
+      render: (_, record) => {
+        const shortQty = Math.max(0, record.poQty - record.receiveQty);
+
+        return (
+          <div>
+            <div style={{ fontWeight: 500 }}>{record.code}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+              {record.isMissing ? (
+                <CloseCircleFilled style={{ color: '#ff4d4f', flex: 'none' }} />
+              ) : shortQty > 0 ? (
+                <WarningFilled style={{ color: '#faad14', flex: 'none' }} />
+              ) : null}
+              <div style={{ fontSize: 12, color: '#666' }}>{record.name}</div>
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: 'PO Qty',
@@ -439,12 +465,23 @@ export function GRCreationModal({
       key: 'poQty',
       width: 76,
       align: 'right',
-      render: (value: number) => (
-        <span style={{ display: 'block', textAlign: 'right' }}>{value.toLocaleString()}</span>
-      ),
+      render: (value: number, record) => {
+        const shortQty = Math.max(0, record.poQty - record.receiveQty);
+
+        return (
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ display: 'block' }}>{value.toLocaleString()}</span>
+            {record.isMissing ? (
+              <span style={{ display: 'block', fontSize: 11, color: '#cf1322' }}>Missing item</span>
+            ) : shortQty > 0 ? (
+              <span style={{ display: 'block', fontSize: 11, color: '#ad6800' }}>Short by {shortQty}</span>
+            ) : null}
+          </div>
+        );
+      },
     },
     {
-      title: 'Receive Qty',
+      title: hasAvailableItems ? renderRequiredLabel('Receive Qty') : 'Receive Qty',
       key: 'receiveQty',
       width: 104,
       render: (_, record) => (
@@ -462,7 +499,7 @@ export function GRCreationModal({
     },
     { title: 'UoM', dataIndex: 'uom', key: 'uom', width: 48 },
     {
-      title: 'Product Date',
+      title: hasAvailableItems ? renderRequiredLabel('Product Date') : 'Product Date',
       key: 'productDate',
       width: 132,
       render: (_, record) => (
@@ -478,7 +515,7 @@ export function GRCreationModal({
       ),
     },
     {
-      title: 'Expiry',
+      title: hasAvailableItems ? renderRequiredLabel('Expiry') : 'Expiry',
       key: 'expiryDate',
       width: 132,
       render: (_, record) => (
@@ -494,7 +531,7 @@ export function GRCreationModal({
       ),
     },
     {
-      title: 'Batch Number',
+      title: hasAvailableItems ? renderRequiredLabel('Batch Number') : 'Batch Number',
       key: 'batchNumber',
       width: 136,
       render: (_, record) => (
@@ -508,37 +545,41 @@ export function GRCreationModal({
       ),
     },
     {
-      title: 'Receipt Status',
+      title: hasAvailableItems ? renderRequiredLabel('Receipt Status') : 'Receipt Status',
       key: 'receiptStatus',
       width: 150,
       render: (_, record) => {
+        const shortQty = Math.max(0, record.poQty - record.receiveQty);
+        const hasShortQty = !record.isMissing && shortQty > 0;
         const receiptStatus = record.isMissing ? 'Missing' : 'Good';
         const isMissingStatus = receiptStatus === 'Missing';
 
         return (
-          <div
-            style={{
-              width: '100%',
-              padding: 2,
-              borderRadius: 8,
-              backgroundColor: isMissingStatus ? '#fff1f0' : '#f6ffed',
-            }}
-          >
-            <Select
-              value={receiptStatus}
-              style={{ width: '100%' }}
-              onChange={(value: 'Good' | 'Missing') => setReceiptStatus(record.index, value)}
-              options={[
-                { value: 'Good', label: 'Good' },
-                { value: 'Missing', label: 'Missing' },
-              ]}
-            />
-          </div>
+          <Space direction="vertical" size={6} style={{ width: '100%' }}>
+            <div
+              style={{
+                width: '100%',
+                padding: 2,
+                borderRadius: 8,
+                backgroundColor: isMissingStatus ? '#fff1f0' : hasShortQty ? '#fffbe6' : '#f6ffed',
+              }}
+            >
+              <Select
+                value={receiptStatus}
+                style={{ width: '100%' }}
+                onChange={(value: 'Good' | 'Missing') => setReceiptStatus(record.index, value)}
+                options={[
+                  { value: 'Good', label: 'Good' },
+                  { value: 'Missing', label: 'Missing' },
+                ]}
+              />
+            </div>
+          </Space>
         );
       },
     },
     {
-      title: 'Remark',
+      title: hasMissingItems ? renderRequiredLabel('Remark') : 'Remark',
       key: 'remark',
       width: 180,
       render: (_, record) => (
@@ -595,7 +636,7 @@ export function GRCreationModal({
                       : 'Unplanned',
                 },
                 {
-                  title: 'Posting Date',
+                  title: renderRequiredLabel('Posting Date'),
                   key: 'postingDate',
                   width: 150,
                   render: (_: unknown, __: PurchaseOrder, index: number) => ({
@@ -603,8 +644,12 @@ export function GRCreationModal({
                       index === 0 ? (
                         <DatePicker
                           value={postingDate ? dayjs(postingDate) : null}
-                          onChange={(_, dateStr) => setPostingDate(dateStr as string)}
+                          onChange={(_, dateStr) => {
+                            setPostingDate(dateStr as string);
+                            setErrors((prev) => ({ ...prev, postingDate: false }));
+                          }}
                           style={{ width: 128 }}
+                          status={errors.postingDate ? 'error' : undefined}
                         />
                       ) : null,
                     props: {
@@ -635,8 +680,8 @@ export function GRCreationModal({
                 >
                   <Input
                     placeholder="From truck paperwork"
-                    size="large"
-                    style={{ minHeight: 44 }}
+                    size="middle"
+                    style={{ minHeight: 38 }}
                     value={deliveryNoteNumber}
                     onChange={(event) => {
                       setDeliveryNoteNumber(event.target.value);
@@ -672,7 +717,7 @@ export function GRCreationModal({
                         accept=".pdf,.doc,.docx,image/*"
                         listType="text"
                       >
-                        <Button icon={<InboxOutlined />} size="large" style={{ width: '100%', height: 44 }}>
+                        <Button icon={<InboxOutlined />} size="middle" style={{ width: '100%', height: 38 }}>
                           Upload Files
                         </Button>
                       </Upload>
@@ -706,15 +751,6 @@ export function GRCreationModal({
                 Scan PO Barcode
               </Button>
             </div>
-            {hasDiscrepancy && (
-              <Alert
-                type="warning"
-                showIcon
-                style={{ marginBottom: 16 }}
-                message={`${missingItemsCount} missing and ${shortItemsCount} short item row${shortItemsCount !== 1 ? 's' : ''}.`}
-                description="Missing rows require a remark."
-              />
-            )}
             <Space direction="vertical" size={16} style={{ width: '100%' }}>
               {groupedItems.map((group) => (
                 <Card

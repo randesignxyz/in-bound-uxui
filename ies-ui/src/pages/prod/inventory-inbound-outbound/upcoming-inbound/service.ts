@@ -8,7 +8,6 @@ import {
   InboundGoodsReceiptCountParams,
   InboundGoodsReceiptSearch,
   InboundGoodsReceiptStatusChangeInput,
-  InboundGrActivityApi,
   InboundLinkPoInput,
   InboundPurchaseOrderApi,
   InboundPurchaseOrderCountParams,
@@ -19,12 +18,10 @@ import {
   InboundSubmitQcReviewInput,
   InboundSubmitSupervisorReviewInput,
   InboundSuccessPayloadResponse,
-  UpcomingInboundActivity,
   UpcomingInboundGoodsReceipt,
   UpcomingInboundPurchaseOrder,
 } from './data';
 import {
-  mapInboundActivity,
   mapInboundDashboardSummary,
   mapInboundGoodsReceipt,
   mapInboundPurchaseOrder,
@@ -116,13 +113,6 @@ const UpcomingInboundAction = {
     endpoint: 'PROD',
     actionName: 'inbound-dashboard-summary',
     payload: params,
-  }),
-
-  getRecentActivity: (): ServiceApiType<Record<string, never>> => ({
-    type: 'LIST_QUERY',
-    endpoint: 'PROD',
-    actionName: 'inbound-recent-activity',
-    payload: {},
   }),
 
   saveGoodsReceipt: (data: InboundSaveGoodsReceiptInput): ServiceApiType<InboundSaveGoodsReceiptInput> => ({
@@ -230,13 +220,6 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
         UpcomingInboundAction.getDashboardSummary(params),
       )(requestAction)) as InboundDashboardSummaryApi;
       return mapInboundDashboardSummary(response);
-    },
-
-    getRecentActivity: async (): Promise<UpcomingInboundActivity[]> => {
-      const response = (await singleRequest<InboundGrActivityApi>(
-        UpcomingInboundAction.getRecentActivity(),
-      )(requestAction)) as InboundGrActivityApi[];
-      return response.map(mapInboundActivity);
     },
 
     saveGoodsReceipt: async (

@@ -20,7 +20,7 @@ import {
 } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { InboxOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { CloseCircleFilled, DeleteOutlined, InboxOutlined, PlusOutlined, WarningFilled } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
   buildReceiptExceptionReason,
@@ -337,10 +337,6 @@ export function TempGRCreationModal({
   const missingItemsCount = items.filter((item) => item.isMissing).length;
   const shortItemsCount = items.filter((item) => !item.isMissing && item.poQty > item.receiveQty).length;
   const hasDiscrepancy = missingItemsCount > 0 || shortItemsCount > 0;
-  const discrepancySummary = [
-    `${missingItemsCount} missing`,
-    `${shortItemsCount} short`,
-  ].join(' and ');
 
   const itemColumns: ColumnsType<GRItem & { index: number }> = useMemo(
     () => [
@@ -348,40 +344,63 @@ export function TempGRCreationModal({
         title: 'Item',
         key: 'item',
         width: 280,
-        render: (_, record) => (
-          <Space direction="vertical" size={6} style={{ width: '100%' }}>
-            <Input
-              placeholder="Item code"
-              value={record.code}
-              onChange={(event) => updateItem(record.index, 'code', event.target.value.toUpperCase())}
-              status={
-                errors[`code-${record.index}`] || errors[`duplicate-${record.index}`]
-                  ? 'error'
-                  : undefined
-              }
-            />
-            <Input
-              placeholder="Item name"
-              value={record.name}
-              onChange={(event) => updateItem(record.index, 'name', event.target.value)}
-              status={errors[`name-${record.index}`] ? 'error' : undefined}
-            />
-          </Space>
-        ),
+        render: (_, record) => {
+          const shortQty = Math.max(0, record.poQty - record.receiveQty);
+
+          return (
+            <Space direction="vertical" size={6} style={{ width: '100%' }}>
+              <Input
+                placeholder="Item code"
+                value={record.code}
+                onChange={(event) => updateItem(record.index, 'code', event.target.value.toUpperCase())}
+                status={
+                  errors[`code-${record.index}`] || errors[`duplicate-${record.index}`]
+                    ? 'error'
+                    : undefined
+                }
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                {record.isMissing ? (
+                  <CloseCircleFilled style={{ color: '#ff4d4f', flex: 'none' }} />
+                ) : shortQty > 0 ? (
+                  <WarningFilled style={{ color: '#faad14', flex: 'none' }} />
+                ) : null}
+                <Input
+                  placeholder="Item name"
+                  value={record.name}
+                  onChange={(event) => updateItem(record.index, 'name', event.target.value)}
+                  status={errors[`name-${record.index}`] ? 'error' : undefined}
+                  style={{ flex: 1 }}
+                />
+              </div>
+            </Space>
+          );
+        },
       },
       {
         title: 'Doc Qty',
         key: 'poQty',
         width: 92,
-        render: (_, record) => (
-          <InputNumber
-            min={0}
-            value={record.poQty}
-            onChange={(value) => updateItem(record.index, 'poQty', value ?? 0)}
-            status={errors[`poQty-${record.index}`] ? 'error' : undefined}
-            style={{ width: '100%' }}
-          />
-        ),
+        render: (_, record) => {
+          const shortQty = Math.max(0, record.poQty - record.receiveQty);
+
+          return (
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <InputNumber
+                min={0}
+                value={record.poQty}
+                onChange={(value) => updateItem(record.index, 'poQty', value ?? 0)}
+                status={errors[`poQty-${record.index}`] ? 'error' : undefined}
+                style={{ width: '100%' }}
+              />
+              {record.isMissing ? (
+                <Text style={{ fontSize: 11, color: '#cf1322' }}>Missing item</Text>
+              ) : shortQty > 0 ? (
+                <Text style={{ fontSize: 11, color: '#ad6800' }}>Short by {shortQty}</Text>
+              ) : null}
+            </Space>
+          );
+        },
       },
       {
         title: 'Received',
@@ -522,8 +541,8 @@ export function TempGRCreationModal({
       destroyOnClose
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 24px 0' }}>
-          <Descriptions column={4} size="small" style={{ marginTop: 10, marginBottom: 20 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 0' }}>
+          <Descriptions column={4} size="small" style={{ marginBottom: 10 }}>
           <Descriptions.Item label="Source">
             <Tag color="purple">{goodsReceiptSourceLabel.TEMP_NO_PO}</Tag>
           </Descriptions.Item>
@@ -538,7 +557,7 @@ export function TempGRCreationModal({
         <Alert
           showIcon
           type="info"
-          style={{ marginBottom: 20 }}
+          style={{ marginBottom: 10 }}
           message={correctionMode ? 'Warehouse Correction Required' : 'Temporary Inbound Receiving'}
           description={
             correctionMode
@@ -547,7 +566,7 @@ export function TempGRCreationModal({
           }
         />
 
-        <Form layout="vertical" style={{ marginBottom: 24 }}>
+        <Form layout="vertical" style={{ marginBottom: 10 }}>
           <Row gutter={24}>
             <Col span={8}>
               <Form.Item
@@ -616,15 +635,6 @@ export function TempGRCreationModal({
               Add Item
             </Button>
           </div>
-          {hasDiscrepancy && (
-            <Alert
-              type="warning"
-              showIcon
-              style={{ marginBottom: 16 }}
-              message={`${discrepancySummary} item rows.`}
-              description="Missing rows require a remark."
-            />
-          )}
           <Card size="small" style={{ borderRadius: 12 }}>
             <Table
               size="small"
@@ -646,7 +656,7 @@ export function TempGRCreationModal({
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '220px minmax(0, 1fr)',
+                gridTemplateColumns: '140px minmax(0, 1fr)',
                 gap: 12,
                 alignItems: 'start',
               }}
@@ -667,7 +677,7 @@ export function TempGRCreationModal({
                   listType="text"
                 >
                   <Button icon={<InboxOutlined />} size="large" style={{ width: '100%', height: 44 }}>
-                    Upload Delivery Note / PDF / Photos
+                    Upload Files
                   </Button>
                 </Upload>
               </div>

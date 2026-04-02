@@ -24,6 +24,9 @@ import {
 } from '../workflow';
 
 const { Link, Text } = Typography;
+const GRID_ACTION_BASE_COLOR = '#8c8c8c';
+
+type GridActionKind = 'view' | 'download' | 'delete';
 
 interface SupportingDocsListProps {
   docs?: SupportingDocReference[];
@@ -64,6 +67,8 @@ export function SupportingDocsList({
   collapsedLimit = 4,
 }: SupportingDocsListProps) {
   const [expanded, setExpanded] = useState(false);
+  const [hoveredAction, setHoveredAction] = useState<string | null>(null);
+  const [activeAction, setActiveAction] = useState<string | null>(null);
   const items = files
     ? files.map((file) => ({
         key: file.uid,
@@ -85,6 +90,46 @@ export function SupportingDocsList({
         onView: () => openSupportingDoc(doc),
         onRemove: undefined,
       }));
+
+  const getGridActionColor = (action: GridActionKind, itemKey: string) => {
+    const actionKey = `${itemKey}-${action}`;
+    if (activeAction === actionKey) {
+      if (action === 'delete') {
+        return '#cf1322';
+      }
+      if (action === 'download') {
+        return '#389e0d';
+      }
+      return '#0958d9';
+    }
+    if (hoveredAction === actionKey) {
+      if (action === 'delete') {
+        return '#ff4d4f';
+      }
+      if (action === 'download') {
+        return '#52c41a';
+      }
+      return '#1677ff';
+    }
+    return GRID_ACTION_BASE_COLOR;
+  };
+
+  const bindGridActionState = (action: GridActionKind, itemKey: string) => {
+    const actionKey = `${itemKey}-${action}`;
+    return {
+      onMouseEnter: () => setHoveredAction(actionKey),
+      onMouseLeave: () => {
+        setHoveredAction((current) => (current === actionKey ? null : current));
+        setActiveAction((current) => (current === actionKey ? null : current));
+      },
+      onMouseDown: () => setActiveAction(actionKey),
+      onMouseUp: () => setActiveAction((current) => (current === actionKey ? null : current)),
+      onBlur: () => {
+        setHoveredAction((current) => (current === actionKey ? null : current));
+        setActiveAction((current) => (current === actionKey ? null : current));
+      },
+    };
+  };
 
   if (displayMode === 'grid') {
     if (items.length === 0) {
@@ -113,85 +158,101 @@ export function SupportingDocsList({
             style={{
               minWidth: 0,
               border: '1px solid #f0f0f0',
-              borderRadius: 12,
-              padding: 10,
+              borderRadius: 10,
+              padding: '8px 10px',
               background: '#fff',
-              minHeight: 118,
-              display: 'flex',
-              flexDirection: 'column',
+              minHeight: 78,
             }}
           >
             <div
               style={{
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: 52,
-                marginBottom: 8,
-                borderRadius: 10,
-                background: '#fafafa',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 10,
               }}
             >
-              {getDocumentIcon(item.fileName)}
-            </div>
-            <div style={{ flex: 1, marginBottom: 8 }}>
-              {item.isLegacy ? (
-                <Text
-                  style={{
-                    display: 'block',
-                    fontSize: 12,
-                    lineHeight: 1.3,
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {item.fileName}
-                </Text>
-              ) : (
-                <Link
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 8,
+                  minWidth: 0,
+                  flex: 1,
+                }}
+              >
+                <span style={{ display: 'inline-flex', marginTop: 1 }}>{getDocumentIcon(item.fileName)}</span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  {item.isLegacy ? (
+                    <Text
+                      style={{
+                        display: '-webkit-box',
+                        fontSize: 12,
+                        lineHeight: 1.35,
+                        overflow: 'hidden',
+                        wordBreak: 'break-word',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {item.fileName}
+                    </Text>
+                  ) : (
+                    <Link
+                      onClick={() => void item.onView()}
+                      style={{
+                        display: '-webkit-box',
+                        fontSize: 12,
+                        lineHeight: 1.35,
+                        overflow: 'hidden',
+                        wordBreak: 'break-word',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {item.fileName}
+                    </Link>
+                  )}
+                </div>
+              </div>
+              <Space size={2}>
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<EyeOutlined />}
                   onClick={() => void item.onView()}
-                  style={{
-                    display: 'block',
-                    fontSize: 12,
-                    lineHeight: 1.3,
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {item.fileName}
-                </Link>
-              )}
+                  disabled={item.isLegacy}
+                  style={{ color: getGridActionColor('view', item.key) }}
+                  {...bindGridActionState('view', item.key)}
+                />
+                {item.fileId && (
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<DownloadOutlined />}
+                    onClick={() =>
+                      void downloadSupportingDoc({
+                        fileId: item.fileId,
+                        fileName: item.fileName,
+                        source: item.source,
+                      })
+                    }
+                    style={{ color: getGridActionColor('download', item.key) }}
+                    {...bindGridActionState('download', item.key)}
+                  />
+                )}
+                {item.onRemove && (
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<DeleteOutlined />}
+                    onClick={item.onRemove}
+                    style={{ color: getGridActionColor('delete', item.key) }}
+                    {...bindGridActionState('delete', item.key)}
+                  />
+                )}
+              </Space>
             </div>
-            <Space size={0} wrap>
-              <Button
-                size="small"
-                type="text"
-                icon={<EyeOutlined />}
-                onClick={() => void item.onView()}
-                disabled={item.isLegacy}
-              />
-              {item.fileId && (
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<DownloadOutlined />}
-                  onClick={() =>
-                    void downloadSupportingDoc({
-                      fileId: item.fileId,
-                      fileName: item.fileName,
-                      source: item.source,
-                    })
-                  }
-                />
-              )}
-              {item.onRemove && (
-                <Button
-                  size="small"
-                  type="text"
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={item.onRemove}
-                />
-              )}
-            </Space>
           </div>
         ))}
         {remainingItems > 0 && !expanded && (

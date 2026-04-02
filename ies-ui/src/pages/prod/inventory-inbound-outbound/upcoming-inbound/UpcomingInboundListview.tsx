@@ -22,7 +22,6 @@ import {
 import {
   AppstoreOutlined,
   BarsOutlined,
-  HistoryOutlined,
   InboxOutlined,
   WarningOutlined,
   ClockCircleOutlined,
@@ -56,11 +55,8 @@ import { POListTable } from './components/POListTable';
 import { PODetailSidebar } from './components/PODetailSidebar';
 import { GRCreationModal } from './components/GRCreationModal';
 import { GRDetailSidebar } from './components/GRDetailSidebar';
-import { RecentActivity } from './components/RecentActivity';
 import { InboundGRTable } from './components/InboundGRTable';
 import { GRQueueTable } from './components/GRQueueTable';
-import { QCVerificationModal } from './components/QCVerificationModal';
-import { SupervisorReviewModal } from './components/SupervisorReviewModal';
 import { TempGRCreationModal } from './components/TempGRCreationModal';
 import { LinkPOModal } from './components/LinkPOModal';
 import {
@@ -70,7 +66,7 @@ import {
 
 const { Text } = Typography;
 
-type InboundViewMode = 'operations' | 'history' | 'activity';
+type InboundViewMode = 'operations' | 'history';
 type InboundWorkspaceRole = 'WAREHOUSE_STAFF' | 'QC' | 'WAREHOUSE_SUPERVISOR';
 type HistoryStatusFilter = 'ALL' | InboundHistoryStatus;
 
@@ -148,8 +144,6 @@ export default function UpcomingInboundListview() {
   const [selectedGR, setSelectedGR] = useState<GoodsReceipt | null>(null);
   const [warehouseCorrectionReceipt, setWarehouseCorrectionReceipt] = useState<GoodsReceipt | null>(null);
   const [linkPOReceipt, setLinkPOReceipt] = useState<GoodsReceipt | null>(null);
-  const [qcVerificationReceipt, setQCVerificationReceipt] = useState<GoodsReceipt | null>(null);
-  const [supervisorReviewReceipt, setSupervisorReviewReceipt] = useState<GoodsReceipt | null>(null);
   const [supervisorApprovalSuccess, setSupervisorApprovalSuccess] =
     useState<SupervisorApprovalSuccessData | null>(null);
   const [tempGRHint, setTempGRHint] = useState('');
@@ -487,8 +481,6 @@ export default function UpcomingInboundListview() {
     setSelectedGR(null);
     setWarehouseCorrectionReceipt(null);
     setLinkPOReceipt(null);
-    setQCVerificationReceipt(null);
-    setSupervisorReviewReceipt(null);
     setSupervisorApprovalSuccess(null);
     setQueueSearchValue('');
     setQueueTypeFilter('ALL');
@@ -689,7 +681,6 @@ export default function UpcomingInboundListview() {
       });
       await loadInboundData();
       const updated = syncReceiptInState(response.data);
-      setQCVerificationReceipt(null);
       if (updated.qcResult === 'Pass') {
         setSelectedGR(null);
       } else {
@@ -698,7 +689,7 @@ export default function UpcomingInboundListview() {
       message.success(response.message || 'QC review submitted.');
       return true;
     } catch (error: any) {
-      message.error(error?.message || 'Failed to submit QC review.');
+      message.error(error?.message || 'Failed to submit review.');
       return false;
     }
   };
@@ -720,7 +711,6 @@ export default function UpcomingInboundListview() {
       });
       await loadInboundData();
       const updated = syncReceiptInState(response.data);
-      setSupervisorReviewReceipt(null);
 
       if (payload.action === 'approve') {
         setSupervisorApprovalSuccess({
@@ -801,18 +791,20 @@ export default function UpcomingInboundListview() {
   };
 
   const poHeaderTitle = (
-    <Space direction="vertical" size={0}>
-      <Text strong>Purchase Orders</Text>
-      <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
-        {filteredWarehousePurchaseOrders.length} purchase order
-        {filteredWarehousePurchaseOrders.length !== 1 ? 's' : ''}
-      </Text>
-    </Space>
+    <div style={{ paddingLeft: 8 }}>
+      <Text strong>{`Purchase Orders (${filteredWarehousePurchaseOrders.length})`}</Text>
+    </div>
   );
 
   const poHeaderActions = (
     <Space size={8} wrap>
-      <Button type="primary" onClick={() => handleCreateTempGR()}>
+      <Button
+        onClick={() => handleCreateTempGR()}
+        style={{
+          background: '#fff',
+          fontWeight: 600,
+        }}
+      >
         Receive Without PO
       </Button>
     </Space>
@@ -827,7 +819,10 @@ export default function UpcomingInboundListview() {
   }));
 
   const shouldShowRoleSelector = isRoleSimulationEnabled || inboundRoleOptions.length > 1;
-  const activeQueueTitle = activeRole === 'QC' ? 'QC Queue' : 'Warehouse Supervisor Queue';
+  const dashboardSummaryTitle =
+    activeRole === 'WAREHOUSE_STAFF'
+      ? 'Inbound Upcoming Dashboard'
+      : 'Inbound Receiving Dashboard';
   const historyTabLabel =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? 'GR History' : 'Inbound Receiving';
   const inboundViewOptions: {
@@ -837,7 +832,6 @@ export default function UpcomingInboundListview() {
   }[] = [
     { label: 'Inbound Upcoming', value: 'operations', icon: <AppstoreOutlined /> },
     { label: historyTabLabel, value: 'history', icon: <BarsOutlined /> },
-    { label: 'Recent Activity', value: 'activity', icon: <HistoryOutlined /> },
   ];
   const historyReceipts = useMemo(() => {
     if (activeRole !== 'WAREHOUSE_SUPERVISOR') {
@@ -864,15 +858,13 @@ export default function UpcomingInboundListview() {
     }
     return data.length;
   }, [historyReceipts, historyStatusFilter, historyTypeFilter]);
+  const historyHeaderTitle =
+    activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Good Receipt' : 'Inbound Receiving';
   const inboundReceivingHeaderTitle = (
-    <Space direction="vertical" size={0}>
-      <Text strong>Inbound Receiving</Text>
-      <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
-        {filteredHistoryReceiptCount} receipt{filteredHistoryReceiptCount !== 1 ? 's' : ''}
-      </Text>
-    </Space>
+    <div style={{ paddingLeft: 8 }}>
+      <Text strong>{`${historyHeaderTitle} (${filteredHistoryReceiptCount})`}</Text>
+    </div>
   );
-
   const workspaceContent =
     (warehouseCorrectionReceipt &&
       (warehouseCorrectionReceipt.receiptSourceType === 'TEMP_NO_PO' ? (
@@ -926,22 +918,6 @@ export default function UpcomingInboundListview() {
         onLink={handleLinkReceiptToPO}
         onValidationChange={handleUpdatePOLinkValidation}
       />
-    )) ||
-    (qcVerificationReceipt && (
-      <QCVerificationModal
-        open={true}
-        receipt={qcVerificationReceipt}
-        onClose={() => setQCVerificationReceipt(null)}
-        onSubmit={(payload) => handleSubmitQCVerification(qcVerificationReceipt, payload)}
-      />
-    )) ||
-    (supervisorReviewReceipt && (
-      <SupervisorReviewModal
-        open={true}
-        receipt={supervisorReviewReceipt}
-        onClose={() => setSupervisorReviewReceipt(null)}
-        onSubmit={(payload) => handleSubmitSupervisorReview(supervisorReviewReceipt, payload)}
-      />
     ));
 
   return (
@@ -975,31 +951,45 @@ export default function UpcomingInboundListview() {
 
         <Row justify="space-between" align="middle" gutter={[12, 12]} style={{ marginBottom: 12 }}>
           <Col>
-            <Text strong>Dashboard Summary</Text>
+            <Text strong>{dashboardSummaryTitle}</Text>
           </Col>
           <Col>
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                padding: 4,
+                gap: 6,
+                padding: 3,
                 background: '#f5f5f5',
                 border: '1px solid #d9d9d9',
-                borderRadius: 10,
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+                borderRadius: 12,
               }}
             >
-              <Segmented
-                value={dashboardSummaryRange}
-                onChange={(value) =>
-                  setDashboardSummaryRange(value as InboundDashboardSummaryRange)
-                }
-                options={[
-                  { label: 'Overall', value: 'OVERALL' },
-                  { label: 'Daily', value: 'DAILY' },
-                  { label: 'Weekly', value: 'WEEKLY' },
-                ]}
-              />
+              {[
+                { label: 'Overall', value: 'OVERALL' },
+                { label: 'Daily', value: 'DAILY' },
+                { label: 'Weekly', value: 'WEEKLY' },
+              ].map((option) => {
+                const isActive = dashboardSummaryRange === option.value;
+
+                return (
+                  <Button
+                    key={option.value}
+                    size="small"
+                    type={isActive ? 'primary' : 'default'}
+                    onClick={() => setDashboardSummaryRange(option.value as InboundDashboardSummaryRange)}
+                    style={{
+                      minWidth: 78,
+                      height: 30,
+                      borderRadius: 9,
+                      fontWeight: 600,
+                      boxShadow: isActive ? '0 4px 10px rgba(0, 0, 0, 0.08)' : 'none',
+                    }}
+                  >
+                    {option.label}
+                  </Button>
+                );
+              })}
             </div>
           </Col>
         </Row>
@@ -1091,7 +1081,7 @@ export default function UpcomingInboundListview() {
                       icon={option.icon}
                       onClick={() => setInboundView(option.value)}
                       style={{
-                        minHeight: 30,
+                        minHeight: 32,
                         paddingInline: 10,
                         borderRadius: 10,
                         fontWeight: 600,
@@ -1313,16 +1303,9 @@ export default function UpcomingInboundListview() {
                 receipts={filteredRoleQueue}
                 onViewDetail={handleOpenGRDetail}
                 headerTitle={
-                  <Space size={8}>
-                    <Text strong>
-                      <InboxOutlined style={{ marginRight: 8 }} />
-                      {activeQueueTitle}
-                    </Text>
-                    <Text type="secondary">
-                      {filteredRoleQueue.length} receipt
-                      {filteredRoleQueue.length !== 1 ? 's' : ''}
-                    </Text>
-                  </Space>
+                  <div style={{ paddingLeft: 8 }}>
+                    <Text strong>{`Inbound Receiving (${filteredRoleQueue.length})`}</Text>
+                  </div>
                 }
               />
             )}
@@ -1332,7 +1315,7 @@ export default function UpcomingInboundListview() {
         {/* ── GR History View ── */}
         {inboundView === 'history' && (
           <Card size="small" style={{ marginBottom: 16 }} bodyStyle={{ padding: 0 }}>
-            <div style={{ padding: '16px 16px 0' }}>{inboundReceivingHeaderTitle}</div>
+            <div style={{ padding: '16px 16px 12px' }}>{inboundReceivingHeaderTitle}</div>
             <InboundGRTable
               receipts={historyReceipts}
               onViewDetail={handleOpenGRDetail}
@@ -1340,11 +1323,6 @@ export default function UpcomingInboundListview() {
               statusFilter={historyStatusFilter}
             />
           </Card>
-        )}
-
-        {/* ── Recent Activity View ── */}
-        {inboundView === 'activity' && (
-          <RecentActivity receipts={receipts} onViewDetail={handleOpenGRDetail} />
         )}
       </div>
       )}
@@ -1367,8 +1345,8 @@ export default function UpcomingInboundListview() {
             onUpdateProcessState={handleUpdateGRProcessState}
             onOpenWarehouseCorrection={handleOpenWarehouseCorrection}
             onOpenLinkPO={(receipt) => setLinkPOReceipt(receipt)}
-            onOpenQCVerification={(receipt) => setQCVerificationReceipt(receipt)}
-            onOpenSupervisorReview={(receipt) => setSupervisorReviewReceipt(receipt)}
+            onSubmitQCVerification={handleSubmitQCVerification}
+            onSubmitSupervisorReview={handleSubmitSupervisorReview}
           />
 
           <SupervisorApprovalSuccessModal

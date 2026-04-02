@@ -37,6 +37,7 @@ export function GRQueueTable({
   toolbarExtra,
 }: GRQueueTableProps) {
   const actionRef = useRef<ActionType>();
+  const toolbarContent = toolbarExtra ? [toolbarExtra] : headerTitle ? [<div key="spacer" style={{ minHeight: 32 }} />] : [];
 
   const columns: ProColumns<GoodsReceipt>[] = [
     {
@@ -145,7 +146,7 @@ export function GRQueueTable({
       size="small"
       search={false}
       options={{ density: false, setting: false }}
-      toolBarRender={() => (toolbarExtra ? [toolbarExtra] : [])}
+      toolBarRender={() => toolbarContent}
       pagination={{ pageSize: 10, showSizeChanger: true }}
       onRow={(record) => ({
         onClick: () => onViewDetail(record),

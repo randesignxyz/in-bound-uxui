@@ -220,7 +220,6 @@ export const MY_REQUESTS_TO_RETURN_STATUS_OPTIONS = [
   { value: 'Status', label: 'Status' },
   { value: 'Pending', label: 'Pending' },
   { value: 'Approved', label: 'Approved' },
-  { value: 'Receiving', label: 'Receiving' },
   { value: 'Partially Returned', label: 'Partially Returned' },
   { value: 'Rejected', label: 'Rejected' },
   { value: 'Completed', label: 'Completed' },
@@ -297,7 +296,6 @@ export interface TableViewSearchReturnsParam{
 
 /** Filter options for MySparePartList (radio: All / MRO-W / MRO-S / MRO-G) */
 export const SPARE_PART_RETURN_RADIO_OPTIONS = [
-  { value: 'All', label: 'ALL' },
   { value: 'MRO-W', label: 'MRO-W' },
   { value: 'MRO-S', label: 'MRO-S' },
   { value: 'MRO-G', label: 'MRO-G' },

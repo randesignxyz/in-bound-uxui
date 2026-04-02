@@ -17,9 +17,8 @@ import { SparePartReturnAPI } from './service';
 const mapStatusToApiValue = (status: string) => {
   if (status === 'Approved') return 'APPROVED';
   if (status === 'Rejected') return 'REJECTED';
-  if (status === 'Completed') return 'COMPLETED';
+  if (status === 'Completed') return 'COMPLETE';
   if (status === 'Pending') return 'PENDING';
-  if (status === 'Receiving') return 'RECEIVING';
   if (status === 'Partially Returned') return 'PARTIAL_RETURN';
   return '';
 };

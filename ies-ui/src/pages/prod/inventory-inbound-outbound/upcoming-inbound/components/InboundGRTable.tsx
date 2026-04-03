@@ -10,6 +10,8 @@ import {
   getInboundHistoryStatusColor,
   getGoodsReceiptSourceColor,
   getPOLinkStatusColor,
+  getReceiptApprovedGrNumber,
+  getReceiptIrNumber,
   getReceiptPOReferences,
   goodsReceiptSourceLabel,
   poLinkStatusLabel,
@@ -42,16 +44,27 @@ export function InboundGRTable({
     }
     return data;
   }, [receipts, typeFilter, statusFilter]);
+  const showApprovedGrColumn = filteredReceipts.some((receipt) => getReceiptApprovedGrNumber(receipt));
 
   const columns: ProColumns<GoodsReceipt>[] = [
     {
-      key: 'grNumber',
-      title: 'ID',
-      dataIndex: 'grNumber',
+      key: 'receivingNumber',
+      title: 'IR Number',
+      dataIndex: 'receivingNumber',
       render: (_: any, r: GoodsReceipt) => (
-        <a onClick={() => onViewDetail(r)}>{r.grNumber}</a>
+        <a onClick={() => onViewDetail(r)}>{getReceiptIrNumber(r)}</a>
       ),
     },
+    ...(showApprovedGrColumn
+      ? [
+          {
+            key: 'approvedGrNumber',
+            title: 'GR Number',
+            dataIndex: 'approvedGrNumber',
+            render: (_: any, r: GoodsReceipt) => getReceiptApprovedGrNumber(r) || '-',
+          } as ProColumns<GoodsReceipt>,
+        ]
+      : []),
     {
       key: 'poNumber',
       title: 'PO Reference',
@@ -143,7 +156,7 @@ export function InboundGRTable({
       actionRef={actionRef}
       columns={columns}
       dataSource={filteredReceipts}
-      rowKey="grNumber"
+      rowKey={(record) => record.receivingNumber || record.grNumber}
       bordered
       size="small"
       search={false}

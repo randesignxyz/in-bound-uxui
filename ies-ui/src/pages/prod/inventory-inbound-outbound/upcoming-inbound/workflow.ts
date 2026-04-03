@@ -30,6 +30,13 @@ export type InboundHistoryStatus =
   | 'Correction Required'
   | 'Rejected';
 
+export type QcQueueStatus =
+  | 'Pending'
+  | 'Submitted'
+  | 'Correction Required'
+  | 'Rejected'
+  | 'Complete';
+
 export type GRScenarioPath =
   | 'NORMAL'
   | 'MISMATCH_CORRECTION'
@@ -121,6 +128,9 @@ export interface GRActivity {
 export interface GoodsReceipt {
   grNumber: string;
   receivingNumber?: string;
+  approvedGrNumber?: string;
+  previousReceivingNumber?: string;
+  previousApprovedGrNumber?: string;
   poNumber: string;
   supplier: string;
   poReferences: Array<{
@@ -206,6 +216,18 @@ export function summarizeSuppliers(receipt: GoodsReceipt) {
     : Array.from(new Set(getReceiptPOReferences(receipt).map((reference) => reference.supplier)));
   if (suppliers.length === 1) return suppliers[0];
   return `${suppliers.length} suppliers`;
+}
+
+export function getReceiptIrNumber(
+  receipt: Pick<GoodsReceipt, 'receivingNumber' | 'grNumber'>,
+) {
+  return receipt.receivingNumber?.trim() || receipt.grNumber;
+}
+
+export function getReceiptApprovedGrNumber(
+  receipt: Pick<GoodsReceipt, 'approvedGrNumber'>,
+) {
+  return receipt.approvedGrNumber?.trim() || undefined;
 }
 
 export function hasReceiptDiscrepancy(items: GRItem[]) {
@@ -307,6 +329,50 @@ export function getInboundHistoryStatus(receipt: GoodsReceipt): InboundHistorySt
       return isSupervisorRejectedCorrection(receipt) ? 'Rejected' : 'Correction Required';
     default:
       return 'Draft';
+  }
+}
+
+export function getQcQueueStatus(receipt: GoodsReceipt): QcQueueStatus | null {
+  switch (receipt.processState) {
+    case 'QC_PENDING':
+      return 'Pending';
+    case 'QC_PASSED':
+    case 'PENDING_SUPERVISOR_REVIEW':
+    case 'MERGED_TO_SUPERVISOR_REVIEW':
+      return 'Submitted';
+    case 'SUPERVISOR_APPROVED':
+    case 'TRANSFERRED_TO_PM_RM_WH':
+    case 'FIN_SUBMITTED':
+    case 'DAILY_CLOSED':
+    case 'MONTHLY_SUMMARY_READY':
+      return 'Complete';
+    case 'MISMATCH_EXCEPTION':
+      return 'Correction Required';
+    case 'CORRECTION_REQUIRED':
+      if (isSupervisorRejectedCorrection(receipt)) {
+        return 'Rejected';
+      }
+
+      return 'Correction Required';
+    default:
+      return null;
+  }
+}
+
+export function getQcQueueStatusColor(status: QcQueueStatus) {
+  switch (status) {
+    case 'Pending':
+      return 'gold';
+    case 'Submitted':
+      return 'blue';
+    case 'Correction Required':
+      return 'orange';
+    case 'Rejected':
+      return 'red';
+    case 'Complete':
+      return 'green';
+    default:
+      return 'default';
   }
 }
 

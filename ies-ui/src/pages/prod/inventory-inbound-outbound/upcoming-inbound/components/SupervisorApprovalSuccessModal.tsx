@@ -66,10 +66,10 @@ export function SupervisorApprovalSuccessModal({
       </div>
 
       <Descriptions bordered size="small" column={2}>
-        <Descriptions.Item label="Receiving Number">
+        <Descriptions.Item label="IR Number">
           {data.receivingNumber || data.grNumber}
         </Descriptions.Item>
-        <Descriptions.Item label="GR Ready Number">
+        <Descriptions.Item label="GR Number">
           {data.approvedGrNumber || data.grNumber}
         </Descriptions.Item>
         <Descriptions.Item label="PO Reference">{poReferenceSummary}</Descriptions.Item>

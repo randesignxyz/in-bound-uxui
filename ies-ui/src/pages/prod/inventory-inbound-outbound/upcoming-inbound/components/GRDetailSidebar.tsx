@@ -33,6 +33,9 @@ import {
   type GRItem,
   type InboundProcessState,
   type QcDecision,
+  getQcQueueStatus,
+  getReceiptApprovedGrNumber,
+  getReceiptIrNumber,
   goodsReceiptSourceLabel,
   summarizePOReferences,
   summarizeSuppliers,
@@ -245,13 +248,16 @@ export function GRDetailSidebar({
       ? 'QC Reviewed By'
       : 'Approved By';
   const reviewerDateLabel = reviewerLabel === 'QC Reviewed By' ? 'QC Reviewed Date' : 'Approved Date';
+  const displayedStatus =
+    viewerRole === 'QC' ? getQcQueueStatus(receipt) || receipt.status : receipt.status;
+  const approvedGrNumber = getReceiptApprovedGrNumber(receipt);
   const shortMetadataItems: ReceiptMetadataItem[] = [
-    { label: 'Receiving / GR Number', value: receipt.grNumber, emphasize: true },
+    { label: 'IR Number', value: getReceiptIrNumber(receipt), emphasize: true },
+    ...(approvedGrNumber ? [{ label: 'GR Number', value: approvedGrNumber, emphasize: true }] : []),
     { label: 'PO Reference', value: summarizePOReferences(receipt), emphasize: true },
     { label: 'Supplier', value: summarizeSuppliers(receipt) },
     { label: 'Type', value: receipt.receiptType },
-    { label: 'Source', value: goodsReceiptSourceLabel[receipt.receiptSourceType] },
-    { label: 'Status', value: receipt.status },
+    { label: 'Status', value: displayedStatus },
     { label: 'Posting Date', value: receipt.postingDate },
     { label: 'Actual Receipt Date', value: receipt.actualReceiptDate },
     { label: 'Receiver Warehouse', value: receipt.receiverWarehouseName },
@@ -260,7 +266,6 @@ export function GRDetailSidebar({
     { label: 'Created Date', value: receipt.createdDate },
     ...(receipt.approvedBy ? [{ label: reviewerLabel, value: receipt.approvedBy }] : []),
     ...(receipt.approvedDate ? [{ label: reviewerDateLabel, value: receipt.approvedDate }] : []),
-    ...(receipt.linkedPoNumber ? [{ label: 'Linked PO', value: receipt.linkedPoNumber }] : []),
     ...(receipt.linkedPoLinkedAt ? [{ label: 'Linked At', value: receipt.linkedPoLinkedAt }] : []),
     ...(receipt.linkedPoLinkedBy ? [{ label: 'Linked By', value: receipt.linkedPoLinkedBy }] : []),
   ];
@@ -681,7 +686,7 @@ export function GRDetailSidebar({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: 12,
+              gap: 12,
             width: '100%',
             paddingRight: 12,
           }}

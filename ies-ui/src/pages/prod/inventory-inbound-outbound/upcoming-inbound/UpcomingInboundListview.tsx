@@ -34,8 +34,12 @@ import {
   type InboundHistoryStatus,
   type InboundProcessState,
   type POLinkStatus,
+  type QcQueueStatus,
   getGoodsReceiptSourceColor,
+  getQcQueueStatus,
   getInboundHistoryStatus,
+  getReceiptApprovedGrNumber,
+  getReceiptIrNumber,
   getReceiptPOReferences,
   officialStateLabel,
   poLinkStatusLabel,
@@ -69,6 +73,7 @@ const { Text } = Typography;
 type InboundViewMode = 'operations' | 'history';
 type InboundWorkspaceRole = 'WAREHOUSE_STAFF' | 'QC' | 'WAREHOUSE_SUPERVISOR';
 type HistoryStatusFilter = 'ALL' | InboundHistoryStatus;
+type QcQueueStatusFilter = QcQueueStatus | 'All';
 
 const simulationRoleLabel: Record<InboundWorkspaceRole, string> = {
   WAREHOUSE_STAFF: 'Warehouse Staff',
@@ -83,6 +88,15 @@ const historyStatusOptions: Array<{ label: string; value: HistoryStatusFilter }>
   { label: 'Complete', value: 'Complete' },
   { label: 'Correction Required', value: 'Correction Required' },
   { label: 'Rejected', value: 'Rejected' },
+];
+
+const qcStatusOptions: Array<{ label: string; value: QcQueueStatusFilter }> = [
+  { label: 'Pending', value: 'Pending' },
+  { label: 'Submitted', value: 'Submitted' },
+  { label: 'Correction Required', value: 'Correction Required' },
+  { label: 'Rejected', value: 'Rejected' },
+  { label: 'Complete', value: 'Complete' },
+  { label: 'All', value: 'All' },
 ];
 
 function normalizeReceiptForUI(receipt: GoodsReceipt): GoodsReceipt {
@@ -120,6 +134,7 @@ export default function UpcomingInboundListview() {
   const [queueTypeFilter, setQueueTypeFilter] = useState<'ALL' | GoodsReceipt['receiptType']>('ALL');
   const [queueSourceFilter, setQueueSourceFilter] =
     useState<'ALL' | 'STANDARD' | 'TEMP'>('ALL');
+  const [qcStatusFilter, setQcStatusFilter] = useState<QcQueueStatusFilter>('Pending');
   const [historyTypeFilter, setHistoryTypeFilter] = useState<'ALL' | 'Planned' | 'Unplanned'>('ALL');
   const [historyStatusFilter, setHistoryStatusFilter] = useState<HistoryStatusFilter>('ALL');
   const [dashboardSummaryRange, setDashboardSummaryRange] =
@@ -321,8 +336,8 @@ export default function UpcomingInboundListview() {
     [receipts],
   );
 
-  const qcQueueReceipts = useMemo(
-    () => receipts.filter((r) => r.processState === 'QC_PENDING'),
+  const qcRelevantReceipts = useMemo(
+    () => receipts.filter((receipt) => getQcQueueStatus(receipt) !== null),
     [receipts],
   );
 
@@ -342,7 +357,7 @@ export default function UpcomingInboundListview() {
   const filteredRoleQueue = useMemo(() => {
     const source =
       activeRole === 'QC'
-        ? qcQueueReceipts
+        ? qcRelevantReceipts
         : activeRole === 'WAREHOUSE_SUPERVISOR'
           ? supervisorQueueReceipts
           : [];
@@ -354,6 +369,8 @@ export default function UpcomingInboundListview() {
       data = data.filter(
         (receipt) =>
           receipt.grNumber.toUpperCase().includes(term) ||
+          getReceiptIrNumber(receipt).toUpperCase().includes(term) ||
+          (getReceiptApprovedGrNumber(receipt)?.toUpperCase().includes(term) ?? false) ||
           receipt.poNumber.toUpperCase().includes(term) ||
           getReceiptPOReferences(receipt).some((reference) =>
             reference.poNumber.toUpperCase().includes(term) ||
@@ -368,7 +385,11 @@ export default function UpcomingInboundListview() {
       data = data.filter((receipt) => receipt.receiptType === queueTypeFilter);
     }
 
-    if (queueSourceFilter === 'STANDARD') {
+    if (activeRole === 'QC') {
+      if (qcStatusFilter !== 'All') {
+        data = data.filter((receipt) => getQcQueueStatus(receipt) === qcStatusFilter);
+      }
+    } else if (queueSourceFilter === 'STANDARD') {
       data = data.filter((receipt) => receipt.receiptSourceType !== 'TEMP_NO_PO');
     } else if (queueSourceFilter === 'TEMP') {
       data = data.filter((receipt) => receipt.receiptSourceType === 'TEMP_NO_PO');
@@ -376,7 +397,8 @@ export default function UpcomingInboundListview() {
 
     return data.sort((a, b) => b.createdDate.localeCompare(a.createdDate));
   }, [
-    qcQueueReceipts,
+    qcRelevantReceipts,
+    qcStatusFilter,
     queueSearchValue,
     queueSourceFilter,
     queueTypeFilter,
@@ -482,9 +504,13 @@ export default function UpcomingInboundListview() {
     setWarehouseCorrectionReceipt(null);
     setLinkPOReceipt(null);
     setSupervisorApprovalSuccess(null);
+    if (nextRole === 'QC') {
+      setInboundView('operations');
+    }
     setQueueSearchValue('');
     setQueueTypeFilter('ALL');
     setQueueSourceFilter('ALL');
+    setQcStatusFilter('Pending');
     setHistoryTypeFilter('ALL');
     setHistoryStatusFilter('ALL');
   };
@@ -819,6 +845,9 @@ export default function UpcomingInboundListview() {
   }));
 
   const shouldShowRoleSelector = isRoleSimulationEnabled || inboundRoleOptions.length > 1;
+  const shouldShowInboundTabs = activeRole !== 'QC';
+  const effectiveInboundView: InboundViewMode =
+    activeRole === 'QC' ? 'operations' : inboundView;
   const dashboardSummaryTitle =
     activeRole === 'WAREHOUSE_STAFF'
       ? 'Inbound Upcoming Dashboard'
@@ -1059,43 +1088,45 @@ export default function UpcomingInboundListview() {
 
         <ProCard bordered style={{ marginBottom: 16 }}>
           <Row justify="space-between" align="middle" gutter={[12, 12]}>
-            <Col>
-              <Space
-                size={6}
-                wrap
-                style={{
-                  padding: 2,
-                  background: '#f5f5f5',
-                  border: '1px solid #e8e8e8',
-                  borderRadius: 14,
-                }}
-              >
-                {inboundViewOptions.map((option) => {
-                  const isActive = inboundView === option.value;
+            {shouldShowInboundTabs && (
+              <Col>
+                <Space
+                  size={6}
+                  wrap
+                  style={{
+                    padding: 2,
+                    background: '#f5f5f5',
+                    border: '1px solid #e8e8e8',
+                    borderRadius: 14,
+                  }}
+                >
+                  {inboundViewOptions.map((option) => {
+                    const isActive = inboundView === option.value;
 
-                  return (
-                    <Button
-                      key={option.value}
-                      type={isActive ? 'primary' : 'default'}
-                      size="small"
-                      icon={option.icon}
-                      onClick={() => setInboundView(option.value)}
-                      style={{
-                        minHeight: 32,
-                        paddingInline: 10,
-                        borderRadius: 10,
-                        fontWeight: 600,
-                        boxShadow: isActive ? '0 4px 12px rgba(22, 119, 255, 0.16)' : 'none',
-                      }}
-                    >
-                      {option.label}
-                    </Button>
-                  );
-                })}
-              </Space>
-            </Col>
+                    return (
+                      <Button
+                        key={option.value}
+                        type={isActive ? 'primary' : 'default'}
+                        size="small"
+                        icon={option.icon}
+                        onClick={() => setInboundView(option.value)}
+                        style={{
+                          minHeight: 32,
+                          paddingInline: 10,
+                          borderRadius: 10,
+                          fontWeight: 600,
+                          boxShadow: isActive ? '0 4px 12px rgba(22, 119, 255, 0.16)' : 'none',
+                        }}
+                      >
+                        {option.label}
+                      </Button>
+                    );
+                  })}
+                </Space>
+              </Col>
+            )}
             <Col flex="auto">
-              {inboundView === 'operations' ? (
+              {effectiveInboundView === 'operations' ? (
                 activeRole === 'WAREHOUSE_STAFF' ? (
                   <Space size="large" wrap style={{ justifyContent: 'flex-end', width: '100%' }}>
                     <Input.Search
@@ -1120,6 +1151,34 @@ export default function UpcomingInboundListview() {
                       }}
                       placeholder="Expected date"
                     />
+                  </Space>
+                ) : activeRole === 'QC' ? (
+                  <Space size="large" wrap style={{ justifyContent: 'flex-end', width: '100%' }}>
+                    <Input.Search
+                      allowClear
+                      placeholder="Search GR / PO / Supplier"
+                      onSearch={(value) => setQueueSearchValue(value)}
+                      onChange={(event) => !event.target.value && setQueueSearchValue('')}
+                      style={{ width: 260 }}
+                    />
+                    <Radio.Group
+                      value={queueTypeFilter}
+                      onChange={(event) => setQueueTypeFilter(event.target.value)}
+                    >
+                      <Radio.Button value="ALL">All</Radio.Button>
+                      <Radio.Button value="Planned">Planned</Radio.Button>
+                      <Radio.Button value="Unplanned">Unplanned</Radio.Button>
+                    </Radio.Group>
+                    <Radio.Group
+                      value={qcStatusFilter}
+                      onChange={(event) => setQcStatusFilter(event.target.value)}
+                    >
+                      {qcStatusOptions.map((option) => (
+                        <Radio.Button key={option.value} value={option.value}>
+                          {option.label}
+                        </Radio.Button>
+                      ))}
+                    </Radio.Group>
                   </Space>
                 ) : (
                   <Space size="large" wrap style={{ justifyContent: 'flex-end', width: '100%' }}>
@@ -1148,7 +1207,7 @@ export default function UpcomingInboundListview() {
                     </Radio.Group>
                   </Space>
                 )
-              ) : inboundView === 'history' ? (
+              ) : effectiveInboundView === 'history' ? (
                 <Space size="large" wrap style={{ justifyContent: 'flex-end', width: '100%' }}>
                   <Radio.Group
                     value={historyTypeFilter}
@@ -1176,7 +1235,7 @@ export default function UpcomingInboundListview() {
         </ProCard>
 
         {/* ── Inbound Operations View ── */}
-        {inboundView === 'operations' && (
+        {effectiveInboundView === 'operations' && (
           <div>
             {activeRole === 'WAREHOUSE_STAFF' ? (
               <>
@@ -1302,6 +1361,7 @@ export default function UpcomingInboundListview() {
               <GRQueueTable
                 receipts={filteredRoleQueue}
                 onViewDetail={handleOpenGRDetail}
+                statusMode={activeRole === 'QC' ? 'qc' : 'legacy'}
                 headerTitle={
                   <div style={{ paddingLeft: 8 }}>
                     <Text strong>{`Inbound Receiving (${filteredRoleQueue.length})`}</Text>
@@ -1313,7 +1373,7 @@ export default function UpcomingInboundListview() {
         )}
 
         {/* ── GR History View ── */}
-        {inboundView === 'history' && (
+        {effectiveInboundView === 'history' && (
           <Card size="small" style={{ marginBottom: 16 }} bodyStyle={{ padding: 0 }}>
             <div style={{ padding: '16px 16px 12px' }}>{inboundReceivingHeaderTitle}</div>
             <InboundGRTable

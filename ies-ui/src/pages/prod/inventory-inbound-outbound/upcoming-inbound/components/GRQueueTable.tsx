@@ -5,11 +5,11 @@ import type { ActionType, ProColumns } from '@ant-design/pro-table';
 import type { GoodsReceipt, LegacyGRStatus } from '../workflow';
 import {
   getGoodsReceiptWorkflowProgress,
-  getGoodsReceiptSourceColor,
-  getPOLinkStatusColor,
+  getQcQueueStatus,
+  getQcQueueStatusColor,
+  getReceiptApprovedGrNumber,
+  getReceiptIrNumber,
   getReceiptPOReferences,
-  goodsReceiptSourceLabel,
-  poLinkStatusLabel,
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
@@ -19,6 +19,7 @@ interface GRQueueTableProps {
   onViewDetail: (receipt: GoodsReceipt) => void;
   headerTitle?: ReactNode;
   toolbarExtra?: ReactNode;
+  statusMode?: 'legacy' | 'qc';
 }
 
 const statusColor: Record<LegacyGRStatus, string> = {
@@ -35,17 +36,31 @@ export function GRQueueTable({
   onViewDetail,
   headerTitle,
   toolbarExtra,
+  statusMode = 'legacy',
 }: GRQueueTableProps) {
   const actionRef = useRef<ActionType>();
   const toolbarContent = toolbarExtra ? [toolbarExtra] : headerTitle ? [<div key="spacer" style={{ minHeight: 32 }} />] : [];
+  const showApprovedGrColumn = receipts.some((receipt) => getReceiptApprovedGrNumber(receipt));
 
   const columns: ProColumns<GoodsReceipt>[] = [
     {
-      key: 'grNumber',
-      title: 'GR Number',
-      dataIndex: 'grNumber',
-      render: (_: any, row: GoodsReceipt) => <a onClick={() => onViewDetail(row)}>{row.grNumber}</a>,
+      key: 'receivingNumber',
+      title: 'IR Number',
+      dataIndex: 'receivingNumber',
+      render: (_: any, row: GoodsReceipt) => (
+        <a onClick={() => onViewDetail(row)}>{getReceiptIrNumber(row)}</a>
+      ),
     },
+    ...(showApprovedGrColumn
+      ? [
+          {
+            key: 'approvedGrNumber',
+            title: 'GR Number',
+            dataIndex: 'approvedGrNumber',
+            render: (_: any, row: GoodsReceipt) => getReceiptApprovedGrNumber(row) || '-',
+          } as ProColumns<GoodsReceipt>,
+        ]
+      : []),
     {
       key: 'poNumber',
       title: 'PO Reference',
@@ -65,24 +80,6 @@ export function GRQueueTable({
       dataIndex: 'receiptType',
       render: (_: any, row: GoodsReceipt) => (
         <Tag color={row.receiptType === 'Planned' ? 'green' : 'orange'}>{row.receiptType}</Tag>
-      ),
-    },
-    {
-      key: 'source',
-      title: 'Source',
-      render: (_: any, row: GoodsReceipt) => (
-        <Tag color={getGoodsReceiptSourceColor(row.receiptSourceType)}>
-          {goodsReceiptSourceLabel[row.receiptSourceType]}
-        </Tag>
-      ),
-    },
-    {
-      key: 'poLinkStatus',
-      title: 'PO Link',
-      render: (_: any, row: GoodsReceipt) => (
-        <Tag color={getPOLinkStatusColor(row.poLinkStatus)}>
-          {poLinkStatusLabel[row.poLinkStatus]}
-        </Tag>
       ),
     },
     {
@@ -127,11 +124,22 @@ export function GRQueueTable({
     {
       key: 'status',
       title: 'Status',
-      render: (_: any, row: GoodsReceipt) => (
-        <Tag color={statusColor[row.status]} bordered={false}>
-          {row.status}
-        </Tag>
-      ),
+      render: (_: any, row: GoodsReceipt) => {
+        if (statusMode === 'qc') {
+          const qcStatus = getQcQueueStatus(row);
+          return (
+            <Tag color={qcStatus ? getQcQueueStatusColor(qcStatus) : statusColor[row.status]} bordered={false}>
+              {qcStatus || row.status}
+            </Tag>
+          );
+        }
+
+        return (
+          <Tag color={statusColor[row.status]} bordered={false}>
+            {row.status}
+          </Tag>
+        );
+      },
     },
   ];
 
@@ -141,7 +149,7 @@ export function GRQueueTable({
       headerTitle={headerTitle}
       columns={columns}
       dataSource={receipts}
-      rowKey="grNumber"
+      rowKey={(record) => record.receivingNumber || record.grNumber}
       bordered
       size="small"
       search={false}

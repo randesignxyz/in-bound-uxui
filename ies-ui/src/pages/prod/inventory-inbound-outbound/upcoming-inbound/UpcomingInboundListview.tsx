@@ -989,6 +989,8 @@ export default function UpcomingInboundListview() {
     activeRole === 'WAREHOUSE_STAFF'
       ? 'Inbound Upcoming Dashboard'
       : 'Inbound Receiving Dashboard';
+  const operationsTabLabel =
+    activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Inbound Receiving' : 'Inbound Upcoming';
   const historyTabLabel =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? 'GR History' : 'Inbound Receiving';
   const inboundViewOptions: {
@@ -996,7 +998,7 @@ export default function UpcomingInboundListview() {
     label: string;
     value: InboundViewMode;
   }[] = [
-    { label: 'Inbound Upcoming', value: 'operations', icon: <AppstoreOutlined /> },
+    { label: operationsTabLabel, value: 'operations', icon: <AppstoreOutlined /> },
     { label: historyTabLabel, value: 'history', icon: <BarsOutlined /> },
   ];
   const historyReceipts = useMemo(() => {
@@ -1526,6 +1528,7 @@ export default function UpcomingInboundListview() {
               onViewDetail={handleOpenGRDetail}
               typeFilter={historyTypeFilter}
               statusFilter={historyStatusFilter}
+              hideSourceAndPoLink={activeRole === 'WAREHOUSE_STAFF'}
             />
           </Card>
         )}

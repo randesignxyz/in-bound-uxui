@@ -24,6 +24,7 @@ interface InboundGRTableProps {
   onViewDetail: (gr: GoodsReceipt) => void;
   typeFilter: 'ALL' | 'Planned' | 'Unplanned';
   statusFilter: 'ALL' | InboundHistoryStatus;
+  hideSourceAndPoLink?: boolean;
 }
 
 export function InboundGRTable({
@@ -31,6 +32,7 @@ export function InboundGRTable({
   onViewDetail,
   typeFilter,
   statusFilter,
+  hideSourceAndPoLink = false,
 }: InboundGRTableProps) {
   const actionRef = useRef<ActionType>();
 
@@ -80,24 +82,28 @@ export function InboundGRTable({
         <Tag color={r.receiptType === 'Planned' ? 'green' : 'orange'}>{r.receiptType}</Tag>
       ),
     },
-    {
-      key: 'receiptSourceType',
-      title: 'Source',
-      render: (_: any, r: GoodsReceipt) => (
-        <Tag color={getGoodsReceiptSourceColor(r.receiptSourceType)}>
-          {goodsReceiptSourceLabel[r.receiptSourceType]}
-        </Tag>
-      ),
-    },
-    {
-      key: 'poLinkStatus',
-      title: 'PO Link',
-      render: (_: any, r: GoodsReceipt) => (
-        <Tag color={getPOLinkStatusColor(r.poLinkStatus)}>
-          {poLinkStatusLabel[r.poLinkStatus]}
-        </Tag>
-      ),
-    },
+    ...(!hideSourceAndPoLink
+      ? [
+          {
+            key: 'receiptSourceType',
+            title: 'Source',
+            render: (_: any, r: GoodsReceipt) => (
+              <Tag color={getGoodsReceiptSourceColor(r.receiptSourceType)}>
+                {goodsReceiptSourceLabel[r.receiptSourceType]}
+              </Tag>
+            ),
+          } as ProColumns<GoodsReceipt>,
+          {
+            key: 'poLinkStatus',
+            title: 'PO Link',
+            render: (_: any, r: GoodsReceipt) => (
+              <Tag color={getPOLinkStatusColor(r.poLinkStatus)}>
+                {poLinkStatusLabel[r.poLinkStatus]}
+              </Tag>
+            ),
+          } as ProColumns<GoodsReceipt>,
+        ]
+      : []),
     {
       key: 'supplier',
       title: 'Supplier',

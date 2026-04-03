@@ -48,6 +48,8 @@ export type InboundDashboardSummaryRange = 'DAILY' | 'WEEKLY' | 'OVERALL';
 export interface InboundDashboardSummaryParams {
   expectedDate?: string | null;
   range?: InboundDashboardSummaryRange | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
 }
 
 export interface InboundPoItemApi {
@@ -194,7 +196,9 @@ export interface InboundDashboardSummaryApi {
   qcPending: number;
   supervisorPending: number;
   approved: number;
+  completed: number;
   exceptions: number;
+  returnedForCorrection: number;
   awaitingPOLink: number;
   totalGRs: number;
 }

@@ -276,7 +276,6 @@ export function GRDetailSidebar({
   const overflowMetadataItems = shortMetadataItems.slice(15);
   const noteMetadataItems: ReceiptMetadataItem[] = [
     ...(receipt.pendingPOReason ? [{ label: 'Pending PO Note', value: receipt.pendingPOReason }] : []),
-    ...(receipt.linkBlockReason ? [{ label: 'Link Check', value: receipt.linkBlockReason }] : []),
   ];
   const updateItem = (index: number, field: 'qcDecision' | 'qcRemark', value: string) => {
     setItems((prev) =>

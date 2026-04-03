@@ -48,6 +48,7 @@ import {
 } from './workflow';
 import type {
   InboundDashboardSummaryApi,
+  InboundDashboardSummaryParams,
   InboundDashboardSummaryRange,
   InboundSaveGoodsReceiptInput,
   UpcomingInboundGoodsReceipt as GoodsReceipt,
@@ -74,6 +75,13 @@ type InboundViewMode = 'operations' | 'history';
 type InboundWorkspaceRole = 'WAREHOUSE_STAFF' | 'QC' | 'WAREHOUSE_SUPERVISOR';
 type HistoryStatusFilter = 'ALL' | InboundHistoryStatus;
 type QcQueueStatusFilter = QcQueueStatus | 'All';
+type DashboardSummaryViewMode = InboundDashboardSummaryRange | 'CUSTOM';
+type DashboardStatCard = {
+  title: string;
+  value: number;
+  color?: string;
+  prefix?: ReactNode;
+};
 
 const simulationRoleLabel: Record<InboundWorkspaceRole, string> = {
   WAREHOUSE_STAFF: 'Warehouse Staff',
@@ -85,6 +93,22 @@ const historyStatusOptions: Array<{ label: string; value: HistoryStatusFilter }>
   { label: 'All', value: 'ALL' },
   { label: 'Draft', value: 'Draft' },
   { label: 'Pending', value: 'Pending' },
+  { label: 'Complete', value: 'Complete' },
+  { label: 'Correction Required', value: 'Correction Required' },
+  { label: 'Rejected', value: 'Rejected' },
+];
+
+const warehouseHistoryStatusOptions: Array<{ label: string; value: HistoryStatusFilter }> = [
+  { label: 'All Status', value: 'ALL' },
+  { label: 'Draft', value: 'Draft' },
+  { label: 'Pending', value: 'Pending' },
+  { label: 'Complete', value: 'Complete' },
+  { label: 'Correction Required', value: 'Correction Required' },
+  { label: 'Rejected', value: 'Rejected' },
+];
+
+const supervisorHistoryStatusOptions: Array<{ label: string; value: HistoryStatusFilter }> = [
+  { label: 'All Status', value: 'ALL' },
   { label: 'Complete', value: 'Complete' },
   { label: 'Correction Required', value: 'Correction Required' },
   { label: 'Rejected', value: 'Rejected' },
@@ -129,7 +153,7 @@ export default function UpcomingInboundListview() {
   // Shared PO filters
   const [poSearchValue, setPOSearchValue] = useState('');
   const [poTypeFilter, setPOTypeFilter] = useState<'ALL' | PurchaseOrder['type']>('ALL');
-  const [poDateFilter, setPODateFilter] = useState<string | undefined>();
+  const [poDateRangeFilter, setPODateRangeFilter] = useState<[string, string] | null>(null);
   const [queueSearchValue, setQueueSearchValue] = useState('');
   const [queueTypeFilter, setQueueTypeFilter] = useState<'ALL' | GoodsReceipt['receiptType']>('ALL');
   const [queueSourceFilter, setQueueSourceFilter] =
@@ -137,14 +161,16 @@ export default function UpcomingInboundListview() {
   const [qcStatusFilter, setQcStatusFilter] = useState<QcQueueStatusFilter>('Pending');
   const [historyTypeFilter, setHistoryTypeFilter] = useState<'ALL' | 'Planned' | 'Unplanned'>('ALL');
   const [historyStatusFilter, setHistoryStatusFilter] = useState<HistoryStatusFilter>('ALL');
-  const [dashboardSummaryRange, setDashboardSummaryRange] =
-    useState<InboundDashboardSummaryRange>('OVERALL');
+  const [dashboardSummaryRange, setDashboardSummaryRange] = useState<DashboardSummaryViewMode>('OVERALL');
+  const [dashboardPeriodFilter, setDashboardPeriodFilter] = useState<[string, string] | null>(null);
   const [inboundStats, setInboundStats] = useState<InboundDashboardSummaryApi>({
     expectedToday: 0,
     qcPending: 0,
     supervisorPending: 0,
     approved: 0,
+    completed: 0,
     exceptions: 0,
+    returnedForCorrection: 0,
     awaitingPOLink: 0,
     totalGRs: 0,
   });
@@ -203,12 +229,19 @@ export default function UpcomingInboundListview() {
       data = data.filter((po) => po.type === poTypeFilter);
     }
 
-    if (poDateFilter) {
-      data = data.filter((po) => po.expectedDate === poDateFilter);
+    if (poDateRangeFilter) {
+      const [dateFrom, dateTo] = poDateRangeFilter;
+      data = data.filter((po) => po.expectedDate >= dateFrom && po.expectedDate <= dateTo);
     }
 
     return data;
-  }, [poDateFilter, poSearchValue, poTypeFilter, purchaseOrders]);
+  }, [poDateRangeFilter, poSearchValue, poTypeFilter, purchaseOrders]);
+
+  const buildDashboardSummaryParams = (): InboundDashboardSummaryParams => ({
+    range: dashboardSummaryRange === 'CUSTOM' ? null : dashboardSummaryRange,
+    dateFrom: dashboardPeriodFilter?.[0] ?? null,
+    dateTo: dashboardPeriodFilter?.[1] ?? null,
+  });
 
   const loadInboundData = async () => {
     const [poResult, receiptResult, summaryResult] = await Promise.allSettled([
@@ -220,9 +253,7 @@ export default function UpcomingInboundListview() {
           pageSize: 200,
         },
       }),
-      services.getDashboardSummary({
-        range: dashboardSummaryRange,
-      }),
+      services.getDashboardSummary(buildDashboardSummaryParams()),
     ]);
 
     if (poResult.status === 'fulfilled') {
@@ -265,9 +296,10 @@ export default function UpcomingInboundListview() {
 
   const loadDashboardSummary = async () => {
     try {
-      const summary = await services.getDashboardSummary({
-        range: dashboardSummaryRange,
-      });
+      if (dashboardSummaryRange === 'CUSTOM' && !dashboardPeriodFilter) {
+        return;
+      }
+      const summary = await services.getDashboardSummary(buildDashboardSummaryParams());
       setInboundStats(summary);
     } catch (error: any) {
       message.error(error?.message || 'Failed to load inbound dashboard summary.');
@@ -284,7 +316,7 @@ export default function UpcomingInboundListview() {
       return;
     }
     void loadDashboardSummary();
-  }, [dashboardSummaryRange]);
+  }, [dashboardPeriodFilter, dashboardSummaryRange]);
   
   useEffect(() => {
     if (isRoleSimulationEnabled) return;
@@ -319,11 +351,116 @@ export default function UpcomingInboundListview() {
   };
 
   const dashboardExpectedTitle =
-    dashboardSummaryRange === 'DAILY'
-      ? 'Expected Today'
-      : dashboardSummaryRange === 'WEEKLY'
-        ? 'Expected This Week'
-        : 'Expected Overall';
+    dashboardSummaryRange === 'CUSTOM' && dashboardPeriodFilter
+      ? 'Expected in Selected Period'
+      : dashboardSummaryRange === 'DAILY'
+        ? 'Expected Today'
+        : dashboardSummaryRange === 'WEEKLY'
+          ? 'Expected This Week'
+          : 'Expected Overall';
+  const dashboardStatCards: DashboardStatCard[] =
+    activeRole === 'WAREHOUSE_STAFF'
+      ? [
+          {
+            title: dashboardExpectedTitle,
+            value: inboundStats.expectedToday,
+            color: '#1890ff',
+            prefix: <InboxOutlined />,
+          },
+          {
+            title: 'QC Pending',
+            value: inboundStats.qcPending,
+            color: '#faad14',
+            prefix: <ClockCircleOutlined />,
+          },
+          {
+            title: 'Supervisor Pending',
+            value: inboundStats.supervisorPending,
+            color: '#d48806',
+            prefix: <ClockCircleOutlined />,
+          },
+          {
+            title: 'Exception Queue',
+            value: inboundStats.exceptions,
+            color: '#ff4d4f',
+            prefix: <WarningOutlined />,
+          },
+          {
+            title: 'Awaiting PO Link',
+            value: inboundStats.awaitingPOLink,
+            color: '#722ed1',
+            prefix: <ClockCircleOutlined />,
+          },
+          {
+            title: 'Total GRs',
+            value: inboundStats.totalGRs,
+          },
+        ]
+      : activeRole === 'QC'
+        ? [
+            {
+              title: 'Total IR/GR',
+              value: inboundStats.totalGRs,
+              color: '#1890ff',
+              prefix: <InboxOutlined />,
+            },
+            {
+              title: 'Pending Review',
+              value: inboundStats.qcPending,
+              color: '#faad14',
+              prefix: <ClockCircleOutlined />,
+            },
+            {
+              title: 'Completed',
+              value: inboundStats.completed,
+              color: '#52c41a',
+              prefix: <InboxOutlined />,
+            },
+            {
+              title: 'Submitted',
+              value: inboundStats.supervisorPending,
+              color: '#1677ff',
+              prefix: <ClockCircleOutlined />,
+            },
+            {
+              title: 'Rejected',
+              value: inboundStats.returnedForCorrection,
+              color: '#ff4d4f',
+              prefix: <WarningOutlined />,
+            },
+          ]
+        : [
+            {
+              title: 'Total GR',
+              value: inboundStats.totalGRs,
+              color: '#1890ff',
+              prefix: <InboxOutlined />,
+            },
+            {
+              title: 'Pending Review',
+              value: inboundStats.supervisorPending,
+              color: '#d48806',
+              prefix: <ClockCircleOutlined />,
+            },
+            {
+              title: 'QC Pending',
+              value: inboundStats.qcPending,
+              color: '#faad14',
+              prefix: <ClockCircleOutlined />,
+            },
+            {
+              title: 'Completed',
+              value: inboundStats.completed,
+              color: '#52c41a',
+              prefix: <InboxOutlined />,
+            },
+            {
+              title: 'Return for Correction',
+              value: inboundStats.returnedForCorrection,
+              color: '#ff4d4f',
+              prefix: <WarningOutlined />,
+            },
+          ];
 
   const exceptionQueue = useMemo(
     () =>
@@ -889,6 +1026,12 @@ export default function UpcomingInboundListview() {
   }, [historyReceipts, historyStatusFilter, historyTypeFilter]);
   const historyHeaderTitle =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Good Receipt' : 'Inbound Receiving';
+  const historyStatusFilterOptions =
+    activeRole === 'WAREHOUSE_SUPERVISOR'
+      ? supervisorHistoryStatusOptions
+      : activeRole === 'WAREHOUSE_STAFF'
+        ? warehouseHistoryStatusOptions
+        : historyStatusOptions;
   const inboundReceivingHeaderTitle = (
     <div style={{ paddingLeft: 8 }}>
       <Text strong>{`${historyHeaderTitle} (${filteredHistoryReceiptCount})`}</Text>
@@ -983,108 +1126,99 @@ export default function UpcomingInboundListview() {
             <Text strong>{dashboardSummaryTitle}</Text>
           </Col>
           <Col>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: 3,
-                background: '#f5f5f5',
-                border: '1px solid #d9d9d9',
-                borderRadius: 12,
-              }}
-            >
-              {[
-                { label: 'Overall', value: 'OVERALL' },
-                { label: 'Daily', value: 'DAILY' },
-                { label: 'Weekly', value: 'WEEKLY' },
-              ].map((option) => {
-                const isActive = dashboardSummaryRange === option.value;
+            <Space size={12} wrap>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: 3,
+                  background: '#f5f5f5',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: 12,
+                }}
+              >
+                {[
+                  { label: 'Overall', value: 'OVERALL' },
+                  { label: 'Daily', value: 'DAILY' },
+                  { label: 'Weekly', value: 'WEEKLY' },
+                  { label: 'Pick Period', value: 'CUSTOM' },
+                ].map((option) => {
+                  const isActive = dashboardSummaryRange === option.value;
 
-                return (
-                  <Button
-                    key={option.value}
-                    size="small"
-                    type={isActive ? 'primary' : 'default'}
-                    onClick={() => setDashboardSummaryRange(option.value as InboundDashboardSummaryRange)}
-                    style={{
-                      minWidth: 78,
-                      height: 30,
-                      borderRadius: 9,
-                      fontWeight: 600,
-                      boxShadow: isActive ? '0 4px 10px rgba(0, 0, 0, 0.08)' : 'none',
-                    }}
-                  >
-                    {option.label}
-                  </Button>
-                );
-              })}
-            </div>
+                  return (
+                    <Button
+                      key={option.value}
+                      size="small"
+                      type={isActive ? 'primary' : 'default'}
+                      onClick={() => {
+                        setDashboardSummaryRange(option.value as DashboardSummaryViewMode);
+                        if (option.value !== 'CUSTOM') {
+                          setDashboardPeriodFilter(null);
+                        }
+                      }}
+                      style={{
+                        minWidth: 78,
+                        height: 30,
+                        borderRadius: 9,
+                        fontWeight: 600,
+                        boxShadow: isActive ? '0 4px 10px rgba(0, 0, 0, 0.08)' : 'none',
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  );
+                })}
+              </div>
+              {dashboardSummaryRange === 'CUSTOM' && (
+                <DatePicker.RangePicker
+                  size="small"
+                  allowClear
+                  style={{ width: 220 }}
+                  placeholder={['Start date', 'End date']}
+                  onChange={(values) => {
+                    if (!values?.[0] || !values?.[1]) {
+                      setDashboardPeriodFilter(null);
+                      setDashboardSummaryRange('OVERALL');
+                      return;
+                    }
+
+                    setDashboardPeriodFilter([
+                      values[0].format('YYYY-MM-DD'),
+                      values[1].format('YYYY-MM-DD'),
+                    ]);
+                  }}
+                />
+              )}
+            </Space>
           </Col>
         </Row>
 
         {/* Stats Row */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col xs={12} sm={8} lg={4}>
-            <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
-              <Statistic
-                title={<Text style={{ fontSize: 12 }}>{dashboardExpectedTitle}</Text>}
-                value={inboundStats.expectedToday}
-                valueStyle={{ fontSize: 24, color: '#1890ff' }}
-                prefix={<InboxOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} lg={4}>
-            <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
-              <Statistic
-                title={<Text style={{ fontSize: 12 }}>QC Pending</Text>}
-                value={inboundStats.qcPending}
-                valueStyle={{ fontSize: 24, color: '#faad14' }}
-                prefix={<ClockCircleOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} lg={4}>
-            <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
-              <Statistic
-                title={<Text style={{ fontSize: 12 }}>Supervisor Pending</Text>}
-                value={inboundStats.supervisorPending}
-                valueStyle={{ fontSize: 24, color: '#d48806' }}
-                prefix={<ClockCircleOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} lg={4}>
-            <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
-              <Statistic
-                title={<Text style={{ fontSize: 12 }}>Exception Queue</Text>}
-                value={inboundStats.exceptions}
-                valueStyle={{ fontSize: 24, color: '#ff4d4f' }}
-                prefix={<WarningOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} lg={4}>
-            <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
-              <Statistic
-                title={<Text style={{ fontSize: 12 }}>Awaiting PO Link</Text>}
-                value={inboundStats.awaitingPOLink}
-                valueStyle={{ fontSize: 24, color: '#722ed1' }}
-                prefix={<ClockCircleOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8} lg={4}>
-            <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
-              <Statistic
-                title={<Text style={{ fontSize: 12 }}>Total GRs</Text>}
-                value={inboundStats.totalGRs}
-                valueStyle={{ fontSize: 24 }}
-              />
-            </Card>
-          </Col>
-        </Row>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
+          {dashboardStatCards.map((card) => (
+            <div key={card.title}>
+              <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
+                <Statistic
+                  title={<Text style={{ fontSize: 12 }}>{card.title}</Text>}
+                  value={card.value}
+                  valueStyle={{
+                    fontSize: 24,
+                    ...(card.color ? { color: card.color } : {}),
+                  }}
+                  prefix={card.prefix}
+                />
+              </Card>
+            </div>
+          ))}
+        </div>
 
         <ProCard bordered style={{ marginBottom: 16 }}>
           <Row justify="space-between" align="middle" gutter={[12, 12]}>
@@ -1144,12 +1278,21 @@ export default function UpcomingInboundListview() {
                       <Radio.Button value="Planned">Planned</Radio.Button>
                       <Radio.Button value="Unplanned">Unplanned</Radio.Button>
                     </Radio.Group>
-                    <DatePicker
-                      style={{ width: 165 }}
-                      onChange={(v) => {
-                        setPODateFilter(v?.format('YYYY-MM-DD'));
+                    <DatePicker.RangePicker
+                      allowClear
+                      style={{ width: 260 }}
+                      onChange={(values) => {
+                        if (!values?.[0] || !values?.[1]) {
+                          setPODateRangeFilter(null);
+                          return;
+                        }
+
+                        setPODateRangeFilter([
+                          values[0].format('YYYY-MM-DD'),
+                          values[1].format('YYYY-MM-DD'),
+                        ]);
                       }}
-                      placeholder="Expected date"
+                      placeholder={['Start date', 'End date']}
                     />
                   </Space>
                 ) : activeRole === 'QC' ? (
@@ -1218,13 +1361,15 @@ export default function UpcomingInboundListview() {
                     <Radio.Button value="Unplanned">Unplanned</Radio.Button>
                   </Radio.Group>
                   <Space size={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Status
-                    </Text>
+                    {activeRole !== 'WAREHOUSE_SUPERVISOR' && activeRole !== 'WAREHOUSE_STAFF' && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        Status
+                      </Text>
+                    )}
                     <Select<HistoryStatusFilter>
                       value={historyStatusFilter}
                       onChange={(value) => setHistoryStatusFilter(value)}
-                      options={historyStatusOptions}
+                      options={historyStatusFilterOptions}
                       style={{ width: 190 }}
                     />
                   </Space>

@@ -168,7 +168,9 @@ export function mapInboundDashboardSummary(summary: InboundDashboardSummaryApi):
     qcPending: summary.qcPending,
     supervisorPending: summary.supervisorPending,
     approved: summary.approved,
+    completed: summary.completed,
     exceptions: summary.exceptions,
+    returnedForCorrection: summary.returnedForCorrection,
     awaitingPOLink: summary.awaitingPOLink,
     totalGRs: summary.totalGRs,
   };

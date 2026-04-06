@@ -500,6 +500,10 @@ function getActivityText(activity?: Pick<GRActivity, 'title' | 'description'>) {
   return `${activity?.title || ''} ${activity?.description || ''}`.trim();
 }
 
+function isSkipQcActivityText(activityText: string) {
+  return activityText.toLowerCase().includes('skip qc');
+}
+
 function hasActivityMatch(receipt: GoodsReceipt, text: string) {
   return receipt.activities.some((activity) => getActivityText(activity).toLowerCase().includes(text));
 }
@@ -827,12 +831,21 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
     if (!expandedStates.length) return;
 
     expandedStates.forEach((state, index) => {
-      const isDerivedQcPassed = state === 'QC_PASSED' && activity.processState === 'PENDING_SUPERVISOR_REVIEW' && index === 0;
       const activityText = getActivityText(activity);
+      const isSkipQcActivity =
+        activity.processState === 'PENDING_SUPERVISOR_REVIEW' && isSkipQcActivityText(activityText);
+      const isDerivedQcPassed =
+        state === 'QC_PASSED' && activity.processState === 'PENDING_SUPERVISOR_REVIEW' && index === 0;
       const title = isDerivedQcPassed
-        ? officialStateLabel.QC_PASSED
+        ? isSkipQcActivity
+          ? activity.title || 'Skip QC'
+          : officialStateLabel.QC_PASSED
         : resolveHistoricalTimelineTitle(state, activityText);
-      const description = isDerivedQcPassed ? officialStateLabel.QC_PASSED : activity.description || activity.title;
+      const description = isDerivedQcPassed
+        ? isSkipQcActivity
+          ? activity.description || activity.title || 'Skip QC'
+          : officialStateLabel.QC_PASSED
+        : activity.description || activity.title;
 
       appendTimelineState(
         timelineStates,

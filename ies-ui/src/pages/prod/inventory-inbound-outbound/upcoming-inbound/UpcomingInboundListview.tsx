@@ -810,6 +810,7 @@ export default function UpcomingInboundListview() {
     grNumber: string,
     newState: InboundProcessState,
     note?: string,
+    action?: string,
   ) => {
     const currentReceipt = receipts.find((gr) => gr.grNumber === grNumber);
     if (!currentReceipt?.id) {
@@ -823,6 +824,7 @@ export default function UpcomingInboundListview() {
         statusChange: newState,
         remark: note,
         state: newState,
+        action,
       });
       await loadInboundData();
       syncReceiptInState(response.data);

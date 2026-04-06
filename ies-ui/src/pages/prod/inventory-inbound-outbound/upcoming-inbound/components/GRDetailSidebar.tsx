@@ -90,7 +90,12 @@ interface GRDetailSidebarProps {
   onClose: () => void;
   receipt: GoodsReceipt | null;
   viewerRole: 'WAREHOUSE_STAFF' | 'QC' | 'WAREHOUSE_SUPERVISOR';
-  onUpdateProcessState: (grNumber: string, newState: InboundProcessState, note?: string) => void;
+  onUpdateProcessState: (
+    grNumber: string,
+    newState: InboundProcessState,
+    note?: string,
+    action?: string,
+  ) => Promise<void> | void;
   onOpenWarehouseCorrection: (receipt: GoodsReceipt) => void;
   onOpenLinkPO: (receipt: GoodsReceipt) => void;
   onSubmitQCVerification: (
@@ -234,6 +239,7 @@ export function GRDetailSidebar({
   const warehouseSupportingDocs = supportingDocs.filter((doc) => doc.source !== 'QC');
   const timelineActivities = buildReceiptTimelineActivities(receipt);
   const canSubmitForQC = viewerRole === 'WAREHOUSE_STAFF' && receipt.processState === 'GRPO_DRAFT';
+  const canSkipQc = viewerRole === 'WAREHOUSE_STAFF' && receipt.processState === 'QC_PENDING';
   const canOpenWarehouseCorrection =
     viewerRole === 'WAREHOUSE_STAFF' &&
     ['CORRECTION_REQUIRED', 'MISMATCH_EXCEPTION'].includes(receipt.processState);
@@ -432,6 +438,25 @@ export function GRDetailSidebar({
     }
   };
 
+  const handleSkipQc = () => {
+    if (!canSkipQc) return;
+
+    Modal.confirm({
+      title: 'Skip QC?',
+      content:
+        'This will bypass QC review for this receipt and send it directly to supervisor review. You can only do this after the receipt has already been submitted to QC.',
+      okText: 'Skip QC',
+      cancelText: 'Cancel',
+      onOk: () =>
+        onUpdateProcessState(
+          receipt.grNumber,
+          'PENDING_SUPERVISOR_REVIEW',
+          'Warehouse skipped QC and forwarded the receipt directly to supervisor review',
+          'SKIP_QC',
+        ),
+    });
+  };
+
   const handleSaveRemark = async () => {
     if (!remarkModalState) return;
 
@@ -473,6 +498,12 @@ export function GRDetailSidebar({
         onClick={() => onUpdateProcessState(receipt.grNumber, 'QC_PENDING', 'Submitted for QC')}
       >
         Submit for QC
+      </Button>,
+    );
+  } else if (canSkipQc) {
+    headerActions.push(
+      <Button key="skip-qc" onClick={handleSkipQc}>
+        Skip QC
       </Button>,
     );
   } else if (isQcEditable) {

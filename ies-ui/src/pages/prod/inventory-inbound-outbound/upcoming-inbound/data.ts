@@ -275,6 +275,7 @@ export interface InboundGoodsReceiptStatusChangeInput {
   statusChange: string;
   remark?: string | null;
   state: string;
+  action?: string | null;
 }
 
 export interface InboundLinkPoInput {

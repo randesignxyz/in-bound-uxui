@@ -491,6 +491,11 @@ export default function UpcomingInboundListview() {
     [receipts],
   );
 
+  const warehouseRejectedReceiptCount = useMemo(
+    () => receipts.filter((receipt) => getInboundHistoryStatus(receipt) === 'Rejected').length,
+    [receipts],
+  );
+
   const filteredRoleQueue = useMemo(() => {
     const source =
       activeRole === 'QC'
@@ -628,6 +633,29 @@ export default function UpcomingInboundListview() {
     }
   };
 
+  const resetDashboardFilters = () => {
+    setDashboardSummaryRange('OVERALL');
+    setDashboardPeriodFilter(null);
+  };
+
+  const resetWorkspaceFilters = () => {
+    setPOSearchValue('');
+    setPOTypeFilter('ALL');
+    setPODateRangeFilter(null);
+    setQueueSearchValue('');
+    setQueueTypeFilter('ALL');
+    setQueueSourceFilter('ALL');
+    setQcStatusFilter('Pending');
+    setHistoryTypeFilter('ALL');
+    setHistoryStatusFilter('ALL');
+    resetDashboardFilters();
+  };
+
+  const handleInboundViewChange = (nextView: InboundViewMode) => {
+    setInboundView(nextView);
+    resetWorkspaceFilters();
+  };
+
   const handleRoleChange = (nextRole: InboundWorkspaceRole) => {
     if (!isRoleSimulationEnabled && !inboundRoleOptions.includes(nextRole)) {
       return;
@@ -644,12 +672,7 @@ export default function UpcomingInboundListview() {
     if (nextRole === 'QC') {
       setInboundView('operations');
     }
-    setQueueSearchValue('');
-    setQueueTypeFilter('ALL');
-    setQueueSourceFilter('ALL');
-    setQcStatusFilter('Pending');
-    setHistoryTypeFilter('ALL');
-    setHistoryStatusFilter('ALL');
+    resetWorkspaceFilters();
   };
 
   const handleViewPODetail = async (po: PurchaseOrder) => {
@@ -996,10 +1019,19 @@ export default function UpcomingInboundListview() {
   const operationsTabLabel =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Inbound Receiving' : 'Inbound Upcoming';
   const historyTabLabel =
-    activeRole === 'WAREHOUSE_SUPERVISOR' ? 'GR History' : 'Inbound Receiving';
+    activeRole === 'WAREHOUSE_SUPERVISOR' ? (
+      'GR History'
+    ) : (
+      <Space size={6}>
+        <span>Inbound Receiving</span>
+        {warehouseRejectedReceiptCount > 0 && (
+          <Badge count={warehouseRejectedReceiptCount} size="small" />
+        )}
+      </Space>
+    );
   const inboundViewOptions: {
     icon: ReactNode;
-    label: string;
+    label: ReactNode;
     value: InboundViewMode;
   }[] = [
     { label: operationsTabLabel, value: 'operations', icon: <AppstoreOutlined /> },
@@ -1251,7 +1283,7 @@ export default function UpcomingInboundListview() {
                         type={isActive ? 'primary' : 'default'}
                         size="small"
                         icon={option.icon}
-                        onClick={() => setInboundView(option.value)}
+                        onClick={() => handleInboundViewChange(option.value)}
                         style={{
                           minHeight: 32,
                           paddingInline: 10,

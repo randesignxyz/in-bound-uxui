@@ -1576,6 +1576,7 @@ export default function UpcomingInboundListview() {
               typeFilter={historyTypeFilter}
               statusFilter={historyStatusFilter}
               hideSourceAndPoLink={activeRole === 'WAREHOUSE_STAFF'}
+              showNotificationBadge={activeRole === 'WAREHOUSE_STAFF'}
             />
           </Card>
         )}

@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { Flex, Progress, Tag } from 'antd';
+import { Badge, Flex, Progress, Tag } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
 import {
@@ -25,6 +25,7 @@ interface InboundGRTableProps {
   typeFilter: 'ALL' | 'Planned' | 'Unplanned';
   statusFilter: 'ALL' | InboundHistoryStatus;
   hideSourceAndPoLink?: boolean;
+  showNotificationBadge?: boolean;
 }
 
 export function InboundGRTable({
@@ -33,6 +34,7 @@ export function InboundGRTable({
   typeFilter,
   statusFilter,
   hideSourceAndPoLink = false,
+  showNotificationBadge = false,
 }: InboundGRTableProps) {
   const actionRef = useRef<ActionType>();
 
@@ -53,9 +55,20 @@ export function InboundGRTable({
       key: 'receivingNumber',
       title: 'IR Number',
       dataIndex: 'receivingNumber',
-      render: (_: any, r: GoodsReceipt) => (
-        <a onClick={() => onViewDetail(r)}>{getReceiptIrNumber(r)}</a>
-      ),
+      render: (_: any, r: GoodsReceipt) => {
+        const shouldShowRowBadge =
+          showNotificationBadge && getInboundHistoryStatus(r) === 'Rejected';
+
+        return (
+          <Badge
+            dot={shouldShowRowBadge}
+            color="#ff4d4f"
+            offset={[2, 2]}
+          >
+            <a onClick={() => onViewDetail(r)}>{getReceiptIrNumber(r)}</a>
+          </Badge>
+        );
+      },
     },
     ...(showApprovedGrColumn
       ? [

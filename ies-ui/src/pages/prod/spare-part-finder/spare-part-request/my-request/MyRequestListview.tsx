@@ -10,7 +10,7 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { useRef, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import { formatSpfDateTime } from '../../shared/dateTime';
-import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../data';
+import type { MyRequestItem, RequestPriority, RequestStatus } from '../data';
 import RequestedBatchDrawer from '../RequestedBatchDrawer';
 import type { RequestDetailData } from '../RequestedBatchDrawer';
 import { buildRequestDetailData, SparePartRequestService } from '../service';
@@ -119,12 +119,10 @@ export default function MyRequestListview() {
   const [filters, setFilters] = useState<{
     status: 'ALL' | RequestStatus;
     priority: 'ALL' | RequestPriority;
-    type: 'ALL' | SparePartType;
     dateRange?: [string, string];
   }>({
     status: 'ALL',
     priority: 'ALL',
-    type: 'ALL',
   });
 
   const reloadTable = () => {
@@ -158,7 +156,6 @@ export default function MyRequestListview() {
         advanceSearch: {
           priority: filters.priority,
           status: filters.status,
-          type: filters.type,
           dateRange: filters.dateRange,
         },
       },

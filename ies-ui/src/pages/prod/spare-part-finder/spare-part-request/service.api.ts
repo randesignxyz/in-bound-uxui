@@ -1,12 +1,13 @@
 import { Paging } from '@/services/API';
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
-import type { SparePartRequestItem, SparePartStockStatus, SparePartType } from './data';
+import { getServiceUrl } from '@/services/ApiUrl';
+import type { SparePartRequestItem, SparePartStockStatus } from './data';
 
 export interface SparePartRequestListSearch { 
   searchValue?: string;
   status?: string;
   category?: string;
-  type?: string;
+  categoryId?: number;
   warehouse?: string;
 }
 
@@ -16,8 +17,13 @@ interface SparePartRequestListApiSearch {
     warehouse: string;
     status: string;
     category: string;
-    type: string;
+    categoryId?: number;
   };
+}
+
+export interface SparePartCategoryApiItem {
+  id: number;
+  category_name: string;
 }
 
 export interface SparePartRequestListApiItem {
@@ -25,16 +31,14 @@ export interface SparePartRequestListApiItem {
   productId: string;
   partName: string;
   description?: string;
-  tag?: string;
   uom?: string | string[] | null;
-  type: string;
-  category: string;
+  category_id?: number | null;
+  category?: { id?: number | null; category_name?: string | null } | string | null;
   stock: number;
-  status: string;
   avalailableStock?: number;
   imageId?: string[];
   isActive: boolean;
-  businessUnit: string;
+  businessUnit?: string | null;
   createdBy?: string;
   createdDate?: string;
   updatedBy?: string;
@@ -49,10 +53,12 @@ interface Location {
   shelve: string;
   rack: string;
   bin: string;
-  onHandQty: number;
-  reservedQty: number;
+  onHandQty?: number;
+  reservedQty?: number;
   availableQty: number;
   reorderLevel: number;
+  sapStock?: number | null;
+  lastSyncedAt?: string | null;
 }
 
 type SparePartDetailParams = {
@@ -79,7 +85,7 @@ const SparePartRequestTestAction = {
         warehouse: params.criteria?.warehouse || '',
         status: '',
         category: params.criteria?.category || '',
-        type: params.criteria?.type && params.criteria.type !== 'All' ? params.criteria.type : '',
+        categoryId: params.criteria?.categoryId,
       },
     },
     pagination: {
@@ -103,13 +109,6 @@ const mapStockStatus = (stock: number): SparePartStockStatus => {
   if (stock <= 0) return 'no-stock';
   if (stock <= 2) return 'low';
   return 'available';
-};
-
-const mapType = (type?: string): SparePartType => {
-  const normalized = String(type || 'MRO_W').replace(/_/g, '-');
-  if (normalized === 'MRO-S') return 'MRO-S';
-  if (normalized === 'MRO-G') return 'MRO-G';
-  return 'MRO-W';
 };
 
 const normalizeUomOptions = (value?: string | string[] | null): string[] => {
@@ -139,6 +138,12 @@ const normalizeUomOptions = (value?: string | string[] | null): string[] => {
   return Array.from(new Set(flattened.length > 0 ? flattened : [normalized]));
 };
 
+const resolveCategoryName = (category?: SparePartRequestListApiItem['category']): string =>
+  typeof category === 'string' ? category : category?.category_name || '-';
+
+const resolveCategoryId = (item: SparePartRequestListApiItem): number | undefined =>
+  item.category_id ?? (typeof item.category === 'object' ? item.category?.id ?? undefined : undefined);
+
 export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string): SparePartRequestItem => {
   const firstLocation = item.locations?.[0];
   const stock = firstLocation?.availableQty ?? item.avalailableStock ?? item.stock ?? 0;
@@ -151,13 +156,12 @@ export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: s
     productId: item.productId,
     partName: item.partName,
     description: item.description,
-    tags: item.tag ? [item.tag] : undefined,
-    type: mapType(item.type),
-    category: item.category,
+    categoryId: resolveCategoryId(item),
+    category: resolveCategoryName(item.category),
     uom: uomOptions[0],
     uomOptions,
     stock,
-    businessUnit: item.businessUnit,
+    businessUnit: item.businessUnit || '-',
     status: mapStockStatus(stock),
     warehouse: firstLocation?.warehouseCode || fallbackWarehouse || '',
     locations: item.locations || [],
@@ -208,3 +212,17 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
     return mapItem(response as SparePartRequestListApiItem);
   },
 });
+
+export const fetchSparePartCategories = async (): Promise<SparePartCategoryApiItem[]> => {
+  const token = localStorage.getItem('accessToken');
+  const response = await fetch(`${getServiceUrl('PROD')}/spare-part-finder/categories`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to load spare part categories.');
+  }
+
+  const payload = (await response.json().catch(() => [])) as SparePartCategoryApiItem[];
+  return Array.isArray(payload) ? payload : [];
+};

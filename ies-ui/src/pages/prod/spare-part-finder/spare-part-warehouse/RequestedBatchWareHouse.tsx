@@ -20,7 +20,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAccess, useModel } from '@umijs/max';
 import SpfDetails from '../spare-part-request/SpfDetails';
-import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from '../spare-part-request/data';
+import type { MyRequestItem, RequestPriority, RequestStatus } from '../spare-part-request/data';
 import type { WarehouseRequestRecord } from './requestsWarehouse.shared';
 import type { Shipment, ShipmentLine } from '../shipmentsStore';
 import { formatSpfDateTime } from '../shared/dateTime';
@@ -108,7 +108,6 @@ export interface RequestDetailLineItem {
   level?: string;
   company?: string;
   category?: string;
-  sparePartType?: string;
   businessUnit?: string;
   uom?: string;
 }
@@ -127,7 +126,7 @@ export interface RequestDetailData {
   requestDate: string;
   status: RequestStatus;
   priority?: RequestPriority;
-  type?: SparePartType;
+  category?: string;
   totalItems: number;
   receivedItems?: number;
   remark?: string;
@@ -291,13 +290,12 @@ export default function RequestedBatchWareHouse({
       warehouseSentQuantity: Number(it.receivedQuantity ?? it.issuedQty ?? 0),
       description: it.remark ?? it.description ?? undefined,
       stockQuantity: it.stockQuantity,
-      warehouse: it.toWarehouseCode ?? req?.type,
+      warehouse: it.toWarehouseCode ?? req?.category,
       zone: it.zone,
       shelf: it.shelf,
       level: it.level,
       company: it.company,
       category: it.category,
-      sparePartType: it.sparePartType ?? it.type ?? req?.type,
       businessUnit: it.businessUnit ?? it.unit,
       uom: it.uom ?? it.unit,
     }));
@@ -307,7 +305,7 @@ export default function RequestedBatchWareHouse({
       requestDate: req?.requestDate ?? '',
       status: normalizeWarehouseStatus(req?.requestStatus || req?.status || 'pending'),
       priority: req?.priority as RequestPriority,
-      type: (req?.type || items.find((item) => item.sparePartType)?.sparePartType) as SparePartType,
+      category: req?.category || items.find((item) => item.category)?.category,
       totalItems: req?.totalItems ?? items.length,
       receivedItems: req?.receivedItems,
       remark: req?.remark,
@@ -498,7 +496,6 @@ export default function RequestedBatchWareHouse({
         receiving_from_warehouse: detail.warehouse,
         company: detail.company,
         category: detail.category,
-        spare_part_type: detail.type,
         business_unit: detail.businessUnit,
         requested_date: detail.createdDate,
       };
@@ -518,7 +515,6 @@ export default function RequestedBatchWareHouse({
       level: selectedProduct.level,
       company: selectedProduct.company,
       category: selectedProduct.category,
-      spare_part_type: selectedProduct.sparePartType,
       business_unit: selectedProduct.businessUnit,
       requested_date: data.requestDate,
     };
@@ -1154,7 +1150,7 @@ export default function RequestedBatchWareHouse({
         >
           <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
-          <Descriptions.Item label="Type">{data.type ?? '—'}</Descriptions.Item>         
+          <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Total Items">{data.totalItems}</Descriptions.Item>
           <Descriptions.Item label="Status">

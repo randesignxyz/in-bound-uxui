@@ -153,7 +153,7 @@ export default function SpfDetails({
           status={isInStock ? "success" : "error"} 
           text={
             <Text style={{ color: isInStock ? '#52c41a' : '#ff4d4f', fontWeight: 500 }}>
-              {isInStock ? "In Stock" : "Out of Stock"}
+              {isInStock ? "Available" : "Out of Stock"}
             </Text>
           }
           style={{ marginBottom: 16, display: 'block' }}
@@ -220,7 +220,7 @@ export default function SpfDetails({
                 color: '#d4a574',
                 lineHeight: 1
               }}>
-                {data?.stock_quantity || 24}
+                {data?.stock_quantity ?? 0}
               </Text>
               <Text style={{ marginLeft: 4, color: '#8c8c8c' }}>Units</Text>
             </div>
@@ -306,7 +306,7 @@ export default function SpfDetails({
           }}
           bodyStyle={{ padding: 0 }}
         >
-          <div style={{ 
+          {/* <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between',
             padding: '16px 20px',
@@ -314,7 +314,7 @@ export default function SpfDetails({
           }}>
             <Text style={{ color: '#8c8c8c' }}>Company</Text>
             <Text>{data?.company || "Isobaric Valve Co."}</Text>
-          </div>
+          </div> */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between',
@@ -322,16 +322,7 @@ export default function SpfDetails({
             borderBottom: '1px solid #f0f0f0'
           }}>
             <Text style={{ color: '#8c8c8c' }}>Category</Text>
-            <Text>{data?.category || "Hydraulic"}</Text>
-          </div>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between',
-            padding: '16px 20px',
-            borderBottom: '1px solid #f0f0f0'
-          }}>
-            <Text style={{ color: '#8c8c8c' }}>Type</Text>
-            <Text>{data?.spare_part_type || "Control Valve"}</Text>
+            <Text>{data?.category || '-'}</Text>
           </div>
           <div style={{ 
             display: 'flex', 
@@ -339,7 +330,7 @@ export default function SpfDetails({
             padding: '16px 20px'
           }}>
             <Text style={{ color: '#8c8c8c' }}>Warehouse</Text>
-            <Text>{firstLocation?.warehouseCode || data?.receiving_from_warehouse || "MRO-W"}</Text>
+            <Text>{firstLocation?.warehouseCode || data?.receiving_from_warehouse || '-'}</Text>
           </div>
         </Card>
       </div>
@@ -384,7 +375,7 @@ export default function SpfDetails({
             padding: '16px 20px'
           }}>
             <Text style={{ color: '#8c8c8c' }}>Pickup Date</Text>
-            <Text>{data?.requested_pickup_date || "2024-01-20"}</Text>
+            <Text>{data?.requested_pickup_date}</Text>
           </div>
         </Card>
       </div>

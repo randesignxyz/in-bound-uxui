@@ -2,7 +2,7 @@ import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Card, Input, Select, Space, Tag, Typography, message } from 'antd';
 import type { SortOrder } from 'antd/es/table/interface';
 import type {
@@ -10,17 +10,10 @@ import type {
   SparePartRequestSearch,
   SparePartStockStatus,
   SparePartTab,
-  SparePartType,
 } from './spare-part-request/data';
+import { fetchSparePartCategories } from './spare-part-request/service.api';
 import RequestItemModal from './spare-part-request/requestItem';
 import type { SparePartRequestServiceReturn } from './spare-part-request/service';
-
-const typeOptions: { label: string; value: 'ALL' | SparePartType }[] = [
-  { label: 'All', value: 'ALL' },
-  { label: 'MRO-W', value: 'MRO-W' },
-  { label: 'MRO-S', value: 'MRO-S' },
-  { label: 'MRO-G', value: 'MRO-G' },
-];
 
 interface ItemListViewProps {
   services: SparePartRequestServiceReturn;
@@ -39,14 +32,17 @@ const ItemListView: React.FC<ItemListViewProps> = ({ services, activeTab, onSwit
   const [currentRows, setCurrentRows] = useState<SparePartRequestItem[]>([]);
   const [knownCategories, setKnownCategories] = useState<string[]>([]);
   const [filters, setFilters] = useState<{
-    type: 'ALL' | SparePartType;
     category?: string;
     status?: 'ALL' | SparePartStockStatus;
-  }>({
-    type: 'ALL',
-  });
+  }>({});
 
   const categoryOptions = knownCategories.map((it) => ({ label: it, value: it }));
+
+  useEffect(() => {
+    fetchSparePartCategories()
+      .then((items) => setKnownCategories(items.map((item) => item.category_name).filter(Boolean)))
+      .catch(() => undefined);
+  }, []);
 
   const requestData = async (
     pagination: { current?: number; pageSize?: number },
@@ -58,7 +54,6 @@ const ItemListView: React.FC<ItemListViewProps> = ({ services, activeTab, onSwit
         advanceSearch: {
           searchValue,
           tab: activeTab,
-          type: filters.type,
           category: filters.category,
           status: filters.status,
         } as SparePartRequestSearch,
@@ -70,10 +65,6 @@ const ItemListView: React.FC<ItemListViewProps> = ({ services, activeTab, onSwit
     const rs = await services.page(params);
     const rows = rs.items || [];
     setCurrentRows(rows);
-    setKnownCategories((prev) => {
-      const merged = new Set([...prev, ...rows.map((r) => r.category).filter(Boolean)]);
-      return Array.from(merged).sort();
-    });
     return {
       data: rows,
       total: rs.total || 0,
@@ -88,7 +79,7 @@ const ItemListView: React.FC<ItemListViewProps> = ({ services, activeTab, onSwit
           <Input.Search
             allowClear
             style={{ width: 360 }}
-            placeholder="Search by name, product ID, category, type, status, business unit"
+            placeholder="Search by name, product ID, category, status, business unit"
             onSearch={(v) => {
               setSearchValue(v);
               actionRef.current?.reloadAndRest?.();
@@ -96,21 +87,7 @@ const ItemListView: React.FC<ItemListViewProps> = ({ services, activeTab, onSwit
             enterButton={<SearchOutlined />}
           />
 
-          <Button.Group>
-            {typeOptions.map((it) => (
-              <Button
-                key={it.value}
-                type={filters.type === it.value ? 'primary' : 'default'}
-                onClick={() => {
-                  setFilters((prev) => ({ ...prev, type: it.value }));
-                  setSelectedRowKeys([]);
-                  actionRef.current?.reloadAndRest?.();
-                }}
-              >
-                {it.label}
-              </Button>
-            ))}
-          </Button.Group>
+          {/* hidden — field temporarily removed from backend */}
 
           <Select
             allowClear
@@ -208,12 +185,7 @@ const ItemListView: React.FC<ItemListViewProps> = ({ services, activeTab, onSwit
               dataIndex: 'partName',
             },
             {
-              title: 'Type',
-              dataIndex: 'type',
-              width: 100,
-            },
-            {
-              title: 'Categories',
+              title: 'Category',
               dataIndex: 'category',
             },
             {

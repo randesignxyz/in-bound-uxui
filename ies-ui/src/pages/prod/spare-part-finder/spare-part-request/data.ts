@@ -12,7 +12,8 @@ export interface MyRequestLineItem {
   sparePartId: string;
   sparePartCode: string;
   sparePartName: string;
-  type?: SparePartType;
+  categoryId?: number;
+  category?: string;
   requestedQty: number;
   approvedQty: number;
   unit: string;
@@ -25,9 +26,9 @@ export interface MyRequestLineItem {
 export interface SparePartRequestSearch {
   searchValue?: string;
   tab?: SparePartTab;
-  type?: 'ALL' | SparePartType;
   warehouse?: string;
   category?: string;
+  categoryId?: number;
   status?: 'ALL' | SparePartStockStatus;
   sort?: Record<string, SortOrder>;
 }
@@ -36,7 +37,6 @@ export interface MyRequestSearch {
   searchValue?: string;
   priority?: 'ALL' | RequestPriority;
   status?: 'ALL' | RequestStatus;
-  type?: 'ALL' | SparePartType;
   dateRange?: [string, string];
   sort?: Record<string, SortOrder>;
 }
@@ -48,8 +48,7 @@ export interface SparePartRequestItem {
   productId: string;
   partName: string;
   description?: string;
-  tags?: string[];
-  type: SparePartType;
+  categoryId?: number;
   category: string;
   uom?: string;
   uomOptions?: string[];
@@ -64,10 +63,12 @@ export interface SparePartRequestItem {
     shelve: string;
     rack: string;
     bin: string;
-    onHandQty: number;
-    reservedQty: number;
+    onHandQty?: number;
+    reservedQty?: number;
     availableQty: number;
     reorderLevel: number;
+    sapStock?: number | null;
+    lastSyncedAt?: string;
   }[];
   tab: SparePartTab;
   createdDate?: string;
@@ -85,7 +86,7 @@ export interface MyRequestItem {
   receivedItems: number;
   requestStatus: RequestStatus;
   remark: string;
-  type?: SparePartType;
+  category?: string;
   totalApprovedQty?: number;
   totalIssuedQty?: number;
   totalPickedQty?: number;

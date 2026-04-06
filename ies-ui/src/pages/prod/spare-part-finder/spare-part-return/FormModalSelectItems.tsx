@@ -77,14 +77,9 @@ export default function FormModalSelectItems({
       dataIndex: "spare_part_name",
       editable: false,
     },
-    {
-      title: "Type",
-      dataIndex: "type",
-      editable: false,
-    },
-    {
-      title: "Category",
-      dataIndex: "category",
+      {
+        title: "Category",
+        dataIndex: "category",
       editable: false,
     },
     {
@@ -236,7 +231,7 @@ export default function FormModalSelectItems({
       >
         <TextArea
           rows={4}
-          maxLength={200}
+          maxLength={1000}
           value={remark}
           onChange={(e) => {
             setRemark(e.target.value);

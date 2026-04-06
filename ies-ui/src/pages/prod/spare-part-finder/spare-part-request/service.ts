@@ -8,7 +8,6 @@ import type {
   MyRequestSearch,
   RequestPriority,
   RequestStatus,
-  SparePartType,
   SparePartRequestItem,
 } from './data';
 import { mapItem, type SparePartRequestListApiItem } from './service.api';
@@ -33,7 +32,8 @@ type MyRequestLineDto = {
   sparePartId: string;
   sparePartCode: string;
   sparePartName: string;
-  type?: string | null;
+  category_id?: number | null;
+  category?: { id?: number | null; category_name?: string | null } | string | null;
   requestedQty: number;
   approvedQty?: number;
   unit: string;
@@ -51,7 +51,6 @@ type MyRequestDto = {
   requestedDate?: string;
   requestDate?: string;
   requestStatus: BackendRequestStatus;
-  type?: string | null;
   remark?: string | null;
   totalRequestedQty?: number;
   totalApprovedQty?: number;
@@ -88,7 +87,8 @@ type IssueDetailLineDto = {
   sparePartId: string;
   sparePartCode: string;
   sparePartName: string;
-  type?: string | null;
+  category_id?: number | null;
+  category?: { id?: number | null; category_name?: string | null } | string | null;
   requestedQty: number;
   approvedQty: number;
   issuedQty: number;
@@ -110,7 +110,6 @@ type IssueDetailDto = {
   warehouseAcceptedAt?: string | null;
   requestedDate?: string;
   requestStatus: BackendRequestStatus;
-  type?: string | null;
   remark?: string | null;
   totalRequestedQty?: number;
   totalApprovedQty?: number;
@@ -193,7 +192,6 @@ const SparePartRequestAction = {
     advanceSearch?: {
       priority?: string;
       status?: string;
-      type?: string;
       dateRange?: [string, string];
     };
   }> => ({
@@ -205,10 +203,6 @@ const SparePartRequestAction = {
       advanceSearch: {
         priority: mapRequestPriorityFilter(params.criteria?.advanceSearch?.priority),
         status: mapRequestStatusFilter(params.criteria?.advanceSearch?.status),
-        type:
-          params.criteria?.advanceSearch?.type && params.criteria.advanceSearch.type !== 'ALL'
-            ? params.criteria.advanceSearch.type
-            : undefined,
         dateRange: params.criteria?.advanceSearch?.dateRange,
       },
     },
@@ -326,13 +320,9 @@ export type ImportedRequestResult = {
   failedRows: ImportedRequestFailedRow[];
 };
 
-const normalizeSparePartType = (value?: string | null): SparePartType | undefined => {
-  const normalized = String(value || '').trim().replace(/_/g, '-').toUpperCase();
-  if (normalized === 'MRO-S') return 'MRO-S';
-  if (normalized === 'MRO-G') return 'MRO-G';
-  if (normalized === 'MRO-W') return 'MRO-W';
-  return undefined;
-};
+const resolveCategoryName = (
+  category?: { id?: number | null; category_name?: string | null } | string | null,
+): string | undefined => (typeof category === 'string' ? category : category?.category_name || undefined);
 
 const normalizeRequestStatus = (
   status?: BackendRequestStatus,
@@ -428,7 +418,8 @@ const mapRequestLine = (item: MyRequestLineDto): MyRequestLineItem => ({
   sparePartId: item.sparePartId,
   sparePartCode: item.sparePartCode,
   sparePartName: item.sparePartName,
-  type: normalizeSparePartType(item.type),
+  categoryId: item.category_id ?? (typeof item.category === 'object' ? item.category?.id ?? undefined : undefined),
+  category: resolveCategoryName(item.category),
   requestedQty: Number(item.requestedQty || 0),
   approvedQty: Number(item.approvedQty || 0),
   unit: item.unit || 'pcs',
@@ -442,7 +433,7 @@ export const mapMyRequestItem = (item: MyRequestDto): MyRequestItem => {
   const totalIssuedQty = Number(item.totalIssuedQty || 0);
   const totalPickedQty = Number(item.totalPickedQty || 0);
   const items = (item.items || []).map(mapRequestLine);
-  const requestType = normalizeSparePartType(item.type) || items.find((line) => line.type)?.type;
+  const requestCategory = items.find((line) => line.category)?.category;
 
   return {
     id: Number(item.id || 0),
@@ -452,7 +443,7 @@ export const mapMyRequestItem = (item: MyRequestDto): MyRequestItem => {
     approvedBy: item.managerId || undefined,
     priority: normalizePriority(item.priority),
     requestDate: item.requestedDate || item.requestDate || '',
-    type: requestType,
+    category: requestCategory,
     totalItems: Number(item.totalRequestedQty || 0),
     receivedItems: totalPickedQty,
     requestStatus: normalizeRequestStatus(item.requestStatus, totalIssuedQty, totalPickedQty),
@@ -530,7 +521,7 @@ const buildRequestActivities = (request: MyRequestItem): RequestDetailActivity[]
 };
 
 export const buildRequestDetailData = (request: MyRequestItem): RequestDetailData => {
-  const detailType = request.type || request.items?.find((item) => item.type)?.type;
+  const detailCategory = request.category || request.items?.find((item) => item.category)?.category;
   const items: RequestDetailLineItem[] = (request.items || []).map((item, index) => ({
     no: index + 1,
     requestLineId: item.requestLineId,
@@ -544,7 +535,7 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     total: Number(item.requestedQty || 0),
     warehouseSentQuantity: 0,
     warehouse: item.toWarehouseCode,
-    sparePartType: item.type || detailType,
+    category: item.category || detailCategory,
     businessUnit: item.unit,
     uom: item.unit,
     description: item.remark,
@@ -556,7 +547,7 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     requestDate: request.requestDate,
     status: request.requestStatus,
     priority: request.priority,
-    type: detailType,
+    category: detailCategory,
     totalItems: request.totalItems,
     receivedItems: request.receivedItems,
     remark: request.remark,
@@ -605,13 +596,12 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     total: Number(line.requestedQty || line.approvedQty || 0),
     warehouseSentQuantity: Number(line.issuedQty || 0),
     warehouse: line.toWarehouseCode || undefined,
-    sparePartType: normalizeSparePartType(line.type) || normalizeSparePartType(item.type),
+    category: resolveCategoryName(line.category),
     businessUnit: line.unit || 'pcs',
     uom: line.unit || 'pcs',
     description: line.remark || undefined,
   }));
-  const detailType =
-    normalizeSparePartType(item.type) || items.find((entry) => entry.sparePartType)?.sparePartType;
+  const detailCategory = items.find((entry) => entry.category)?.category;
 
   const status: RequestStatus = deriveIssueDetailStatus(
     rawStatus,
@@ -740,7 +730,6 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
           level: baseLine?.level,
           company: baseLine?.company,
           category: baseLine?.category,
-          sparePartType: baseLine?.sparePartType,
           businessUnit: baseLine?.businessUnit,
           uom: historyLine.unit || baseLine?.uom,
         };
@@ -753,7 +742,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     requestDate: item.requestedDate || '',
     status,
     priority: normalizePriority(item.priority),
-    type: detailType,
+    category: detailCategory,
     totalItems: Number(item.totalRequestedQty || items.length),
     receivedItems: confirmedPickedQty,
     remark: item.remark || '',

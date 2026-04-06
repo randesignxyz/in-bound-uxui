@@ -3,19 +3,13 @@ import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import { Button, Card, DatePicker, Input, Modal, Select, Space, Tag, Typography, message } from 'antd';
 import dayjs from 'dayjs';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import RequestItemModal from './requestItem';
-import { SparePartRequestAPI } from './service.api';
+import { fetchSparePartCategories, SparePartRequestAPI } from './service.api';
 import { SparePartRequestService } from './service';
 import SparePartImage from './SparePartImage';
 import SpfDetails from './SpfDetails';
-
-const typeOptions = [
-  { label: 'MRO-W', value: 'MRO-W' },
-  { label: 'MRO-S', value: 'MRO-S' },
-  { label: 'MRO-G', value: 'MRO-G' },
-];
 
 const statusOptions = [
   { label: 'All Status', value: 'All' },
@@ -48,7 +42,6 @@ export default function SparePartListView() {
   const [knownWarehouses, setKnownWarehouses] = useState([]);
   const [knownBusinessUnits, setKnownBusinessUnits] = useState([]);
   const [filters, setFilters] = useState({
-    type: [],
     businessUnits: [],
     category: undefined,
     status: 'All',
@@ -67,6 +60,12 @@ export default function SparePartListView() {
   ];
 
   const businessUnitOptions = knownBusinessUnits.map((item) => ({ label: item, value: item }));
+
+  useEffect(() => {
+    fetchSparePartCategories()
+      .then((items) => setKnownCategories(items.map((item) => item.category_name).filter(Boolean)))
+      .catch(() => undefined);
+  }, []);
 
   const reloadTable = (resetPage = false) => {
     if (resetPage) {
@@ -113,7 +112,6 @@ export default function SparePartListView() {
     const response = await services.page({
       criteria: {
         searchValue,
-        type: filters.type.length === 1 ? filters.type[0] : '',
         category: filters.category || '',
         status: filters.status,
         warehouse: filters.warehouse || '',
@@ -137,10 +135,6 @@ export default function SparePartListView() {
       });
     }
 
-    if (filters.type.length > 0) {
-      rows = rows.filter((item) => filters.type.includes(item.type));
-    }
-
     if (filters.businessUnits.length > 0) {
       rows = rows.filter((item) => filters.businessUnits.includes(item.businessUnit));
     }
@@ -155,10 +149,6 @@ export default function SparePartListView() {
         }
       });
       return next;
-    });
-    setKnownCategories((previous) => {
-      const merged = new Set([...previous, ...rows.map((item) => item.category).filter(Boolean)]);
-      return Array.from(merged).sort();
     });
     setKnownWarehouses((previous) => {
       const merged = new Set([...previous, ...rows.map((item) => item.warehouse).filter(Boolean)]);
@@ -333,19 +323,7 @@ export default function SparePartListView() {
             }}
           />
 
-          <Select
-            mode="multiple"
-            allowClear
-            maxTagCount="responsive"
-            style={{ minWidth: 140 }}
-            value={filters.type}
-            placeholder="All Type"
-            options={typeOptions}
-            onChange={(value) => {
-              setFilters((previous) => ({ ...previous, type: value || [] }));
-              reloadTable(true);
-            }}
-          />
+          {/* hidden — field temporarily removed from backend */}
 
           {/* {canSeeWarehouseLocation && ( */}
             <Select
@@ -486,11 +464,7 @@ export default function SparePartListView() {
               ellipsis: true,
             },
             {
-              title: 'Type',
-              dataIndex: 'type',
-            },
-            {
-              title: 'Categories',
+              title: 'Category',
               dataIndex: 'category',
             },
             {
@@ -624,7 +598,6 @@ export default function SparePartListView() {
                 receiving_from_warehouse: detailsItem.warehouse,
                 company: detailsItem.company,
                 category: detailsItem.category,
-                spare_part_type: detailsItem.type,
                 business_unit: detailsItem.businessUnit,
                 requested_date: detailsItem.createdDate,
               }

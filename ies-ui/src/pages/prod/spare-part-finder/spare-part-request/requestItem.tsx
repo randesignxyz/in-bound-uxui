@@ -264,8 +264,8 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       width: '10%',
     },
     {
-      title: 'Type',
-      dataIndex: ['item', 'type'],
+      title: 'Category',
+      dataIndex: ['item', 'category'],
       width: '6%',
       align: 'center' as const,
     },

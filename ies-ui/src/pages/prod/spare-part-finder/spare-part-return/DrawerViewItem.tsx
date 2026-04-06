@@ -239,16 +239,7 @@ export default function DrawerViewItem({
             borderBottom: '1px solid #f0f0f0'
           }}>
             <Text style={{ color: '#8c8c8c' }}>Category</Text>
-            <Text>{data?.category || "Hydraulic"}</Text>
-          </div>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between',
-            padding: '16px 20px',
-            borderBottom: '1px solid #f0f0f0'
-          }}>
-            <Text style={{ color: '#8c8c8c' }}>Type</Text>
-            <Text>{data?.spare_part_type || "Control Valve"}</Text>
+            <Text>{data?.category || '-'}</Text>
           </div>
           <div style={{ 
             display: 'flex', 

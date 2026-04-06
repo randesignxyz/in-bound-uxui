@@ -6,7 +6,6 @@ export interface SparePart {
   image?: string;
   part_number: string;
   spare_part_name: string;
-  spare_part_type: string;
   category: string;
   receiving_from_warehouse: string;
   businessUnit: string;
@@ -28,10 +27,9 @@ export interface SparePartPickedLine {
   isClosed: boolean;
   partName: string;
   uom: string;
-  type: string;
   requestedQty: number;
   deliveredQty: number;
-  category: string;
+  category?: string | { category_name?: string | null } | null;
   businessUnit: string;
   kind: string;
   imageId?: string;
@@ -91,7 +89,6 @@ export interface SparePartReturnListItem {
   request_id?: string;
   quantity?: number;
   UoM?: string;
-  spare_part_type?: string;
   category?: string;
   receiving_from_warehouse?: string;
   businessUnit?: string;
@@ -158,7 +155,6 @@ export interface SparePartReturnItem {
   imageId?: string;
   part_number?: string;
   spare_part_name?: string;
-  spare_part_type?: string;
   category?: string;
   receiving_from_warehouse?: string;
   businessUnit?: string;
@@ -359,8 +355,7 @@ export const mapToFlattenedRowsMySparePartList = (
         itemId:                   line.itemId,
         imageId:                   line.imageId,
         deliveredQty:             line.deliveredQty,
-        category:                 line.category,
-        type:                     line.type,
+        category:                 typeof line.category === 'string' ? line.category : line.category?.category_name || '-',
         pendingReturnQty:         line.pendingReturnQty ?? 0,
         returnedQty:              line.returnedQty ?? 0,
         availableQty:             Math.max(0, line.deliveredQty - (line.pendingReturnQty ?? 0)),

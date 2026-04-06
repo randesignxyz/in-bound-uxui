@@ -16,7 +16,7 @@ import {
 import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { MyRequestItem, RequestPriority, RequestStatus, SparePartType } from './data';
+import type { MyRequestItem, RequestPriority, RequestStatus } from './data';
 import SpfDetails from './SpfDetails';
 import { useAccess, useModel } from '@umijs/max';
 import SparePartImage from './SparePartImage';
@@ -200,7 +200,6 @@ export interface RequestDetailLineItem {
   level?: string;
   company?: string;
   category?: string;
-  sparePartType?: string;
   businessUnit?: string;
   uom?: string;
 }
@@ -227,7 +226,7 @@ export interface RequestDetailData {
   requestDate: string;
   status: RequestStatus;
   priority?: RequestPriority;
-  type?: SparePartType;
+  category?: string;
   totalItems: number;
   receivedItems?: number;
   remark?: string;
@@ -298,7 +297,7 @@ export default function RequestedBatchDrawer({
       receivedItems: 0,
       requestStatus: 'pending',
       remark: '',
-      type: 'MRO-W',
+      category: '-',
     };
 
     const items: RequestDetailLineItem[] =
@@ -313,8 +312,8 @@ export default function RequestedBatchDrawer({
         usedQuantity: 0,
         total: Number(item.requestedQty || 0),
         warehouseSentQuantity: 0,
-        warehouse: item.toWarehouseCode || fallbackRequest.type,
-        sparePartType: fallbackRequest.type,
+        warehouse: item.toWarehouseCode || fallbackRequest.category,
+        category: item.category || fallbackRequest.category,
         businessUnit: item.unit,
         uom: item.unit,
         description: item.remark,
@@ -327,7 +326,7 @@ export default function RequestedBatchDrawer({
       requestDate: fallbackRequest.requestDate,
       status: fallbackRequest.requestStatus,
       priority: fallbackRequest.priority,
-      type: fallbackRequest.type,
+      category: fallbackRequest.category,
       totalItems: fallbackRequest.totalItems,
       receivedItems: fallbackRequest.receivedItems,
       remark: fallbackRequest.remark,
@@ -964,7 +963,6 @@ export default function RequestedBatchDrawer({
         receiving_from_warehouse: selectedProductDetail.warehouse,
         company: selectedProductDetail.company,
         category: selectedProductDetail.category,
-        spare_part_type: selectedProductDetail.type,
         business_unit: selectedProductDetail.businessUnit,
         requested_date: selectedProductDetail.createdDate,
       };
@@ -984,7 +982,6 @@ export default function RequestedBatchDrawer({
       level: selectedProduct.level,
       company: selectedProduct.company,
       category: selectedProduct.category,
-      spare_part_type: selectedProduct.sparePartType,
       business_unit: selectedProduct.businessUnit,
       requested_date: formatSpfDateTime(data.requestDate),
     };
@@ -1376,7 +1373,7 @@ export default function RequestedBatchDrawer({
         >
           <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
-          <Descriptions.Item label="Type">{data.type ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
           <Descriptions.Item label="Status">

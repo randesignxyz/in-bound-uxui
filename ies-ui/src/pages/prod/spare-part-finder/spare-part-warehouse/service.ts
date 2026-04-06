@@ -5,7 +5,6 @@ import type {
   RequestDetailData,
   RequestDetailLineItem,
 } from './RequestedBatchWareHouse';
-import type { SparePartType } from '../spare-part-request/data';
 import type { Shipment } from '../shipmentsStore';
 import type { WarehouseDisplayStatus, WarehouseRequestRecord } from './requestsWarehouse.shared';
 
@@ -23,7 +22,8 @@ type IssueLineDto = {
   sparePartId: string;
   sparePartCode: string;
   sparePartName: string;
-  type?: string | null;
+  category_id?: number | null;
+  category?: { id?: number | null; category_name?: string | null } | string | null;
   approvedQty: number;
   issuedQty: number;
   remainingQty: number;
@@ -66,7 +66,6 @@ type IssueRequestDto = {
   warehouseAcceptedAt?: string | null;
   requestedDate?: string;
   requestStatus: BackendIssueStatus;
-  type?: string | null;
   remark?: string | null;
   totalRequestedQty: number;
   totalApprovedQty: number;
@@ -175,13 +174,9 @@ const normalizePriority = (value?: string | null): WarehouseRequestRecord['prior
   return 'Normal';
 };
 
-const normalizeSparePartType = (value?: string | null): SparePartType | undefined => {
-  const normalized = String(value || '').trim().replace(/_/g, '-').toUpperCase();
-  if (normalized === 'MRO-S') return 'MRO-S';
-  if (normalized === 'MRO-G') return 'MRO-G';
-  if (normalized === 'MRO-W') return 'MRO-W';
-  return undefined;
-};
+const resolveCategoryName = (
+  category?: { id?: number | null; category_name?: string | null } | string | null,
+): string | undefined => (typeof category === 'string' ? category : category?.category_name || undefined);
 
 const deriveRecordStatus = (
   requestStatus?: string | null,
@@ -269,7 +264,7 @@ const mapIssueLineDetail = (item: IssueLineDto, requestId: string, index: number
   warehouseSentQuantity: Number(item.issuedQty || 0),
   description: item.remark || undefined,
   warehouse: item.toWarehouseCode || undefined,
-  sparePartType: normalizeSparePartType(item.type),
+  category: resolveCategoryName(item.category),
   businessUnit: item.unit || 'pcs',
   uom: item.unit || 'pcs',
   imageId: Array.isArray(item.imageId) ? item.imageId[0] : item.imageId || undefined,
@@ -390,11 +385,9 @@ const buildActivities = (
 };
 
 const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
-  const detailType =
-    normalizeSparePartType(item.type) ||
-    (item.items || [])
-      .map((line) => normalizeSparePartType(line.type))
-      .find((value): value is SparePartType => Boolean(value));
+  const detailCategory = (item.items || [])
+    .map((line) => resolveCategoryName(line.category))
+    .find((value): value is string => Boolean(value));
   const mappedRecord = mapIssueRequestRecord(item);
   const normalizedStatus = mapRecordStatusToDetailStatus(mappedRecord.status);
 
@@ -404,7 +397,7 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
     requestDate: item.requestedDate || '',
     status: normalizedStatus,
     priority: normalizePriority(item.priority).toLowerCase() as RequestDetailData['priority'],
-    type: detailType,
+    category: detailCategory,
     totalItems: (item.items || []).length,
     receivedItems: Number(item.totalIssuedQty || 0),
     remark: item.remark || '',

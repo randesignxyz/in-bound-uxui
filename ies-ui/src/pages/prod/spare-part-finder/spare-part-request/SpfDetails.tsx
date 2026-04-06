@@ -1,4 +1,4 @@
-import { Drawer, Badge, Card, Button, Typography, Row, Col } from "antd";
+import { Alert, Badge, Button, Card, Col, Drawer, Row, Skeleton, Typography } from "antd";
 import { 
   InboxOutlined, 
   SettingOutlined, 
@@ -6,12 +6,17 @@ import {
 } from "@ant-design/icons";
 import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from './SparePartImage';
+import { formatSpfDateTime } from '../shared/dateTime';
 
 const { Title, Text } = Typography;
+const LOW_STOCK_THRESHOLD = 5;
+const OUT_OF_STOCK_THRESHOLD = 0;
 
 interface DrawerViewItemProps {
   open: boolean;
   data?: any;
+  loading?: boolean;
+  error?: string | null;
   onClose?: () => void;
   onRequestParts?: () => void;
   onInventoryLog?: () => void;
@@ -29,24 +34,48 @@ type DetailLocation = {
   reservedQty?: number;
   availableQty?: number;
   reorderLevel?: number;
+  lastSyncedAt?: string;
+};
+
+const getStockBadge = (availableStock: number) => {
+  if (availableStock <= OUT_OF_STOCK_THRESHOLD) {
+    return { label: 'Out of Stock', status: 'error' as const, color: '#ff4d4f' };
+  }
+
+  if (availableStock <= LOW_STOCK_THRESHOLD) {
+    return { label: 'Low Stock', status: 'warning' as const, color: '#faad14' };
+  }
+
+  return { label: 'Available', status: 'success' as const, color: '#52c41a' };
 };
 
 export default function SpfDetails({ 
   open, 
   data, 
+  loading = false,
+  error = null,
   onClose, 
   onRequestParts,
   onInventoryLog,
   EditImage
 }: DrawerViewItemProps) {
-  
-  // Determine stock status
-  const isInStock = data?.stock_quantity > 0;
   const imageIds: string[] = Array.isArray(data?.imageId) ? data.imageId.filter(Boolean) : [];
   const locations: DetailLocation[] = Array.isArray(data?.locations) ? data.locations : [];
   const firstLocation = locations[0];
   const firstImageId = imageIds[0];
   const [selectedImageId, setSelectedImageId] = useState<string | undefined>(firstImageId);
+  const hasLiveData = Boolean(
+    data &&
+      (
+        data?.spare_part_name ||
+        data?.part_number ||
+        data?.description ||
+        data?.updated_date ||
+        data?.requested_date ||
+        imageIds.length > 0 ||
+        locations.length > 0
+      ),
+  );
 
   useEffect(() => {
     setSelectedImageId(firstImageId);
@@ -56,6 +85,25 @@ export default function SpfDetails({
     () => selectedImageId || firstImageId,
     [selectedImageId, firstImageId],
   );
+  const availableStock = hasLiveData
+    ? Number(data?.stock_quantity ?? firstLocation?.availableQty ?? 0)
+    : undefined;
+  const normalizedAvailableStock =
+    typeof availableStock === 'number' && Number.isFinite(availableStock) ? availableStock : null;
+  const stockBadge = normalizedAvailableStock == null ? null : getStockBadge(normalizedAvailableStock);
+  const displayCategory =
+    typeof data?.category === 'object' ? data?.category?.category_name || '-' : data?.category || '-';
+  const displayPartNumber = data?.part_number || '-';
+  const displayWarehouse =
+    firstLocation?.warehouseCode ||
+    firstLocation?.warehouseName ||
+    data?.receiving_from_warehouse ||
+    data?.warehouse ||
+    '-';
+  const lastUpdated =
+    data?.updated_date ||
+    firstLocation?.lastSyncedAt ||
+    data?.requested_date;
   
   return (
     <Drawer
@@ -74,6 +122,25 @@ export default function SpfDetails({
       bodyStyle={{ padding: 0, backgroundColor: '#fafafa' }}
       headerStyle={{ borderBottom: '1px solid #f0f0f0' }}
     >
+      {loading ? (
+        <div style={{ padding: 24, backgroundColor: '#fff' }}>
+          <Skeleton active avatar paragraph={{ rows: 10 }} />
+        </div>
+      ) : error ? (
+        <div style={{ padding: 24, backgroundColor: '#fff' }}>
+          <Alert
+            type="error"
+            showIcon
+            message="Unable to load product details"
+            description={error}
+          />
+        </div>
+      ) : !hasLiveData ? (
+        <div style={{ padding: 24, backgroundColor: '#fff' }}>
+          <Skeleton active avatar paragraph={{ rows: 10 }} />
+        </div>
+      ) : (
+        <>
       {/* Product Image */}
       <div style={{ 
         backgroundColor: '#ffffff', 
@@ -149,15 +216,17 @@ export default function SpfDetails({
       {/* Product Info Section */}
       <div style={{ padding: '24px', backgroundColor: '#fff' }}>
         {/* Stock Status Badge */}
-        <Badge 
-          status={isInStock ? "success" : "error"} 
-          text={
-            <Text style={{ color: isInStock ? '#52c41a' : '#ff4d4f', fontWeight: 500 }}>
-              {isInStock ? "Available" : "Out of Stock"}
-            </Text>
-          }
-          style={{ marginBottom: 16, display: 'block' }}
-        />
+        {stockBadge ? (
+          <Badge 
+            status={stockBadge.status} 
+            text={
+              <Text style={{ color: stockBadge.color, fontWeight: 500 }}>
+                {stockBadge.label}
+              </Text>
+            }
+            style={{ marginBottom: 16, display: 'block' }}
+          />
+        ) : null}
 
         {/* Product Name */}
         <Title level={4} style={{ margin: '0 0 16px 0', fontWeight: 600 }}>
@@ -166,7 +235,7 @@ export default function SpfDetails({
 
         {/* Part Number */}
         <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 24 }}>
-          {data?.part_number}
+          {displayPartNumber}
         </Text>
 
         {/* Description Section */}
@@ -212,17 +281,18 @@ export default function SpfDetails({
             paddingBottom: 16,
             borderBottom: '1px solid #e8e8e8'
           }}>
-            <Text style={{ color: '#8c8c8c' }}>Total Quantity</Text>
-            <div>
+              <Text style={{ color: '#8c8c8c' }}>Total Quantity</Text>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Text style={{ 
                 fontSize: 32, 
                 fontWeight: 700, 
                 color: '#d4a574',
                 lineHeight: 1
               }}>
-                {data?.stock_quantity ?? 0}
+                {normalizedAvailableStock ?? '-'}
               </Text>
-              <Text style={{ marginLeft: 4, color: '#8c8c8c' }}>Units</Text>
+              <Text style={{ color: '#8c8c8c' }}>{data?.uom || '-'}</Text>
+              {stockBadge ? <Badge status={stockBadge.status} text={stockBadge.label} /> : null}
             </div>
           </div>
 
@@ -239,7 +309,7 @@ export default function SpfDetails({
                 Warehouse
               </Text>
               <Text strong style={{ fontSize: 16 }}>
-                {firstLocation?.warehouseCode || data?.receiving_from_warehouse || data?.warehouse || '-'}
+                {displayWarehouse}
               </Text>
             </Col>
             <Col span={6}>
@@ -322,7 +392,16 @@ export default function SpfDetails({
             borderBottom: '1px solid #f0f0f0'
           }}>
             <Text style={{ color: '#8c8c8c' }}>Category</Text>
-            <Text>{data?.category || '-'}</Text>
+            <Text>{displayCategory}</Text>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '1px solid #f0f0f0'
+          }}>
+            <Text style={{ color: '#8c8c8c' }}>UOM</Text>
+            <Text>{data?.uom || '-'}</Text>
           </div>
           <div style={{ 
             display: 'flex', 
@@ -330,7 +409,7 @@ export default function SpfDetails({
             padding: '16px 20px'
           }}>
             <Text style={{ color: '#8c8c8c' }}>Warehouse</Text>
-            <Text>{firstLocation?.warehouseCode || data?.receiving_from_warehouse || '-'}</Text>
+            <Text>{displayWarehouse}</Text>
           </div>
         </Card>
       </div>
@@ -358,7 +437,7 @@ export default function SpfDetails({
             borderBottom: '1px solid #f0f0f0'
           }}>
             <Text style={{ color: '#8c8c8c' }}>Business Unit</Text>
-            <Text>{data?.business_unit || "BU-001"}</Text>
+            <Text>{data?.business_unit || '-'}</Text>
           </div>
           <div style={{ 
             display: 'flex', 
@@ -366,8 +445,17 @@ export default function SpfDetails({
             padding: '16px 20px',
             borderBottom: '1px solid #f0f0f0'
           }}>
-            <Text style={{ color: '#8c8c8c' }}>Requested Date</Text>
-            <Text>{data?.requested_date || "2024-01-15"}</Text>
+            <Text style={{ color: '#8c8c8c' }}>Created At</Text>
+            <Text>{formatSpfDateTime(data?.requested_date)}</Text>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '1px solid #f0f0f0'
+          }}>
+            <Text style={{ color: '#8c8c8c' }}>Last Updated</Text>
+            <Text>{formatSpfDateTime(lastUpdated)}</Text>
           </div>
           <div style={{ 
             display: 'flex', 
@@ -375,7 +463,7 @@ export default function SpfDetails({
             padding: '16px 20px'
           }}>
             <Text style={{ color: '#8c8c8c' }}>Pickup Date</Text>
-            <Text>{data?.requested_pickup_date}</Text>
+            <Text>{formatSpfDateTime(data?.requested_pickup_date)}</Text>
           </div>
         </Card>
       </div>
@@ -395,6 +483,7 @@ export default function SpfDetails({
         <Button 
           type="primary"
           block
+          disabled={!onRequestParts}
           style={{ 
             flex: 2
           }}
@@ -408,6 +497,8 @@ export default function SpfDetails({
           Edit
         </Button>
       </div>
+        </>
+      )}
     </Drawer>
   );
 }

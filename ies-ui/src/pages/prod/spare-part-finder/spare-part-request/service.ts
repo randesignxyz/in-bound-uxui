@@ -48,6 +48,7 @@ type MyRequestDto = {
   requestNo?: string;
   requestId: string;
   managerId?: string | null;
+  managerRemark?: string | null;
   requestedDate?: string;
   requestDate?: string;
   requestStatus: BackendRequestStatus;
@@ -105,6 +106,7 @@ type IssueDetailDto = {
   requestNo: string;
   requesterId: string;
   approverId?: string | null;
+  managerRemark?: string | null;
   approvedAt?: string | null;
   warehouseAcceptedBy?: string | null;
   warehouseAcceptedAt?: string | null;
@@ -441,6 +443,7 @@ export const mapMyRequestItem = (item: MyRequestDto): MyRequestItem => {
     requestNo: item.requestNo || undefined,
     requestedBy: item.requestId,
     approvedBy: item.managerId || undefined,
+    approverRemark: item.managerRemark || undefined,
     priority: normalizePriority(item.priority),
     requestDate: item.requestedDate || item.requestDate || '',
     category: requestCategory,
@@ -553,6 +556,7 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     remark: request.remark,
     requestedBy: request.requestedBy,
     approvedBy: request.approvedBy,
+    approverRemark: request.approverRemark,
     items,
     activities: buildRequestActivities(request),
   };
@@ -748,6 +752,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     remark: item.remark || '',
     requestedBy: item.requesterId || undefined,
     approvedBy: item.approverId || undefined,
+    approverRemark: item.managerRemark || undefined,
     warehouseBy: history[history.length - 1]?.warehouseStaffId || history[0]?.warehouseStaffId || undefined,
     items,
     activities,

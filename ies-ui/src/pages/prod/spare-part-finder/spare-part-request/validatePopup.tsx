@@ -1,4 +1,4 @@
-import { Button, Input, Modal, Typography, message } from 'antd';
+import { Button, Input, Modal, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 
 type ValidationPopupProps = {
@@ -9,9 +9,11 @@ type ValidationPopupProps = {
   cancelText?: string;
   danger?: boolean;
   loading?: boolean;
+  showRemark?: boolean;
   requireRemark?: boolean;
   remarkLabel?: string;
   remarkPlaceholder?: string;
+  remarkRequiredMessage?: string;
   initialRemark?: string;
   onCancel: () => void;
   onConfirm: (payload?: { remark?: string }) => void | Promise<void>;
@@ -25,18 +27,23 @@ export default function ValidationPopup({
   cancelText = 'Cancel',
   danger = false,
   loading = false,
+  showRemark,
   requireRemark = false,
   remarkLabel = 'Remark',
   remarkPlaceholder = 'Please enter remark',
+  remarkRequiredMessage,
   initialRemark = '',
   onCancel,
   onConfirm,
 }: ValidationPopupProps) {
   const [remark, setRemark] = useState(initialRemark);
+  const [remarkError, setRemarkError] = useState('');
+  const shouldShowRemark = showRemark ?? requireRemark;
 
   useEffect(() => {
     if (open) {
       setRemark(initialRemark);
+      setRemarkError('');
     }
   }, [open, initialRemark]);
 
@@ -58,10 +65,11 @@ export default function ValidationPopup({
           loading={loading}
           onClick={() => {
             if (requireRemark && !remark.trim()) {
-              message.warning(`${remarkLabel} is required.`);
+              setRemarkError(remarkRequiredMessage || `${remarkLabel} is required.`);
               return;
             }
-            onConfirm(requireRemark ? { remark: remark.trim() } : undefined);
+            setRemarkError('');
+            onConfirm(shouldShowRemark ? { remark: remark.trim() || undefined } : undefined);
           }}
         >
           {confirmText}
@@ -76,17 +84,29 @@ export default function ValidationPopup({
         </Typography.Paragraph>
       ) : null}
 
-      {requireRemark ? (
+      {shouldShowRemark ? (
         <div>
           <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
             {remarkLabel}
+            {requireRemark ? <span style={{ color: '#ff4d4f', marginLeft: 4 }}>*</span> : null}
           </Typography.Text>
           <Input.TextArea
             value={remark}
             rows={4}
             placeholder={remarkPlaceholder}
-            onChange={(event) => setRemark(event.target.value)}
+            status={remarkError ? 'error' : undefined}
+            onChange={(event) => {
+              setRemark(event.target.value);
+              if (remarkError) {
+                setRemarkError('');
+              }
+            }}
           />
+          {remarkError ? (
+            <Typography.Text type="danger" style={{ display: 'block', marginTop: 8 }}>
+              {remarkError}
+            </Typography.Text>
+          ) : null}
         </div>
       ) : null}
     </Modal>

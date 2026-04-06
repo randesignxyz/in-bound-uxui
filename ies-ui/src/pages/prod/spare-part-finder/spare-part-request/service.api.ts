@@ -167,6 +167,7 @@ export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: s
     locations: item.locations || [],
     tab: 'spare-list',
     createdDate: item.createdDate,
+    updatedDate: item.updatedDate,
   };
 };
 

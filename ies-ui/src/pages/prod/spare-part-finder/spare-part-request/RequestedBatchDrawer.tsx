@@ -13,7 +13,7 @@ import {
   Modal,
   InputNumber,
 } from 'antd';
-import { DownOutlined, RightOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus } from './data';
@@ -230,6 +230,7 @@ export interface RequestDetailData {
   totalItems: number;
   receivedItems?: number;
   remark?: string;
+  approverRemark?: string;
   requestedBy?: string;
   approvedBy?: string;
   rejectedBy?: string;
@@ -247,9 +248,11 @@ export interface DrawerBatchReturnItemsProps {
   onApprove?: (payload: {
     id: number;
     lines: Array<{ requestLineId: number; approvedQty: number }>;
+    remark?: string;
   }) => Promise<void>;
   onReject?: (payload: { id: number; remark?: string }) => Promise<void>;
   onConfirmPickup?: (id: number) => Promise<void>;
+  onResubmitRequest?: (detail: RequestDetailData) => void;
 }
 
 export default function RequestedBatchDrawer({
@@ -260,13 +263,15 @@ export default function RequestedBatchDrawer({
   onApprove,
   onReject,
   onConfirmPickup,
+  onResubmitRequest,
 }: DrawerBatchReturnItemsProps) {
   const currentUser = useModel('@@initialState');
   const detailRequestActions = simpleRequestActions();
   const sparePartServices = SparePartRequestAPI(detailRequestActions);
   const [spfOpen, setSpfOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<RequestDetailLineItem | null>(null);
   const [selectedProductDetail, setSelectedProductDetail] = useState<any>(null);
+  const [spfLoading, setSpfLoading] = useState(false);
+  const [spfError, setSpfError] = useState<string | null>(null);
   const [pickedItems, setPickedItems] = useState<RequestDetailLineItem[]>([]);
   const [pickupSelection, setPickupSelection] = useState<string[]>([]);
   const [statusOverride, setStatusOverride] = useState<RequestStatus | null>(null);
@@ -283,6 +288,7 @@ export default function RequestedBatchDrawer({
   const lastServerStatusRef = useRef<RequestStatus | null>(null);
   const lastShipmentNoticeRef = useRef<number>(0);
   const initKeyRef = useRef<string>('');
+  const productDetailRequestRef = useRef(0);
   const resetPersistRef = useRef(false);
   const access = useAccess();
   const data: RequestDetailData = useMemo(() => {
@@ -330,6 +336,7 @@ export default function RequestedBatchDrawer({
       totalItems: fallbackRequest.totalItems,
       receivedItems: fallbackRequest.receivedItems,
       remark: fallbackRequest.remark,
+      approverRemark: fallbackRequest.approverRemark,
       requestedBy: fallbackRequest.requestedBy,
       items,
       activities: [],
@@ -374,7 +381,8 @@ export default function RequestedBatchDrawer({
     initKeyRef.current = initKey;
 
     setSpfOpen(false);
-    setSelectedProduct(null);
+    setSpfLoading(false);
+    setSpfError(null);
     setPickupSelection([]);
     setStatusOverride(null);
     setExpandedPickupBatchNos([]);
@@ -603,8 +611,9 @@ export default function RequestedBatchDrawer({
       editedItems,
     });
     setSpfOpen(false);
-    setSelectedProduct(null);
     setSelectedProductDetail(null);
+    setSpfLoading(false);
+    setSpfError(null);
     setPickupSelection([]);
     setStatusOverride(null);
     setPickedItems([]);
@@ -642,6 +651,10 @@ export default function RequestedBatchDrawer({
     () => requestItems.filter((it) => !itemMarks[it.productId]),
     [itemMarks, requestItems],
   );
+  const hasEditedAmount = useMemo(
+    () => Object.values(editedItems).some(Boolean),
+    [editedItems],
+  );
 
   const availablePickupQty = (record: RequestDetailLineItem, status: RequestStatus): number => {
     if (typeof record.warehouseSentQuantity === 'number') return record.warehouseSentQuantity;
@@ -677,13 +690,23 @@ export default function RequestedBatchDrawer({
   };
 
   const openProductDetails = async (record: RequestDetailLineItem) => {
+    const requestId = productDetailRequestRef.current + 1;
+    productDetailRequestRef.current = requestId;
+    setSelectedProductDetail(null);
+    setSpfError(null);
+    setSpfLoading(true);
+    setSpfOpen(true);
     try {
       const detail = await sparePartServices.detail({ productId: record.productId });
-      setSelectedProduct(record);
+      if (productDetailRequestRef.current !== requestId) return;
       setSelectedProductDetail(detail);
-      setSpfOpen(true);
     } catch (_error) {
-      message.error('Failed to load item details.');
+      if (productDetailRequestRef.current !== requestId) return;
+      setSpfError('Unable to load the latest product details.');
+    } finally {
+      if (productDetailRequestRef.current === requestId) {
+        setSpfLoading(false);
+      }
     }
   };
 
@@ -691,27 +714,45 @@ export default function RequestedBatchDrawer({
     if (!editingItem) return;
     const productId = editingItem.productId;
     const nextQty = Math.max(1, Number(editingQuantity) || 1);
+    const originalQty = Number(data.items.find((item) => item.productId === productId)?.quantityToReturn || 0);
+    const isEdited = nextQty !== originalQty;
 
-    setQuantityOverrides((prev) => ({
-      ...prev,
-      [productId]: nextQty,
-    }));
-    setEditedItems((prev) => ({
-      ...prev,
-      [productId]: true,
-    }));
-    setActivityLogs((prev) => [
-      ...prev,
-      {
-        label: 'Item Edited',
-        description: `${productId} requested quantity updated to ${nextQty}`,
-        date: new Date().toISOString(),
-        by: currentActor,
-        dot: 'done',
-      },
-    ]);
+    setQuantityOverrides((prev) => {
+      const next = { ...prev };
+      if (isEdited) {
+        next[productId] = nextQty;
+      } else {
+        delete next[productId];
+      }
+      return next;
+    });
+    setEditedItems((prev) => {
+      const next = { ...prev };
+      if (isEdited) {
+        next[productId] = true;
+      } else {
+        delete next[productId];
+      }
+      return next;
+    });
+    if (isEdited) {
+      setActivityLogs((prev) => [
+        ...prev,
+        {
+          label: 'Item Edited',
+          description: `${productId} requested quantity updated to ${nextQty}`,
+          date: new Date().toISOString(),
+          by: currentActor,
+          dot: 'done',
+        },
+      ]);
+    }
     setEditingItem(null);
-    message.success(`Updated requested quantity for ${productId} to ${nextQty}.`);
+    message.success(
+      isEdited
+        ? `Updated requested quantity for ${productId} to ${nextQty}.`
+        : `Reset requested quantity for ${productId}.`,
+    );
   };
 
   const confirmDeleteItem = (record: RequestDetailLineItem) => {
@@ -951,41 +992,25 @@ export default function RequestedBatchDrawer({
   ];
 
   const spfData = useMemo(() => {
-    if (selectedProductDetail) {
-      return {
-        image: selectedProductDetail.image,
-        imageId: selectedProductDetail.imageId,
-        locations: selectedProductDetail.locations,
-        spare_part_name: selectedProductDetail.partName,
-        part_number: selectedProductDetail.productId,
-        description: selectedProductDetail.description,
-        stock_quantity: selectedProductDetail.stock,
-        receiving_from_warehouse: selectedProductDetail.warehouse,
-        company: selectedProductDetail.company,
-        category: selectedProductDetail.category,
-        business_unit: selectedProductDetail.businessUnit,
-        requested_date: selectedProductDetail.createdDate,
-      };
-    }
+    if (!selectedProductDetail) return undefined;
 
-    if (!selectedProduct) return undefined;
     return {
-      image: selectedProduct.image,
-      imageId: selectedProduct.imageId,
-      spare_part_name: selectedProduct.itemName,
-      part_number: selectedProduct.productId,
-      description: selectedProduct.description,
-      stock_quantity: selectedProduct.stockQuantity,
-      receiving_from_warehouse: selectedProduct.warehouse,
-      zone: selectedProduct.zone,
-      shelf: selectedProduct.shelf,
-      level: selectedProduct.level,
-      company: selectedProduct.company,
-      category: selectedProduct.category,
-      business_unit: selectedProduct.businessUnit,
-      requested_date: formatSpfDateTime(data.requestDate),
+      image: selectedProductDetail.image,
+      imageId: selectedProductDetail.imageId,
+      locations: selectedProductDetail.locations,
+      spare_part_name: selectedProductDetail.partName,
+      part_number: selectedProductDetail.productId,
+      description: selectedProductDetail.description,
+      stock_quantity: selectedProductDetail.stock,
+      receiving_from_warehouse: selectedProductDetail.warehouse,
+      company: selectedProductDetail.company,
+      category: selectedProductDetail.category,
+      uom: selectedProductDetail.uom,
+      business_unit: selectedProductDetail.businessUnit,
+      requested_date: selectedProductDetail.createdDate,
+      updated_date: selectedProductDetail.updatedDate,
     };
-  }, [data.requestDate, selectedProduct, selectedProductDetail]);
+  }, [selectedProductDetail]);
 
   // const receivedItemsDisplay = useMemo(() => {
   //   if (pickedItems.length > 0 || statusOverride) return `${receivedQtyTotal} / ${requestedQtyTotal}`;
@@ -1084,7 +1109,7 @@ export default function RequestedBatchDrawer({
     }
   };
 
-  const handleApproveRequest = async () => {
+  const handleApproveRequest = async (remark?: string) => {
     const lines = activeRequestItems
       .filter((item) => typeof item.requestLineId === 'number')
       .map((item) => ({
@@ -1113,7 +1138,7 @@ export default function RequestedBatchDrawer({
           },
         ]);
       } else {
-        await onApprove({ id: data.id, lines });
+        await onApprove({ id: data.id, lines, remark });
         setStatusOverride('approved');
         setActivityLogs((prev) => [
           ...prev,
@@ -1387,6 +1412,14 @@ export default function RequestedBatchDrawer({
           <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
         </Descriptions>
 
+        {access.canSpfRequester && effectiveStatus === 'rejected' ? (
+          <div style={{ marginBottom: 24, textAlign: 'right' }}>
+            <Button type="primary" onClick={() => onResubmitRequest?.(data)}>
+              Re-submit Request
+            </Button>
+          </div>
+        ) : null}
+
         <Title level={5} style={{ marginBottom: 16 }}>
           Status Timeline
         </Title>
@@ -1396,6 +1429,10 @@ export default function RequestedBatchDrawer({
           style={{ marginBottom: 32 }}
           items={STATUS_STEPS.map((title, index) => ({
             title,
+            icon:
+              effectiveStatus === 'completed' && index === STATUS_STEPS.length - 1 ? (
+                <CheckCircleOutlined />
+              ) : undefined,
             status:
               effectiveStatus === 'rejected' && index === 1
                 ? 'error'
@@ -1413,6 +1450,17 @@ export default function RequestedBatchDrawer({
         <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
           {data.remark?.trim() ? data.remark : '—'}
         </Text>
+
+        {data.approverRemark?.trim() ? (
+          <>
+            <Title level={5} style={{ marginBottom: 8 }}>
+              Approver&apos;s Remark
+            </Title>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+              {data.approverRemark.trim()}
+            </Text>
+          </>
+        ) : null}
 
         <Title level={5} style={{ marginBottom: 16 }}>
           Items
@@ -1531,21 +1579,30 @@ export default function RequestedBatchDrawer({
       <SpfDetails
         open={open && spfOpen}
         data={spfData}
+        loading={spfLoading}
+        error={spfError}
         onClose={() => {
-      setSpfOpen(false);
-      setSelectedProduct(null);
-      setSelectedProductDetail(null);
-    }}
-  />
+          productDetailRequestRef.current += 1;
+          setSpfOpen(false);
+          setSelectedProductDetail(null);
+          setSpfLoading(false);
+          setSpfError(null);
+        }}
+      />
 
       <ValidationPopup
         open={actionPopup === 'approve'}
         title="Approve Request"
         description="Approve this spare part request?"
         confirmText="Approve"
+        showRemark
+        requireRemark={hasEditedAmount}
+        remarkLabel="Remark"
+        remarkPlaceholder="Please enter approval remark"
+        remarkRequiredMessage="Remark is required when amount has been modified."
         loading={actionLoading}
         onCancel={() => setActionPopup(null)}
-        onConfirm={() => handleApproveRequest()}
+        onConfirm={(payload) => handleApproveRequest(payload?.remark)}
       />
 
       <ValidationPopup
@@ -1554,8 +1611,11 @@ export default function RequestedBatchDrawer({
         description="Reject this spare part request?"
         confirmText="Reject"
         danger
-        requireRemark
+        showRemark
+        requireRemark={hasEditedAmount}
+        remarkLabel="Remark"
         remarkPlaceholder="Please enter rejection remark"
+        remarkRequiredMessage="Remark is required when amount has been modified."
         loading={actionLoading}
         onCancel={() => setActionPopup(null)}
         onConfirm={(payload) => handleRejectRequest(payload?.remark)}

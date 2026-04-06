@@ -75,6 +75,10 @@ const statusLabelMap: Record<RequestStatus, string> = {
   completed: 'Completed',
 };
 
+interface MyRequestListviewProps {
+  onResubmitRequest?: (detail: RequestDetailData) => void;
+}
+
 const clampNonNegativeInt = (value: unknown): number => {
   const n = Number(value);
   if (!Number.isFinite(n)) return 0;
@@ -105,7 +109,7 @@ const deriveDisplayReceived = (
   return 0;
 };
 
-export default function MyRequestListview() {
+export default function MyRequestListview({ onResubmitRequest }: MyRequestListviewProps) {
   const access = useAccess();
   const actionRef = useRef<ActionType>();
   const requestActions = simpleRequestActions();
@@ -467,6 +471,12 @@ export default function MyRequestListview() {
             setSelectedRequestDetail(await services.getRequestDetail(id));
           }
           reloadTable();
+        }}
+        onResubmitRequest={(detail) => {
+          onResubmitRequest?.(detail);
+          setDetailOpen(false);
+          setSelectedRequest(null);
+          setSelectedRequestDetail(null);
         }}
         onClose={() => {
           setDetailOpen(false);

@@ -65,9 +65,9 @@ function statusToCurrentStep(status: RequestStatus): number {
     case 'pending':
       return 0;
     case 'approved':
+    case 'in-progress':
     case 'rejected':
       return 1;
-    case 'in-progress':
     case 'partial':
     case 'ready_to_Pickup':
       return 2;
@@ -159,9 +159,10 @@ export interface DrawerBatchReturnItemsProps {
     id: number;
     lines: Array<{ requestLineId: number; issueQty: number }>;
   }) => Promise<void>;
+  onDeleteDraft?: (id: number) => Promise<void>;
   onAcceptRequest?: (id: number) => Promise<void>;
-  onConfirmPickup?: (id: number) => Promise<void>;
-  onGeneratePickupQr?: (id: number) => Promise<void>;
+  onConfirmPickup?: (payload: { id: number; fulfillmentId?: string }) => Promise<void>;
+  onGeneratePickupQr?: (payload: { id: number; fulfillmentId?: string }) => Promise<void>;
 }
 
 type SendingMap = Record<string, number>;
@@ -184,6 +185,25 @@ const getActivityRank = (label?: string): number => {
   if (/^partial issue #\d+$/i.test(normalized)) return 6;
   if (normalized === 'completed') return 7;
   return 8;
+};
+
+const getMaxVisibleActivityRank = (status: RequestStatus): number => {
+  switch (status) {
+    case 'pending':
+      return 1;
+    case 'approved':
+    case 'in-progress':
+    case 'rejected':
+      return 2;
+    case 'ready_to_Pickup':
+      return 4;
+    case 'partial':
+      return 6;
+    case 'completed':
+      return 7;
+    default:
+      return 8;
+  }
 };
 
 const parseActivityShipmentNo = (label?: string, description?: string): number | undefined => {
@@ -243,6 +263,7 @@ export default function RequestedBatchWareHouse({
   onChange,
   onIssueRequest,
   onSaveDraft,
+  onDeleteDraft,
   onAcceptRequest,
   onConfirmPickup,
   onGeneratePickupQr,
@@ -252,10 +273,12 @@ export default function RequestedBatchWareHouse({
   const detailRequestActions = simpleRequestActions();
   const sparePartServices = SparePartRequestAPI(detailRequestActions);
   const initKeyRef = useRef<string>('');
+  const productDetailRequestRef = useRef(0);
 
   const [spfOpen, setSpfOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<RequestDetailLineItem | null>(null);
   const [selectedProductDetail, setSelectedProductDetail] = useState<any>(null);
+  const [spfLoading, setSpfLoading] = useState(false);
+  const [spfError, setSpfError] = useState<string | null>(null);
   const [itemDetailMap, setItemDetailMap] = useState<Record<string, any>>({});
   const [statusOverride, setStatusOverride] = useState<RequestStatus | null>(null);
   const [activityLogs, setActivityLogs] = useState<RequestDetailActivity[]>([]);
@@ -268,9 +291,12 @@ export default function RequestedBatchWareHouse({
   const [shipmentBatches, setShipmentBatches] = useState<Shipment[]>([]);
   const [confirmPickupPopupOpen, setConfirmPickupPopupOpen] = useState(false);
   const [confirmPickupLoading, setConfirmPickupLoading] = useState(false);
+  const [confirmPickupShipmentId, setConfirmPickupShipmentId] = useState<string | null>(null);
   const [pickupQrModalOpen, setPickupQrModalOpen] = useState(false);
   const [pickupQrLoading, setPickupQrLoading] = useState(false);
+  const [pickupQrShipmentId, setPickupQrShipmentId] = useState<string | null>(null);
   const [acceptLoading, setAcceptLoading] = useState(false);
+  const [draftDeleteLoading, setDraftDeleteLoading] = useState(false);
   const [expandedShipmentBatchNos, setExpandedShipmentBatchNos] = useState<number[]>([]);
 
   const data: RequestDetailData = useMemo(() => {
@@ -354,10 +380,8 @@ export default function RequestedBatchWareHouse({
     return 'pending';
   }, [data.status, shipmentBatches, statusOverride, totals.totalRequested, totals.totalSent]);
 
-  const displayedStatusLabel =
-    effectiveStatus === 'approved' ? 'Pending' : statusLabelMap[effectiveStatus];
-  const displayedStatusColor =
-    effectiveStatus === 'approved' ? statusColorMap.pending : statusColorMap[effectiveStatus];
+  const displayedStatusLabel = statusLabelMap[effectiveStatus];
+  const displayedStatusColor = statusColorMap[effectiveStatus];
   const currentActor =
     currentUser.initialState?.currentUser?.login || data.warehouseBy || 'Warehouse';
 
@@ -373,7 +397,22 @@ export default function RequestedBatchWareHouse({
       data.requestId,
       data.status,
       data.pickupStatus || '',
-      data.shipments?.length || 0,
+      (data.shipments || [])
+        .map((shipment) =>
+          [
+            shipment.id,
+            shipment.status,
+            shipment.pickupQrToken || '',
+            shipment.pickupQrGeneratedAt || '',
+            shipment.pickupQrExpiredAt || '',
+            shipment.confirmedAt || '',
+            shipment.lines.map((line) => `${line.productId}:${line.quantity}`).join(';'),
+          ].join(':'),
+        )
+        .join('|'),
+      (data.activities || [])
+        .map((activity) => `${activity.label}:${activity.date || ''}:${activity.description}:${activity.by || ''}`)
+        .join('|'),
       (data.draftItems || []).map((item) => `${item.requestLineId}:${item.draftQty}`).join(','),
       data.items.map((item) => `${item.requestLineId}:${item.warehouseSentQuantity || 0}`).join(','),
     ].join('|');
@@ -381,7 +420,8 @@ export default function RequestedBatchWareHouse({
     initKeyRef.current = initKey;
 
     setSpfOpen(false);
-    setSelectedProduct(null);
+    setSpfLoading(false);
+    setSpfError(null);
     setStatusOverride(null);
     setShipmentBatches([]);
     setExpandedShipmentBatchNos([]);
@@ -469,71 +509,75 @@ export default function RequestedBatchWareHouse({
   }, [data.items, open]);
 
   const handleClose = () => {
+    productDetailRequestRef.current += 1;
     initKeyRef.current = '';
     setSpfOpen(false);
-    setSelectedProduct(null);
     setSelectedProductDetail(null);
+    setSpfLoading(false);
+    setSpfError(null);
     setStatusOverride(null);
     setActivityLogs([]);
     setSendingByProductId({});
     setDraftByProductId({});
     setExpandedShipmentBatchNos([]);
     setPickupQrModalOpen(false);
+    setPickupQrShipmentId(null);
+    setConfirmPickupShipmentId(null);
     onClose?.();
   };
 
   const spfData = useMemo(() => {
     const detail = selectedProductDetail;
-    if (detail) {
-      return {
-        image: detail.image,
-        imageId: detail.imageId,
-        locations: detail.locations,
-        spare_part_name: detail.partName,
-        part_number: detail.productId,
-        description: detail.description,
-        stock_quantity: detail.stock,
-        receiving_from_warehouse: detail.warehouse,
-        company: detail.company,
-        category: detail.category,
-        business_unit: detail.businessUnit,
-        requested_date: detail.createdDate,
-      };
-    }
-
-    if (!selectedProduct) return undefined;
+    if (!detail) return undefined;
     return {
-      image: selectedProduct.image,
-      imageId: selectedProduct.imageId,
-      spare_part_name: selectedProduct.itemName,
-      part_number: selectedProduct.productId,
-      description: selectedProduct.description,
-      stock_quantity: selectedProduct.stockQuantity,
-      receiving_from_warehouse: selectedProduct.warehouse,
-      zone: selectedProduct.zone,
-      shelf: selectedProduct.shelf,
-      level: selectedProduct.level,
-      company: selectedProduct.company,
-      category: selectedProduct.category,
-      business_unit: selectedProduct.businessUnit,
-      requested_date: data.requestDate,
+      image: detail.image,
+      imageId: detail.imageId,
+      locations: detail.locations,
+      spare_part_name: detail.partName,
+      part_number: detail.productId,
+      description: detail.description,
+      stock_quantity: detail.stock,
+      receiving_from_warehouse: detail.warehouse,
+      company: detail.company,
+      category: detail.category,
+      uom: detail.uom,
+      business_unit: detail.businessUnit,
+      requested_date: detail.createdDate,
+      updated_date: detail.updatedDate,
     };
-  }, [data.requestDate, selectedProduct, selectedProductDetail]);
+  }, [selectedProductDetail]);
 
   const openProductDetails = async (record: RequestDetailLineItem) => {
+    const requestId = productDetailRequestRef.current + 1;
+    productDetailRequestRef.current = requestId;
+    setSelectedProductDetail(null);
+    setSpfError(null);
+    setSpfLoading(true);
+    setSpfOpen(true);
     try {
       const detail = await sparePartServices.detail({ productId: record.productId });
-      setSelectedProduct(record);
+      if (productDetailRequestRef.current !== requestId) return;
       setSelectedProductDetail(detail);
-      setSpfOpen(true);
     } catch (_error) {
-      message.error('Failed to load item details.');
+      if (productDetailRequestRef.current !== requestId) return;
+      setSpfError('Unable to load the latest product details.');
+    } finally {
+      if (productDetailRequestRef.current === requestId) {
+        setSpfLoading(false);
+      }
     }
   };
 
   const displayActivityLogs = useMemo(() => {
     let readyCount = 0;
     let partialIssueCount = 0;
+    const dynamicVisibleRank = activityLogs.reduce((maxRank, activity) => {
+      const activityRank = getActivityRank(activity.label);
+      if (effectiveStatus !== 'completed' && activityRank >= 7) {
+        return maxRank;
+      }
+      return Math.max(maxRank, activityRank);
+    }, getMaxVisibleActivityRank(effectiveStatus));
 
     return [...activityLogs]
       .sort((left, right) => {
@@ -543,6 +587,7 @@ export default function RequestedBatchWareHouse({
         if (leftTime !== rightTime) return leftTime - rightTime;
         return getActivityRank(left.label) - getActivityRank(right.label);
       })
+      .filter((activity) => getActivityRank(activity.label) <= dynamicVisibleRank)
       .map((activity) => {
         const rawLabel = String(activity.label || '').trim();
         const normalizedLabel = rawLabel.toLowerCase();
@@ -574,7 +619,7 @@ export default function RequestedBatchWareHouse({
 
         return activity;
       });
-  }, [activityLogs, data.requestDate]);
+  }, [activityLogs, data.requestDate, effectiveStatus]);
 
   const canWarehouseOperate = access.canSpfWarehouseStaff || access.canAdmin;
   const isReadyForWarehouseWork = effectiveStatus !== 'rejected' && effectiveStatus !== 'completed';
@@ -582,21 +627,18 @@ export default function RequestedBatchWareHouse({
     canWarehouseOperate &&
     isReadyForWarehouseWork &&
     effectiveStatus !== 'pending' &&
-    effectiveStatus !== 'approved' &&
-    effectiveStatus !== 'ready_to_Pickup';
+    effectiveStatus !== 'approved';
   const showSaveDraft =
     canWarehouseOperate &&
     isReadyForWarehouseWork &&
     effectiveStatus !== 'pending' &&
     effectiveStatus !== 'approved' &&
-    effectiveStatus !== 'ready_to_Pickup' &&
     currentSelectionTotal > 0;
   const showSaveAndPickUp =
     canWarehouseOperate &&
     isReadyForWarehouseWork &&
     effectiveStatus !== 'pending' &&
     effectiveStatus !== 'approved' &&
-    effectiveStatus !== 'ready_to_Pickup' &&
     (currentSelectionTotal > 0 || totalDraft > 0);
   const showAcceptRequest =
     canWarehouseOperate &&
@@ -653,56 +695,16 @@ export default function RequestedBatchWareHouse({
       return;
     }
 
-    if (!onConfirmPickup || !data.id) {
+    if (!onConfirmPickup || !data.id || !confirmPickupShipmentId) {
       message.warning('Pickup confirmation is not available.');
       return;
     }
 
     setConfirmPickupLoading(true);
     try {
-      await onConfirmPickup(data.id);
-      const latestReadyShipment = [...shipmentBatches]
-        .sort((left, right) => right.shipmentNo - left.shipmentNo)
-        .find((shipment) => shipment.status !== 'completed');
-      const nextStatus =
-        totals.totalRequested > 0 && totals.totalSent >= totals.totalRequested ? 'completed' : 'partial';
-
-      setStatusOverride(nextStatus);
-      setShipmentBatches((prev) =>
-        prev.map((shipment) =>
-          shipment.shipmentNo === (latestReadyShipment?.shipmentNo ?? shipment.shipmentNo)
-            ? {
-                ...shipment,
-                status: 'completed',
-                confirmedAt: shipment.confirmedAt || new Date().toISOString(),
-                confirmedBy:
-                  shipment.confirmedBy ||
-                  currentUser.initialState?.currentUser?.login ||
-                  data.warehouseBy ||
-                  undefined,
-              }
-            : shipment,
-        ),
-      );
-      emitWarehouseUpdate({
-        status: nextStatus === 'completed' ? 'Completed' : 'Partial',
-        items: workingItems,
-        shipments: shipmentBatches.map((shipment) =>
-          shipment.shipmentNo === (latestReadyShipment?.shipmentNo ?? shipment.shipmentNo)
-            ? {
-                ...shipment,
-                status: 'completed',
-                confirmedAt: shipment.confirmedAt || new Date().toISOString(),
-                confirmedBy:
-                  shipment.confirmedBy ||
-                  currentUser.initialState?.currentUser?.login ||
-                  data.warehouseBy ||
-                  undefined,
-              }
-            : shipment,
-        ),
-      });
+      await onConfirmPickup({ id: data.id, fulfillmentId: confirmPickupShipmentId });
       setConfirmPickupPopupOpen(false);
+      setConfirmPickupShipmentId(null);
       message.success('Pickup confirmed successfully.');
     } catch (_error) {
       message.error('Failed to confirm pickup.');
@@ -711,7 +713,7 @@ export default function RequestedBatchWareHouse({
     }
   };
 
-  const handleGeneratePickupQr = async () => {
+  const handleGeneratePickupQr = async (shipment: Shipment) => {
     if (!canWarehouseOperate) {
       message.error('You are not allowed to generate pickup QR.');
       return;
@@ -723,7 +725,8 @@ export default function RequestedBatchWareHouse({
     }
 
     if (!onGeneratePickupQr) {
-      if (data.pickupQrToken) {
+      if (shipment.pickupQrToken) {
+        setPickupQrShipmentId(shipment.id);
         setPickupQrModalOpen(true);
       } else {
         message.warning('Pickup QR generation is not available.');
@@ -733,7 +736,8 @@ export default function RequestedBatchWareHouse({
 
     setPickupQrLoading(true);
     try {
-      await onGeneratePickupQr(data.id);
+      await onGeneratePickupQr({ id: data.id, fulfillmentId: shipment.id });
+      setPickupQrShipmentId(shipment.id);
       setPickupQrModalOpen(true);
       message.success('Pickup QR generated successfully.');
     } catch (_error) {
@@ -816,6 +820,15 @@ export default function RequestedBatchWareHouse({
     Object.entries(sendingByProductId).forEach(([pid, qty]) => {
       nextDraft[pid] = (nextDraft[pid] || 0) + qty;
     });
+    const hasUnavailableQty = workingItems.some((item) => {
+      const stock = Number(itemDetailMap[item.productId]?.stock);
+      const hasKnownStock = Number.isFinite(stock);
+      return hasKnownStock && clampInt(nextDraft[item.productId]) > Math.max(0, stock);
+    });
+    if (hasUnavailableQty) {
+      message.error('Unavailable quantity. Please keep Select Amount within available stock.');
+      return;
+    }
     const lines = workingItems
       .map((item) => ({
         requestLineId: Number(item.requestLineId || 0),
@@ -830,6 +843,7 @@ export default function RequestedBatchWareHouse({
 
     onSaveDraft({ id: data.id, lines })
       .then(() => {
+        setDraftByProductId(nextDraft);
         setSendingByProductId((prev) => {
           const cleared = { ...prev };
           Object.keys(cleared).forEach((k) => (cleared[k] = 0));
@@ -852,6 +866,41 @@ export default function RequestedBatchWareHouse({
       });
   };
 
+  const handleDeleteDraft = () => {
+    if (!totalDraft || !data.id) return;
+
+    Modal.confirm({
+      title: 'Delete draft',
+      content: 'Are you sure you want to delete this draft?',
+      okText: 'Confirm',
+      cancelText: 'Cancel',
+      okButtonProps: { danger: true, loading: draftDeleteLoading },
+      onOk: async () => {
+        setDraftDeleteLoading(true);
+        try {
+          if (onDeleteDraft) {
+            await onDeleteDraft(data.id);
+          }
+          setStatusOverride(null);
+          setDraftByProductId({});
+          setSendingByProductId((prev) => {
+            const cleared = { ...prev };
+            Object.keys(cleared).forEach((key) => {
+              cleared[key] = 0;
+            });
+            return cleared;
+          });
+          message.success('Draft deleted successfully.');
+        } catch (_error) {
+          message.error('Failed to delete draft.');
+          throw _error;
+        } finally {
+          setDraftDeleteLoading(false);
+        }
+      },
+    });
+  };
+
   // ─── SAVE & PICK UP ─────────────────────────────────────────────────────────
   // Commits current draft (+ any new inputs) into a shipment batch card.
   // The card will show a "Confirm Picked" button for warehouse to press
@@ -865,6 +914,15 @@ export default function RequestedBatchWareHouse({
     Object.entries(sendingByProductId).forEach(([pid, qty]) => {
       mergedDraft[pid] = (mergedDraft[pid] || 0) + qty;
     });
+    const hasUnavailableQty = workingItems.some((item) => {
+      const stock = Number(itemDetailMap[item.productId]?.stock);
+      const hasKnownStock = Number.isFinite(stock);
+      return hasKnownStock && clampInt(mergedDraft[item.productId]) > Math.max(0, stock);
+    });
+    if (hasUnavailableQty) {
+      message.error('Unavailable quantity. Please keep Select Amount within available stock.');
+      return;
+    }
     if (onIssueRequest && data.id) {
       const lines = workingItems
         .map((item) => ({
@@ -947,21 +1005,20 @@ export default function RequestedBatchWareHouse({
       key: 'selectAmount',
       width: 'auto',
       render: (_: unknown, record) => {
-        const draft = clampInt(draftByProductId[record.productId]);
         const current = clampInt(sendingByProductId[record.productId]);
         const stock = Number(itemDetailMap[record.productId]?.stock);
         const hasKnownStock = Number.isFinite(stock);
         const isOutOfStock = hasKnownStock && stock <= 0;
-        const maxSelectable = getMaxSelectableQty(record, draft);
-        const isInvalid = current > maxSelectable;
+        const exceedsAvailableQty = hasKnownStock && current > Math.max(0, stock);
         return (
           <div>
             <InputNumber
               style={{ width: '100%' }}
-              status={isInvalid || isOutOfStock ? 'error' : undefined}
+              status={exceedsAvailableQty || isOutOfStock ? 'error' : undefined}
               value={current}
-              min={0}
-              disabled={!canSelectAmount || maxSelectable <= 0 || isOutOfStock}
+              min={1}
+              max={hasKnownStock ? Math.max(0, stock) : undefined}
+              disabled={!canSelectAmount || draftDeleteLoading}
               onChange={(v) =>
                 setSendingByProductId((prev) => ({
                   ...prev,
@@ -971,11 +1028,11 @@ export default function RequestedBatchWareHouse({
             />
             {isOutOfStock ? (
               <Text type="danger" style={{ fontSize: 12 }}>
-                Unavailable
+                Unavailable. Available qty is 0.
               </Text>
-            ) : isInvalid ? (
+            ) : exceedsAvailableQty ? (
               <Text type="danger" style={{ fontSize: 12 }}>
-                Unavailable
+                Unavailable. Max available qty is {stock}.
               </Text>
             ) : null}
           </div>
@@ -989,12 +1046,16 @@ export default function RequestedBatchWareHouse({
     () => [...shipmentBatches].sort((left, right) => right.shipmentNo - left.shipmentNo),
     [shipmentBatches],
   );
-
-  const latestReadyShipmentNo = orderedShipmentBatches.find((shipment) => shipment.status !== 'completed')?.shipmentNo;
+  const selectedPickupQrShipment = pickupQrShipmentId
+    ? shipmentBatches.find((shipment) => shipment.id === pickupQrShipmentId)
+    : undefined;
+  const confirmPickupShipment = confirmPickupShipmentId
+    ? shipmentBatches.find((shipment) => shipment.id === confirmPickupShipmentId)
+    : undefined;
 
   const shipmentCards = orderedShipmentBatches.map((shipment) => {
     const isCompleted = shipment.status === 'completed';
-    const showShipmentActions = !isCompleted && shipment.shipmentNo === latestReadyShipmentNo;
+    const isQrGenerated = shipment.status === 'qr_generated';
     const cardTitle = (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {isCompleted ? (
@@ -1004,11 +1065,11 @@ export default function RequestedBatchWareHouse({
         )}
         <span>Shipment #{shipment.shipmentNo}</span>
         <Tag
-          color={isCompleted ? 'success' : 'warning'}
+          color={isCompleted ? 'success' : isQrGenerated ? 'processing' : 'warning'}
           bordered={false}
           style={{ marginLeft: 4 }}
         >
-          {isCompleted ? 'Picked Up' : 'Ready to Pick up'}
+          {isCompleted ? 'Picked Up' : isQrGenerated ? 'QR Generated' : 'Pending'}
         </Tag>
       </div>
     );
@@ -1017,18 +1078,28 @@ export default function RequestedBatchWareHouse({
       <Text type="secondary" style={{ fontSize: 12 }}>
         Confirmed: {formatSpfDateTime(shipment.confirmedAt)}
       </Text>
-    ) : showShipmentActions ? (
+    ) : (
       <div style={{ padding: '8px 0' }}>
         <Space>
-          <Button loading={pickupQrLoading} onClick={() => handleGeneratePickupQr()}>
+          <Button
+            loading={pickupQrLoading && pickupQrShipmentId === shipment.id}
+            disabled={isQrGenerated}
+            onClick={() => handleGeneratePickupQr(shipment)}
+          >
             Generate QR
           </Button>
-          <Button type="primary" onClick={() => setConfirmPickupPopupOpen(true)}>
+          <Button
+            type="primary"
+            onClick={() => {
+              setConfirmPickupShipmentId(shipment.id);
+              setConfirmPickupPopupOpen(true);
+            }}
+          >
             Confirm Pick up
           </Button>
         </Space>
       </div>
-    ) : null;
+    );
 
     return (
       <Card
@@ -1086,9 +1157,14 @@ export default function RequestedBatchWareHouse({
         extra={
           showSaveAndPickUp ? (
             <div style={{ padding: '8px 0' }}>
-              <Button type="primary" onClick={handleSaveAndPickUp}>
-                Save &amp; Pick up
-              </Button>
+              <Space>
+                <Button danger onClick={handleDeleteDraft} loading={draftDeleteLoading}>
+                  Delete
+                </Button>
+                <Button type="primary" onClick={handleSaveAndPickUp} disabled={draftDeleteLoading}>
+                  Save &amp; Pick up
+                </Button>
+              </Space>
             </div>
           ) : null
         }
@@ -1121,11 +1197,15 @@ export default function RequestedBatchWareHouse({
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
             <Space>
-              {showSaveDraft ? <Button onClick={handleSave}>Save (Draft)</Button> : null}
+              {showSaveDraft ? (
+                <Button onClick={handleSave} disabled={draftDeleteLoading}>
+                  Save (Draft)
+                </Button>
+              ) : null}
             </Space>
             <Space>
-              {showSaveDraft ? (
-                <Button type="primary" onClick={handleSaveAndPickUp}>
+              {showSaveAndPickUp ? (
+                <Button type="primary" onClick={handleSaveAndPickUp} disabled={draftDeleteLoading}>
                   Save &amp; Pick up
                 </Button>
               ) : null}
@@ -1174,6 +1254,10 @@ export default function RequestedBatchWareHouse({
           style={{ marginBottom: 32 }}
           items={STATUS_STEPS.map((title, index) => ({
             title,
+            icon:
+              effectiveStatus === 'completed' && index === STATUS_STEPS.length - 1 ? (
+                <CheckCircleOutlined />
+              ) : undefined,
             status:
               effectiveStatus === 'rejected' && index === 1
                 ? 'error'
@@ -1313,10 +1397,17 @@ export default function RequestedBatchWareHouse({
       <ValidationPopup
         open={confirmPickupPopupOpen}
         title="Confirm Pick up"
-        description="Confirm that the requester has picked up the prepared spare parts?"
+        description={
+          confirmPickupShipment
+            ? `Confirm that the requester has picked up Shipment #${confirmPickupShipment.shipmentNo}?`
+            : 'Confirm that the requester has picked up the prepared spare parts?'
+        }
         confirmText="Confirm"
         loading={confirmPickupLoading}
-        onCancel={() => setConfirmPickupPopupOpen(false)}
+        onCancel={() => {
+          setConfirmPickupPopupOpen(false);
+          setConfirmPickupShipmentId(null);
+        }}
         onConfirm={() => handleConfirmPickupRequest()}
       />
 
@@ -1325,25 +1416,28 @@ export default function RequestedBatchWareHouse({
         open={pickupQrModalOpen}
         centered
         footer={null}
-        onCancel={() => setPickupQrModalOpen(false)}
+        onCancel={() => {
+          setPickupQrModalOpen(false);
+          setPickupQrShipmentId(null);
+        }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-          {data.pickupQrToken ? (
-            <QRCode value={data.pickupQrToken} size={220} />
+          {selectedPickupQrShipment?.pickupQrToken ? (
+            <QRCode value={selectedPickupQrShipment.pickupQrToken} size={220} />
           ) : (
             <Text type="secondary">No pickup QR code is available yet.</Text>
           )}
           <Text strong>{data.requestId}</Text>
-          {data.pickupQrToken ? (
+          {selectedPickupQrShipment?.pickupQrToken ? (
             <Text copyable style={{ textAlign: 'center', wordBreak: 'break-all' }}>
-              {data.pickupQrToken}
+              {selectedPickupQrShipment.pickupQrToken}
             </Text>
           ) : null}
           <Text type="secondary">
-            Generated: {formatDateTime(data.pickupQrGeneratedAt)}
+            Generated: {formatDateTime(selectedPickupQrShipment?.pickupQrGeneratedAt)}
           </Text>
           <Text type="secondary">
-            Expires: {formatDateTime(data.pickupQrExpiredAt)}
+            Expires: {formatDateTime(selectedPickupQrShipment?.pickupQrExpiredAt)}
           </Text>
         </div>
       </Modal>
@@ -1351,10 +1445,14 @@ export default function RequestedBatchWareHouse({
       <SpfDetails
         open={open && spfOpen}
         data={spfData}
+        loading={spfLoading}
+        error={spfError}
         onClose={() => {
+          productDetailRequestRef.current += 1;
           setSpfOpen(false);
-          setSelectedProduct(null);
           setSelectedProductDetail(null);
+          setSpfLoading(false);
+          setSpfError(null);
         }}
       />
     </>

@@ -1,11 +1,11 @@
 import dayjs from 'dayjs';
 
-export const SPF_DATE_TIME_FORMAT = 'YYYY/MM/DD - hh:mm:ss';
+export const SPF_DATE_TIME_FORMAT = 'YYYY/MM/DD - HH:mm:ss';
 
 const PARSE_FORMATS = [
   SPF_DATE_TIME_FORMAT,
-  'YY:MM:DD hh:mm:ss',
-  'YYYY/MM/DD - hh:mm:ss',
+  'YY:MM:DD HH:mm:ss',
+  'YYYY/MM/DD - HH:mm:ss',
   'YYYY-MM-DD HH:mm',
   'YYYY-MM-DDTHH:mm:ss',
   'YYYY-MM-DDTHH:mm:ss.SSS[Z]',

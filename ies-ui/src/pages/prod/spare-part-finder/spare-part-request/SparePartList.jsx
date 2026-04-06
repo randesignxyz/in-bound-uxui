@@ -18,10 +18,43 @@ const statusOptions = [
   { label: 'No Stock', value: 'no-stock' },
 ];
 
-export default function SparePartListView() {
+const normalizeResubmitPriority = (value) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  return normalized === 'urgent' || normalized === 'high' ? normalized : 'normal';
+};
+
+const buildResubmitItem = (line, index) => ({
+  id: Number(line.requestLineId || index + 1),
+  image: line.image,
+  imageId: Array.isArray(line.imageId) ? line.imageId : line.imageId ? [line.imageId] : undefined,
+  productId: line.productId,
+  partName: line.itemName,
+  description: line.description,
+  category: line.category || '',
+  uom: line.uom || '',
+  uomOptions: line.uom ? [line.uom] : [],
+  stock: Math.max(Number(line.quantityToReturn || line.requestedQty || line.total || 1), 1),
+  businessUnit: line.businessUnit || '',
+  status: 'available',
+  warehouse: line.warehouse || '',
+  locations: [],
+  tab: 'spare-list',
+});
+
+const buildResubmitRow = (line, item) => ({
+  item,
+  quantity: Math.max(Number(line.quantityToReturn || line.requestedQty || line.total || 1), 1),
+  purpose: line.description || '',
+  toWarehouseCode: line.warehouse || '',
+  forLine: line.company || '',
+  uom: line.uom || '',
+});
+
+export default function SparePartListView({ resubmitDraft, onResubmitDraftHandled }) {
   const access = useAccess();
   const actionRef = useRef();
   const importInputRef = useRef();
+  const detailRequestRef = useRef(0);
   const requestActions = simpleRequestActions();
   const services = SparePartRequestAPI(requestActions);
   const requestServices = SparePartRequestService(requestActions);
@@ -34,9 +67,13 @@ export default function SparePartListView() {
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestItems, setRequestItems] = useState([]);
   const [requestInitialRows, setRequestInitialRows] = useState([]);
+  const [requestInitialRemark, setRequestInitialRemark] = useState('');
+  const [requestInitialPriority, setRequestInitialPriority] = useState('normal');
   const [importingFile, setImportingFile] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsItem, setDetailsItem] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState(null);
   const [currentRows, setCurrentRows] = useState([]);
   const [knownCategories, setKnownCategories] = useState([]);
   const [knownWarehouses, setKnownWarehouses] = useState([]);
@@ -66,6 +103,28 @@ export default function SparePartListView() {
       .then((items) => setKnownCategories(items.map((item) => item.category_name).filter(Boolean)))
       .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (!resubmitDraft?.items?.length) return;
+
+    const items = resubmitDraft.items.map((line, index) => buildResubmitItem(line, index));
+    const initialRows = resubmitDraft.items.map((line, index) => buildResubmitRow(line, items[index]));
+    const selectedKeys = items.map((item) => String(item.id));
+
+    setSelectedRowKeys(selectedKeys);
+    setSelectedItemsById(
+      items.reduce((acc, item) => {
+        acc[String(item.id)] = item;
+        return acc;
+      }, {}),
+    );
+    setRequestItems(items);
+    setRequestInitialRows(initialRows);
+    setRequestInitialRemark(resubmitDraft.remark || '');
+    setRequestInitialPriority(normalizeResubmitPriority(resubmitDraft.priority));
+    setRequestModalOpen(true);
+    onResubmitDraftHandled?.();
+  }, [onResubmitDraftHandled, resubmitDraft]);
 
   const reloadTable = (resetPage = false) => {
     if (resetPage) {
@@ -176,6 +235,11 @@ export default function SparePartListView() {
       return;
     }
 
+    if (!requestInitialRows.length) {
+      setRequestInitialRemark('');
+      setRequestInitialPriority('normal');
+    }
+
     setRequestInitialRows((previous) => {
       if (!previous.length) return previous;
 
@@ -246,6 +310,8 @@ export default function SparePartListView() {
 
       syncSelection(importedKeys, importedItems);
       setRequestInitialRows(result.successfulRows);
+      setRequestInitialRemark('');
+      setRequestInitialPriority('normal');
       setRequestItems(importedItems);
       setRequestModalOpen(true);
       message.success(`Imported ${result.successCount} row(s) successfully.`);
@@ -262,30 +328,45 @@ export default function SparePartListView() {
   };
 
   const openDetails = async (item) => {
+    const requestId = detailRequestRef.current + 1;
+    detailRequestRef.current = requestId;
+    setDetailsItem(null);
+    setDetailsError(null);
+    setDetailsLoading(Boolean(item));
+    setDetailsOpen(true);
+
     if (!item) {
-      setDetailsItem(null);
-      setDetailsOpen(true);
+      setDetailsLoading(false);
       return;
     }
 
     try {
       const detail = await services.detail({ id: item.id, productId: item.productId });
-      setDetailsItem(detail || item);
+      if (detailRequestRef.current !== requestId) return;
+      setDetailsItem(detail || null);
     } catch (error) {
-      message.warning('Unable to load item details. Showing list data.');
-      setDetailsItem(item);
+      if (detailRequestRef.current !== requestId) return;
+      setDetailsError('Unable to load the latest product details.');
+      setDetailsItem(null);
+    } finally {
+      if (detailRequestRef.current === requestId) {
+        setDetailsLoading(false);
+      }
     }
-
-    setDetailsOpen(true);
   };
 
   const closeDetails = () => {
+    detailRequestRef.current += 1;
     setDetailsOpen(false);
     setDetailsItem(null);
+    setDetailsError(null);
+    setDetailsLoading(false);
   };
 
   const handleRequestPartsFromDetails = () => {
     if (!detailsItem) return;
+    setRequestInitialRemark('');
+    setRequestInitialPriority('normal');
     setRequestInitialRows([]);
     setRequestItems([detailsItem]);
     setRequestModalOpen(true);
@@ -550,6 +631,8 @@ export default function SparePartListView() {
         onCancel={() => {
           setRequestModalOpen(false);
           setRequestInitialRows([]);
+          setRequestInitialRemark('');
+          setRequestInitialPriority('normal');
         }}
         onSubmit={async (payload) => {
           if (!(access.canSpfRequester || access.canSpfApprover)) {
@@ -564,6 +647,8 @@ export default function SparePartListView() {
             setSelectedRowKeys([]);
             setSelectedItemsById({});
             setRequestInitialRows([]);
+            setRequestInitialRemark('');
+            setRequestInitialPriority('normal');
             reloadTable(true);
           } catch (error) {
             message.error('Failed to submit request.');
@@ -573,6 +658,8 @@ export default function SparePartListView() {
         onAddMore={() => {
           setRequestModalOpen(false);
         }}
+        initialRemark={requestInitialRemark}
+        initialPriority={requestInitialPriority}
       />
 
       <input
@@ -598,15 +685,19 @@ export default function SparePartListView() {
                 receiving_from_warehouse: detailsItem.warehouse,
                 company: detailsItem.company,
                 category: detailsItem.category,
+                uom: detailsItem.uom,
                 business_unit: detailsItem.businessUnit,
                 requested_date: detailsItem.createdDate,
+                updated_date: detailsItem.updatedDate,
               }
             : undefined
         }
-          onClose={closeDetails}
-          onRequestParts={handleRequestPartsFromDetails}
-          onInventoryLog={() => {}}
-          EditImage={undefined}
+        loading={detailsLoading}
+        error={detailsError}
+        onClose={closeDetails}
+        onRequestParts={detailsItem ? handleRequestPartsFromDetails : undefined}
+        onInventoryLog={() => {}}
+        EditImage={undefined}
       />
 
     </>

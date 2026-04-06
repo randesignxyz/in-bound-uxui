@@ -252,12 +252,16 @@ export default function RequestsListWarehouse() {
           const response = await services.saveDraft(payload);
           applyResponseUpdate(response);
         }}
-        onConfirmPickup={async (id) => {
-          const response = await services.confirmPickup(id);
+        onDeleteDraft={async (id) => {
+          const response = await services.deleteDraft(id);
           applyResponseUpdate(response);
         }}
-        onGeneratePickupQr={async (id) => {
-          const response = await services.generatePickupQr(id);
+        onConfirmPickup={async (payload) => {
+          const response = await services.confirmPickup(payload);
+          applyResponseUpdate(response);
+        }}
+        onGeneratePickupQr={async (payload) => {
+          const response = await services.generatePickupQr(payload);
           applyResponseUpdate(response);
         }}
         onAcceptRequest={async (id) => {

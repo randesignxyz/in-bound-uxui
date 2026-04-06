@@ -86,6 +86,10 @@ export const deriveWarehouseDisplayStatus = (request: WarehouseRequestRecord): W
   const received = request.items.reduce((sum, item) => sum + (Number(item.receivedQuantity) || 0), 0);
 
   if (request.status === 'Rejected') return 'Rejected';
+  if (request.status === 'Completed') return 'Completed';
+  if (request.status === 'Partial') return 'Partial';
+  if (request.status === 'Ready To Pick Up') return 'Ready To Pick Up';
+  if (request.status === 'In Progress') return 'In Progress';
   if (rawRequestStatus === 'IN_PROGRESS') {
     return pickupStatus === 'confirmed' && received > 0 ? 'Partial' : 'In Progress';
   }

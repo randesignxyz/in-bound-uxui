@@ -11,7 +11,7 @@ export interface ShipmentLine {
   uom?: string;
 }
 
-export type ShipmentStatus = 'ready_to_pickup' | 'confirmed_picked' | 'completed';
+export type ShipmentStatus = 'pending' | 'qr_generated' | 'confirmed_pickup' | 'completed';
 
 export interface Shipment {
   id: string;
@@ -21,6 +21,9 @@ export interface Shipment {
   lines: ShipmentLine[];
   /** Status of this individual shipment batch */
   status: ShipmentStatus;
+  pickupQrToken?: string;
+  pickupQrGeneratedAt?: string;
+  pickupQrExpiredAt?: string;
   /** ISO timestamp when warehouse confirmed the requester picked this up */
   confirmedAt?: string;
   confirmedBy?: string;

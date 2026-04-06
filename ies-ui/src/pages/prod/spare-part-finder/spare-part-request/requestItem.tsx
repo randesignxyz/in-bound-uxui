@@ -37,7 +37,9 @@ interface RequestItemModalProps {
     toWarehouseCode: string;
     forLine: string;
     uom: string;
-  }[];
+    }[];
+  initialRemark?: string;
+  initialPriority?: PriorityLevel;
   onCancel: () => void;
   onSubmit: (payload: {
     items: {
@@ -101,6 +103,8 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   open,
   selectedItems,
   initialRows,
+  initialRemark,
+  initialPriority,
   onCancel,
   onSubmit,
   onAddMore,
@@ -143,7 +147,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
         return {
           key: idx,
           item: initialRow?.item || item,
-          quantity: initialRow?.quantity ?? (item.stock > 0 ? 1 : 0),
+          quantity: initialRow?.quantity ?? 1,
           purpose: initialRow?.purpose || '',
           uom: initialRow?.uom || uomOptions[0] || '',
           toWarehouseCode: initialRow?.toWarehouseCode || item.warehouse || 'WH1',
@@ -156,6 +160,12 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       wasOpenRef.current = true;
     }
   }, [open, selectedItems, initialRows]);
+
+  useEffect(() => {
+    if (!open) return;
+    setRemark(initialRemark || '');
+    setPriority(initialPriority || 'normal');
+  }, [initialPriority, initialRemark, open]);
 
   const handleQuantityChange = (key: number, value: number) => {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, quantity: value } : r)));
@@ -353,17 +363,27 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       title: 'QTY to Request',
       width: 120,
       render: (_: unknown, record: RequestRowItem) => {
-        const max = record.item.stock > 0 ? record.item.stock : 100;
+        const availableStock = Number(record.item.stock || 0);
+        const exceedsStock = availableStock > 0 && record.quantity > availableStock;
+        const isOutOfStock = availableStock <= 0;
         return (
-          <Space size={4}>
+          <div style={{ width: '100%' }}>
             <InputNumber
-              min={0}
-              max={max}
+              min={1}
               value={record.quantity}
               onChange={(val) => handleQuantityChange(record.key, val ?? 0)}
               style={{ width: '100%' }}
             />
-          </Space>
+            {isOutOfStock ? (
+              <Typography.Text type="warning" style={{ fontSize: 12 }}>
+                Currently out of stock
+              </Typography.Text>
+            ) : exceedsStock ? (
+              <Typography.Text type="warning" style={{ fontSize: 12 }}>
+                Quantity exceed
+              </Typography.Text>
+            ) : null}
+          </div>
         );
       },
     },

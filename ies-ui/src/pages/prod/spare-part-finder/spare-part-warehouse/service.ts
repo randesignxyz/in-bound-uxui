@@ -49,6 +49,9 @@ type IssueHistoryDto = {
   fulfillmentStatus: string;
   issuedAt?: string | null;
   warehouseStaffId: string;
+  pickupQrToken?: string | null;
+  pickupQrGeneratedAt?: string | null;
+  pickupQrExpiredAt?: string | null;
   pickupConfirmedAt?: string | null;
   pickupConfirmedBy?: string | null;
   note?: string | null;
@@ -101,8 +104,10 @@ type IssueRequestPayload = {
 };
 
 type SaveDraftPayload = IssueRequestPayload;
+type DeleteDraftPayload = { id: number };
 type AcceptIssuePayload = { id: number };
-type GeneratePickupQrPayload = { id: number };
+type GeneratePickupQrPayload = { id: number; fulfillmentId?: string };
+type ConfirmPickupPayload = { id: number; fulfillmentId?: string };
 
 const SparePartWarehouseAction = {
   pageRequests: (params: PageIssueRequestsParams): ServiceApiType<any> => ({
@@ -145,11 +150,17 @@ const SparePartWarehouseAction = {
     endpoint: 'PROD',
     payload,
   }),
-  confirmPickup: (id: number): ServiceApiType<{ id: number }> => ({
+  deleteDraft: (payload: DeleteDraftPayload): ServiceApiType<DeleteDraftPayload> => ({
+    type: 'EXEC',
+    actionName: 'delete-spare-part-issue-draft',
+    endpoint: 'PROD',
+    payload,
+  }),
+  confirmPickup: (payload: ConfirmPickupPayload): ServiceApiType<ConfirmPickupPayload> => ({
     type: 'EXEC',
     actionName: 'confirm-spare-part-pickup',
     endpoint: 'PROD',
-    payload: { id },
+    payload,
   }),
   generatePickupQr: (payload: GeneratePickupQrPayload): ServiceApiType<GeneratePickupQrPayload> => ({
     type: 'EXEC',
@@ -182,20 +193,33 @@ const deriveRecordStatus = (
   requestStatus?: string | null,
   pickupStatus?: string | null,
   totalIssuedQty: number = 0,
+  history: IssueHistoryDto[] = [],
 ): WarehouseRequestRecord['status'] => {
   const normalizedRequestStatus = String(requestStatus || '').trim().toUpperCase();
   const normalizedPickupStatus = String(pickupStatus || '').trim().toLowerCase();
+  const committedShipmentCount = history.length;
+  const confirmedShipmentCount = history.filter((entry) => Boolean(entry.pickupConfirmedAt)).length;
+  const hasAnyConfirmedShipment = confirmedShipmentCount > 0;
+  const hasAllShipmentsConfirmed = committedShipmentCount > 0 && confirmedShipmentCount === committedShipmentCount;
+  const hasPendingShipment = committedShipmentCount > confirmedShipmentCount;
 
   switch (normalizedRequestStatus) {
     case 'REJECTED':
       return 'Rejected';
     case 'IN_PROGRESS':
-      return normalizedPickupStatus === 'confirmed' && totalIssuedQty > 0 ? 'Partial' : 'In Progress';
+      return hasAnyConfirmedShipment || (normalizedPickupStatus === 'confirmed' && totalIssuedQty > 0)
+        ? 'Partial'
+        : 'In Progress';
     case 'PARTIAL_ISSUE':
-      return normalizedPickupStatus === 'confirmed' ? 'Partial' : 'Ready To Pick Up';
-    case 'READY_TO_PICKUP':
+      if (hasPendingShipment) return 'Ready To Pick Up';
+      if (hasAllShipmentsConfirmed || normalizedPickupStatus === 'confirmed') return 'Partial';
       return 'Ready To Pick Up';
+    case 'READY_TO_PICKUP':
+      return hasAllShipmentsConfirmed ? 'Completed' : 'Ready To Pick Up';
     case 'COMPLETE':
+      if (hasPendingShipment) return 'Ready To Pick Up';
+      if (hasAllShipmentsConfirmed) return 'Completed';
+      if (hasAnyConfirmedShipment) return 'Ready To Pick Up';
       return normalizedPickupStatus === 'confirmed' ? 'Completed' : 'Ready To Pick Up';
     case 'APPROVED':
       return 'Pending';
@@ -225,6 +249,38 @@ const mapRecordStatusToDetailStatus = (
   }
 };
 
+const deriveDetailStatus = (
+  requestStatus?: string | null,
+  pickupStatus?: string | null,
+  history: IssueHistoryDto[] = [],
+): RequestDetailData['status'] => {
+  const normalizedRequestStatus = String(requestStatus || '').trim().toUpperCase();
+  const normalizedPickupStatus = String(pickupStatus || '').trim().toLowerCase();
+  const committedShipmentCount = history.length;
+  const confirmedShipmentCount = history.filter((entry) => Boolean(entry.pickupConfirmedAt)).length;
+  const hasAllShipmentsConfirmed = committedShipmentCount > 0 && confirmedShipmentCount === committedShipmentCount;
+  const hasPendingShipment = committedShipmentCount > confirmedShipmentCount;
+
+  switch (normalizedRequestStatus) {
+    case 'REJECTED':
+      return 'rejected';
+    case 'APPROVED':
+      return 'approved';
+    case 'IN_PROGRESS':
+      return 'in-progress';
+    case 'PARTIAL_ISSUE':
+      return hasPendingShipment ? 'ready_to_Pickup' : 'partial';
+    case 'READY_TO_PICKUP':
+      return hasAllShipmentsConfirmed ? 'completed' : 'ready_to_Pickup';
+    case 'COMPLETE':
+      if (hasPendingShipment) return 'ready_to_Pickup';
+      if (hasAllShipmentsConfirmed || normalizedPickupStatus === 'confirmed') return 'completed';
+      return 'ready_to_Pickup';
+    default:
+      return mapRecordStatusToDetailStatus(deriveRecordStatus(requestStatus, pickupStatus, 0, history));
+  }
+};
+
 const mapIssueLineToWarehouseLine = (item: IssueLineDto) => ({
   id: Number(item.requestLineId || 0),
   productId: item.sparePartId || item.sparePartCode,
@@ -245,7 +301,7 @@ const mapIssueRequestRecord = (item: IssueRequestDto): WarehouseRequestRecord =>
     requestDate: item.requestedDate || '',
     requester: item.requesterId || '',
     priority: normalizePriority(item.priority),
-    status: deriveRecordStatus(item.requestStatus, item.pickupStatus, totalIssuedQty),
+    status: deriveRecordStatus(item.requestStatus, item.pickupStatus, totalIssuedQty, item.history || []),
     items,
     rawRequestStatus: item.requestStatus,
     pickupStatus: item.pickupStatus || undefined,
@@ -284,7 +340,14 @@ const buildShipments = (
     shipmentNo: index + 1,
     createdAt: entry.issuedAt || '',
     createdBy: entry.warehouseStaffId || 'Warehouse',
-    status: entry.pickupConfirmedAt ? 'completed' : 'ready_to_pickup',
+    status: entry.pickupConfirmedAt
+      ? 'completed'
+      : entry.pickupQrToken
+        ? 'qr_generated'
+        : 'pending',
+    pickupQrToken: entry.pickupQrToken || undefined,
+    pickupQrGeneratedAt: entry.pickupQrGeneratedAt || undefined,
+    pickupQrExpiredAt: entry.pickupQrExpiredAt || undefined,
     confirmedAt: entry.pickupConfirmedAt || undefined,
     confirmedBy: entry.pickupConfirmedBy || undefined,
     lines: (entry.items || []).map((line) => ({
@@ -388,8 +451,7 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
   const detailCategory = (item.items || [])
     .map((line) => resolveCategoryName(line.category))
     .find((value): value is string => Boolean(value));
-  const mappedRecord = mapIssueRequestRecord(item);
-  const normalizedStatus = mapRecordStatusToDetailStatus(mappedRecord.status);
+  const normalizedStatus = deriveDetailStatus(item.requestStatus, item.pickupStatus, item.history || []);
 
   return {
     id: Number(item.id || 0),
@@ -502,9 +564,24 @@ export const SparePartWarehouseService = (requestAction: RequestActions) => ({
       detail: mapIssueRequestDetail(data),
     };
   },
-  confirmPickup: async (id: number): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {
+  deleteDraft: async (id: number): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {
     const response = (await singleRequest<ExecResponseDto<IssueRequestDto>>(
-      SparePartWarehouseAction.confirmPickup(id),
+      SparePartWarehouseAction.deleteDraft({ id }),
+    )(requestAction)) as ExecResponseDto<IssueRequestDto>;
+
+    const data = unwrapExecPayload(response);
+    if (!data) {
+      throw new Error('Delete draft response is missing data.');
+    }
+
+    return {
+      record: mapIssueRequestRecord(data),
+      detail: mapIssueRequestDetail(data),
+    };
+  },
+  confirmPickup: async (payload: ConfirmPickupPayload): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {
+    const response = (await singleRequest<ExecResponseDto<IssueRequestDto>>(
+      SparePartWarehouseAction.confirmPickup(payload),
     )(requestAction)) as ExecResponseDto<IssueRequestDto>;
 
     const data = unwrapExecPayload(response);
@@ -517,9 +594,9 @@ export const SparePartWarehouseService = (requestAction: RequestActions) => ({
       detail: mapIssueRequestDetail(data),
     };
   },
-  generatePickupQr: async (id: number): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {
+  generatePickupQr: async (payload: GeneratePickupQrPayload): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {
     const response = (await singleRequest<ExecResponseDto<IssueRequestDto>>(
-      SparePartWarehouseAction.generatePickupQr({ id }),
+      SparePartWarehouseAction.generatePickupQr(payload),
     )(requestAction)) as ExecResponseDto<IssueRequestDto>;
 
     const data = unwrapExecPayload(response);

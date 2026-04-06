@@ -72,6 +72,7 @@ export interface SparePartRequestItem {
   }[];
   tab: SparePartTab;
   createdDate?: string;
+  updatedDate?: string;
 }
 
 export interface MyRequestItem {
@@ -80,6 +81,7 @@ export interface MyRequestItem {
   requestNo?: string;
   requestedBy?: string;
   approvedBy?: string;
+  approverRemark?: string;
   priority: RequestPriority;
   requestDate: string;
   totalItems: number;

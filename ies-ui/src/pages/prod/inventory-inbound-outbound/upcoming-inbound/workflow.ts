@@ -158,6 +158,7 @@ export interface GoodsReceipt {
   items: GRItem[];
   status: LegacyGRStatus;
   processState: InboundProcessState;
+  displayStatus?: string;
   legacyStatus?: LegacyGRStatus;
   createdBy: string;
   createdDate: string;
@@ -310,10 +311,81 @@ export function getSupportingDocSourceColor(source?: SupportingDocSource | null)
   }
 }
 
+export function getReceiptDisplayStatus(receipt: GoodsReceipt) {
+  const explicitDisplayStatus = receipt.displayStatus?.trim();
+  if (explicitDisplayStatus) {
+    return explicitDisplayStatus;
+  }
+
+  switch (receipt.processState) {
+    case 'RECEIVED_CHECKING':
+      return 'Received Checking';
+    case 'RECEIPT_CONFIRMED':
+      return 'Receipt Confirmed';
+    case 'STORED_ON_HOLD':
+      return 'Stored On-Hold';
+    case 'GRPO_DRAFT':
+      return 'GRPO Draft';
+    case 'QC_PENDING':
+      return 'QC Pending';
+    case 'QC_PASSED':
+      return 'QC Passed';
+    case 'PENDING_SUPERVISOR_REVIEW':
+    case 'MERGED_TO_SUPERVISOR_REVIEW':
+      return 'Pending Supervisor Review';
+    case 'SUPERVISOR_APPROVED':
+    case 'TRANSFERRED_TO_PM_RM_WH':
+    case 'FIN_SUBMITTED':
+    case 'DAILY_CLOSED':
+    case 'MONTHLY_SUMMARY_READY':
+      return 'Supervisor Approved';
+    case 'MISMATCH_EXCEPTION':
+      return 'QC Rejected';
+    case 'CORRECTION_REQUIRED':
+      if (isSupervisorRejectedCorrection(receipt)) {
+        return 'Supervisor Rejected';
+      }
+      if (isQcRejectedReceipt(receipt)) {
+        return 'QC Rejected';
+      }
+      return 'Correction Required';
+    default:
+      return officialStateLabel[receipt.processState];
+  }
+}
+
+export function getReceiptDisplayStatusColor(displayStatus: string) {
+  switch (displayStatus) {
+    case 'Received Checking':
+      return 'geekblue';
+    case 'Receipt Confirmed':
+      return 'cyan';
+    case 'Stored On-Hold':
+    case 'Correction Required':
+      return 'orange';
+    case 'QC Pending':
+    case 'Pending Supervisor Review':
+      return 'gold';
+    case 'QC Passed':
+      return 'blue';
+    case 'Supervisor Approved':
+      return 'green';
+    case 'QC Rejected':
+    case 'Supervisor Rejected':
+      return 'red';
+    case 'GRPO Draft':
+      return 'default';
+    default:
+      return 'default';
+  }
+}
+
 export function getInboundHistoryStatus(receipt: GoodsReceipt): InboundHistoryStatus {
+  const rejectedHistory = hasRejectedHistory(receipt);
+
   switch (receipt.processState) {
     case 'GRPO_DRAFT':
-      return 'Draft';
+      return rejectedHistory ? 'Rejected' : 'Draft';
     case 'QC_PENDING':
     case 'QC_PASSED':
     case 'PENDING_SUPERVISOR_REVIEW':
@@ -324,9 +396,9 @@ export function getInboundHistoryStatus(receipt: GoodsReceipt): InboundHistorySt
     case 'DAILY_CLOSED':
     case 'MONTHLY_SUMMARY_READY':
       return 'Complete';
-    case 'CORRECTION_REQUIRED':
     case 'MISMATCH_EXCEPTION':
-      return isSupervisorRejectedCorrection(receipt) ? 'Rejected' : 'Correction Required';
+    case 'CORRECTION_REQUIRED':
+      return rejectedHistory ? 'Rejected' : 'Correction Required';
     default:
       return 'Draft';
   }
@@ -347,13 +419,9 @@ export function getQcQueueStatus(receipt: GoodsReceipt): QcQueueStatus | null {
     case 'MONTHLY_SUMMARY_READY':
       return 'Complete';
     case 'MISMATCH_EXCEPTION':
-      return 'Correction Required';
+      return 'Rejected';
     case 'CORRECTION_REQUIRED':
-      if (isSupervisorRejectedCorrection(receipt)) {
-        return 'Rejected';
-      }
-
-      return 'Correction Required';
+      return isRejectedReceipt(receipt) ? 'Rejected' : 'Correction Required';
     default:
       return null;
   }
@@ -418,14 +486,72 @@ export function mapProcessStateToLegacyStatus(state: InboundProcessState): Legac
   }
 }
 
-function isSupervisorRejectedCorrection(receipt: GoodsReceipt) {
-  const latestCorrectionActivity = [...receipt.activities]
-    .reverse()
-    .find((activity) => activity.processState === receipt.processState);
-  const activityText =
-    `${latestCorrectionActivity?.title || ''} ${latestCorrectionActivity?.description || ''}`.toLowerCase();
+function getLatestCorrectionActivityText(receipt: GoodsReceipt) {
+  const latestCorrectionActivity =
+    [...receipt.activities].reverse().find((activity) => activity.processState === receipt.processState) ??
+    [...receipt.activities]
+      .reverse()
+      .find((activity) => getActivityText(activity).length > 0);
 
-  return activityText.includes('supervisor rejected');
+  return getActivityText(latestCorrectionActivity).toLowerCase();
+}
+
+function getActivityText(activity?: Pick<GRActivity, 'title' | 'description'>) {
+  return `${activity?.title || ''} ${activity?.description || ''}`.trim();
+}
+
+function hasActivityMatch(receipt: GoodsReceipt, text: string) {
+  return receipt.activities.some((activity) => getActivityText(activity).toLowerCase().includes(text));
+}
+
+function hasRejectedHistory(receipt: GoodsReceipt) {
+  return hasSupervisorRejectedHistory(receipt) || hasQcRejectedHistory(receipt);
+}
+
+function isRejectedReceipt(receipt: GoodsReceipt) {
+  return isSupervisorRejectedCorrection(receipt) || isQcRejectedReceipt(receipt);
+}
+
+function isQcRejectedReceipt(receipt: GoodsReceipt) {
+  return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || isQcRejectedCorrection(receipt);
+}
+
+function isSupervisorRejectedCorrection(receipt: GoodsReceipt) {
+  return getLatestCorrectionActivityText(receipt).includes('supervisor rejected');
+}
+
+function isQcRejectedCorrection(receipt: GoodsReceipt) {
+  return getLatestCorrectionActivityText(receipt).includes('qc rejected');
+}
+
+function hasSupervisorRejectedHistory(receipt: GoodsReceipt) {
+  return hasActivityMatch(receipt, 'supervisor rejected');
+}
+
+function hasQcRejectedHistory(receipt: GoodsReceipt) {
+  return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || hasActivityMatch(receipt, 'qc rejected');
+}
+
+function resolveHistoricalTimelineTitle(
+  processState: InboundProcessState,
+  description: string,
+) {
+  const normalizedDescription = description.toLowerCase();
+
+  if (processState === 'CORRECTION_REQUIRED') {
+    if (normalizedDescription.includes('supervisor rejected')) {
+      return 'Supervisor Rejected';
+    }
+
+    if (
+      normalizedDescription.includes('qc rejected') ||
+      normalizedDescription.includes('rejected during qc')
+    ) {
+      return 'QC Rejected';
+    }
+  }
+
+  return officialStateLabel[processState];
 }
 
 export const officialStateLabel: Record<InboundProcessState, string> = {
@@ -517,7 +643,10 @@ export function buildActivities(
   processState: InboundProcessState,
   createdDate: string,
   stepTitle: string,
+  displayStatus?: string,
 ): GRActivity[] {
+  const currentDisplayStatus = displayStatus?.trim() || officialStateLabel[getVisibleWorkflowState(processState)];
+
   if (processState === 'MISMATCH_EXCEPTION') {
     return [
       {
@@ -528,7 +657,7 @@ export function buildActivities(
         processState: 'GRPO_DRAFT',
       },
       {
-        title: officialStateLabel.MISMATCH_EXCEPTION,
+        title: currentDisplayStatus,
         description: stepTitle,
         timestamp: createdDate,
         state: 'active',
@@ -561,7 +690,7 @@ export function buildActivities(
         processState: 'QC_PENDING',
       },
       {
-        title: officialStateLabel.CORRECTION_REQUIRED,
+        title: currentDisplayStatus,
         description: stepTitle,
         timestamp: createdDate,
         state: 'active',
@@ -590,7 +719,7 @@ export function buildActivities(
   const currentDescription = visibleState === processState ? stepTitle : officialStateLabel[visibleState];
 
   return workflowPath.map((state, index) => ({
-    title: officialStateLabel[state],
+    title: index === currentIndex ? currentDisplayStatus : officialStateLabel[state],
     description: index === currentIndex ? currentDescription : officialStateLabel[state],
     timestamp: index <= currentIndex ? createdDate : '',
     processState: state,
@@ -628,10 +757,12 @@ function mapActivityProcessStateToTimelineStates(
 function appendTimelineState(
   items: Array<{
     processState: InboundProcessState;
+    title: string;
     description: string;
     timestamp: string;
   }>,
   processState: InboundProcessState,
+  title: string,
   description: string,
   timestamp: string,
 ) {
@@ -639,18 +770,20 @@ function appendTimelineState(
   if (previous?.processState === processState) {
     items[items.length - 1] = {
       processState,
+      title,
       description,
       timestamp: timestamp || previous.timestamp,
     };
     return;
   }
 
-  items.push({ processState, description, timestamp });
+  items.push({ processState, title, description, timestamp });
 }
 
 function timelineEndsWithStates(
   items: Array<{
     processState: InboundProcessState;
+    title: string;
     description: string;
     timestamp: string;
   }>,
@@ -668,17 +801,25 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
       receipt.processState,
       receipt.createdDate,
       receipt.scenario.stepTitle || officialStateLabel[getVisibleWorkflowState(receipt.processState)],
+      getReceiptDisplayStatus(receipt),
     );
   }
 
   const timelineStates: Array<{
     processState: InboundProcessState;
+    title: string;
     description: string;
     timestamp: string;
   }> = [];
 
   for (const baseState of ['RECEIVED_CHECKING', 'RECEIPT_CONFIRMED', 'STORED_ON_HOLD'] as InboundProcessState[]) {
-    appendTimelineState(timelineStates, baseState, officialStateLabel[baseState], receipt.createdDate);
+    appendTimelineState(
+      timelineStates,
+      baseState,
+      officialStateLabel[baseState],
+      officialStateLabel[baseState],
+      receipt.createdDate,
+    );
   }
 
   receipt.activities.forEach((activity) => {
@@ -687,10 +828,17 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
 
     expandedStates.forEach((state, index) => {
       const isDerivedQcPassed = state === 'QC_PASSED' && activity.processState === 'PENDING_SUPERVISOR_REVIEW' && index === 0;
+      const activityText = getActivityText(activity);
+      const title = isDerivedQcPassed
+        ? officialStateLabel.QC_PASSED
+        : resolveHistoricalTimelineTitle(state, activityText);
+      const description = isDerivedQcPassed ? officialStateLabel.QC_PASSED : activity.description || activity.title;
+
       appendTimelineState(
         timelineStates,
         state,
-        isDerivedQcPassed ? officialStateLabel.QC_PASSED : activity.description || activity.title,
+        title,
+        description,
         activity.timestamp,
       );
     });
@@ -708,6 +856,9 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
         timelineStates,
         state,
         state === currentVisibleState
+          ? getReceiptDisplayStatus(receipt)
+          : officialStateLabel[state],
+        state === currentVisibleState
           ? receipt.scenario.stepTitle || officialStateLabel[state]
           : officialStateLabel[state],
         receipt.createdDate,
@@ -721,7 +872,13 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
       : workflowPath.slice(Math.max(workflowPath.indexOf(currentVisibleState) + 1, 0));
 
   futureStates.forEach((state) => {
-    appendTimelineState(timelineStates, state, officialStateLabel[state], '');
+    appendTimelineState(
+      timelineStates,
+      state,
+      officialStateLabel[state],
+      officialStateLabel[state],
+      '',
+    );
   });
 
   let activeIndex = -1;
@@ -734,7 +891,10 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
   const finalWorkflowState = workflowPath[workflowPath.length - 1];
 
   return timelineStates.map((item, index) => ({
-    title: officialStateLabel[item.processState],
+    title:
+      index === activeIndex
+        ? getReceiptDisplayStatus(receipt)
+        : item.title || resolveHistoricalTimelineTitle(item.processState, item.description || ''),
     description: item.description || officialStateLabel[item.processState],
     timestamp: item.timestamp,
     processState: item.processState,

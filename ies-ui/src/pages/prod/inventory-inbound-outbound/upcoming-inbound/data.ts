@@ -166,6 +166,7 @@ export interface InboundGoodsReceiptApi {
   items: InboundGrItemApi[];
   status: string;
   processState: string;
+  displayStatus?: string | null;
   legacyStatus?: string | null;
   createdBy?: string | null;
   createdDate?: string | null;

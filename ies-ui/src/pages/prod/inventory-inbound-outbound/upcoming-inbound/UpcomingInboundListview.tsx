@@ -25,6 +25,7 @@ import {
   InboxOutlined,
   WarningOutlined,
   ClockCircleOutlined,
+  ExportOutlined,
 } from '@ant-design/icons';
 import { useAccess } from '@umijs/max';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
@@ -36,12 +37,13 @@ import {
   type POLinkStatus,
   type QcQueueStatus,
   getGoodsReceiptSourceColor,
-  getQcQueueStatus,
   getInboundHistoryStatus,
+  getQcQueueStatus,
+  getReceiptDisplayStatus,
+  getReceiptDisplayStatusColor,
   getReceiptApprovedGrNumber,
   getReceiptIrNumber,
   getReceiptPOReferences,
-  officialStateLabel,
   poLinkStatusLabel,
   summarizePOReferences,
   summarizeSuppliers,
@@ -110,14 +112,12 @@ const warehouseHistoryStatusOptions: Array<{ label: string; value: HistoryStatus
 const supervisorHistoryStatusOptions: Array<{ label: string; value: HistoryStatusFilter }> = [
   { label: 'All Status', value: 'ALL' },
   { label: 'Complete', value: 'Complete' },
-  { label: 'Correction Required', value: 'Correction Required' },
   { label: 'Rejected', value: 'Rejected' },
 ];
 
 const qcStatusOptions: Array<{ label: string; value: QcQueueStatusFilter }> = [
   { label: 'Pending', value: 'Pending' },
   { label: 'Submitted', value: 'Submitted' },
-  { label: 'Correction Required', value: 'Correction Required' },
   { label: 'Rejected', value: 'Rejected' },
   { label: 'Complete', value: 'Complete' },
   { label: 'All', value: 'All' },
@@ -953,6 +953,10 @@ export default function UpcomingInboundListview() {
     });
   };
 
+  const handleExportReportClick = () => {
+    message.info('Export report is not connected yet.');
+  };
+
   const poHeaderTitle = (
     <div style={{ paddingLeft: 8 }}>
       <Text strong>{`Purchase Orders (${filteredWarehousePurchaseOrders.length})`}</Text>
@@ -1006,15 +1010,10 @@ export default function UpcomingInboundListview() {
       return receipts;
     }
 
-    return receipts.filter((receipt) =>
-      [
-        'SUPERVISOR_APPROVED',
-        'TRANSFERRED_TO_PM_RM_WH',
-        'FIN_SUBMITTED',
-        'DAILY_CLOSED',
-        'MONTHLY_SUMMARY_READY',
-      ].includes(receipt.processState),
-    );
+    return receipts.filter((receipt) => {
+      const historyStatus = getInboundHistoryStatus(receipt);
+      return historyStatus === 'Complete' || historyStatus === 'Rejected';
+    });
   }, [activeRole, receipts]);
   const filteredHistoryReceiptCount = useMemo(() => {
     let data = historyReceipts;
@@ -1129,6 +1128,13 @@ export default function UpcomingInboundListview() {
           </Col>
           <Col>
             <Space size={12} wrap>
+              <Button
+                icon={<ExportOutlined />}
+                onClick={handleExportReportClick}
+                style={{ fontWeight: 600 }}
+              >
+                Export Report
+              </Button>
               <div
                 style={{
                   display: 'inline-flex',
@@ -1474,33 +1480,40 @@ export default function UpcomingInboundListview() {
                     }
                     style={{ borderColor: '#ffa39e' }}
                   >
-                    {exceptionQueue.map((gr) => (
-                      <div
-                        key={gr.grNumber}
-                        style={{
-                          padding: '8px 0',
-                          borderBottom: '1px solid #f0f0f0',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleOpenGRDetail(gr)}
-                      >
-                        <Row align="middle" justify="space-between">
-                          <Col>
-                            <div>
-                              <Text strong style={{ color: '#cf1322', fontSize: 13 }}>
-                                {gr.grNumber}
+                    {exceptionQueue.map((gr) => {
+                      const displayStatus = getReceiptDisplayStatus(gr);
+
+                      return (
+                        <div
+                          key={gr.grNumber}
+                          style={{
+                            padding: '8px 0',
+                            borderBottom: '1px solid #f0f0f0',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => handleOpenGRDetail(gr)}
+                        >
+                          <Row align="middle" justify="space-between">
+                            <Col>
+                              <div>
+                                <Text strong style={{ color: '#cf1322', fontSize: 13 }}>
+                                  {gr.grNumber}
+                                </Text>
+                                <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                                  - {summarizePOReferences(gr)}
+                                </Text>
+                              </div>
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                {summarizeSuppliers(gr)} &middot;{' '}
+                                <Tag color={getReceiptDisplayStatusColor(displayStatus)} bordered={false}>
+                                  {displayStatus}
+                                </Tag>
                               </Text>
-                              <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
-                                - {summarizePOReferences(gr)}
-                              </Text>
-                            </div>
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              {summarizeSuppliers(gr)} &middot; {officialStateLabel[gr.processState]}
-                            </Text>
-                          </Col>
-                        </Row>
-                      </div>
-                    ))}
+                            </Col>
+                          </Row>
+                        </div>
+                      );
+                    })}
                   </Card>
                 )}
               </>

@@ -7,6 +7,7 @@ import type {
   InboundGrItemApi,
   InboundPoItemApi,
   InboundPurchaseOrderApi,
+  SupportingDocReferenceApi,
   UpcomingInboundActivity,
   UpcomingInboundDocumentChecklist,
   UpcomingInboundGoodsReceipt,
@@ -23,6 +24,7 @@ import {
   type LegacyGRStatus,
   type QcDecision,
   type SupportingDocReference,
+  type SupportingDocSource,
 } from './workflow';
 
 const PROCESS_STATE_VALUES: UpcomingInboundProcessState[] = [
@@ -136,6 +138,7 @@ export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInb
     items: api.items.map(mapInboundGoodsReceiptItem),
     status: normalizeLegacyStatus(api.status, processState),
     processState,
+    displayStatus: api.displayStatus ?? undefined,
     legacyStatus: normalizeLegacyStatus(api.legacyStatus, processState),
     createdBy: api.createdBy ?? '',
     createdDate,
@@ -219,12 +222,25 @@ function mapInboundDocumentChecklist(
   };
 }
 
-function mapSupportingDoc(doc: SupportingDocReference): SupportingDocReference {
+function mapSupportingDoc(doc: SupportingDocReferenceApi): SupportingDocReference {
   return {
     fileId: doc.fileId ?? undefined,
     fileName: doc.fileName,
-    source: doc.source ?? undefined,
+    source: normalizeSupportingDocSource(doc.source),
   };
+}
+
+function normalizeSupportingDocSource(value?: string | null): SupportingDocSource | null | undefined {
+  switch (value) {
+    case 'WAREHOUSE':
+    case 'QC':
+    case 'SUPERVISOR':
+      return value;
+    case null:
+      return null;
+    default:
+      return undefined;
+  }
 }
 
 export function mapInboundActivity(activity: InboundGrActivityApi): UpcomingInboundActivity {

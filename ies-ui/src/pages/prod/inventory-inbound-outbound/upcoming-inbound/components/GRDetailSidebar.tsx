@@ -33,10 +33,10 @@ import {
   type GRItem,
   type InboundProcessState,
   type QcDecision,
-  getQcQueueStatus,
+  getReceiptDisplayStatus,
+  getReceiptDisplayStatusColor,
   getReceiptApprovedGrNumber,
   getReceiptIrNumber,
-  goodsReceiptSourceLabel,
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
@@ -183,6 +183,10 @@ function renderMetadataValue(value: ReactNode) {
   return value;
 }
 
+function isRejectedActivityTitle(title: string) {
+  return title === 'QC Rejected' || title === 'Supervisor Rejected';
+}
+
 export function GRDetailSidebar({
   open,
   onClose,
@@ -248,8 +252,7 @@ export function GRDetailSidebar({
       ? 'QC Reviewed By'
       : 'Approved By';
   const reviewerDateLabel = reviewerLabel === 'QC Reviewed By' ? 'QC Reviewed Date' : 'Approved Date';
-  const displayedStatus =
-    viewerRole === 'QC' ? getQcQueueStatus(receipt) || receipt.status : receipt.status;
+  const displayedStatus = getReceiptDisplayStatus(receipt);
   const approvedGrNumber = getReceiptApprovedGrNumber(receipt);
   const shortMetadataItems: ReceiptMetadataItem[] = [
     { label: 'IR Number', value: getReceiptIrNumber(receipt), emphasize: true },
@@ -257,7 +260,14 @@ export function GRDetailSidebar({
     { label: 'PO Reference', value: summarizePOReferences(receipt), emphasize: true },
     { label: 'Supplier', value: summarizeSuppliers(receipt) },
     { label: 'Type', value: receipt.receiptType },
-    { label: 'Status', value: displayedStatus },
+    {
+      label: 'Status',
+      value: (
+        <Tag color={getReceiptDisplayStatusColor(displayedStatus)} bordered={false}>
+          {displayedStatus}
+        </Tag>
+      ),
+    },
     { label: 'Posting Date', value: receipt.postingDate },
     { label: 'Actual Receipt Date', value: receipt.actualReceiptDate },
     { label: 'Receiver Warehouse', value: receipt.receiverWarehouseName },
@@ -336,11 +346,13 @@ export function GRDetailSidebar({
 
   const validateQcReview = () => {
     const nextErrors: Record<string, boolean> = {};
+    let hasMissingDecision = false;
     let firstMissingRemarkIndex: number | null = null;
 
     items.forEach((item, index) => {
       if (!item.qcDecision) {
         nextErrors[`decision-${index}`] = true;
+        hasMissingDecision = true;
       }
       if (
         (item.qcDecision === 'On-Hold' || item.qcDecision === 'Reject') &&
@@ -354,6 +366,9 @@ export function GRDetailSidebar({
     });
 
     setErrors(nextErrors);
+    if (hasMissingDecision) {
+      message.error('Please select a decision for every item before submitting.');
+    }
     if (firstMissingRemarkIndex !== null) {
       openQcRemarkEditor(
         firstMissingRemarkIndex,
@@ -923,14 +938,23 @@ export function GRDetailSidebar({
           <Timeline
             items={timelineActivities.map((activity) => ({
               color:
-                activity.state === 'done'
+                isRejectedActivityTitle(activity.title)
+                  ? 'red'
+                  : activity.state === 'done'
                   ? 'green'
                   : activity.state === 'active'
                     ? 'orange'
                     : 'gray',
               children: (
                 <div>
-                  <div style={{ fontWeight: 600 }}>{activity.title}</div>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: isRejectedActivityTitle(activity.title) ? '#cf1322' : undefined,
+                    }}
+                  >
+                    {activity.title}
+                  </div>
                   <div style={{ fontSize: 12, color: '#666' }}>{activity.description}</div>
                   {activity.timestamp && (
                     <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>

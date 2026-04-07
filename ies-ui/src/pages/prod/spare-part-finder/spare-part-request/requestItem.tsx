@@ -54,6 +54,7 @@ interface RequestItemModalProps {
     priority: PriorityLevel;
   }) => void | Promise<void>;
   onAddMore?: () => void;
+  onViewProduct?: (item: SparePartRequestItem) => void | Promise<void>;
 }
 
 const priorityOptions: { label: string; value: PriorityLevel; color: string; borderColor: string }[] = [
@@ -108,6 +109,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   onCancel,
   onSubmit,
   onAddMore,
+  onViewProduct,
 }) => {
   const [rows, setRows] = useState<RequestRowItem[]>([]);
   const [remark, setRemark] = useState<string>('');
@@ -250,9 +252,19 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       title: 'Product ID',
       dataIndex: ['item', 'productId'],
       width: '120px',
-      render: (text: string) => (
-        <Typography.Link>{text}</Typography.Link>
-      ),
+      render: (text: string, record: RequestRowItem) =>
+        onViewProduct ? (
+          <Typography.Link
+            onClick={(event) => {
+              event.preventDefault();
+              onViewProduct(record.item);
+            }}
+          >
+            {text}
+          </Typography.Link>
+        ) : (
+          <Typography.Text>{text}</Typography.Text>
+        ),
     },
     {
       title: 'Image',

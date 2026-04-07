@@ -292,7 +292,7 @@ export default function SpfDetails({
                 {normalizedAvailableStock ?? '-'}
               </Text>
               <Text style={{ color: '#8c8c8c' }}>{data?.uom || '-'}</Text>
-              {stockBadge ? <Badge status={stockBadge.status} text={stockBadge.label} /> : null}
+              {/* {stockBadge ? <Badge status={stockBadge.status} text={stockBadge.label} /> : null} */}
             </div>
           </div>
 

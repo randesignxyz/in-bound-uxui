@@ -628,6 +628,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         open={requestModalOpen}
         selectedItems={requestItems}
         initialRows={requestInitialRows}
+        onViewProduct={openDetails}
         onCancel={() => {
           setRequestModalOpen(false);
           setRequestInitialRows([]);

@@ -38,6 +38,7 @@ import {
   type QcQueueStatus,
   getGoodsReceiptSourceColor,
   getInboundHistoryStatus,
+  getPurchaseOrderVendorOptions,
   getQcQueueStatus,
   canCombinePurchaseOrders,
   getCombinedPurchaseOrderVendor,
@@ -154,6 +155,7 @@ export default function UpcomingInboundListview() {
 
   // Shared PO filters
   const [poSearchValue, setPOSearchValue] = useState('');
+  const [poVendorFilter, setPOVendorFilter] = useState<string>('ALL');
   const [poTypeFilter, setPOTypeFilter] = useState<'ALL' | PurchaseOrder['type']>('ALL');
   const [poDateRangeFilter, setPODateRangeFilter] = useState<[string, string] | null>(null);
   const [queueSearchValue, setQueueSearchValue] = useState('');
@@ -216,6 +218,11 @@ export default function UpcomingInboundListview() {
     { path: '', label: 'Upcoming Inbound' },
   ];
 
+  const warehouseVendorOptions = useMemo(
+    () => getPurchaseOrderVendorOptions(purchaseOrders),
+    [purchaseOrders],
+  );
+
   const filteredWarehousePurchaseOrders = useMemo(() => {
     let data = [...purchaseOrders];
 
@@ -228,6 +235,10 @@ export default function UpcomingInboundListview() {
       );
     }
 
+    if (poVendorFilter !== 'ALL') {
+      data = data.filter((po) => po.supplier?.trim() === poVendorFilter);
+    }
+
     if (poTypeFilter !== 'ALL') {
       data = data.filter((po) => po.type === poTypeFilter);
     }
@@ -238,7 +249,7 @@ export default function UpcomingInboundListview() {
     }
 
     return data;
-  }, [poDateRangeFilter, poSearchValue, poTypeFilter, purchaseOrders]);
+  }, [poDateRangeFilter, poSearchValue, poTypeFilter, poVendorFilter, purchaseOrders]);
 
   const selectedWarehousePOs = useMemo(
     () =>
@@ -689,6 +700,7 @@ export default function UpcomingInboundListview() {
   const resetWorkspaceFilters = () => {
     setSelectedWarehousePONumbers([]);
     setPOSearchValue('');
+    setPOVendorFilter('ALL');
     setPOTypeFilter('ALL');
     setPODateRangeFilter(null);
     setQueueSearchValue('');
@@ -1053,6 +1065,16 @@ export default function UpcomingInboundListview() {
     });
   }, [filteredWarehousePurchaseOrders]);
 
+  useEffect(() => {
+    if (poVendorFilter === 'ALL') {
+      return;
+    }
+
+    if (!warehouseVendorOptions.includes(poVendorFilter)) {
+      setPOVendorFilter('ALL');
+    }
+  }, [poVendorFilter, warehouseVendorOptions]);
+
   const poHeaderTitle = (
     <div style={{ paddingLeft: 8 }}>
       <Text strong>{`Purchase Orders (${filteredWarehousePurchaseOrders.length})`}</Text>
@@ -1399,6 +1421,18 @@ export default function UpcomingInboundListview() {
                       onSearch={handleWarehousePOSearch}
                       onChange={(e) => setPOSearchValue(e.target.value)}
                       style={{ width: 220 }}
+                    />
+                    <Select
+                      value={poVendorFilter}
+                      onChange={(value) => setPOVendorFilter(value)}
+                      style={{ width: 220 }}
+                      options={[
+                        { label: 'All Vendors', value: 'ALL' },
+                        ...warehouseVendorOptions.map((vendor) => ({
+                          label: vendor,
+                          value: vendor,
+                        })),
+                      ]}
                     />
                     <Radio.Group
                       value={poTypeFilter}

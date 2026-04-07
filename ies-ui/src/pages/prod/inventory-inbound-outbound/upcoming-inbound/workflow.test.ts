@@ -1,7 +1,9 @@
 import {
   type GoodsReceipt,
   type GRItem,
+  getPurchaseOrderVendorOptions,
   groupReceiptItemsByPO,
+  type PurchaseOrder,
 } from './workflow';
 
 function createReceipt(overrides: Partial<GoodsReceipt> = {}): GoodsReceipt {
@@ -96,6 +98,57 @@ function createItem(overrides: Partial<GRItem> = {}): GRItem {
     ...overrides,
   };
 }
+
+function createPurchaseOrder(overrides: Partial<PurchaseOrder> = {}): PurchaseOrder {
+  const supplier = overrides.supplier || 'Vendor A';
+
+  return {
+    poNumber: 'PO-001',
+    supplier,
+    expectedDate: '2026-04-01',
+    expectedTime: '08:00',
+    items: [],
+    totalItems: 0,
+    totalQty: 0,
+    type: 'Planned',
+    status: 'Expected',
+    ...overrides,
+  };
+}
+
+describe('getPurchaseOrderVendorOptions', () => {
+  it('returns unique vendors from the purchase order list', () => {
+    const purchaseOrders = [
+      createPurchaseOrder({ poNumber: 'PO-001', supplier: 'Vendor C' }),
+      createPurchaseOrder({ poNumber: 'PO-002', supplier: 'Vendor A' }),
+      createPurchaseOrder({ poNumber: 'PO-003', supplier: 'Vendor B' }),
+      createPurchaseOrder({ poNumber: 'PO-004', supplier: 'Vendor A' }),
+      createPurchaseOrder({ poNumber: 'PO-005', supplier: 'Vendor C' }),
+    ];
+
+    expect(getPurchaseOrderVendorOptions(purchaseOrders)).toEqual([
+      'Vendor A',
+      'Vendor B',
+      'Vendor C',
+    ]);
+  });
+
+  it('trims vendor names, removes blanks, and keeps ordering stable', () => {
+    const purchaseOrders = [
+      createPurchaseOrder({ poNumber: 'PO-001', supplier: ' Vendor B ' }),
+      createPurchaseOrder({ poNumber: 'PO-002', supplier: '' }),
+      createPurchaseOrder({ poNumber: 'PO-003', supplier: 'Vendor A' }),
+      createPurchaseOrder({ poNumber: 'PO-004', supplier: 'Vendor B' }),
+      createPurchaseOrder({ poNumber: 'PO-005', supplier: 'Vendor C' }),
+    ];
+
+    expect(getPurchaseOrderVendorOptions(purchaseOrders)).toEqual([
+      'Vendor A',
+      'Vendor B',
+      'Vendor C',
+    ]);
+  });
+});
 
 describe('groupReceiptItemsByPO', () => {
   it('groups receipt items by po number and keeps po order stable', () => {

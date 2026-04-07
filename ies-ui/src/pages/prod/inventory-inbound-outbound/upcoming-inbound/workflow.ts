@@ -90,6 +90,16 @@ export function getCombinedPurchaseOrderVendor(purchaseOrders: PurchaseOrder[]) 
   return normalizedSuppliers.length === 1 ? normalizedSuppliers[0] : undefined;
 }
 
+export function getPurchaseOrderVendorOptions(purchaseOrders: PurchaseOrder[]) {
+  return Array.from(
+    new Set(
+      purchaseOrders
+        .map((purchaseOrder) => purchaseOrder.supplier?.trim())
+        .filter((supplier): supplier is string => Boolean(supplier)),
+    ),
+  ).sort((left, right) => left.localeCompare(right));
+}
+
 export function canCombinePurchaseOrders(purchaseOrders: PurchaseOrder[]) {
   return purchaseOrders.length <= 1 || Boolean(getCombinedPurchaseOrderVendor(purchaseOrders));
 }

@@ -3,9 +3,13 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import { Tabs } from 'antd';
 import { ProdPaths } from '../..';
 import MyRequestListview from '../spare-part-request/my-request/MyRequestListview';
+import MyRequestsToReturn from '../spare-part-return/MyRequestsToReturn';
+import { access } from 'fs';
+import { useAccess } from '@umijs/max';
 // import MyRequestsToReturn from '../spare-part-return/MyRequestsToReturn';
 
 export default function ListView() {
+    const access = useAccess();
     const routes =[
         {
            path: '/prod',
@@ -27,11 +31,13 @@ export default function ListView() {
             key: '1',
             children: <MyRequestListview />,
         },
-        // {
-        //     label: 'Return List',
-        //     key: '2',
-        //     children: <MyRequestsToReturn />,
-        // },
+            ...(access.canSpfApprover ?[
+                {
+                    label: 'Return List',
+                    key: '2',
+                    children: <MyRequestsToReturn />,
+                }
+            ]:[])
     ]}
     />
   </>

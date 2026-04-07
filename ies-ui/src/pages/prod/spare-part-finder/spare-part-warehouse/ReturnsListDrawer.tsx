@@ -9,6 +9,7 @@ import {
   Image,
   Input,
   InputNumber,
+  Popconfirm,
   Space,
   Steps,
   Table,
@@ -62,6 +63,7 @@ interface ReturnItem {
   productId: string;
   partName?: string;
   name: string;
+  uom?: string;
   usedQty: number;
   qtyToReturn: number;
   status?: string;
@@ -258,6 +260,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           productId: i.product_id,
           name: i.item_name,
           partName: i.item_name,
+          uom: i.uom,
           usedQty: i.used_quantity ?? 0,
           qtyToReturn: i.quantity_to_return ?? 0,
           // Receipt fields from completed returns
@@ -278,6 +281,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       usedQty: i.usedQty ?? i.used_quantity ?? 0,
       productId: i.productId ?? i.product_id ?? '',
       name: i.name ?? i.item_name ?? '',
+      uom: i.uom ?? i.UoM ?? '',
     }));
   }, [fetchedData, data?.items]);
 
@@ -688,8 +692,8 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
     },
     {
       title: 'UoM',
-      dataIndex: 'UoM',
-      key: 'UoM',
+      dataIndex: 'uom',
+      key: 'uom',
     },
     {
       title: 'Used QTY',
@@ -1013,14 +1017,19 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
               <Button onClick={onClose}>Close</Button>
-              <Button
-                type="primary"
-                loading={loading}
-                disabled={!canSubmitChanges}
-                onClick={handleReceived}
-              >
-                Received
-              </Button>
+             <Popconfirm
+            title="Confirm marking as received?"
+            disabled={!canSubmitChanges}
+            onConfirm={handleReceived}
+          >
+            <Button
+              type="primary"
+              loading={loading}
+              disabled={!canSubmitChanges}
+            >
+              Received
+            </Button>
+          </Popconfirm>
             </Space>
           </div>
         ) : (

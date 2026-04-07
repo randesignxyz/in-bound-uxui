@@ -10,10 +10,17 @@ type Props = {
   size?: number;
 };
 
+const isDirectImageUrl = (value?: string) =>
+  Boolean(value) &&
+  /^(https?:\/\/|blob:|data:image\/|\/)/i.test(value as string);
+
 export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) {
-  const [imageUrl, setImageUrl] = useState<string | undefined>(src);
+  const [imageUrl, setImageUrl] = useState<string | undefined>(
+    isDirectImageUrl(src) ? src : undefined,
+  );
   const objectUrlRef = useRef<string | undefined>();
   const normalizedImageId = Array.isArray(imageId) ? imageId.find((id) => Boolean(id)) : imageId;
+  const fallbackImageId = normalizedImageId ?? (!isDirectImageUrl(src) ? src : undefined);
 
   const revokeObjectUrl = () => {
     if (objectUrlRef.current) {
@@ -26,19 +33,19 @@ export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) 
     let active = true;
 
     revokeObjectUrl();
-    setImageUrl(src);
+    setImageUrl(isDirectImageUrl(src) ? src : undefined);
 
-    if (!normalizedImageId) {
+    if (!fallbackImageId) {
       return () => {
         active = false;
       };
     }
 
-    if (!src) {
+    if (!isDirectImageUrl(src)) {
       setImageUrl(undefined);
     }
 
-    getUploadFileObjectUrlV2()(normalizedImageId)
+    getUploadFileObjectUrlV2()(fallbackImageId)
       .then((url) => {
         if (!active) {
           URL.revokeObjectURL(url);
@@ -49,7 +56,7 @@ export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) 
       })
       .catch(() => {
         if (active) {
-          setImageUrl(src);
+          setImageUrl(isDirectImageUrl(src) ? src : undefined);
         }
       });
 
@@ -57,7 +64,7 @@ export default function SparePartImage({ imageId, src, alt, size = 48 }: Props) 
       active = false;
       revokeObjectUrl();
     };
-  }, [normalizedImageId, src]);
+  }, [fallbackImageId, src]);
 
   return imageUrl ? (
     <Avatar src={imageUrl} alt={alt} size={size} shape="square" />

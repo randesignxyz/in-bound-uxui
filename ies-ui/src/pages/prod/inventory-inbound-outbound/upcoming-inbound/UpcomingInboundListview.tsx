@@ -39,6 +39,8 @@ import {
   getGoodsReceiptSourceColor,
   getInboundHistoryStatus,
   getQcQueueStatus,
+  canCombinePurchaseOrders,
+  getCombinedPurchaseOrderVendor,
   getReceiptDisplayStatus,
   getReceiptDisplayStatusColor,
   getReceiptApprovedGrNumber,
@@ -179,6 +181,7 @@ export default function UpcomingInboundListview() {
   // GR state (mirrors WarehouseStaffUI)
   const [receipts, setReceipts] = useState<GoodsReceipt[]>([]);
   const [selectedPOs, setSelectedPOs] = useState<PurchaseOrder[]>([]);
+  const [selectedWarehousePONumbers, setSelectedWarehousePONumbers] = useState<string[]>([]);
   const [isGRCreationOpen, setIsGRCreationOpen] = useState(false);
   const [isTempGRCreationOpen, setIsTempGRCreationOpen] = useState(false);
   const [selectedPODetail, setSelectedPODetail] = useState<PurchaseOrder | null>(null);
@@ -237,6 +240,19 @@ export default function UpcomingInboundListview() {
     return data;
   }, [poDateRangeFilter, poSearchValue, poTypeFilter, purchaseOrders]);
 
+  const selectedWarehousePOs = useMemo(
+    () =>
+      filteredWarehousePurchaseOrders.filter((purchaseOrder) =>
+        selectedWarehousePONumbers.includes(purchaseOrder.poNumber),
+      ),
+    [filteredWarehousePurchaseOrders, selectedWarehousePONumbers],
+  );
+
+  const selectedWarehousePOVendor = useMemo(
+    () => getCombinedPurchaseOrderVendor(selectedWarehousePOs),
+    [selectedWarehousePOs],
+  );
+
   const buildDashboardSummaryParams = (): InboundDashboardSummaryParams => ({
     range: dashboardSummaryRange === 'CUSTOM' ? null : dashboardSummaryRange,
     dateFrom: dashboardPeriodFilter?.[0] ?? null,
@@ -272,6 +288,11 @@ export default function UpcomingInboundListview() {
               ) || null,
           )
           .filter((po): po is PurchaseOrder => po !== null),
+      );
+      setSelectedWarehousePONumbers((prev) =>
+        prev.filter((poNumber) =>
+          nextPurchaseOrders.some((purchaseOrder) => purchaseOrder.poNumber === poNumber),
+        ),
       );
     } else {
       message.error(poResult.reason?.message || 'Failed to load purchase orders.');
@@ -559,16 +580,43 @@ export default function UpcomingInboundListview() {
 
   const handleCreateGR = async (purchaseOrders: PurchaseOrder[]) => {
     if (!purchaseOrders.length) return;
+    if (!canCombinePurchaseOrders(purchaseOrders)) {
+      message.error('You can only combine purchase orders from the same vendor into one IR/GR.');
+      return;
+    }
 
     setSelectedPODetail(null);
 
     try {
       const hydratedPurchaseOrders = await Promise.all(purchaseOrders.map(hydratePurchaseOrder));
-      setSelectedPOs(hydratedPurchaseOrders);
+      if (!canCombinePurchaseOrders(hydratedPurchaseOrders)) {
+        message.error('Selected purchase orders no longer share the same vendor. Please reselect them.');
+        return;
+      }
+      setSelectedPOs(
+        [...hydratedPurchaseOrders].sort((left, right) => left.poNumber.localeCompare(right.poNumber)),
+      );
       setIsGRCreationOpen(true);
     } catch (error: any) {
       message.error(error?.message || 'Failed to load purchase order detail.');
     }
+  };
+
+  const handleCreateSelectedGR = async () => {
+    await handleCreateGR(selectedWarehousePOs);
+  };
+
+  const handleWarehousePOSelectionChange = (nextSelectedRowKeys: string[]) => {
+    const nextSelectedPOs = filteredWarehousePurchaseOrders.filter((purchaseOrder) =>
+      nextSelectedRowKeys.includes(purchaseOrder.poNumber),
+    );
+
+    if (!canCombinePurchaseOrders(nextSelectedPOs)) {
+      message.warning('Please select purchase orders from the same vendor only.');
+      return;
+    }
+
+    setSelectedWarehousePONumbers(nextSelectedPOs.map((purchaseOrder) => purchaseOrder.poNumber));
   };
 
   const handleCreateTempGR = (hint?: string) => {
@@ -639,6 +687,7 @@ export default function UpcomingInboundListview() {
   };
 
   const resetWorkspaceFilters = () => {
+    setSelectedWarehousePONumbers([]);
     setPOSearchValue('');
     setPOTypeFilter('ALL');
     setPODateRangeFilter(null);
@@ -662,6 +711,7 @@ export default function UpcomingInboundListview() {
     }
     setSimulationRole(nextRole);
     setSelectedPOs([]);
+    setSelectedWarehousePONumbers([]);
     setIsGRCreationOpen(false);
     setIsTempGRCreationOpen(false);
     setSelectedPODetail(null);
@@ -700,11 +750,20 @@ export default function UpcomingInboundListview() {
   };
 
   const mapDraftToSaveInput = (data: any): InboundSaveGoodsReceiptInput => {
-    const primaryPoReference = data.poReferences?.[0];
+    const canonicalPoReferences = Array.from(
+      new Map(
+        [...(data.poReferences || [])]
+          .filter((reference) => reference?.poNumber)
+          .sort((left, right) => left.poNumber.localeCompare(right.poNumber))
+          .map((reference) => [reference.poNumber, reference]),
+      ).values(),
+    );
+    const primaryPoReference = canonicalPoReferences[0];
     const receiptSourceType: GoodsReceiptSourceType =
       data.receiptSourceType || (data.receiptType === 'Planned' ? 'PLANNED' : 'UNPLANNED_WITH_PO');
     const poLinkStatus: POLinkStatus =
       data.poLinkStatus || (receiptSourceType === 'TEMP_NO_PO' ? 'WAITING_PO' : 'NOT_REQUIRED');
+    const isNewMultiPOReceipt = !data.id && canonicalPoReferences.length > 1;
 
     return {
       id: data.id || undefined,
@@ -714,7 +773,7 @@ export default function UpcomingInboundListview() {
       po_number: primaryPoReference?.poNumber || data.linkedPoNumber || undefined,
       supplier: primaryPoReference?.supplier || data.supplier,
       receipt_type: data.receiptType,
-      append_to_open_receiving: data.id ? false : true,
+      append_to_open_receiving: data.id ? false : !isNewMultiPOReceipt,
       receipt_source_type: receiptSourceType,
       po_link_status: poLinkStatus,
       temp_reference_no: data.tempReferenceNo || undefined,
@@ -725,7 +784,7 @@ export default function UpcomingInboundListview() {
       posting_date: data.postingDate,
       actual_receipt_date: data.actualReceiptDate,
       delivery_note_number: data.deliveryNoteNumber || 'DRAFT',
-      poReferences: primaryPoReference ? [primaryPoReference] : [],
+      poReferences: canonicalPoReferences,
       items: (data.items || []).map((item: GRItem) => ({
         poNumber: item.poNumber || undefined,
         supplier: item.supplier || undefined,
@@ -769,6 +828,7 @@ export default function UpcomingInboundListview() {
       const response = await services.saveGoodsReceipt(mapDraftToSaveInput(data));
       const updatedReceipt = normalizeReceiptForUI(response.data);
       setSelectedPOs([]);
+      setSelectedWarehousePONumbers([]);
       setTempGRHint('');
       await loadInboundData();
       syncReceiptInState(updatedReceipt);
@@ -982,6 +1042,17 @@ export default function UpcomingInboundListview() {
     message.info('Export report is not connected yet.');
   };
 
+  useEffect(() => {
+    const visiblePurchaseOrderNumbers = new Set(
+      filteredWarehousePurchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber),
+    );
+
+    setSelectedWarehousePONumbers((prev) => {
+      const next = prev.filter((poNumber) => visiblePurchaseOrderNumbers.has(poNumber));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [filteredWarehousePurchaseOrders]);
+
   const poHeaderTitle = (
     <div style={{ paddingLeft: 8 }}>
       <Text strong>{`Purchase Orders (${filteredWarehousePurchaseOrders.length})`}</Text>
@@ -990,6 +1061,23 @@ export default function UpcomingInboundListview() {
 
   const poHeaderActions = (
     <Space size={8} wrap>
+      <Text type="secondary" style={{ fontSize: 12 }}>
+        {selectedWarehousePOs.length > 0 && selectedWarehousePOVendor
+          ? `${selectedWarehousePOs.length} PO${selectedWarehousePOs.length > 1 ? 's' : ''} selected from ${selectedWarehousePOVendor}`
+          : 'Select same-vendor POs to create one IR/GR'}
+      </Text>
+      <Button
+        type="primary"
+        onClick={() => void handleCreateSelectedGR()}
+        disabled={selectedWarehousePOs.length === 0}
+      >
+        {selectedWarehousePOs.length > 1
+          ? `Create 1 IR (${selectedWarehousePOs.length} POs)`
+          : 'Create 1 IR'}
+      </Button>
+      {selectedWarehousePONumbers.length > 0 && (
+        <Button onClick={() => setSelectedWarehousePONumbers([])}>Clear Selection</Button>
+      )}
       <Button
         onClick={() => handleCreateTempGR()}
         style={{
@@ -1431,6 +1519,9 @@ export default function UpcomingInboundListview() {
                   onViewDetails={handleViewPODetail}
                   headerTitle={poHeaderTitle}
                   toolbarExtra={poHeaderActions}
+                  selectedRowKeys={selectedWarehousePONumbers}
+                  lockedSupplier={selectedWarehousePOVendor}
+                  onSelectionChange={handleWarehousePOSelectionChange}
                 />
 
                 {awaitingPOLinkReceipts.length > 0 && (

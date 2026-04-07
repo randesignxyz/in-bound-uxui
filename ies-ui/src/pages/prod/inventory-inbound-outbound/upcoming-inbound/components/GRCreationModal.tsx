@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Collapse,
   DatePicker,
   Divider,
   Descriptions,
@@ -34,7 +35,11 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { buildReceiptExceptionReason, hasReceiptDiscrepancy } from '../workflow';
+import {
+  buildReceiptExceptionReason,
+  getCombinedPurchaseOrderVendor,
+  hasReceiptDiscrepancy,
+} from '../workflow';
 import type { GRItem, PurchaseOrder } from '../workflow';
 import type { UpcomingInboundGoodsReceipt } from '../data';
 import {
@@ -113,15 +118,18 @@ export function GRCreationModal({
   correctionMode = false,
 }: GRCreationModalProps) {
   const selectedPOCount = purchaseOrders.length;
-  const selectedPOReferences = purchaseOrders.map((purchaseOrder) => ({
-    poNumber: purchaseOrder.poNumber,
-    supplier: purchaseOrder.supplier,
-    expectedDate: purchaseOrder.expectedDate,
-    expectedTime: purchaseOrder.expectedTime,
-  }));
+  const selectedPOReferences = [...purchaseOrders]
+    .sort((left, right) => left.poNumber.localeCompare(right.poNumber))
+    .map((purchaseOrder) => ({
+      poNumber: purchaseOrder.poNumber,
+      supplier: purchaseOrder.supplier,
+      expectedDate: purchaseOrder.expectedDate,
+      expectedTime: purchaseOrder.expectedTime,
+    }));
   const supplierNames = Array.from(
     new Set(purchaseOrders.map((purchaseOrder) => purchaseOrder.supplier)),
   );
+  const selectedVendor = getCombinedPurchaseOrderVendor(purchaseOrders) || supplierNames[0] || '';
   const receiptType = deriveReceiptType(purchaseOrders);
   const firstPO = purchaseOrders[0];
 
@@ -133,8 +141,10 @@ export function GRCreationModal({
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [storedOnHoldConfirmed, setStoredOnHoldConfirmed] = useState(false);
   const [scanModalOpen, setScanModalOpen] = useState(false);
+  const [scanTargetPoNumber, setScanTargetPoNumber] = useState<string | null>(null);
   const [scannedValue, setScannedValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeItemPanels, setActiveItemPanels] = useState<string[]>([]);
 
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     let nextItem: GRItem | null = null;
@@ -327,47 +337,57 @@ export function GRCreationModal({
     }
   };
 
-  const openScanModal = () => {
+  const openScanModal = (poNumber: string) => {
+    setScanTargetPoNumber(poNumber);
     setScanModalOpen(true);
-    setScannedValue(
-      `PO-SCAN-${purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber).join('-')}`,
-    );
+    setScannedValue(`PO-SCAN-${poNumber}`);
   };
 
   const closeScanModal = () => {
     setScanModalOpen(false);
+    setScanTargetPoNumber(null);
     setScannedValue('');
   };
 
   const confirmScan = () => {
-    const fallbackBarcode = `PO-SCAN-${purchaseOrders
-      .map((purchaseOrder) => purchaseOrder.poNumber)
-      .join('-')}`;
+    if (!scanTargetPoNumber) {
+      return;
+    }
+
+    const fallbackBarcode = `PO-SCAN-${scanTargetPoNumber}`;
     const barcodeValue = scannedValue.trim() || fallbackBarcode;
     const autoProductDate = dayjs(postingDate || undefined).format('YYYY-MM-DD');
     const autoExpiry = dayjs(autoProductDate || undefined)
       .add(12, 'month')
       .format('YYYY-MM-DD');
 
+    let targetRowIndex = 0;
     setItems((prev) =>
-      prev.map((item, index) =>
-        item.isMissing
-          ? item
-          : {
-              ...item,
-              receiveQty: item.poQty,
-              productDate: item.productDate || autoProductDate,
-              expiryDate: item.expiryDate || autoExpiry,
-              batchNumber:
-                item.batchNumber ||
-                `${item.poNumber.replace(/[^A-Z0-9]/gi, '')}-${String(index + 1).padStart(2, '0')}`,
-              barcode: `${barcodeValue}-${String(index + 1).padStart(2, '0')}`,
-            },
-      ),
+      prev.map((item) => {
+        if (item.poNumber !== scanTargetPoNumber || item.isMissing) {
+          return item;
+        }
+
+        targetRowIndex += 1;
+        const poScanPrefix = scanTargetPoNumber.replace(/[^A-Z0-9]/gi, '');
+        const poSequence = String(targetRowIndex).padStart(2, '0');
+
+        return {
+          ...item,
+          receiveQty: item.poQty,
+          productDate: item.productDate || autoProductDate,
+          expiryDate: item.expiryDate || autoExpiry,
+          batchNumber: item.batchNumber || `${poScanPrefix}-${poSequence}`,
+          barcode: item.barcode || `${barcodeValue}-${poSequence}`,
+        };
+      }),
     );
     setErrors((prev) => {
       const next = { ...prev };
-      items.forEach((_, index) => {
+      items.forEach((item, index) => {
+        if (item.poNumber !== scanTargetPoNumber) {
+          return;
+        }
         delete next[`receiveQty-${index}`];
         delete next[`productDate-${index}`];
         delete next[`expiryDate-${index}`];
@@ -395,6 +415,7 @@ export function GRCreationModal({
       setUploadedFiles(supportingDocsToUploadFiles(initialReceipt.documentChecklist.supportingDocs || []));
       setStoredOnHoldConfirmed(true);
       setErrors({});
+      setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
       closeScanModal();
       return;
     }
@@ -406,6 +427,7 @@ export function GRCreationModal({
     setUploadedFiles([]);
     setErrors({});
     setStoredOnHoldConfirmed(false);
+    setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
     closeScanModal();
   }, [initialReceipt, open, purchaseOrders]);
 
@@ -428,6 +450,10 @@ export function GRCreationModal({
       }))
       .filter((item) => item.poNumber === purchaseOrder.poNumber),
   }));
+  const scanTargetPurchaseOrder =
+    purchaseOrders.find((purchaseOrder) => purchaseOrder.poNumber === scanTargetPoNumber) || null;
+  const scanTargetGroup =
+    groupedItems.find((group) => group.poNumber === scanTargetPoNumber) || null;
   const missingItemsCount = items.filter((item) => item.isMissing).length;
   const shortItemsCount = items.filter((item) => !item.isMissing && item.receiveQty < item.poQty)
     .length;
@@ -609,68 +635,68 @@ export function GRCreationModal({
       >
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div style={{ flex: 1, overflowY: 'auto', padding: '14px 24px 0' }}>
-          <div style={{ marginBottom: 20 }}>
-            <h4 style={{ marginBottom: 8 }}>Selected Purchase Orders</h4>
-            <Table
-              size="small"
-              rowKey="poNumber"
-              pagination={false}
-              tableLayout="fixed"
-              dataSource={purchaseOrders}
-              columns={[
-                { title: 'PO Number', dataIndex: 'poNumber', key: 'poNumber', width: 140 },
-                {
-                  title: 'Supplier',
-                  dataIndex: 'supplier',
-                  key: 'supplier',
-                  width: 220,
-                  ellipsis: true,
-                },
-                {
-                  title: 'Expected Date',
-                  key: 'expectedDate',
-                  width: 170,
-                  render: (_, record: PurchaseOrder) =>
-                    record.expectedDate
-                      ? `${record.expectedDate} ${record.expectedTime || ''}`.trim()
-                      : 'Unplanned',
-                },
-                {
-                  title: renderRequiredLabel('Posting Date'),
-                  key: 'postingDate',
-                  width: 150,
-                  render: (_: unknown, __: PurchaseOrder, index: number) => ({
-                    children:
-                      index === 0 ? (
-                        <DatePicker
-                          value={postingDate ? dayjs(postingDate) : null}
-                          onChange={(_, dateStr) => {
-                            setPostingDate(dateStr as string);
-                            setErrors((prev) => ({ ...prev, postingDate: false }));
-                          }}
-                          style={{ width: 128 }}
-                          status={errors.postingDate ? 'error' : undefined}
-                        />
-                      ) : null,
-                    props: {
-                      rowSpan: index === 0 ? purchaseOrders.length : 0,
-                    },
-                  }),
-                },
-                { title: 'Items', dataIndex: 'totalItems', key: 'totalItems', width: 72 },
-                {
-                  title: 'Total Qty',
-                  dataIndex: 'totalQty',
-                  key: 'totalQty',
-                  width: 96,
-                  render: (value: number) => value.toLocaleString(),
-                },
-              ]}
-            />
-          </div>
+            <div style={{ marginBottom: 20 }}>
+              <h4 style={{ marginBottom: 8 }}>Selected Purchase Orders</h4>
+              <Table
+                size="small"
+                rowKey="poNumber"
+                pagination={false}
+                tableLayout="fixed"
+                dataSource={purchaseOrders}
+                columns={[
+                  { title: 'PO Number', dataIndex: 'poNumber', key: 'poNumber', width: 140 },
+                  {
+                    title: 'Supplier',
+                    dataIndex: 'supplier',
+                    key: 'supplier',
+                    width: 220,
+                    ellipsis: true,
+                  },
+                  {
+                    title: 'Expected Date',
+                    key: 'expectedDate',
+                    width: 170,
+                    render: (_, record: PurchaseOrder) =>
+                      record.expectedDate
+                        ? `${record.expectedDate} ${record.expectedTime || ''}`.trim()
+                        : 'Unplanned',
+                  },
+                  {
+                    title: renderRequiredLabel('Posting Date'),
+                    key: 'postingDate',
+                    width: 150,
+                    render: (_: unknown, __: PurchaseOrder, index: number) => ({
+                      children:
+                        index === 0 ? (
+                          <DatePicker
+                            value={postingDate ? dayjs(postingDate) : null}
+                            onChange={(_, dateStr) => {
+                              setPostingDate(dateStr as string);
+                              setErrors((prev) => ({ ...prev, postingDate: false }));
+                            }}
+                            style={{ width: 128 }}
+                            status={errors.postingDate ? 'error' : undefined}
+                          />
+                        ) : null,
+                      props: {
+                        rowSpan: index === 0 ? purchaseOrders.length : 0,
+                      },
+                    }),
+                  },
+                  { title: 'Items', dataIndex: 'totalItems', key: 'totalItems', width: 72 },
+                  {
+                    title: 'Total Qty',
+                    dataIndex: 'totalQty',
+                    key: 'totalQty',
+                    width: 96,
+                    render: (value: number) => value.toLocaleString(),
+                  },
+                ]}
+              />
+            </div>
 
           <Form layout="vertical" style={{ marginBottom: 6 }}>
-            <Row gutter={24}>
+            <Row gutter={24}> 
               <Col span={6}>
                 <Form.Item
                   label="Delivery Note Number"
@@ -741,88 +767,102 @@ export function GRCreationModal({
             <div
               style={{
                 display: 'flex',
-                justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: 8,
               }}
             >
               <h4 style={{ margin: 0 }}>Item Receipt</h4>
-              <Button icon={<QrcodeOutlined />} onClick={openScanModal}>
-                Scan PO Barcode
-              </Button>
             </div>
-            <Space direction="vertical" size={16} style={{ width: '100%' }}>
-              {groupedItems.map((group) => (
-                <Card
-                  key={group.poNumber}
-                  size="small"
-                  style={{ borderRadius: 12, overflow: 'hidden' }}
-                  headStyle={{
-                    background: '#fafafa',
-                    borderBottom: '1px solid #f0f0f0',
-                    padding: '14px 16px',
-                  }}
-                  bodyStyle={{ padding: 0 }}
-                  title={
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        gap: 16,
-                        width: '100%',
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: 11, color: '#8c8c8c', marginBottom: 4 }}>
-                          Purchase Order
-                        </div>
-                        <Space size={8} wrap style={{ marginBottom: 2 }}>
-                          <Text strong style={{ fontSize: 16 }}>
-                            {group.poNumber}
-                          </Text>
-                          <Tag color={group.type === 'Planned' ? 'blue' : 'orange'}>
-                            {group.type}
-                          </Tag>
-                        </Space>
-                        <Text type="secondary" style={{ fontSize: 13 }}>
-                          {group.supplier}
-                        </Text>
+            <Collapse
+              activeKey={activeItemPanels}
+              destroyInactivePanel
+              onChange={(keys) =>
+                setActiveItemPanels(
+                  Array.isArray(keys)
+                    ? keys.map((key) => String(key))
+                    : keys
+                      ? [String(keys)]
+                      : [],
+                )
+              }
+              items={groupedItems.map((group) => ({
+                key: group.poNumber,
+                style: {
+                  marginBottom: 16,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  background: '#fff',
+                },
+                label: (
+                  <div
+                    data-testid={`item-receipt-panel-header-${group.poNumber}`}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 16,
+                      width: '100%',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 11, color: '#8c8c8c', marginBottom: 4 }}>
+                        Purchase Order
                       </div>
-                      <Space size={8} wrap style={{ justifyContent: 'flex-end' }}>
-                        <Tag bordered={false} color="default" style={{ paddingInline: 10 }}>
-                          {group.rows.length} item{group.rows.length !== 1 ? 's' : ''}
+                      <Space size={8} wrap style={{ marginBottom: 2 }}>
+                        <Text strong style={{ fontSize: 16 }}>
+                          {group.poNumber}
+                        </Text>
+                        <Tag color={group.type === 'Planned' ? 'blue' : 'orange'}>
+                          {group.type}
                         </Tag>
-                        {group.missingCount > 0 && (
-                          <Tag bordered={false} color="error" style={{ paddingInline: 10 }}>
-                            {group.missingCount} missing
-                          </Tag>
-                        )}
-                        {group.shortCount > 0 && (
-                          <Tag bordered={false} color="warning" style={{ paddingInline: 10 }}>
-                            {group.shortCount} short
-                          </Tag>
-                        )}
-                        {/* <Tag bordered={false} color="processing" style={{ paddingInline: 10 }}>
-                          {group.expectedDate
-                            ? `${group.expectedDate}${group.expectedTime ? ` ${group.expectedTime}` : ''}`
-                            : 'Unplanned arrival'}
-                        </Tag> */}
                       </Space>
+                      <Text type="secondary" style={{ fontSize: 13 }}>
+                        {group.supplier}
+                      </Text>
                     </div>
-                  }
-                >
-                  <Table
-                    size="small"
-                    columns={itemColumns}
-                    dataSource={group.rows}
-                    pagination={false}
-                    scroll={{ x: 1420 }}
-                    tableLayout="auto"
-                  />
-                </Card>
-              ))}
-            </Space>
+                    <Space size={8} wrap style={{ justifyContent: 'flex-end' }}>
+                      <Tag bordered={false} color="default" style={{ paddingInline: 10 }}>
+                        {group.rows.length} item{group.rows.length !== 1 ? 's' : ''}
+                      </Tag>
+                      {group.missingCount > 0 && (
+                        <Tag bordered={false} color="error" style={{ paddingInline: 10 }}>
+                          {group.missingCount} missing
+                        </Tag>
+                      )}
+                      {group.shortCount > 0 && (
+                        <Tag bordered={false} color="warning" style={{ paddingInline: 10 }}>
+                          {group.shortCount} short
+                        </Tag>
+                      )}
+                      <Button
+                        size="small"
+                        icon={<QrcodeOutlined />}
+                        data-testid={`scan-po-button-${group.poNumber}`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          openScanModal(group.poNumber);
+                        }}
+                      >
+                        Scan PO Barcode
+                      </Button>
+                    </Space>
+                  </div>
+                ),
+                children: (
+                  <div data-testid={`item-receipt-panel-body-${group.poNumber}`}>
+                    <Table
+                      size="small"
+                      columns={itemColumns}
+                      dataSource={group.rows}
+                      pagination={false}
+                      scroll={{ x: 1420 }}
+                      tableLayout="auto"
+                    />
+                  </div>
+                ),
+              }))}
+            />
           </div>
 
             <Form.Item
@@ -950,8 +990,8 @@ export function GRCreationModal({
                   fontSize: 12,
                 }}
               >
-                <span>{selectedPOCount === 1 ? firstPO?.poNumber : `${selectedPOCount} POs`}</span>
-                <span>{items.length} item rows</span>
+                <span>{scanTargetPurchaseOrder?.poNumber || '-'}</span>
+                <span>{scanTargetGroup?.rows.length || 0} item rows</span>
               </div>
               <div
                 style={{
@@ -987,16 +1027,16 @@ export function GRCreationModal({
           <Card size="small" title="Decoded PO Data">
             <Descriptions size="small" column={2}>
               <Descriptions.Item label="PO Reference">
-                {selectedPOCount === 1 ? firstPO?.poNumber : `${selectedPOCount} selected`}
+                {scanTargetPurchaseOrder?.poNumber || '-'}
               </Descriptions.Item>
               <Descriptions.Item label="Supplier">
-                {supplierNames.length === 1 ? supplierNames[0] : `${supplierNames.length} suppliers`}
+                {scanTargetPurchaseOrder?.supplier || '-'}
               </Descriptions.Item>
               <Descriptions.Item label="Receipt Type">
-                {receiptType}
+                {scanTargetPurchaseOrder?.type || receiptType}
               </Descriptions.Item>
               <Descriptions.Item label="Item Count">
-                {items.length}
+                {scanTargetGroup?.rows.length || 0}
               </Descriptions.Item>
             </Descriptions>
             <Divider style={{ margin: '12px 0' }} />
@@ -1006,7 +1046,11 @@ export function GRCreationModal({
                   value={scannedValue}
                   onChange={(event) => setScannedValue(event.target.value)}
                   prefix={<QrcodeOutlined />}
-                  placeholder="Scan result for the PO barcode"
+                  placeholder={
+                    scanTargetPurchaseOrder
+                      ? `Scan result for ${scanTargetPurchaseOrder.poNumber}`
+                      : 'Scan result for the PO barcode'
+                  }
                 />
               </Form.Item>
             </Form>
@@ -1015,7 +1059,7 @@ export function GRCreationModal({
           <Alert
             type="info"
             showIcon
-            message="Confirming the scan will fill quantities, product dates, expiry dates, batch numbers, and barcode values for non-missing rows."
+            message="Confirming the scan will fill quantities, product dates, expiry dates, batch numbers, and barcode values for this PO's non-missing rows."
           />
 
           <Space direction="vertical" style={{ width: '100%' }}>

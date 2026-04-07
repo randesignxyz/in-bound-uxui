@@ -5,6 +5,7 @@ import type { ProColumns } from '@ant-design/pro-table';
 import {
   Alert,
   Button,
+  Collapse,
   Divider,
   Input,
   Modal,
@@ -37,6 +38,7 @@ import {
   getReceiptDisplayStatusColor,
   getReceiptApprovedGrNumber,
   getReceiptIrNumber,
+  groupReceiptItemsByPO,
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
@@ -209,6 +211,7 @@ export function GRDetailSidebar({
   const [remarkModalState, setRemarkModalState] = useState<RemarkModalState>(null);
   const [draftRemark, setDraftRemark] = useState('');
   const [supervisorNote, setSupervisorNote] = useState('');
+  const [activePoPanels, setActivePoPanels] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const routingSummary = useMemo(() => summarizeQcRouting(items), [items]);
 
@@ -230,14 +233,42 @@ export function GRDetailSidebar({
     setRemarkModalState(null);
     setDraftRemark('');
     setSupervisorNote('');
+    setActivePoPanels([]);
     setIsSubmitting(false);
   }, [open, receipt]);
 
+  const supportingDocs = receipt?.documentChecklist.supportingDocs || [];
+  const warehouseSupportingDocs = supportingDocs.filter((doc) => doc.source !== 'QC');
+  const timelineActivities = useMemo(
+    () => (receipt ? buildReceiptTimelineActivities(receipt) : []),
+    [receipt],
+  );
+  const editableItems = useMemo(
+    () =>
+      receipt
+        ? items.map((item, index) => ({
+            ...item,
+            index,
+            key: `${item.poNumber || receipt.linkedPoNumber || receipt.poNumber || 'TEMP'}-${item.code}-${item.batchNumber || index}`,
+          }))
+        : [],
+    [items, receipt?.linkedPoNumber, receipt?.poNumber],
+  );
+  const groupedReceiptItems = useMemo(
+    () => (receipt ? groupReceiptItemsByPO(receipt, editableItems) : []),
+    [editableItems, receipt],
+  );
+
+  useEffect(() => {
+    if (!open || !receipt) {
+      return;
+    }
+
+    setActivePoPanels(groupedReceiptItems.length === 1 ? [groupedReceiptItems[0].key] : []);
+  }, [groupedReceiptItems.length, groupedReceiptItems[0]?.key, open, receipt?.grNumber]);
+
   if (!receipt) return null;
 
-  const supportingDocs = receipt.documentChecklist.supportingDocs || [];
-  const warehouseSupportingDocs = supportingDocs.filter((doc) => doc.source !== 'QC');
-  const timelineActivities = buildReceiptTimelineActivities(receipt);
   const canSubmitForQC = viewerRole === 'WAREHOUSE_STAFF' && receipt.processState === 'GRPO_DRAFT';
   const canSkipQc = viewerRole === 'WAREHOUSE_STAFF' && receipt.processState === 'QC_PENDING';
   const canOpenWarehouseCorrection =
@@ -293,6 +324,7 @@ export function GRDetailSidebar({
   const noteMetadataItems: ReceiptMetadataItem[] = [
     ...(receipt.pendingPOReason ? [{ label: 'Pending PO Note', value: receipt.pendingPOReason }] : []),
   ];
+
   const updateItem = (index: number, field: 'qcDecision' | 'qcRemark', value: string) => {
     setItems((prev) =>
       prev.map((item, itemIndex) => (itemIndex === index ? { ...item, [field]: value } : item)),
@@ -897,23 +929,80 @@ export function GRDetailSidebar({
           )}
 
           <Divider />
-          <div style={{ marginInline: -8 }}>
-            <ProTable<EditableSidebarItem>
-              headerTitle="Receipt Items"
-              size="small"
-              search={false}
-              rowKey="key"
-              dataSource={items.map((item, index) => ({
-                ...item,
-                index,
-                key: `${item.poNumber}-${item.code}-${item.batchNumber || index}`,
+          <div style={{ fontWeight: 600, marginBottom: 16 }}>Receipt Items</div>
+          {groupedReceiptItems.length > 0 ? (
+            <Collapse
+              activeKey={activePoPanels}
+              onChange={(keys) =>
+                setActivePoPanels(
+                  Array.isArray(keys)
+                    ? keys.map((key) => String(key))
+                    : keys
+                      ? [String(keys)]
+                      : [],
+                )
+              }
+              items={groupedReceiptItems.map((group) => ({
+                key: group.key,
+                label: (
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 16,
+                      width: '100%',
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, marginBottom: 4 }}>{group.displayPoNumber}</div>
+                      <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 2 }}>{group.supplier}</div>
+                      <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+                        {group.expectedDate
+                          ? `${group.expectedDate}${group.expectedTime ? ` ${group.expectedTime}` : ''}`
+                          : 'Expected date not available'}
+                      </div>
+                    </div>
+                    <Space size={8} wrap>
+                      <Tag bordered={false} color="default">
+                        {group.itemCount} item{group.itemCount !== 1 ? 's' : ''}
+                      </Tag>
+                      <Tag
+                        bordered={false}
+                        color={
+                          group.items.some((item) => item.isMissing) || group.totalReceiveQty < group.totalPoQty
+                            ? 'warning'
+                            : 'success'
+                        }
+                      >
+                        {`${group.totalReceiveQty.toLocaleString()} / ${group.totalPoQty.toLocaleString()}`}
+                      </Tag>
+                    </Space>
+                  </div>
+                ),
+                children: (
+                  <div style={{ marginInline: -8 }}>
+                    <ProTable<EditableSidebarItem>
+                      size="small"
+                      search={false}
+                      rowKey="key"
+                      dataSource={group.items}
+                      options={{ density: false, fullScreen: false, reload: false, setting: false }}
+                      pagination={false}
+                      tableLayout="fixed"
+                      columns={columns}
+                    />
+                  </div>
+                ),
               }))}
-              options={{ density: false, fullScreen: false, reload: false, setting: false }}
-              pagination={false}
-              tableLayout="fixed"
-              columns={columns}
             />
-          </div>
+          ) : (
+            <Alert
+              type="info"
+              showIcon
+              message="No receipt items are available for this inbound receiving."
+            />
+          )}
 
           <Divider />
           <div style={{ marginBottom: 16 }}>

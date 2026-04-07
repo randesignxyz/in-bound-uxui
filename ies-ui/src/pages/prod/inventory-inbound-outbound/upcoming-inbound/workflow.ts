@@ -78,6 +78,22 @@ export interface PurchaseOrder {
   status: 'Expected' | 'Partial' | 'Fully Received';
 }
 
+export function getCombinedPurchaseOrderVendor(purchaseOrders: PurchaseOrder[]) {
+  const normalizedSuppliers = Array.from(
+    new Set(
+      purchaseOrders
+        .map((purchaseOrder) => purchaseOrder.supplier?.trim())
+        .filter((supplier): supplier is string => Boolean(supplier)),
+    ),
+  );
+
+  return normalizedSuppliers.length === 1 ? normalizedSuppliers[0] : undefined;
+}
+
+export function canCombinePurchaseOrders(purchaseOrders: PurchaseOrder[]) {
+  return purchaseOrders.length <= 1 || Boolean(getCombinedPurchaseOrderVendor(purchaseOrders));
+}
+
 export type GoodsReceiptSourceType = 'PLANNED' | 'UNPLANNED_WITH_PO' | 'TEMP_NO_PO';
 
 export type POLinkStatus = 'NOT_REQUIRED' | 'WAITING_PO' | 'LINKED';
@@ -98,6 +114,24 @@ export interface GRItem {
   missingRemark?: string;
   qcDecision?: QcDecision;
   qcRemark?: string;
+}
+
+type ReceiptPoGroupedItemShape = Pick<
+  GRItem,
+  'poNumber' | 'supplier' | 'poQty' | 'receiveQty'
+>;
+
+export interface ReceiptPoItemGroup<TItem extends ReceiptPoGroupedItemShape = GRItem> {
+  key: string;
+  poNumber?: string;
+  displayPoNumber: string;
+  supplier: string;
+  expectedDate?: string;
+  expectedTime?: string;
+  itemCount: number;
+  totalPoQty: number;
+  totalReceiveQty: number;
+  items: TItem[];
 }
 
 export type QcDecision = 'Pass' | 'On-Hold' | 'Reject';
@@ -219,6 +253,53 @@ export function summarizeSuppliers(receipt: GoodsReceipt) {
   return `${suppliers.length} suppliers`;
 }
 
+export function groupReceiptItemsByPO<TItem extends ReceiptPoGroupedItemShape>(
+  receipt: GoodsReceipt,
+  items: TItem[],
+): ReceiptPoItemGroup<TItem>[] {
+  const poReferencesByNumber = new Map(
+    getReceiptPOReferences(receipt).map((reference) => [reference.poNumber, reference]),
+  );
+  const groupedItems = new Map<string, ReceiptPoItemGroup<TItem>>();
+
+  items.forEach((item) => {
+    const poNumber = normalizeReceiptItemPoNumber(receipt, item);
+    const groupKey = poNumber || '__UNASSIGNED_PO__';
+    const existingGroup = groupedItems.get(groupKey);
+    const poReference = poNumber ? poReferencesByNumber.get(poNumber) : undefined;
+
+    if (existingGroup) {
+      existingGroup.items.push(item);
+      existingGroup.itemCount += 1;
+      existingGroup.totalPoQty += item.poQty;
+      existingGroup.totalReceiveQty += item.receiveQty;
+      return;
+    }
+
+    groupedItems.set(groupKey, {
+      key: groupKey,
+      poNumber,
+      displayPoNumber:
+        poNumber ||
+        (receipt.receiptSourceType === 'TEMP_NO_PO' ? 'Waiting SAP PO' : 'PO Unassigned'),
+      supplier: item.supplier || poReference?.supplier || receipt.supplier,
+      expectedDate: poReference?.expectedDate || undefined,
+      expectedTime: poReference?.expectedTime || undefined,
+      itemCount: 1,
+      totalPoQty: item.poQty,
+      totalReceiveQty: item.receiveQty,
+      items: [item],
+    });
+  });
+
+  return Array.from(groupedItems.values()).sort((left, right) => {
+    if (!left.poNumber && !right.poNumber) return 0;
+    if (!left.poNumber) return 1;
+    if (!right.poNumber) return -1;
+    return left.poNumber.localeCompare(right.poNumber);
+  });
+}
+
 export function getReceiptIrNumber(
   receipt: Pick<GoodsReceipt, 'receivingNumber' | 'grNumber'>,
 ) {
@@ -233,6 +314,18 @@ export function getReceiptApprovedGrNumber(
 
 export function hasReceiptDiscrepancy(items: GRItem[]) {
   return items.some((item) => item.isMissing || item.receiveQty < item.poQty);
+}
+
+function normalizeReceiptItemPoNumber(
+  receipt: GoodsReceipt,
+  item: ReceiptPoGroupedItemShape,
+) {
+  return (
+    item.poNumber?.trim() ||
+    receipt.linkedPoNumber?.trim() ||
+    receipt.poNumber?.trim() ||
+    undefined
+  );
 }
 
 export function buildReceiptExceptionReason(items: GRItem[]) {

@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react';
+import { useRef, type MouseEvent, type ReactNode } from 'react';
 import { Flex, Progress, Tag } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
@@ -9,6 +9,9 @@ interface POListTableProps {
   onViewDetails: (po: PurchaseOrder) => void;
   headerTitle?: ReactNode;
   toolbarExtra?: ReactNode;
+  selectedRowKeys?: string[];
+  lockedSupplier?: string;
+  onSelectionChange?: (selectedRowKeys: string[]) => void;
 }
 
 export function POListTable({
@@ -16,8 +19,27 @@ export function POListTable({
   onViewDetails,
   headerTitle,
   toolbarExtra,
+  selectedRowKeys = [],
+  lockedSupplier,
+  onSelectionChange,
 }: POListTableProps) {
   const actionRef = useRef<ActionType>();
+  const hasActiveSelection = selectedRowKeys.length > 0;
+  const isSelectionLockedRow = (purchaseOrder: PurchaseOrder) =>
+    Boolean(lockedSupplier) &&
+    purchaseOrder.supplier !== lockedSupplier &&
+    !selectedRowKeys.includes(purchaseOrder.poNumber);
+  const openPurchaseOrderDetails = (
+    purchaseOrder: PurchaseOrder,
+    event?: { preventDefault?: () => void; stopPropagation?: () => void },
+  ) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (hasActiveSelection) {
+      return;
+    }
+    onViewDetails(purchaseOrder);
+  };
 
   const columns: ProColumns<PurchaseOrder>[] = [
     {
@@ -26,7 +48,20 @@ export function POListTable({
       dataIndex: 'poNumber',
       width: 130,
       render: (_: any, r: PurchaseOrder) => (
-        <a onClick={() => onViewDetails(r)}>{r.poNumber}</a>
+        <a
+          onClick={(event) => openPurchaseOrderDetails(r, event)}
+          aria-disabled={hasActiveSelection ? 'true' : undefined}
+          style={{
+            color: isSelectionLockedRow(r) ? '#8c8c8c' : undefined,
+            cursor: hasActiveSelection
+              ? isSelectionLockedRow(r)
+                ? 'not-allowed'
+                : 'default'
+              : 'pointer',
+          }}
+        >
+          {r.poNumber}
+        </a>
       ),
     },
     {
@@ -105,15 +140,29 @@ export function POListTable({
           <Tag color="gold" bordered={false}>
             Expected
           </Tag>
-        ),
+      ),
     },
   ];
+  const interactiveColumns = columns.map((column) => ({
+    ...column,
+    onCell: (record: PurchaseOrder) => ({
+      onClick: (event: MouseEvent<HTMLElement>) => {
+        const target = event.target as HTMLElement;
+        if (target.closest('a') || target.closest('button')) {
+          return;
+        }
+
+        openPurchaseOrderDetails(record);
+      },
+      style: { cursor: hasActiveSelection ? 'default' : 'pointer' },
+    }),
+  }));
 
   return (
     <ProTable<PurchaseOrder>
       actionRef={actionRef}
       headerTitle={headerTitle}
-      columns={columns}
+      columns={interactiveColumns}
       dataSource={purchaseOrders}
       rowKey="poNumber"
       bordered
@@ -121,11 +170,32 @@ export function POListTable({
       search={false}
       options={{ density: false, setting: false }}
       toolBarRender={() => (toolbarExtra ? [toolbarExtra] : [])}
+      tableAlertRender={false}
       pagination={{ pageSize: 10, showSizeChanger: true }}
       tableLayout="fixed"
+      rowSelection={
+        onSelectionChange
+          ? {
+              selectedRowKeys,
+              onChange: (nextSelectedRowKeys) =>
+                onSelectionChange(nextSelectedRowKeys.map((key) => String(key))),
+              preserveSelectedRowKeys: false,
+              getCheckboxProps: (record) => ({
+                disabled:
+                  Boolean(lockedSupplier) &&
+                  record.supplier !== lockedSupplier &&
+                  !selectedRowKeys.includes(record.poNumber),
+              }),
+            }
+          : undefined
+      }
       onRow={(record) => ({
-        onClick: () => onViewDetails(record),
-        style: { cursor: 'pointer' },
+        'data-dimmed-row': isSelectionLockedRow(record) ? 'true' : undefined,
+        style: {
+          backgroundColor: isSelectionLockedRow(record) ? '#fafafa' : undefined,
+          opacity: isSelectionLockedRow(record) ? 0.58 : 1,
+          transition: 'background-color 0.2s ease, opacity 0.2s ease',
+        },
       })}
     />
   );

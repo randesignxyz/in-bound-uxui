@@ -215,12 +215,18 @@ const deriveRecordStatus = (
       if (hasAllShipmentsConfirmed || normalizedPickupStatus === 'confirmed') return 'Partial';
       return 'Ready To Pick Up';
     case 'READY_TO_PICKUP':
+      if (committedShipmentCount === 0) {
+        return normalizedPickupStatus === 'confirmed' ? 'Completed' : 'Ready To Pick Up';
+      }
       return hasAllShipmentsConfirmed ? 'Completed' : 'Ready To Pick Up';
     case 'COMPLETE':
+      if (committedShipmentCount === 0) {
+        return normalizedPickupStatus === 'confirmed' ? 'Completed' : 'Ready To Pick Up';
+      }
       if (hasPendingShipment) return 'Ready To Pick Up';
       if (hasAllShipmentsConfirmed) return 'Completed';
       if (hasAnyConfirmedShipment) return 'Ready To Pick Up';
-      return normalizedPickupStatus === 'confirmed' ? 'Completed' : 'Ready To Pick Up';
+      return 'Ready To Pick Up';
     case 'APPROVED':
       return 'Pending';
     default:
@@ -274,7 +280,7 @@ const deriveDetailStatus = (
       return hasAllShipmentsConfirmed ? 'completed' : 'ready_to_Pickup';
     case 'COMPLETE':
       if (hasPendingShipment) return 'ready_to_Pickup';
-      if (hasAllShipmentsConfirmed || normalizedPickupStatus === 'confirmed') return 'completed';
+      if (hasAllShipmentsConfirmed) return 'completed';
       return 'ready_to_Pickup';
     default:
       return mapRecordStatusToDetailStatus(deriveRecordStatus(requestStatus, pickupStatus, 0, history));
@@ -368,6 +374,16 @@ const buildActivities = (
     const rightTime = new Date(right.issuedAt || item.requestedDate || '').getTime();
     return leftTime - rightTime;
   });
+  const confirmedHistory = orderedHistory.filter((entry) => Boolean(entry.pickupConfirmedAt));
+  const hasAllShipmentsConfirmed =
+    orderedHistory.length > 0 && confirmedHistory.length === orderedHistory.length;
+  const finalConfirmedEntry = hasAllShipmentsConfirmed
+    ? [...confirmedHistory].sort((left, right) => {
+        const leftTime = new Date(left.pickupConfirmedAt || left.issuedAt || item.requestedDate || '').getTime();
+        const rightTime = new Date(right.pickupConfirmedAt || right.issuedAt || item.requestedDate || '').getTime();
+        return leftTime - rightTime;
+      })[confirmedHistory.length - 1]
+    : undefined;
   const activities: RequestDetailActivity[] = [
     {
       label: 'Requested',
@@ -400,12 +416,9 @@ const buildActivities = (
 
   orderedHistory.forEach((entry, index) => {
     const shipmentNo = index + 1;
-    const isLastShipment = shipmentNo === orderedHistory.length;
     const hasPickupConfirmation = Boolean(entry.pickupConfirmedAt);
-    const isFinalCompleted =
-      String(item.requestStatus || '').trim().toUpperCase() === 'COMPLETE' &&
-      String(item.pickupStatus || '').trim().toLowerCase() === 'confirmed' &&
-      isLastShipment;
+    const isFinalCompletedEntry =
+      hasAllShipmentsConfirmed && finalConfirmedEntry?.fulfillmentId === entry.fulfillmentId;
 
     activities.push({
       label: 'Ready to Pick up',
@@ -424,15 +437,7 @@ const buildActivities = (
         dot: 'done',
       });
 
-      if (isFinalCompleted) {
-        activities.push({
-          label: 'Completed',
-          description: 'All issued items have been picked up.',
-          date: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate,
-          by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
-          dot: 'done',
-        });
-      } else {
+      if (!isFinalCompletedEntry) {
         activities.push({
           label: `Partial Issue #${shipmentNo}`,
           description: `Shipment #${shipmentNo} was picked up, but the request is still partially issued.`,
@@ -443,6 +448,19 @@ const buildActivities = (
       }
     }
   });
+
+  if (hasAllShipmentsConfirmed && finalConfirmedEntry) {
+    activities.push({
+      label: 'Completed',
+      description: 'All issued items have been picked up.',
+      date:
+        finalConfirmedEntry.pickupConfirmedAt ||
+        finalConfirmedEntry.issuedAt ||
+        item.requestedDate,
+      by: finalConfirmedEntry.pickupConfirmedBy || finalConfirmedEntry.warehouseStaffId || undefined,
+      dot: 'done',
+    });
+  }
 
   return activities;
 };

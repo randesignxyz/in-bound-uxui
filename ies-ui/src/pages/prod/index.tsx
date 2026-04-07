@@ -116,7 +116,7 @@ export default () => {
     {
       id: 'sparePartRequestWarehouse',
       name: 'Spare Part Request List',
-      description: 'Spare Part Request List Warehouse Staff',
+      description: 'Spare Part List Warehouse Staff',
       icon: warehouseTransferIcon,
       link: `${ProdPaths.sparePartWarehouse}/list`,
       visible: access.canSpfWarehouseStaff,

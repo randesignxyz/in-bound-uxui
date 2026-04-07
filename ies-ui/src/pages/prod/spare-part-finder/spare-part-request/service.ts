@@ -619,6 +619,15 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     const rightTime = new Date(right.issuedAt || '').getTime();
     return leftTime - rightTime;
   });
+  const confirmedHistory = history.filter((entry) => Boolean(entry.pickupConfirmedAt));
+  const hasAllShipmentsConfirmed = history.length > 0 && confirmedHistory.length === history.length;
+  const finalConfirmedEntry = hasAllShipmentsConfirmed
+    ? [...confirmedHistory].sort((left, right) => {
+        const leftTime = new Date(left.pickupConfirmedAt || left.issuedAt || item.requestedDate || '').getTime();
+        const rightTime = new Date(right.pickupConfirmedAt || right.issuedAt || item.requestedDate || '').getTime();
+        return leftTime - rightTime;
+      })[confirmedHistory.length - 1]
+    : undefined;
   const lineItemByRequestLineId = new Map(items.map((line) => [Number(line.requestLineId || 0), line]));
 
   const activities: RequestDetailActivity[] = [
@@ -678,10 +687,10 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
         dot: 'done',
       });
 
-      const isLastShipment = shipmentNo === history.length;
       const hasMoreToIssue = Number(item.totalRemainingQty || 0) > 0;
+      const isFinalConfirmedShipment = finalConfirmedEntry?.fulfillmentId === entry.fulfillmentId;
 
-      if (hasMoreToIssue || !isLastShipment) {
+      if (hasMoreToIssue || !isFinalConfirmedShipment) {
         activities.push({
           label: `Partial Pick up #${shipmentNo}`,
           description: `Picked ${Number(entry.totalIssuedQty || 0)} item(s)`,
@@ -693,13 +702,12 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     }
   });
 
-  if (rawStatus === 'COMPLETE' && normalizedPickupStatus === 'confirmed' && history.length > 0) {
-    const lastHistory = history[history.length - 1];
+  if (hasAllShipmentsConfirmed && finalConfirmedEntry) {
     activities.push({
       label: 'Completed',
       description: 'Picked up all requested items',
-      date: lastHistory.pickupConfirmedAt || lastHistory.issuedAt || item.requestedDate,
-      by: lastHistory.pickupConfirmedBy || lastHistory.warehouseStaffId || undefined,
+      date: finalConfirmedEntry.pickupConfirmedAt || finalConfirmedEntry.issuedAt || item.requestedDate,
+      by: finalConfirmedEntry.pickupConfirmedBy || finalConfirmedEntry.warehouseStaffId || undefined,
       dot: 'done',
     });
   }

@@ -13,7 +13,7 @@ import {
   Modal,
   InputNumber,
 } from 'antd';
-import { CheckCircleOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
+import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus } from './data';
@@ -1429,13 +1429,11 @@ export default function RequestedBatchDrawer({
           style={{ marginBottom: 32 }}
           items={STATUS_STEPS.map((title, index) => ({
             title,
-            icon:
-              effectiveStatus === 'completed' && index === STATUS_STEPS.length - 1 ? (
-                <CheckCircleOutlined />
-              ) : undefined,
             status:
               effectiveStatus === 'rejected' && index === 1
                 ? 'error'
+                : effectiveStatus === 'completed' && index === STATUS_STEPS.length - 1
+                  ? 'finish'
                 : index < currentStep
                   ? 'finish'
                   : index === currentStep

@@ -191,14 +191,13 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    const emptyPurpose = rows.some((r) => !r.purpose.trim());
-    if (emptyPurpose) {
-      message.warning('Please fill in the purpose for all items.');
-      return;
-    }
     const zeroQty = rows.some((r) => r.quantity <= 0);
     if (zeroQty) {
       message.warning('Quantity must be greater than 0 for all items.');
+      return;
+    }
+    if (!remark.trim()) {
+      message.warning('Please fill in the remark.');
       return;
     }
     const missingWarehouse = rows.some((r) => !r.toWarehouseCode.trim());
@@ -404,7 +403,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       width: '15%',
       render: (_: unknown, record: RequestRowItem) => (
         <Input.TextArea
-          placeholder="write your purpose here"
+          placeholder="write your purpose here (optional)"
           value={record.purpose}
           rows={1}
           onChange={(e) => handlePurposeChange(record.key, e.target.value)}
@@ -502,11 +501,11 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       {/* Remark */}
       <div style={{ marginBottom: 16 }}>
         <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>
-          Remark
+          Remark <span style={{ color: '#ff4d4f' }}>*</span>
         </Typography.Text>
         <Input.TextArea
           rows={3}
-          placeholder="write your purpose here"
+          placeholder="write your remark here"
           value={remark}
           onChange={(e) => setRemark(e.target.value)}
         />

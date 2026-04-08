@@ -51,7 +51,8 @@ const normalizeWarehouseStatus = (status: unknown): RequestStatus => {
 };
 
 const statusColorMap: Record<RequestStatus, string> = {
-  pending: 'default',
+  // pending: 'default',
+  pending: '#bfbfbf',
   approved: 'warning',
   rejected: 'error',
   'in-progress': 'processing',
@@ -881,7 +882,7 @@ export default function RequestedBatchWareHouse({
       onOk: async () => {
         setDraftDeleteLoading(true);
         try {
-          if (onDeleteDraft) {
+          if (onDeleteDraft && typeof data.id === 'number') {
             await onDeleteDraft(data.id);
           }
           setStatusOverride(null);
@@ -1210,7 +1211,16 @@ export default function RequestedBatchWareHouse({
   return (
     <>
       <Drawer
-        title="Request Details"
+        title={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+            <span>Request Details</span>
+            {showAcceptRequest ? (
+              <Button type="primary" loading={acceptLoading} onClick={handleAcceptRequest}>
+                Accept
+              </Button>
+            ) : null}
+          </div>
+        }
         width="60%"
         placement="right"
         onClose={handleClose}
@@ -1236,14 +1246,6 @@ export default function RequestedBatchWareHouse({
           </div>
         }
       >
-        {showAcceptRequest ? (
-          <div style={{ marginBottom: 24, textAlign: 'right' }}>
-            <Button type="primary" loading={acceptLoading} onClick={handleAcceptRequest}>
-              Accept
-            </Button>
-          </div>
-        ) : null}
-
         <Descriptions
           column={3}
           size="small"
@@ -1251,20 +1253,20 @@ export default function RequestedBatchWareHouse({
           labelStyle={{ textAlign: 'center', fontWeight: 'bolder' }}
           contentStyle={{ textAlign: 'center' }}
         >
-          <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
-          <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Total Items">{data.totalItems}</Descriptions.Item>
+          {/* <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item> */}
           <Descriptions.Item label="Status">
             <Tag color={displayedStatusColor} bordered={false}>
               {displayedStatusLabel}
             </Tag>
           </Descriptions.Item>
+          <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
+          <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Total Items">{data.totalItems}</Descriptions.Item>
           <Descriptions.Item label="Sent Qty">
             {totals.totalSent} / {totals.totalRequested}
           </Descriptions.Item>
-          <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
+          {/* <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item> */}
         </Descriptions>
         
 

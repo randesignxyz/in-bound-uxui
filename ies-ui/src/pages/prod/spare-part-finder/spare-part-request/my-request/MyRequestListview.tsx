@@ -308,7 +308,11 @@ export default function MyRequestListview({ onResubmitRequest }: MyRequestListvi
                   width: 130,
                   render: (dom, r) => (
                     <a
-                      onClick={() => {}}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        openDetail(r);
+                      }}
                     >
                       {dom}
                     </a>
@@ -397,7 +401,7 @@ export default function MyRequestListview({ onResubmitRequest }: MyRequestListvi
                 // },
                 // ]: []),
 
-                ...(access.canSpfRequester ? [
+                ...(access.canSpfRequester || access.canSpfApprover ? [
                 {
                   title: '',
                   dataIndex: 'action',

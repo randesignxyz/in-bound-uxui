@@ -60,6 +60,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const requestServices = SparePartRequestService(requestActions);
   const { RangePicker } = DatePicker;
   const canSeeWarehouseLocation = access.canSpfWarehouseStaff || access.canAdmin;
+  const canSeeStatusFilter = access.canSpfWarehouseStaff || access.canAdmin;
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -165,6 +166,20 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       : [...selectedRowKeys, key];
 
     syncSelection(nextKeys, [record]);
+  };
+
+  const updateBusinessUnitFilters = (nextBusinessUnits) => {
+    setFilters((previous) => ({ ...previous, businessUnits: nextBusinessUnits }));
+    reloadTable(true);
+  };
+
+  const toggleBusinessUnitFilter = (businessUnit) => {
+    const isSelected = filters.businessUnits.includes(businessUnit);
+    updateBusinessUnitFilters(
+      isSelected
+        ? filters.businessUnits.filter((item) => item !== businessUnit)
+        : [...filters.businessUnits, businessUnit],
+    );
   };
 
   const requestData = async (params) => {
@@ -390,19 +405,43 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             }}
           />
 
-          <Select
-            mode="multiple"
-            allowClear
-            maxTagCount="responsive"
-            style={{ minWidth: 140 }}
-            value={filters.businessUnits}
-            placeholder="All BU"
-            options={businessUnitOptions}
-            onChange={(value) => {
-              setFilters((previous) => ({ ...previous, businessUnits: value || [] }));
-              reloadTable(true);
-            }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Typography.Text type="secondary"></Typography.Text>
+            <div
+              style={{
+                display: 'flex',
+                maxWidth: 420,
+                overflowX: 'auto',
+                paddingBottom: 2,
+              }}
+            >
+              <Button
+                type={filters.businessUnits.length === 0 ? 'primary' : 'default'}
+                onClick={() => updateBusinessUnitFilters([])}
+                style={{
+                  borderRadius: '6px 0 0 6px',
+                  flexShrink: 0,
+                }}
+              >
+                All
+              </Button>
+              {businessUnitOptions.map((option, index) => (
+                <Button
+                  key={option.value}
+                  type={filters.businessUnits.includes(option.value) ? 'primary' : 'default'}
+                  onClick={() => toggleBusinessUnitFilter(option.value)}
+                  style={{
+                    borderLeftWidth: index === 0 ? undefined : 0,
+                    borderRadius:
+                      index === businessUnitOptions.length - 1 ? '0 6px 6px 0' : 0,
+                    flexShrink: 0,
+                  }}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </div>
 
           {/* hidden — field temporarily removed from backend */}
 
@@ -430,15 +469,17 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
           
 
-          <Select
-            style={{ width: 140 }}
-            value={filters.status}
-            options={statusOptions}
-            onChange={(value) => {
-              setFilters((previous) => ({ ...previous, status: value }));
-              reloadTable(true);
-            }}
-          />
+          {canSeeStatusFilter ? (
+            <Select
+              style={{ width: 140 }}
+              value={filters.status}
+              options={statusOptions}
+              onChange={(value) => {
+                setFilters((previous) => ({ ...previous, status: value }));
+                reloadTable(true);
+              }}
+            />
+          ) : null}
 
           {/* <RangePicker
             allowClear

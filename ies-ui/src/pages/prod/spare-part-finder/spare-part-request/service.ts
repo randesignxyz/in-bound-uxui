@@ -121,6 +121,14 @@ type IssueDetailDto = {
   pickupStatus?: string | null;
   items?: IssueDetailLineDto[];
   history?: IssueHistoryDto[];
+  draftItems?: Array<{ requestLineId: number; draftQty: number }>;
+  activities?: Array<{
+    label?: string | null;
+    description?: string | null;
+    date?: string | null;
+    by?: string | null;
+    dot?: 'pending' | 'done' | string | null;
+  }>;
 };
 
 type CreateRequestPayload = {
@@ -177,6 +185,7 @@ type ApproveRequestPayload = {
   lines: Array<{
     requestLineId: number;
     approvedQty: number;
+    editedAt?: string;
   }>;
   remark?: string;
 };
@@ -684,6 +693,16 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     });
   }
 
+  if ((item.draftItems || []).some((draft) => Number(draft.draftQty || 0) > 0)) {
+    activities.push({
+      label: 'Draft Updated',
+      description: 'Warehouse updated shipment draft quantities',
+      date: item.warehouseAcceptedAt || history[0]?.issuedAt || item.approvedAt || item.requestedDate,
+      by: item.warehouseAcceptedBy || history[0]?.warehouseStaffId || undefined,
+      dot: 'done',
+    });
+  }
+
   history.forEach((entry, index) => {
     const shipmentNo = index + 1;
     activities.push({
@@ -779,7 +798,23 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     approverRemark: extractApproverRemark(item.managerRemark),
     warehouseBy: history[history.length - 1]?.warehouseStaffId || history[0]?.warehouseStaffId || undefined,
     items,
-    activities,
+    activities: (item.activities || []).map((activity) => ({
+      label: String(activity.label || '').trim(),
+      description: String(activity.description || '').trim(),
+      date: activity.date || item.requestedDate,
+      by: activity.by?.trim() ? activity.by.trim() : undefined,
+      dot: activity.dot === 'pending' ? 'pending' : 'done',
+    })),
+    // activities:
+    //   (item.activities || []).length > 0
+    //     ? (item.activities || []).map((activity) => ({
+    //         label: String(activity.label || '').trim(),
+    //         description: String(activity.description || '').trim(),
+    //         date: activity.date || item.requestedDate,
+    //         by: activity.by?.trim() ? activity.by.trim() : undefined,
+    //         dot: activity.dot === 'pending' ? 'pending' : 'done',
+    //       }))
+    //     : activities,
     pickupBatches,
   };
 };

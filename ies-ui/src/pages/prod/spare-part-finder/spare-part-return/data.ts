@@ -358,7 +358,7 @@ export const mapToFlattenedRowsMySparePartList = (
         category:                 typeof line.category === 'string' ? line.category : line.category?.category_name || '-',
         pendingReturnQty:         line.pendingReturnQty ?? 0,
         returnedQty:              line.returnedQty ?? 0,
-        availableQty:             Math.max(0, line.deliveredQty - (line.pendingReturnQty ?? 0)),
+        availableQty:             Math.max(0, line.deliveredQty - (line.pendingReturnQty ?? 0) - (line.returnedQty ?? 0)),
       }))
     )
   );

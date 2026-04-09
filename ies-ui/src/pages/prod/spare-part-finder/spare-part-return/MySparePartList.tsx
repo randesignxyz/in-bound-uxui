@@ -110,19 +110,73 @@ export default function MySparePartList() {
     remark: string;
     items: SparePartReturnListItem[];
   }) => {
+    const toSafeInt = (value: unknown) => {
+      const num = Number(value);
+      if (!Number.isFinite(num)) return 0;
+      return Math.max(0, Math.trunc(num));
+    };
+
+    const normalizedItems = payload.items.map((item) => {
+      const quantity = toSafeInt(item.return_quantity);
+      const quantityUsed = toSafeInt(item.used_quantity);
+      const availableQty = toSafeInt(item.availableQty);
+      return {
+        source: item,
+        quantity,
+        quantityUsed,
+        availableQty,
+      };
+    });
+
+    const seenFulfillmentLineIds = new Set<string>();
+    for (const item of normalizedItems) {
+      // Handle comma-separated fulfillmentLineIds (e.g., "1018,1019")
+      const fulfillmentLineIdStr = String(item.source.fulfillmentLineId).trim();
+      const fulfillmentLineId = fulfillmentLineIdStr.split(',')[0].trim(); // Get first ID for validation
+      const totalHandled = item.quantity + item.quantityUsed;
+
+      if (!fulfillmentLineId || isNaN(Number(fulfillmentLineId))) {
+        message.error('Invalid fulfillment line id in selected items');
+        return;
+      }
+
+      if (seenFulfillmentLineIds.has(fulfillmentLineIdStr)) {
+        message.error(`Duplicate fulfillment line selected: ${fulfillmentLineIdStr}`);
+        return;
+      }
+      seenFulfillmentLineIds.add(fulfillmentLineIdStr);
+
+      if (totalHandled <= 0) {
+        message.error(`Please enter quantity for ${item.source.part_number || item.source.itemId || 'selected item'}`);
+        return;
+      }
+
+      if (totalHandled > item.availableQty) {
+        message.error(
+          `Quantity for ${item.source.part_number || item.source.itemId || 'selected item'} exceeds available (${item.availableQty})`,
+        );
+        return;
+      }
+    }
+
     const requestPayload = {
       remark: payload.remark,
-      items: payload.items.map((item) => ({
-        productId: item.itemId ?? item.part_number,
-        originalRequestId: item.requestId,
-        originalRequestLineId: item.requestLineId,
-        fulfillmentLineId: item.fulfillmentLineId,
-        quantity: item.return_quantity ?? 0,
-        uom: item.UoM,
-        quantityUsed: item.used_quantity ?? 0,
-        conditionOnReturn: 'USABLE',
-        remark: item.reason ?? '',
-      })),
+      items: normalizedItems.map((item) => {
+        // Parse comma-separated fulfillmentLineIds and send the first one
+        const fulfillmentLineIdStr = String(item.source.fulfillmentLineId).trim();
+        const fulfillmentLineId = Number(fulfillmentLineIdStr.split(',')[0].trim());
+        return {
+          productId: item.source.itemId ?? item.source.part_number,
+          originalRequestId: item.source.requestId,
+          originalRequestLineId: item.source.requestLineId,
+          fulfillmentLineId: fulfillmentLineId,
+          quantity: item.quantity,
+          uom: item.source.UoM,
+          quantityUsed: item.quantityUsed,
+          conditionOnReturn: item.quantityUsed > 0 ? 'DAMAGED' : 'USABLE',
+          remark: item.source.reason ?? '',
+        };
+      }),
     };
 
     const hideLoading = message.loading('Submitting return request...', 0);

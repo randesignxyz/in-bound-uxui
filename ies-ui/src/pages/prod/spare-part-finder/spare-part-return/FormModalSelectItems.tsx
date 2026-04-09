@@ -3,7 +3,7 @@ import { EditableProTable, ProColumns } from "@ant-design/pro-components";
 import { useState, useEffect } from "react";
 import TextArea from "antd/es/input/TextArea";
 import SparePartImage from "../spare-part-request/SparePartImage";
-import { Form, Modal } from "antd";
+import { Form, Modal, message } from "antd";
 
 interface FormModalProps {
   open: boolean;
@@ -25,14 +25,26 @@ export default function FormModalSelectItems({
   const [remark, setRemark] = useState<string>("");
   const [remarkError, setRemarkError] = useState<string>("");
 
+  const toSafeInt = (value: unknown) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return 0;
+    return Math.max(0, Math.trunc(num));
+  };
+
   const normalizeItems = (items: any[] = []) =>
-    items.map((item) => ({
-      ...item,
-      return_quantity: item.return_quantity ?? 1,
-      used_quantity: item.used_quantity ?? 0,
-      reason: item.reason ?? "",
-      UoM: item.UoM ?? "pcs",
-    }));
+    items.map((item) => {
+      const availableQty = toSafeInt(item.availableQty);
+      const returnQty = item.return_quantity == null ? (availableQty > 0 ? 1 : 0) : toSafeInt(item.return_quantity);
+      const usedQty = item.used_quantity == null ? 0 : toSafeInt(item.used_quantity);
+
+      return {
+        ...item,
+        return_quantity: returnQty,
+        used_quantity: usedQty,
+        reason: item.reason ?? "",
+        UoM: item.UoM ?? "pcs",
+      };
+    });
 
   // Reset table state whenever the modal is opened with selected items
   useEffect(() => {
@@ -50,6 +62,46 @@ export default function FormModalSelectItems({
   const updateItems = (items: any[]) => {
     setDataSource(items);
     onItemsChange?.(items);
+  };
+
+  const sanitizeItems = (items: any[]) =>
+    items.map((item) => ({
+      ...item,
+      return_quantity: toSafeInt(item.return_quantity),
+      used_quantity: toSafeInt(item.used_quantity),
+    }));
+
+  const validateItems = (items: any[]) => {
+    const seenFulfillmentLineIds = new Set<string>();
+
+    for (const item of items) {
+      const qtyToReturn = toSafeInt(item.return_quantity);
+      const qtyUsed = toSafeInt(item.used_quantity);
+      const availableQty = toSafeInt(item.availableQty);
+      const totalHandled = qtyToReturn + qtyUsed;
+
+      // Handle comma-separated fulfillmentLineIds (e.g., "1018,1019")
+      const fulfillmentLineIdStr = String(item.fulfillmentLineId).trim();
+      if (fulfillmentLineIdStr) {
+        const firstId = fulfillmentLineIdStr.split(',')[0].trim();
+        if (Number.isFinite(Number(firstId))) {
+          if (seenFulfillmentLineIds.has(fulfillmentLineIdStr)) {
+            return `Duplicate fulfillment line selected: ${fulfillmentLineIdStr}.`;
+          }
+          seenFulfillmentLineIds.add(fulfillmentLineIdStr);
+        }
+      }
+
+      if (totalHandled <= 0) {
+        return `Please enter quantity for ${item.part_number || item.itemId || "selected item"}.`;
+      }
+
+      if (totalHandled > availableQty) {
+        return `Quantity for ${item.part_number || item.itemId || "selected item"} exceeds available (${availableQty}).`;
+      }
+    }
+
+    return null;
   };
 
   const columns: ProColumns<any>[] = [
@@ -94,12 +146,20 @@ export default function FormModalSelectItems({
       dataIndex: "return_quantity",
       width: 120,
       valueType: "digit",
+      fieldProps: {
+        min: 0,
+        precision: 0,
+      },
     },
     {
       title: "Used QTY",
       dataIndex: "used_quantity",
       width: 120,
       valueType: "digit",
+      fieldProps: {
+        min: 0,
+        precision: 0,
+      },
     },
     {
       title: "UoM",
@@ -155,6 +215,12 @@ export default function FormModalSelectItems({
       return;
     }
 
+    const validationError = validateItems(dataSource);
+    if (validationError) {
+      message.error(validationError);
+      return;
+    }
+
     setRemarkError("");
     Modal.confirm({
     title: "Submit return request",
@@ -183,7 +249,7 @@ export default function FormModalSelectItems({
         rowKey="id"
         columns={columns}
         value={dataSource}
-        onChange={(value) => updateItems([...value])}
+        onChange={(value) => updateItems(sanitizeItems([...value]))}
         recordCreatorProps={false}
         editable={{
           type: "multiple",
@@ -205,13 +271,13 @@ export default function FormModalSelectItems({
           ],
           onSave: async (rowKey, data) => {
             updateItems(
-              dataSource.map((item) =>
+              sanitizeItems(dataSource.map((item) =>
                 item.id === rowKey ? { ...item, ...data } : item
-              )
+              ))
             );
           },
           onValuesChange: (_, recordList) => {
-            updateItems([...recordList]);
+            updateItems(sanitizeItems([...recordList]));
           },
         }}
       />

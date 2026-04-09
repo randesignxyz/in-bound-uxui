@@ -13,7 +13,7 @@ import {
   Modal,
   InputNumber,
 } from 'antd';
-import { CheckCircleOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
+import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus } from './data';
@@ -1355,14 +1355,31 @@ export default function RequestedBatchDrawer({
       </Card>
     ) : null;
 
+  const headerActions =
+    access.canSpfApprover && effectiveStatus === 'pending' ? (
+      <Space>
+        <Button danger onClick={() => setActionPopup('reject')}>
+          Reject
+        </Button>
+        <Button type="primary" onClick={() => setActionPopup('approve')}>
+          Approve
+        </Button>
+      </Space>
+    ) : access.canSpfRequester && effectiveStatus === 'rejected' ? (
+      <Button type="primary" onClick={() => onResubmitRequest?.(data)}>
+        Re-submit Request
+      </Button>
+    ) : null;
+
   return (
     <>
       <Drawer
-      title={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Request Details</span>
-        </div>
-          }
+        title={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+            <span>Request Details</span>
+            {headerActions}
+          </div>
+        }
           width="60%"
           placement="right"
           onClose={handleClose}
@@ -1370,25 +1387,6 @@ export default function RequestedBatchDrawer({
           bodyStyle={{ padding: 16, backgroundColor: '#fafafa' }}
           headerStyle={{ borderBottom: '1px solid #f0f0f0' }}
         >
-          {access.canSpfApprover && effectiveStatus === 'pending' && (
-            <div style={{ marginBottom: 24, textAlign: 'right' }}>
-              <Space>
-                <Button
-                  danger
-                  onClick={() => setActionPopup('reject')}
-                >
-                  Reject
-                </Button>
-                <Button
-                  type="primary"
-                  onClick={() => setActionPopup('approve')}
-                >
-                  Approve
-                </Button>
-              </Space>
-            </div>
-          )}
-
         <Descriptions
           column={3}
           size="small"
@@ -1396,11 +1394,7 @@ export default function RequestedBatchDrawer({
           labelStyle={{ textAlign: 'center', fontWeight: 'bolder' }}
           contentStyle={{ textAlign: 'center' }}
         >
-          <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
-          <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
+          {/* <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item> */}
           <Descriptions.Item label="Status">
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}
             >
@@ -1408,17 +1402,34 @@ export default function RequestedBatchDrawer({
               
             </Tag>
           </Descriptions.Item>
+          <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
+          <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
           <Descriptions.Item label="Received Items">{displayedReceivedItems}</Descriptions.Item>
-          <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
+          {/* <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item> */}
         </Descriptions>
 
-        {access.canSpfRequester && effectiveStatus === 'rejected' ? (
-          <div style={{ marginBottom: 24, textAlign: 'right' }}>
-            <Button type="primary" onClick={() => onResubmitRequest?.(data)}>
-              Re-submit Request
-            </Button>
-          </div>
+        {data.approverRemark?.trim() ? (
+          <>
+            <Title level={5} style={{ marginBottom: 8 }}>
+              Manager Remark
+            </Title>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+              {data.approverRemark.trim()}
+            </Text>
+          </>
         ) : null}
+        <Text style={{ display: 'none' }}>
+          {data.remark?.trim() ? data.remark : '—'}
+        </Text>
+
+        <Title level={5} style={{ marginBottom: 8 }}>
+          Remark
+        </Title>
+        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+          {data.remark?.trim() ? data.remark : '—'}
+        </Text>
 
         <Title level={5} style={{ marginBottom: 16 }}>
           Status Timeline
@@ -1429,13 +1440,11 @@ export default function RequestedBatchDrawer({
           style={{ marginBottom: 32 }}
           items={STATUS_STEPS.map((title, index) => ({
             title,
-            icon:
-              effectiveStatus === 'completed' && index === STATUS_STEPS.length - 1 ? (
-                <CheckCircleOutlined />
-              ) : undefined,
             status:
               effectiveStatus === 'rejected' && index === 1
                 ? 'error'
+                : effectiveStatus === 'completed' && index === STATUS_STEPS.length - 1
+                  ? 'finish'
                 : index < currentStep
                   ? 'finish'
                   : index === currentStep
@@ -1444,23 +1453,7 @@ export default function RequestedBatchDrawer({
           }))}
         />
 
-        <Title level={5} style={{ marginBottom: 8 }}>
-          Message
-        </Title>
-        <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
-          {data.remark?.trim() ? data.remark : '—'}
-        </Text>
-
-        {data.approverRemark?.trim() ? (
-          <>
-            <Title level={5} style={{ marginBottom: 8 }}>
-              Approver&apos;s Remark
-            </Title>
-            <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
-              {data.approverRemark.trim()}
-            </Text>
-          </>
-        ) : null}
+        
 
         <Title level={5} style={{ marginBottom: 16 }}>
           Items
@@ -1612,10 +1605,10 @@ export default function RequestedBatchDrawer({
         confirmText="Reject"
         danger
         showRemark
-        requireRemark={hasEditedAmount}
+        requireRemark
         remarkLabel="Remark"
         remarkPlaceholder="Please enter rejection remark"
-        remarkRequiredMessage="Remark is required when amount has been modified."
+        remarkRequiredMessage="Remark is required when rejecting a request."
         loading={actionLoading}
         onCancel={() => setActionPopup(null)}
         onConfirm={(payload) => handleRejectRequest(payload?.remark)}

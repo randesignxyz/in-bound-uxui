@@ -78,8 +78,17 @@ export default function RequestsListWarehouse() {
 
   const applyResponseUpdate = useCallback(
     (response: { record: WarehouseRequestRecord; detail: RequestDetailData }) => {
-      setRequestRows((prev) => prev.map((row) => (row.id === response.record.id ? response.record : row)));
-      setSelectedRequest((prev) => (prev?.id === response.record.id ? response.record : prev));
+      const normalizedRecord: WarehouseRequestRecord =
+        response.detail.status === 'completed'
+          ? {
+              ...response.record,
+              status: 'Completed',
+              pickupStatus: 'confirmed',
+            }
+          : response.record;
+
+      setRequestRows((prev) => prev.map((row) => (row.id === normalizedRecord.id ? normalizedRecord : row)));
+      setSelectedRequest((prev) => (prev?.id === normalizedRecord.id ? normalizedRecord : prev));
       setSelectedRequestData((prev) => (prev?.id === response.detail.id ? response.detail : response.detail));
     },
     [],

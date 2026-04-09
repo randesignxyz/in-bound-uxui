@@ -51,7 +51,8 @@ const normalizeWarehouseStatus = (status: unknown): RequestStatus => {
 };
 
 const statusColorMap: Record<RequestStatus, string> = {
-  pending: 'default',
+  // pending: 'default',
+  pending: '#bfbfbf',
   approved: 'warning',
   rejected: 'error',
   'in-progress': 'processing',
@@ -365,7 +366,9 @@ export default function RequestedBatchWareHouse({
 
     const hasReadyToPickupShipment = shipmentBatches.some((s) => s.status !== 'completed');
 
-    if (data.status === 'completed') return 'completed';
+    if (data.status === 'completed') {
+      return hasReadyToPickupShipment ? 'ready_to_Pickup' : 'completed';
+    }
     if (data.status === 'ready_to_Pickup') return 'ready_to_Pickup';
     if (data.status === 'partial') return 'partial';
     if (data.status === 'in-progress') return 'in-progress';
@@ -374,14 +377,15 @@ export default function RequestedBatchWareHouse({
 
     if (hasReadyToPickupShipment) return 'ready_to_Pickup';
 
-    if (totals.totalRequested > 0 && totals.totalSent >= totals.totalRequested) return 'completed';
     if (totals.totalSent > 0 && totals.totalSent < totals.totalRequested) return 'partial';
 
     return 'pending';
   }, [data.status, shipmentBatches, statusOverride, totals.totalRequested, totals.totalSent]);
 
-  const displayedStatusLabel = statusLabelMap[effectiveStatus];
-  const displayedStatusColor = statusColorMap[effectiveStatus];
+  const displayedStatusForTag: RequestStatus =
+    effectiveStatus === 'approved' ? 'pending' : effectiveStatus;
+  const displayedStatusLabel = statusLabelMap[displayedStatusForTag];
+  const displayedStatusColor = statusColorMap[displayedStatusForTag];
   const currentActor =
     currentUser.initialState?.currentUser?.login || data.warehouseBy || 'Warehouse';
 
@@ -878,7 +882,7 @@ export default function RequestedBatchWareHouse({
       onOk: async () => {
         setDraftDeleteLoading(true);
         try {
-          if (onDeleteDraft) {
+          if (onDeleteDraft && typeof data.id === 'number') {
             await onDeleteDraft(data.id);
           }
           setStatusOverride(null);
@@ -1008,17 +1012,24 @@ export default function RequestedBatchWareHouse({
         const current = clampInt(sendingByProductId[record.productId]);
         const stock = Number(itemDetailMap[record.productId]?.stock);
         const hasKnownStock = Number.isFinite(stock);
+        const maxSelectableQty = getMaxSelectableQty(record);
+        const isFullySent = maxSelectableQty <= 0;
         const isOutOfStock = hasKnownStock && stock <= 0;
         const exceedsAvailableQty = hasKnownStock && current > Math.max(0, stock);
+        const requestedQty = clampInt(record.quantityToReturn);
+        const sentQty = clampInt(record.warehouseSentQuantity);
+        const draftedQty = clampInt(draftByProductId[record.productId]);
+        const remainingRequestQty = Math.max(0, requestedQty - sentQty - draftedQty);
+        const exceedsRemainingRequestQty = current > remainingRequestQty;
         return (
-          <div>
+          <div style={{ width: '100%', maxWidth: 140 }}>
             <InputNumber
               style={{ width: '100%' }}
-              status={exceedsAvailableQty || isOutOfStock ? 'error' : undefined}
+              status={exceedsRemainingRequestQty || exceedsAvailableQty || isOutOfStock ? 'error' : undefined}
               value={current}
               min={1}
               max={hasKnownStock ? Math.max(0, stock) : undefined}
-              disabled={!canSelectAmount || draftDeleteLoading}
+              disabled={!canSelectAmount || draftDeleteLoading || isFullySent}
               onChange={(v) =>
                 setSendingByProductId((prev) => ({
                   ...prev,
@@ -1026,12 +1037,25 @@ export default function RequestedBatchWareHouse({
                 }))
               }
             />
-            {isOutOfStock ? (
-              <Text type="danger" style={{ fontSize: 12 }}>
+            {exceedsRemainingRequestQty ? (
+              <Text
+                type="danger"
+                style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
+              >
+                Unavailable. Remaining qty is {remainingRequestQty}.
+              </Text>
+            ) : isOutOfStock ? (
+              <Text
+                type="danger"
+                style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
+              >
                 Unavailable. Available qty is 0.
               </Text>
             ) : exceedsAvailableQty ? (
-              <Text type="danger" style={{ fontSize: 12 }}>
+              <Text
+                type="danger"
+                style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
+              >
                 Unavailable. Max available qty is {stock}.
               </Text>
             ) : null}
@@ -1187,7 +1211,16 @@ export default function RequestedBatchWareHouse({
   return (
     <>
       <Drawer
-        title="Request Details"
+        title={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+            <span>Request Details</span>
+            {showAcceptRequest ? (
+              <Button type="primary" loading={acceptLoading} onClick={handleAcceptRequest}>
+                Accept
+              </Button>
+            ) : null}
+          </div>
+        }
         width="60%"
         placement="right"
         onClose={handleClose}
@@ -1213,14 +1246,6 @@ export default function RequestedBatchWareHouse({
           </div>
         }
       >
-        {showAcceptRequest ? (
-          <div style={{ marginBottom: 24, textAlign: 'right' }}>
-            <Button type="primary" loading={acceptLoading} onClick={handleAcceptRequest}>
-              Accept
-            </Button>
-          </div>
-        ) : null}
-
         <Descriptions
           column={3}
           size="small"
@@ -1228,20 +1253,20 @@ export default function RequestedBatchWareHouse({
           labelStyle={{ textAlign: 'center', fontWeight: 'bolder' }}
           contentStyle={{ textAlign: 'center' }}
         >
-          <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
-          <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="Total Items">{data.totalItems}</Descriptions.Item>
+          {/* <Descriptions.Item label="No">{data.id ?? '—'}</Descriptions.Item> */}
           <Descriptions.Item label="Status">
             <Tag color={displayedStatusColor} bordered={false}>
               {displayedStatusLabel}
             </Tag>
           </Descriptions.Item>
+          <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
+          <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="Total Items">{data.totalItems}</Descriptions.Item>
           <Descriptions.Item label="Sent Qty">
             {totals.totalSent} / {totals.totalRequested}
           </Descriptions.Item>
-          <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item>
+          {/* <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item> */}
         </Descriptions>
         
 
@@ -1254,13 +1279,11 @@ export default function RequestedBatchWareHouse({
           style={{ marginBottom: 32 }}
           items={STATUS_STEPS.map((title, index) => ({
             title,
-            icon:
-              effectiveStatus === 'completed' && index === STATUS_STEPS.length - 1 ? (
-                <CheckCircleOutlined />
-              ) : undefined,
             status:
               effectiveStatus === 'rejected' && index === 1
                 ? 'error'
+                : effectiveStatus === 'completed' && index === STATUS_STEPS.length - 1
+                  ? 'finish'
                 : index < currentStep
                   ? 'finish'
                   : index === currentStep

@@ -326,6 +326,22 @@ const resolveCategoryName = (
   category?: { id?: number | null; category_name?: string | null } | string | null,
 ): string | undefined => (typeof category === 'string' ? category : category?.category_name || undefined);
 
+const APPROVAL_METADATA_PREFIX = 'SPF_APPROVAL_QTY_V1:';
+const APPROVAL_REMARK_DELIMITER = '|REMARK:';
+
+const extractApproverRemark = (value?: string | null): string | undefined => {
+  const normalized = String(value || '').trim();
+  if (!normalized) return undefined;
+  if (!normalized.startsWith(APPROVAL_METADATA_PREFIX)) return normalized;
+
+  const remark = normalized
+    .slice(APPROVAL_METADATA_PREFIX.length)
+    .split(APPROVAL_REMARK_DELIMITER)[1]
+    ?.trim();
+
+  return remark || undefined;
+};
+
 const normalizeRequestStatus = (
   status?: BackendRequestStatus,
   totalIssuedQty: number = 0,
@@ -443,7 +459,7 @@ export const mapMyRequestItem = (item: MyRequestDto): MyRequestItem => {
     requestNo: item.requestNo || undefined,
     requestedBy: item.requestId,
     approvedBy: item.managerId || undefined,
-    approverRemark: item.managerRemark || undefined,
+    approverRemark: extractApproverRemark(item.managerRemark),
     priority: normalizePriority(item.priority),
     requestDate: item.requestedDate || item.requestDate || '',
     category: requestCategory,
@@ -619,6 +635,15 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     const rightTime = new Date(right.issuedAt || '').getTime();
     return leftTime - rightTime;
   });
+  const confirmedHistory = history.filter((entry) => Boolean(entry.pickupConfirmedAt));
+  const hasAllShipmentsConfirmed = history.length > 0 && confirmedHistory.length === history.length;
+  const finalConfirmedEntry = hasAllShipmentsConfirmed
+    ? [...confirmedHistory].sort((left, right) => {
+        const leftTime = new Date(left.pickupConfirmedAt || left.issuedAt || item.requestedDate || '').getTime();
+        const rightTime = new Date(right.pickupConfirmedAt || right.issuedAt || item.requestedDate || '').getTime();
+        return leftTime - rightTime;
+      })[confirmedHistory.length - 1]
+    : undefined;
   const lineItemByRequestLineId = new Map(items.map((line) => [Number(line.requestLineId || 0), line]));
 
   const activities: RequestDetailActivity[] = [
@@ -678,10 +703,10 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
         dot: 'done',
       });
 
-      const isLastShipment = shipmentNo === history.length;
       const hasMoreToIssue = Number(item.totalRemainingQty || 0) > 0;
+      const isFinalConfirmedShipment = finalConfirmedEntry?.fulfillmentId === entry.fulfillmentId;
 
-      if (hasMoreToIssue || !isLastShipment) {
+      if (hasMoreToIssue || !isFinalConfirmedShipment) {
         activities.push({
           label: `Partial Pick up #${shipmentNo}`,
           description: `Picked ${Number(entry.totalIssuedQty || 0)} item(s)`,
@@ -693,13 +718,12 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     }
   });
 
-  if (rawStatus === 'COMPLETE' && normalizedPickupStatus === 'confirmed' && history.length > 0) {
-    const lastHistory = history[history.length - 1];
+  if (hasAllShipmentsConfirmed && finalConfirmedEntry) {
     activities.push({
       label: 'Completed',
       description: 'Picked up all requested items',
-      date: lastHistory.pickupConfirmedAt || lastHistory.issuedAt || item.requestedDate,
-      by: lastHistory.pickupConfirmedBy || lastHistory.warehouseStaffId || undefined,
+      date: finalConfirmedEntry.pickupConfirmedAt || finalConfirmedEntry.issuedAt || item.requestedDate,
+      by: finalConfirmedEntry.pickupConfirmedBy || finalConfirmedEntry.warehouseStaffId || undefined,
       dot: 'done',
     });
   }
@@ -752,7 +776,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     remark: item.remark || '',
     requestedBy: item.requesterId || undefined,
     approvedBy: item.approverId || undefined,
-    approverRemark: item.managerRemark || undefined,
+    approverRemark: extractApproverRemark(item.managerRemark),
     warehouseBy: history[history.length - 1]?.warehouseStaffId || history[0]?.warehouseStaffId || undefined,
     items,
     activities,

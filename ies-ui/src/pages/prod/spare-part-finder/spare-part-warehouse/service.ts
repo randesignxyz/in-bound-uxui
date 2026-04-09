@@ -79,6 +79,13 @@ type IssueRequestDto = {
   history?: IssueHistoryDto[];
   draftItems?: Array<{ requestLineId: number; draftQty: number }>;
   pickupStatus?: string | null;
+  activities?: Array<{
+    label?: string | null;
+    description?: string | null;
+    date?: string | null;
+    by?: string | null;
+    dot?: 'pending' | 'done' | string | null;
+  }>;
 };
 
 type ExecResponseDto<T> = {
@@ -485,7 +492,23 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
     approvedBy: item.approverId || undefined,
     warehouseBy: item.history?.[item.history.length - 1]?.warehouseStaffId || 'Warehouse',
     items: (item.items || []).map((line, index) => mapIssueLineDetail(line, item.requestNo || '', index)),
-    activities: buildActivities(item, normalizedStatus),
+    activities: (item.activities || []).map((activity) => ({
+      label: String(activity.label || '').trim(),
+      description: String(activity.description || '').trim(),
+      date: activity.date || item.requestedDate,
+      by: activity.by?.trim() ? activity.by.trim() : undefined,
+      dot: activity.dot === 'pending' ? 'pending' : 'done',
+    })),
+    // activities:
+    //   (item.activities || []).length > 0
+    //     ? (item.activities || []).map((activity) => ({
+    //         label: String(activity.label || '').trim(),
+    //         description: String(activity.description || '').trim(),
+    //         date: activity.date || item.requestedDate,
+    //         by: activity.by?.trim() ? activity.by.trim() : undefined,
+    //         dot: activity.dot === 'pending' ? 'pending' : 'done',
+    //       }))
+    //     : buildActivities(item, normalizedStatus),
     shipments: buildShipments(item.history || []),
     draftItems: (item.draftItems || []).map((entry) => ({
       requestLineId: Number(entry.requestLineId || 0),

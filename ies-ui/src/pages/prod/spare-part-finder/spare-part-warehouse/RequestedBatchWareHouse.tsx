@@ -25,7 +25,7 @@ import type { WarehouseRequestRecord } from './requestsWarehouse.shared';
 import type { Shipment, ShipmentLine } from '../shipmentsStore';
 import { formatSpfDateTime } from '../shared/dateTime';
 import ValidationPopup from '../spare-part-request/validatePopup';
-import { SparePartRequestAPI } from '../spare-part-request/service.api';
+import { SparePartRequestAPI, uploadFilesToFileService } from '../spare-part-request/service.api';
 import { simpleRequestActions } from '@/services/model';
 
 const { Title, Text } = Typography;
@@ -66,9 +66,9 @@ function statusToCurrentStep(status: RequestStatus): number {
     case 'pending':
       return 0;
     case 'approved':
-    case 'in-progress':
     case 'rejected':
       return 1;
+    case 'in-progress':
     case 'partial':
     case 'ready_to_Pickup':
       return 2;
@@ -180,7 +180,10 @@ const getActivityRank = (label?: string): number => {
   if (normalized === 'requested') return 1;
   if (normalized === 'approved') return 2;
   if (normalized === 'rejected') return 2;
-  if (normalized === 'confirmed') return 3;
+  if (normalized === 'in progress' || normalized === 'confirmed') return 3;
+  if (normalized === 'draft saved') return 4;
+  if (normalized === 'draft updated') return 4;
+  if (normalized === 'draft deleted') return 4;
   if (normalized === 'ready to pick up') return 4;
   if (normalized === 'confirm pick up') return 5;
   if (/^partial issue #\d+$/i.test(normalized)) return 6;
@@ -361,6 +364,16 @@ export default function RequestedBatchWareHouse({
     [sendingByProductId],
   );
 
+  const hasWarehouseAcceptedSignal = useMemo(() => {
+    const rawStatus = String(data.rawStatus || '').trim().toUpperCase();
+    if (rawStatus === 'IN_PROGRESS') return true;
+
+    return (data.activities || []).some((activity) => {
+      const normalizedLabel = String(activity.label || '').trim().toLowerCase();
+      return normalizedLabel === 'confirmed' || normalizedLabel === 'in progress';
+    });
+  }, [data.activities, data.rawStatus]);
+
   const effectiveStatus: RequestStatus = useMemo(() => {
     if (statusOverride) return statusOverride;
 
@@ -372,6 +385,7 @@ export default function RequestedBatchWareHouse({
     if (data.status === 'ready_to_Pickup') return 'ready_to_Pickup';
     if (data.status === 'partial') return 'partial';
     if (data.status === 'in-progress') return 'in-progress';
+    if (data.status === 'approved' && hasWarehouseAcceptedSignal) return 'in-progress';
     if (data.status === 'approved') return 'approved';
     if (data.status === 'rejected') return 'rejected';
 
@@ -380,7 +394,7 @@ export default function RequestedBatchWareHouse({
     if (totals.totalSent > 0 && totals.totalSent < totals.totalRequested) return 'partial';
 
     return 'pending';
-  }, [data.status, shipmentBatches, statusOverride, totals.totalRequested, totals.totalSent]);
+  }, [data.status, hasWarehouseAcceptedSignal, shipmentBatches, statusOverride, totals.totalRequested, totals.totalSent]);
 
   const displayedStatusForTag: RequestStatus =
     effectiveStatus === 'approved' ? 'pending' : effectiveStatus;
@@ -570,6 +584,32 @@ export default function RequestedBatchWareHouse({
         setSpfLoading(false);
       }
     }
+  };
+
+  const handleUploadProductImages = async (files: File[]) => {
+    if (!selectedProductDetail?.productId) return;
+    const uploadedImageIds = await uploadFilesToFileService(files);
+    if (uploadedImageIds.length === 0) {
+      throw new Error('No image uploaded');
+    }
+
+    const updatedDetail = await sparePartServices.updateImages(selectedProductDetail.productId, uploadedImageIds);
+    setSelectedProductDetail(updatedDetail);
+    setItemDetailMap((prev) => ({
+      ...prev,
+      [selectedProductDetail.productId]: updatedDetail,
+    }));
+  };
+
+  const handleDeleteProductImage = async (imageId: string) => {
+    if (!selectedProductDetail?.productId) return;
+
+    const updatedDetail = await sparePartServices.deleteImages(selectedProductDetail.productId, [imageId]);
+    setSelectedProductDetail(updatedDetail);
+    setItemDetailMap((prev) => ({
+      ...prev,
+      [selectedProductDetail.productId]: updatedDetail,
+    }));
   };
 
   const displayActivityLogs = useMemo(() => {
@@ -1477,6 +1517,9 @@ export default function RequestedBatchWareHouse({
           setSpfLoading(false);
           setSpfError(null);
         }}
+        canManageImages={canWarehouseOperate}
+        onUploadImages={handleUploadProductImages}
+        onDeleteImage={handleDeleteProductImage}
       />
     </>
   );

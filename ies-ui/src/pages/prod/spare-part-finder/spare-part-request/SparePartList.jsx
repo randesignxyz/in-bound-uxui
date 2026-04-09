@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import RequestItemModal from './requestItem';
-import { fetchSparePartCategories, SparePartRequestAPI } from './service.api';
+import { fetchSparePartCategories, SparePartRequestAPI, uploadFilesToFileService } from './service.api';
 import { SparePartRequestService } from './service';
 import SparePartImage from './SparePartImage';
 import SpfDetails from './SpfDetails';
@@ -61,6 +61,8 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const { RangePicker } = DatePicker;
   const canSeeWarehouseLocation = access.canSpfWarehouseStaff || access.canAdmin;
   const canSeeStatusFilter = access.canSpfWarehouseStaff || access.canAdmin;
+  const canSelectRows = access.canSpfRequester || access.canSpfApprover;
+  const canManageImages = access.canSpfWarehouseStaff || access.canAdmin;
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -388,6 +390,26 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     closeDetails();
   };
 
+  const handleUploadProductImages = async (files) => {
+    if (!detailsItem?.productId) return;
+    const uploadedImageIds = await uploadFilesToFileService(files);
+    if (!uploadedImageIds.length) {
+      throw new Error('No image uploaded');
+    }
+
+    const updatedDetail = await services.updateImages(detailsItem.productId, uploadedImageIds);
+    setDetailsItem(updatedDetail);
+    reloadTable(false);
+  };
+
+  const handleDeleteProductImage = async (imageId) => {
+    if (!detailsItem?.productId) return;
+
+    const updatedDetail = await services.deleteImages(detailsItem.productId, [imageId]);
+    setDetailsItem(updatedDetail);
+    reloadTable(false);
+  };
+
 
   return (
     <>
@@ -515,24 +537,29 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50],
           }}
-          rowSelection={{
-            selectedRowKeys,
-            onChange: (keys, rows) => {
-              syncSelection((keys || []).map((key) => String(key)), rows || []);
-            },
-          }}
+          rowSelection={
+            canSelectRows
+              ? {
+                  selectedRowKeys,
+                  onChange: (keys, rows) => {
+                    syncSelection((keys || []).map((key) => String(key)), rows || []);
+                  },
+                }
+              : undefined
+          }
           rowClassName={(record) =>
-            selectedRowKeys.includes(String(record.id)) ? 'ant-table-row-selected' : ''
+            canSelectRows && selectedRowKeys.includes(String(record.id)) ? 'ant-table-row-selected' : ''
           }
           onRow={(record) => ({
             onClick: (event) => {
+              if (!canSelectRows) return;
               const target = event.target;
               if (target instanceof HTMLElement && target.closest('a, button, input, textarea, .ant-select')) {
                 return;
               }
               handleToggleRowSelection(record);
             },
-            style: { cursor: 'pointer' },
+            style: { cursor: canSelectRows ? 'pointer' : 'default' },
           })}
           toolBarRender={() => [
             <Space key="spr-action-bar" size="small">
@@ -651,10 +678,12 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
               {
               dataIndex: 'edit',
               width: 40,
-              render: () =>(
+              render: (_, record) =>(
                 <a
                   style={{ color: '#1890ff', fontSize: 16, cursor: 'pointer' }}
-                  onClick={() => {}}>
+                  onClick={() => {
+                    openDetails(record);
+                  }}>
                   Edit
                 </a>
               )
@@ -740,6 +769,9 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         onRequestParts={detailsItem ? handleRequestPartsFromDetails : undefined}
         onInventoryLog={() => {}}
         EditImage={undefined}
+        canManageImages={canManageImages}
+        onUploadImages={canManageImages ? handleUploadProductImages : undefined}
+        onDeleteImage={canManageImages ? handleDeleteProductImage : undefined}
       />
 
     </>

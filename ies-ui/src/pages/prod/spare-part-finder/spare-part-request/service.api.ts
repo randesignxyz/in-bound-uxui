@@ -102,6 +102,18 @@ const SparePartRequestTestAction = {
       productId: params.productId,
     },
   }),
+  updateImages: (payload: { productId: string; images: string[] }): ServiceApiType<{ productId: string; images: string[] }> => ({
+    type: 'EXEC',
+    endpoint: 'PROD',
+    actionName: 'update-spare-part-images',
+    payload,
+  }),
+  deleteImages: (payload: { productId: string; images: string[] }): ServiceApiType<{ productId: string; images: string[] }> => ({
+    type: 'EXEC',
+    endpoint: 'PROD',
+    actionName: 'delete-spare-part-images',
+    payload,
+  }),
   // createRequest: 
 };
 
@@ -212,7 +224,48 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
     );
     return mapItem(response as SparePartRequestListApiItem);
   },
+  updateImages: async (productId: string, images: string[]): Promise<SparePartRequestItem> => {
+    const response = await singleRequest<any>(SparePartRequestTestAction.updateImages({ productId, images }))(
+      requestAction,
+    );
+    const payload = response?.data ?? response;
+    return mapItem(payload as SparePartRequestListApiItem);
+  },
+  deleteImages: async (productId: string, images: string[]): Promise<SparePartRequestItem> => {
+    const response = await singleRequest<any>(SparePartRequestTestAction.deleteImages({ productId, images }))(
+      requestAction,
+    );
+    const payload = response?.data ?? response;
+    return mapItem(payload as SparePartRequestListApiItem);
+  },
 });
+
+export const uploadFilesToFileService = async (files: File[]): Promise<string[]> => {
+  const token = localStorage.getItem('accessToken');
+  const uploadUrl = `${getServiceUrl('FILE')}/upload`;
+  const ids: string[] = [];
+
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      throw new Error(`Upload failed: ${res.status}`);
+    }
+    const fileId = await res.text();
+    const normalizedId = fileId.replace(/"/g, '').trim();
+    if (normalizedId) {
+      ids.push(normalizedId);
+    }
+  }
+
+  return ids;
+};
 
 export const fetchSparePartCategories = async (): Promise<SparePartCategoryApiItem[]> => {
   const token = localStorage.getItem('accessToken');

@@ -1,12 +1,16 @@
-import { Alert, Badge, Button, Card, Col, Drawer, Row, Skeleton, Typography } from "antd";
+import { Alert, Badge, Button, Card, Col, Drawer, Row, Skeleton, Typography, Upload, message, Modal } from "antd";
 import { 
   InboxOutlined, 
   SettingOutlined, 
-  FileTextOutlined
+  FileTextOutlined,
+  DeleteOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
+import { useAccess } from '@umijs/max';
 import { useEffect, useMemo, useState } from 'react';
 import SparePartImage from './SparePartImage';
 import { formatSpfDateTime } from '../shared/dateTime';
+import type { UploadProps } from 'antd';
 
 const { Title, Text } = Typography;
 const LOW_STOCK_THRESHOLD = 5;
@@ -21,6 +25,9 @@ interface DrawerViewItemProps {
   onRequestParts?: () => void;
   onInventoryLog?: () => void;
   EditImage?: () => void;
+  canManageImages?: boolean;
+  onUploadImages?: (files: File[]) => Promise<void>;
+  onDeleteImage?: (imageId: string) => Promise<void>;
 }
 
 type DetailLocation = {
@@ -57,13 +64,19 @@ export default function SpfDetails({
   onClose, 
   onRequestParts,
   onInventoryLog,
-  EditImage
+  EditImage,
+  canManageImages = false,
+  onUploadImages,
+  onDeleteImage,
 }: DrawerViewItemProps) {
+  const access = useAccess();
+  const canRequestParts = access.canSpfRequester || access.canSpfApprover;
   const imageIds: string[] = Array.isArray(data?.imageId) ? data.imageId.filter(Boolean) : [];
   const locations: DetailLocation[] = Array.isArray(data?.locations) ? data.locations : [];
   const firstLocation = locations[0];
   const firstImageId = imageIds[0];
   const [selectedImageId, setSelectedImageId] = useState<string | undefined>(firstImageId);
+  const [imageTransitioning, setImageTransitioning] = useState(false);
   const hasLiveData = Boolean(
     data &&
       (
@@ -85,12 +98,21 @@ export default function SpfDetails({
     () => selectedImageId || firstImageId,
     [selectedImageId, firstImageId],
   );
+
+  useEffect(() => {
+    if (!open || !mainImageId) return;
+    setImageTransitioning(true);
+    const timeout = window.setTimeout(() => setImageTransitioning(false), 180);
+    return () => window.clearTimeout(timeout);
+  }, [mainImageId, open]);
   const availableStock = hasLiveData
     ? Number(data?.stock_quantity ?? firstLocation?.availableQty ?? 0)
     : undefined;
   const normalizedAvailableStock =
     typeof availableStock === 'number' && Number.isFinite(availableStock) ? availableStock : null;
   const stockBadge = normalizedAvailableStock == null ? null : getStockBadge(normalizedAvailableStock);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
   const displayCategory =
     typeof data?.category === 'object' ? data?.category?.category_name || '-' : data?.category || '-';
   const displayPartNumber = data?.part_number || '-';
@@ -104,6 +126,50 @@ export default function SpfDetails({
     data?.updated_date ||
     firstLocation?.lastSyncedAt ||
     data?.requested_date;
+
+  const handleBeforeUpload: UploadProps['beforeUpload'] = async (file) => {
+    if (!canManageImages || !onUploadImages) return;
+
+    setImageUploading(true);
+    try {
+      await onUploadImages([file as File]);
+      message.success('Image uploaded');
+    } catch (error) {
+      console.error('Failed to upload spare part image', error);
+      message.error(
+        error instanceof Error && error.message ? `Failed to upload image: ${error.message}` : 'Failed to upload image',
+      );
+    } finally {
+      setImageUploading(false);
+    }
+    return Upload.LIST_IGNORE;
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    if (!canManageImages || !onDeleteImage) return;
+    setDeletingImageId(imageId);
+    try {
+      await onDeleteImage(imageId);
+      message.success('Image deleted');
+    } catch (error) {
+      console.error('Failed to delete spare part image', error);
+      message.error('Failed to delete image');
+    } finally {
+      setDeletingImageId(null);
+    }
+  };
+
+  const confirmDeleteImage = (imageId: string) => {
+    Modal.confirm({
+      centered: true,
+      title: 'Delete this image?',
+      content: 'This image will be removed from the item.',
+      okText: 'Delete',
+      cancelText: 'Cancel',
+      okButtonProps: { danger: true },
+      onOk: () => handleDeleteImage(imageId),
+    });
+  };
   
   return (
     <Drawer
@@ -160,11 +226,19 @@ export default function SpfDetails({
               alignItems: 'center',
             }}
           >
-            <SparePartImage
-              imageId={mainImageId}
-              alt={data?.spare_part_name || data?.part_number}
-              size={280}
-            />
+            <div
+              style={{
+                transition: 'opacity 180ms ease, transform 180ms ease',
+                opacity: imageTransitioning ? 0.55 : 1,
+                transform: imageTransitioning ? 'scale(0.985)' : 'scale(1)',
+              }}
+            >
+              <SparePartImage
+                imageId={mainImageId}
+                alt={data?.spare_part_name || data?.part_number}
+                size={280}
+              />
+            </div>
 
             {imageIds.length > 1 && (
               <div
@@ -180,36 +254,105 @@ export default function SpfDetails({
                 {imageIds.map((id, index) => {
                   const isActive = id === mainImageId;
                   return (
-                    <button
-                      key={`${id}-${index}`}
-                      type="button"
-                      onClick={() => setSelectedImageId(id)}
-                      style={{
-                        border: isActive ? '2px solid #d4a574' : '1px solid #d9d9d9',
-                        borderRadius: 8,
-                        padding: 4,
-                        background: '#fff',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <SparePartImage
-                        imageId={id}
-                        alt={data?.spare_part_name || data?.part_number}
-                        size={64}
-                      />
-                    </button>
+                    <div key={`${id}-${index}`} style={{ position: 'relative' }}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedImageId(id)}
+                        style={{
+                          border: isActive ? '2px solid #d4a574' : '1px solid #d9d9d9',
+                          borderRadius: 8,
+                          padding: 4,
+                          background: '#fff',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <SparePartImage
+                          imageId={id}
+                          alt={data?.spare_part_name || data?.part_number}
+                          size={64}
+                        />
+                      </button>
+                      {canManageImages ? (
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<DeleteOutlined />}
+                          loading={deletingImageId === id}
+                          onClick={() => confirmDeleteImage(id)}
+                          style={{
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            background: '#fff',
+                            border: '1px solid #f0f0f0',
+                            borderRadius: '50%',
+                          }}
+                        />
+                      ) : null}
+                    </div>
                   );
                 })}
+                {canManageImages ? (
+                  <div
+                    style={{
+                      minHeight: 72,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Upload
+                      multiple
+                      beforeUpload={handleBeforeUpload}
+                      showUploadList={false}
+                      disabled={imageUploading}
+                    >
+                      <Button icon={<UploadOutlined />} loading={imageUploading}>
+                        Upload
+                      </Button>
+                    </Upload>
+                  </div>
+                ) : null}
               </div>
             )}
+            {imageIds.length === 1 && canManageImages ? (
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: 12 }}>
+                <Upload
+                  multiple
+                  beforeUpload={handleBeforeUpload}
+                  showUploadList={false}
+                  disabled={imageUploading}
+                >
+                  <Button icon={<UploadOutlined />} loading={imageUploading}>
+                    Upload
+                  </Button>
+                </Upload>
+                <Button icon={<DeleteOutlined />} loading={deletingImageId === mainImageId} onClick={() => confirmDeleteImage(mainImageId!)}>
+                  Delete
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : (
-          <SparePartImage
-            imageId={data?.imageId}
-            src={data?.image}
-            alt={data?.spare_part_name || data?.part_number}
-            size={280}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+            <SparePartImage
+              imageId={data?.imageId}
+              src={data?.image}
+              alt={data?.spare_part_name || data?.part_number}
+              size={280}
+            />
+            {canManageImages ? (
+              <Upload
+                multiple
+                beforeUpload={handleBeforeUpload}
+                showUploadList={false}
+                disabled={imageUploading}
+              >
+                <Button icon={<UploadOutlined />} loading={imageUploading}>
+                  Upload
+                </Button>
+              </Upload>
+            ) : null}
+          </div>
         )}
       </div>
 
@@ -480,22 +623,24 @@ export default function SpfDetails({
         display: 'flex',
         gap: 12
       }}>
-        <Button 
-          type="primary"
-          block
-          disabled={!onRequestParts}
-          style={{ 
-            flex: 2
-          }}
-          onClick={onRequestParts}
-        >
-          Request Parts
-        </Button>
-         <Button         
+        {canRequestParts ? (
+          <Button 
+            type="primary"
+            block
+            disabled={!onRequestParts}
+            style={{ 
+              flex: 2
+            }}
+            onClick={onRequestParts}
+          >
+            Request Parts
+          </Button>
+        ) : null}
+         {/* <Button         
           onClick={EditImage}
         >
           Edit
-        </Button>
+        </Button> */}
       </div>
         </>
       )}

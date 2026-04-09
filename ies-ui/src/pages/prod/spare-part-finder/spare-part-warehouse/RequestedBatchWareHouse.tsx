@@ -25,7 +25,7 @@ import type { WarehouseRequestRecord } from './requestsWarehouse.shared';
 import type { Shipment, ShipmentLine } from '../shipmentsStore';
 import { formatSpfDateTime } from '../shared/dateTime';
 import ValidationPopup from '../spare-part-request/validatePopup';
-import { SparePartRequestAPI } from '../spare-part-request/service.api';
+import { SparePartRequestAPI, uploadFilesToFileService } from '../spare-part-request/service.api';
 import { simpleRequestActions } from '@/services/model';
 
 const { Title, Text } = Typography;
@@ -584,6 +584,32 @@ export default function RequestedBatchWareHouse({
         setSpfLoading(false);
       }
     }
+  };
+
+  const handleUploadProductImages = async (files: File[]) => {
+    if (!selectedProductDetail?.productId) return;
+    const uploadedImageIds = await uploadFilesToFileService(files);
+    if (uploadedImageIds.length === 0) {
+      throw new Error('No image uploaded');
+    }
+
+    const updatedDetail = await sparePartServices.updateImages(selectedProductDetail.productId, uploadedImageIds);
+    setSelectedProductDetail(updatedDetail);
+    setItemDetailMap((prev) => ({
+      ...prev,
+      [selectedProductDetail.productId]: updatedDetail,
+    }));
+  };
+
+  const handleDeleteProductImage = async (imageId: string) => {
+    if (!selectedProductDetail?.productId) return;
+
+    const updatedDetail = await sparePartServices.deleteImages(selectedProductDetail.productId, [imageId]);
+    setSelectedProductDetail(updatedDetail);
+    setItemDetailMap((prev) => ({
+      ...prev,
+      [selectedProductDetail.productId]: updatedDetail,
+    }));
   };
 
   const displayActivityLogs = useMemo(() => {
@@ -1491,6 +1517,9 @@ export default function RequestedBatchWareHouse({
           setSpfLoading(false);
           setSpfError(null);
         }}
+        canManageImages={canWarehouseOperate}
+        onUploadImages={handleUploadProductImages}
+        onDeleteImage={handleDeleteProductImage}
       />
     </>
   );

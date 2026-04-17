@@ -314,6 +314,7 @@ export default function MySparePartList() {
             defaultPageSize: 10,
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50],
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} lines`,
           }}
           request={async (params) => {
             const dateRange = selectedDateRange
@@ -346,7 +347,7 @@ export default function MySparePartList() {
             return {
               data: result.items,
               success: true,
-              total: result.total ?? result.items.length,
+              total: result.items.length,
             };
           }}
           rowSelection={{

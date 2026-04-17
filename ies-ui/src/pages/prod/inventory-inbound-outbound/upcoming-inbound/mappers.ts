@@ -81,6 +81,7 @@ export function mapInboundPurchaseOrder(api: InboundPurchaseOrderApi): UpcomingI
     supplier: api.supplier,
     expectedDate: api.expected_date,
     expectedTime: api.expected_time,
+    deliveryNoteNumber: api.delivery_note_number ?? undefined,
     items: api.items.map(mapInboundPurchaseOrderItem),
     totalItems: api.total_items,
     totalQty: api.total_qty,
@@ -247,6 +248,7 @@ export function mapInboundActivity(activity: InboundGrActivityApi): UpcomingInbo
   return {
     title: activity.title,
     description: activity.description ?? activity.title,
+    performedBy: activity.performedBy ?? undefined,
     timestamp: formatDisplayTimestamp(activity.timestamp),
     state: normalizeActivityState(activity.state),
     processState: normalizeEnum(activity.state, PROCESS_STATE_VALUES, undefined),

@@ -8,7 +8,6 @@ import type {
   POLinkStatus,
   PurchaseOrder,
   QcDecision,
-  SupportingDocReference,
 } from './workflow';
 
 export interface InboundPurchaseOrderSearch {
@@ -68,6 +67,7 @@ export interface InboundPurchaseOrderApi {
   supplier: string;
   expected_date: string;
   expected_time: string;
+  delivery_note_number?: string | null;
   items: InboundPoItemApi[];
   total_items: number;
   total_qty: number;
@@ -136,6 +136,7 @@ export interface InboundGrActivityApi {
   grNumber: string;
   title: string;
   description?: string | null;
+  performedBy?: string | null;
   timestamp?: string | null;
   state: string;
 }

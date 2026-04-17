@@ -1075,7 +1075,9 @@ export function GRDetailSidebar({
                   >
                     {activity.title}
                   </div>
-                  <div style={{ fontSize: 12, color: '#666' }}>{activity.description}</div>
+                  {activity.secondaryText && (
+                    <div style={{ fontSize: 12, color: '#666' }}>{activity.secondaryText}</div>
+                  )}
                   {activity.timestamp && (
                     <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
                       {activity.timestamp}

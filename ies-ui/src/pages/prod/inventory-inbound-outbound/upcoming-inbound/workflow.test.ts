@@ -1,4 +1,5 @@
 import {
+  buildReceiptTimelineActivities,
   type GoodsReceipt,
   type GRItem,
   getPurchaseOrderVendorOptions,
@@ -211,5 +212,68 @@ describe('groupReceiptItemsByPO', () => {
       displayPoNumber: 'Waiting SAP PO',
       supplier: 'Vendor Temp',
     });
+  });
+
+  it('does not double count po qty when one po item is split across multiple batch rows', () => {
+    const receipt = createReceipt();
+    const items = [
+      createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 8000, receiveQty: 2000 }),
+      createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 6000, receiveQty: 3000, batchNumber: 'BATCH-002' }),
+    ];
+
+    const groups = groupReceiptItemsByPO(receipt, items);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({
+      poNumber: 'PO-001',
+      itemCount: 2,
+      totalPoQty: 8000,
+      totalReceiveQty: 5000,
+    });
+  });
+});
+
+describe('buildReceiptTimelineActivities', () => {
+  it('shows timeline actor as the secondary line when available', () => {
+    const receipt = createReceipt({
+      processState: 'PENDING_SUPERVISOR_REVIEW',
+      displayStatus: 'Pending Supervisor Review',
+      activities: [
+        {
+          title: 'QC approved inbound receiving and forwarded it to supervisor review',
+          description: 'QC forwarded passed items to supervisor',
+          performedBy: 'qc.user',
+          timestamp: '2026-04-01 09:15:00',
+          state: 'done',
+          processState: 'PENDING_SUPERVISOR_REVIEW',
+        },
+      ],
+    });
+
+    const activities = buildReceiptTimelineActivities(receipt);
+    const qcPendingActivity = activities.find((activity) => activity.title === 'QC Passed');
+
+    expect(qcPendingActivity?.secondaryText).toBe('by qc.user');
+  });
+
+  it('hides the timeline secondary line when no actor is available', () => {
+    const receipt = createReceipt({
+      processState: 'PENDING_SUPERVISOR_REVIEW',
+      displayStatus: 'Pending Supervisor Review',
+      activities: [
+        {
+          title: 'QC approved inbound receiving and forwarded it to supervisor review',
+          description: 'QC forwarded passed items to supervisor',
+          timestamp: '2026-04-01 09:15:00',
+          state: 'done',
+          processState: 'PENDING_SUPERVISOR_REVIEW',
+        },
+      ],
+    });
+
+    const activities = buildReceiptTimelineActivities(receipt);
+    const qcPendingActivity = activities.find((activity) => activity.title === 'QC Passed');
+
+    expect(qcPendingActivity?.secondaryText).toBeUndefined();
   });
 });

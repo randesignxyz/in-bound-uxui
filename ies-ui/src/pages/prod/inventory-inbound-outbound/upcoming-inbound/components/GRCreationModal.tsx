@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Button,
@@ -99,6 +99,24 @@ function requiresTraceabilityFields(item: GRItem) {
   return !item.isMissing && item.receiveQty > 0;
 }
 
+function hasInvalidDateOrder(productDate?: string, expiryDate?: string) {
+  if (!productDate || !expiryDate) return false;
+
+  return dayjs(productDate).isAfter(dayjs(expiryDate), 'day');
+}
+
+function resolveInheritedDeliveryNoteNumber(purchaseOrders: PurchaseOrder[]): string | undefined {
+  const deliveryNotes = Array.from(
+    new Set(
+      purchaseOrders
+        .map((purchaseOrder) => purchaseOrder.deliveryNoteNumber?.trim())
+        .filter((deliveryNote): deliveryNote is string => Boolean(deliveryNote)),
+    ),
+  );
+
+  return deliveryNotes.length === 1 ? deliveryNotes[0] : undefined;
+}
+
 function renderRequiredLabel(label: string) {
   return (
     <span>
@@ -132,6 +150,8 @@ export function GRCreationModal({
   const selectedVendor = getCombinedPurchaseOrderVendor(purchaseOrders) || supplierNames[0] || '';
   const receiptType = deriveReceiptType(purchaseOrders);
   const firstPO = purchaseOrders[0];
+  const inheritedDeliveryNoteNumber = resolveInheritedDeliveryNoteNumber(purchaseOrders);
+  const isDeliveryNoteInherited = Boolean(!initialReceipt && !correctionMode && inheritedDeliveryNoteNumber);
 
   const [postingDate, setPostingDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [actualReceiptDate, setActualReceiptDate] = useState(dayjs().format('YYYY-MM-DD'));
@@ -168,6 +188,11 @@ export function GRCreationModal({
         ...prev,
         [`${String(field)}-${index}`]: false,
       };
+
+      if (field === 'productDate' || field === 'expiryDate') {
+        delete nextErrors[`productDate-${index}`];
+        delete nextErrors[`expiryDate-${index}`];
+      }
 
       if (field === 'receiveQty' && nextItem && !requiresTraceabilityFields(nextItem)) {
         delete nextErrors[`productDate-${index}`];
@@ -237,6 +262,10 @@ export function GRCreationModal({
       if (requiresTraceabilityFields(item)) {
         if (!item.productDate) nextErrors[`productDate-${index}`] = true;
         if (!item.expiryDate) nextErrors[`expiryDate-${index}`] = true;
+        if (hasInvalidDateOrder(item.productDate, item.expiryDate)) {
+          nextErrors[`productDate-${index}`] = true;
+          nextErrors[`expiryDate-${index}`] = true;
+        }
         if (!item.batchNumber.trim()) nextErrors[`batchNumber-${index}`] = true;
       }
     });
@@ -247,6 +276,37 @@ export function GRCreationModal({
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
+  };
+
+  const validateDraftDateOrder = () => {
+    const nextDateErrors: Record<string, boolean> = {};
+
+    items.forEach((item, index) => {
+      if (!requiresTraceabilityFields(item)) {
+        return;
+      }
+
+      if (hasInvalidDateOrder(item.productDate, item.expiryDate)) {
+        nextDateErrors[`productDate-${index}`] = true;
+        nextDateErrors[`expiryDate-${index}`] = true;
+      }
+    });
+
+    setErrors((prev) => {
+      const next = { ...prev };
+
+      items.forEach((_, index) => {
+        delete next[`productDate-${index}`];
+        delete next[`expiryDate-${index}`];
+      });
+
+      return {
+        ...next,
+        ...nextDateErrors,
+      };
+    });
+
+    return Object.keys(nextDateErrors).length === 0;
   };
 
   const buildGRData = (
@@ -303,6 +363,7 @@ export function GRCreationModal({
   };
 
   const handleSaveDraft = async () => {
+    if (!validateDraftDateOrder()) return;
     setIsSubmitting(true);
     try {
       const supportingDocs = await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
@@ -422,14 +483,14 @@ export function GRCreationModal({
 
     setPostingDate(dayjs().format('YYYY-MM-DD'));
     setActualReceiptDate(dayjs().format('YYYY-MM-DD'));
-    setDeliveryNoteNumber('');
+    setDeliveryNoteNumber(inheritedDeliveryNoteNumber || '');
     setItems(buildInitialItems(purchaseOrders));
     setUploadedFiles([]);
     setErrors({});
     setStoredOnHoldConfirmed(false);
     setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
     closeScanModal();
-  }, [initialReceipt, open, purchaseOrders]);
+  }, [correctionMode, inheritedDeliveryNoteNumber, initialReceipt, open, purchaseOrders]);
 
   const groupedItems = purchaseOrders.map((purchaseOrder) => ({
     poNumber: purchaseOrder.poNumber,
@@ -535,6 +596,9 @@ export function GRCreationModal({
           onChange={(date) =>
             updateItem(record.index, 'productDate', date ? date.format('YYYY-MM-DD') : '')
           }
+          disabledDate={(current) =>
+            Boolean(record.expiryDate) && current.isAfter(dayjs(record.expiryDate), 'day')
+          }
           disabled={record.isMissing}
           status={errors[`productDate-${record.index}`] ? 'error' : undefined}
         />
@@ -550,6 +614,9 @@ export function GRCreationModal({
           value={record.expiryDate ? dayjs(record.expiryDate) : null}
           onChange={(date) =>
             updateItem(record.index, 'expiryDate', date ? date.format('YYYY-MM-DD') : '')
+          }
+          disabledDate={(current) =>
+            Boolean(record.productDate) && current.isBefore(dayjs(record.productDate), 'day')
           }
           disabled={record.isMissing}
           status={errors[`expiryDate-${record.index}`] ? 'error' : undefined}
@@ -702,13 +769,20 @@ export function GRCreationModal({
                   label="Delivery Note Number"
                   required
                   validateStatus={errors.deliveryNote ? 'error' : undefined}
-                  help={errors.deliveryNote ? 'Required' : undefined}
+                  help={
+                    errors.deliveryNote
+                      ? 'Required'
+                      : isDeliveryNoteInherited
+                        ? 'Inherited from the previous approved receiving for the selected PO.'
+                        : undefined
+                  }
                 >
                   <Input
                     placeholder="From truck paperwork"
                     size="middle"
                     style={{ minHeight: 38 }}
                     value={deliveryNoteNumber}
+                    disabled={isDeliveryNoteInherited}
                     onChange={(event) => {
                       setDeliveryNoteNumber(event.target.value);
                       setErrors((prev) => ({ ...prev, deliveryNote: false }));
@@ -876,7 +950,7 @@ export function GRCreationModal({
                   setErrors((prev) => ({ ...prev, onHoldConfirm: false }));
                 }}
               >
-                I confirm received PM/RM is stored in On-Hold Warehouse before QC pass.
+                I confirm received PM/RM is stored in On-Hold Warehouse before QC Approve.
               </Checkbox>
             </Form.Item>
           </div>

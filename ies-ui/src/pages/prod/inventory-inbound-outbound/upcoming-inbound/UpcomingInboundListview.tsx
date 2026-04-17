@@ -1700,7 +1700,7 @@ export default function UpcomingInboundListview() {
               onViewDetail={handleOpenGRDetail}
               typeFilter={historyTypeFilter}
               statusFilter={historyStatusFilter}
-              hideSourceAndPoLink={activeRole === 'WAREHOUSE_STAFF'}
+              hideSourceAndPoLink={activeRole === 'WAREHOUSE_STAFF' || activeRole === 'WAREHOUSE_SUPERVISOR'}
               showNotificationBadge={activeRole === 'WAREHOUSE_STAFF'}
             />
           </Card>

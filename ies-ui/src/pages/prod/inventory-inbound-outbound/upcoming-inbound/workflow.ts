@@ -71,6 +71,7 @@ export interface PurchaseOrder {
   supplier: string;
   expectedDate: string;
   expectedTime: string;
+  deliveryNoteNumber?: string;
   items: POItem[];
   totalItems: number;
   totalQty: number;
@@ -128,7 +129,7 @@ export interface GRItem {
 
 type ReceiptPoGroupedItemShape = Pick<
   GRItem,
-  'poNumber' | 'supplier' | 'poQty' | 'receiveQty'
+  'poNumber' | 'supplier' | 'poQty' | 'receiveQty' | 'code'
 >;
 
 export interface ReceiptPoItemGroup<TItem extends ReceiptPoGroupedItemShape = GRItem> {
@@ -164,6 +165,8 @@ export interface GRDocumentChecklist {
 export interface GRActivity {
   title: string;
   description: string;
+  performedBy?: string;
+  secondaryText?: string;
   timestamp: string;
   state: 'done' | 'active' | 'locked';
   processState?: InboundProcessState;
@@ -271,17 +274,25 @@ export function groupReceiptItemsByPO<TItem extends ReceiptPoGroupedItemShape>(
     getReceiptPOReferences(receipt).map((reference) => [reference.poNumber, reference]),
   );
   const groupedItems = new Map<string, ReceiptPoItemGroup<TItem>>();
+  const poQtyByGroupAndItem = new Map<string, Map<string, number>>();
 
   items.forEach((item) => {
     const poNumber = normalizeReceiptItemPoNumber(receipt, item);
     const groupKey = poNumber || '__UNASSIGNED_PO__';
+    const itemKey = item.code.trim();
     const existingGroup = groupedItems.get(groupKey);
     const poReference = poNumber ? poReferencesByNumber.get(poNumber) : undefined;
+    const groupPoQtyByItem = poQtyByGroupAndItem.get(groupKey) ?? new Map<string, number>();
+    const previousPoQty = groupPoQtyByItem.get(itemKey) ?? 0;
+    const nextPoQty = Math.max(previousPoQty, item.poQty);
+
+    groupPoQtyByItem.set(itemKey, nextPoQty);
+    poQtyByGroupAndItem.set(groupKey, groupPoQtyByItem);
 
     if (existingGroup) {
       existingGroup.items.push(item);
       existingGroup.itemCount += 1;
-      existingGroup.totalPoQty += item.poQty;
+      existingGroup.totalPoQty += nextPoQty - previousPoQty;
       existingGroup.totalReceiveQty += item.receiveQty;
       return;
     }
@@ -603,6 +614,11 @@ function getActivityText(activity?: Pick<GRActivity, 'title' | 'description'>) {
   return `${activity?.title || ''} ${activity?.description || ''}`.trim();
 }
 
+function getActivitySecondaryText(performedBy?: string) {
+  const normalizedActor = performedBy?.trim();
+  return normalizedActor ? `by ${normalizedActor}` : undefined;
+}
+
 function isSkipQcActivityText(activityText: string) {
   return activityText.toLowerCase().includes('skip qc');
 }
@@ -916,6 +932,7 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
     processState: InboundProcessState;
     title: string;
     description: string;
+    performedBy?: string;
     timestamp: string;
   }> = [];
 
@@ -957,6 +974,11 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
         description,
         activity.timestamp,
       );
+
+      const latestTimelineState = timelineStates[timelineStates.length - 1];
+      if (latestTimelineState?.processState === state) {
+        latestTimelineState.performedBy = activity.performedBy;
+      }
     });
   });
 
@@ -1012,6 +1034,8 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
         ? getReceiptDisplayStatus(receipt)
         : item.title || resolveHistoricalTimelineTitle(item.processState, item.description || ''),
     description: item.description || officialStateLabel[item.processState],
+    performedBy: item.performedBy,
+    secondaryText: getActivitySecondaryText(item.performedBy),
     timestamp: item.timestamp,
     processState: item.processState,
     state:

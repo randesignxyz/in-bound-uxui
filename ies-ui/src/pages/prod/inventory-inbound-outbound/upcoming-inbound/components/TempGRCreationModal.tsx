@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
@@ -74,6 +74,12 @@ function buildEmptyItem(): GRItem {
   };
 }
 
+function hasInvalidDateOrder(productDate?: string, expiryDate?: string) {
+  if (!productDate || !expiryDate) return false;
+
+  return dayjs(productDate).isAfter(dayjs(expiryDate), 'day');
+}
+
 export function TempGRCreationModal({
   open,
   onClose,
@@ -142,11 +148,20 @@ export function TempGRCreationModal({
       }),
     );
 
-    setErrors((prev) => ({
-      ...prev,
-      [`${String(field)}-${index}`]: false,
-      [`duplicate-${index}`]: false,
-    }));
+    setErrors((prev) => {
+      const nextErrors = {
+        ...prev,
+        [`${String(field)}-${index}`]: false,
+        [`duplicate-${index}`]: false,
+      };
+
+      if (field === 'productDate' || field === 'expiryDate') {
+        delete nextErrors[`productDate-${index}`];
+        delete nextErrors[`expiryDate-${index}`];
+      }
+
+      return nextErrors;
+    });
   }, []);
 
   const toggleMissingItem = useCallback((index: number) => {
@@ -235,6 +250,10 @@ export function TempGRCreationModal({
       if (item.receiveQty <= 0) nextErrors[`receiveQty-${index}`] = true;
       if (!item.productDate) nextErrors[`productDate-${index}`] = true;
       if (!item.expiryDate) nextErrors[`expiryDate-${index}`] = true;
+      if (hasInvalidDateOrder(item.productDate, item.expiryDate)) {
+        nextErrors[`productDate-${index}`] = true;
+        nextErrors[`expiryDate-${index}`] = true;
+      }
       if (!item.batchNumber.trim()) nextErrors[`batchNumber-${index}`] = true;
     });
 
@@ -343,12 +362,15 @@ export function TempGRCreationModal({
       {
         title: 'Item',
         key: 'item',
-        width: 280,
+        width: 240,
         render: (_, record) => {
           const shortQty = Math.max(0, record.poQty - record.receiveQty);
 
           return (
-            <Space direction="vertical" size={6} style={{ width: '100%' }}>
+            <div
+              data-testid={`temp-gr-item-identity-${record.index}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}
+            >
               <Input
                 placeholder="Item code"
                 value={record.code}
@@ -358,8 +380,9 @@ export function TempGRCreationModal({
                     ? 'error'
                     : undefined
                 }
+                style={{ width: 104, flex: '0 0 104px' }}
               />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
                 {record.isMissing ? (
                   <CloseCircleFilled style={{ color: '#ff4d4f', flex: 'none' }} />
                 ) : shortQty > 0 ? (
@@ -370,10 +393,10 @@ export function TempGRCreationModal({
                   value={record.name}
                   onChange={(event) => updateItem(record.index, 'name', event.target.value)}
                   status={errors[`name-${record.index}`] ? 'error' : undefined}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, minWidth: 0 }}
                 />
               </div>
-            </Space>
+            </div>
           );
         },
       },
@@ -441,6 +464,9 @@ export function TempGRCreationModal({
             onChange={(date) =>
               updateItem(record.index, 'productDate', date ? date.format('YYYY-MM-DD') : '')
             }
+            disabledDate={(current) =>
+              Boolean(record.expiryDate) && current.isAfter(dayjs(record.expiryDate), 'day')
+            }
             status={errors[`productDate-${record.index}`] ? 'error' : undefined}
             disabled={record.isMissing}
           />
@@ -456,6 +482,9 @@ export function TempGRCreationModal({
             value={record.expiryDate ? dayjs(record.expiryDate) : null}
             onChange={(date) =>
               updateItem(record.index, 'expiryDate', date ? date.format('YYYY-MM-DD') : '')
+            }
+            disabledDate={(current) =>
+              Boolean(record.productDate) && current.isBefore(dayjs(record.productDate), 'day')
             }
             status={errors[`expiryDate-${record.index}`] ? 'error' : undefined}
             disabled={record.isMissing}
@@ -543,163 +572,162 @@ export function TempGRCreationModal({
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 0' }}>
           <Descriptions column={4} size="small" style={{ marginBottom: 10 }}>
-          <Descriptions.Item label="Source">
-            <Tag color="purple">{goodsReceiptSourceLabel.TEMP_NO_PO}</Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label="Receipt Type">
-            <Tag color="orange">Unplanned</Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label="PO Link">
-            <Tag color="warning">Waiting PO</Tag>
-          </Descriptions.Item>
-        </Descriptions>
+            <Descriptions.Item label="Source">
+              <Tag color="purple">{goodsReceiptSourceLabel.TEMP_NO_PO}</Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Receipt Type">
+              <Tag color="orange">Unplanned</Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="PO Link">
+              <Tag color="warning">Waiting PO</Tag>
+            </Descriptions.Item>
+          </Descriptions>
 
-        <Alert
-          showIcon
-          type="info"
-          style={{ marginBottom: 10 }}
-          message={correctionMode ? 'Warehouse Correction Required' : 'Temporary Inbound Receiving'}
-          description={
-            correctionMode
-              ? 'Warehouse must recheck the returned receipt, update item quantity and details, save the correction, and then submit it to QC again.'
-              : 'Use this when goods arrive before the SAP PO exists. QC and approval can continue, but SAP PO linking is still required later.'
-          }
-        />
+          <Form layout="vertical" style={{ marginBottom: 10 }}>
+            <Row gutter={24}>
+              <Col span={8}>
+                <Form.Item
+                  label="Supplier"
+                  required
+                  validateStatus={errors.supplier ? 'error' : undefined}
+                  help={errors.supplier ? 'Required' : undefined}
+                >
+                  <Input
+                    value={supplier}
+                    onChange={(event) => setSupplier(event.target.value)}
+                    placeholder="Supplier name"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item label="Posting Date" required>
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    value={postingDate ? dayjs(postingDate) : null}
+                    onChange={(_, dateStr) => setPostingDate(dateStr as string)}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
-        <Form layout="vertical" style={{ marginBottom: 10 }}>
-          <Row gutter={24}>
-            <Col span={8}>
-              <Form.Item
-                label="Supplier"
-                required
-                validateStatus={errors.supplier ? 'error' : undefined}
-                help={errors.supplier ? 'Required' : undefined}
-              >
-                <Input value={supplier} onChange={(event) => setSupplier(event.target.value)} placeholder="Supplier name" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="Posting Date" required>
-                <DatePicker
-                  style={{ width: '100%' }}
-                  value={postingDate ? dayjs(postingDate) : null}
-                  onChange={(_, dateStr) => setPostingDate(dateStr as string)}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+            <Row gutter={24}>
+              <Col span={8}>
+                <Form.Item
+                  label="Delivery Note Number"
+                  required
+                  validateStatus={errors.deliveryNote ? 'error' : undefined}
+                  help={errors.deliveryNote ? 'Required' : undefined}
+                >
+                  <Input
+                    value={deliveryNoteNumber}
+                    onChange={(event) => setDeliveryNoteNumber(event.target.value)}
+                    placeholder="From vendor paperwork"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={16}>
+                <Form.Item
+                  label="Why SAP PO Is Missing"
+                  required
+                  validateStatus={errors.pendingPOReason ? 'error' : undefined}
+                  help={errors.pendingPOReason ? 'Required' : undefined}
+                >
+                  <Input
+                    value={pendingPOReason}
+                    onChange={(event) => setPendingPOReason(event.target.value)}
+                    placeholder="Explain why procurement has not created the SAP PO yet"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
 
-          <Row gutter={24}>
-            <Col span={8}>
-              <Form.Item
-                label="Delivery Note Number"
-                required
-                validateStatus={errors.deliveryNote ? 'error' : undefined}
-                help={errors.deliveryNote ? 'Required' : undefined}
-              >
-                <Input
-                  value={deliveryNoteNumber}
-                  onChange={(event) => setDeliveryNoteNumber(event.target.value)}
-                  placeholder="From vendor paperwork"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={16}>
-              <Form.Item
-                label="Why SAP PO Is Missing"
-                required
-                validateStatus={errors.pendingPOReason ? 'error' : undefined}
-                help={errors.pendingPOReason ? 'Required' : undefined}
-              >
-                <Input
-                  value={pendingPOReason}
-                  onChange={(event) => setPendingPOReason(event.target.value)}
-                  placeholder="Explain why procurement has not created the SAP PO yet"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-
-        <div style={{ marginBottom: 24 }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: 12,
-            }}
-          >
-            <h4 style={{ margin: 0 }}>Item Receipt</h4>
-            <Button icon={<PlusOutlined />} onClick={addItemRow}>
-              Add Item
-            </Button>
-          </div>
-          <Card size="small" style={{ borderRadius: 12 }}>
-            <Table
-              size="small"
-              columns={itemColumns}
-              dataSource={items.map((item, index) => ({ ...item, index, key: `${item.code || 'row'}-${index}` }))}
-              pagination={false}
-              scroll={{ x: 1360 }}
-            />
-          </Card>
-        </div>
-
-        <div style={{ marginBottom: 24 }}>
-          <h4 style={{ marginBottom: 12 }}>Documents</h4>
-          <Form.Item
-            validateStatus={errors.supportingDocs ? 'error' : undefined}
-            help={errors.supportingDocs ? 'Remove failed files before continuing.' : undefined}
-            style={{ marginBottom: 8 }}
-          >
+          <div style={{ marginBottom: 24 }}>
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: '140px minmax(0, 1fr)',
-                gap: 12,
-                alignItems: 'start',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
               }}
             >
-              <div>
-                <Upload
-                  multiple
-                  beforeUpload={stageSupportingDocBeforeUpload}
-                  fileList={uploadedFiles}
-                  showUploadList={false}
-                  onChange={handleUploadChange}
-                  onRemove={(file) => {
-                    removeFile(file.uid);
-                    return true;
-                  }}
-                  onPreview={(file) => previewSupportingUploadFile(file)}
-                  accept=".pdf,.doc,.docx,image/*"
-                  listType="text"
-                >
-                  <Button icon={<InboxOutlined />} size="large" style={{ width: '100%', height: 44 }}>
-                    Upload Files
-                  </Button>
-                </Upload>
-              </div>
-              <div>
-                <SupportingDocsList
-                  files={uploadedFiles}
-                  fallbackSource="WAREHOUSE"
-                  onRemoveFile={removeFile}
-                  displayMode="grid"
-                  collapsedLimit={5}
-                />
-              </div>
+              <h4 style={{ margin: 0 }}>Item Receipt</h4>
+              <Button icon={<PlusOutlined />} onClick={addItemRow}>
+                Add Item
+              </Button>
             </div>
-          </Form.Item>
-        </div>
+            <Card size="small" style={{ borderRadius: 12 }}>
+              <Table
+                size="small"
+                columns={itemColumns}
+                dataSource={items.map((item, index) => ({
+                  ...item,
+                  index,
+                  key: `${item.code || 'row'}-${index}`,
+                }))}
+                pagination={false}
+                scroll={{ x: 1360 }}
+              />
+            </Card>
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
+            <h4 style={{ marginBottom: 12 }}>Documents</h4>
+            <Form.Item
+              validateStatus={errors.supportingDocs ? 'error' : undefined}
+              help={errors.supportingDocs ? 'Remove failed files before continuing.' : undefined}
+              style={{ marginBottom: 8 }}
+            >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '140px minmax(0, 1fr)',
+                  gap: 12,
+                  alignItems: 'start',
+                }}
+              >
+                <div>
+                  <Upload
+                    multiple
+                    beforeUpload={stageSupportingDocBeforeUpload}
+                    fileList={uploadedFiles}
+                    showUploadList={false}
+                    onChange={handleUploadChange}
+                    onRemove={(file) => {
+                      removeFile(file.uid);
+                      return true;
+                    }}
+                    onPreview={(file) => previewSupportingUploadFile(file)}
+                    accept=".pdf,.doc,.docx,image/*"
+                    listType="text"
+                  >
+                    <Button icon={<InboxOutlined />} size="large" style={{ width: '100%', height: 44 }}>
+                      Upload Files
+                    </Button>
+                  </Upload>
+                </div>
+                <div>
+                  <SupportingDocsList
+                    files={uploadedFiles}
+                    fallbackSource="WAREHOUSE"
+                    onRemoveFile={removeFile}
+                    displayMode="grid"
+                    collapsedLimit={5}
+                  />
+                </div>
+              </div>
+            </Form.Item>
+          </div>
 
           <Form.Item
             validateStatus={errors.onHoldConfirm ? 'error' : undefined}
             help={errors.onHoldConfirm ? 'Required' : undefined}
           >
-            <Checkbox checked={storedOnHoldConfirmed} onChange={(event) => setStoredOnHoldConfirmed(event.target.checked)}>
-              I confirm received PM/RM is stored in On-Hold Warehouse before QC pass.
+            <Checkbox
+              checked={storedOnHoldConfirmed}
+              onChange={(event) => setStoredOnHoldConfirmed(event.target.checked)}
+            >
+              I confirm received PM/RM is stored in On-Hold Warehouse before QC Approve.
             </Checkbox>
           </Form.Item>
         </div>

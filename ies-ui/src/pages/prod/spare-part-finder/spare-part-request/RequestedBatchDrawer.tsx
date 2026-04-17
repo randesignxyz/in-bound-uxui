@@ -92,7 +92,9 @@ const getActivityRank = (label?: string): number => {
   if (normalized === 'requested') return 1;
   if (normalized === 'approved') return 2;
   if (normalized === 'rejected') return 2;
+  if (normalized === 'item edited') return 3;
   if (normalized === 'in progress') return 3;
+  if (normalized === 'draft updated') return 4;
   if (normalized === 'ready to pick up') return 4;
   if (normalized === 'confirm pick up') return 5;
   if (/^partial pick up #\d+$/i.test(normalized)) return 6;
@@ -146,6 +148,7 @@ interface PersistedRequestDrawerState {
   quantityOverrides?: Record<string, number>;
   itemMarks?: Record<string, 'deleted' | 'canceled'>;
   editedItems?: Record<string, boolean>;
+  editedAtByRequestLineId?: Record<string, string>;
 }
 
 const getPersistedDrawerStateKey = (requestId?: string) =>
@@ -157,7 +160,7 @@ const readPersistedDrawerState = (requestId?: string): PersistedRequestDrawerSta
   if (!key) return null;
 
   try {
-    const raw = window.sessionStorage.getItem(key);
+    const raw = window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
     return raw ? (JSON.parse(raw) as PersistedRequestDrawerState) : null;
   } catch {
     return null;
@@ -173,6 +176,7 @@ const writePersistedDrawerState = (
   if (!key) return;
 
   try {
+    window.localStorage.setItem(key, JSON.stringify(value));
     window.sessionStorage.setItem(key, JSON.stringify(value));
   } catch {
     // ignore storage errors
@@ -247,7 +251,7 @@ export interface DrawerBatchReturnItemsProps {
   onClose?: () => void;
   onApprove?: (payload: {
     id: number;
-    lines: Array<{ requestLineId: number; approvedQty: number }>;
+    lines: Array<{ requestLineId: number; approvedQty: number; editedAt?: string }>;
     remark?: string;
   }) => Promise<void>;
   onReject?: (payload: { id: number; remark?: string }) => Promise<void>;
@@ -283,6 +287,7 @@ export default function RequestedBatchDrawer({
   const [quantityOverrides, setQuantityOverrides] = useState<Record<string, number>>({});
   const [itemMarks, setItemMarks] = useState<Record<string, 'deleted' | 'canceled'>>({});
   const [editedItems, setEditedItems] = useState<Record<string, boolean>>({});
+  const [editedAtByRequestLineId, setEditedAtByRequestLineId] = useState<Record<string, string>>({});
   const [editingItem, setEditingItem] = useState<RequestDetailLineItem | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<number>(1);
   const lastServerStatusRef = useRef<RequestStatus | null>(null);
@@ -474,6 +479,7 @@ export default function RequestedBatchDrawer({
     setQuantityOverrides(persistedState?.quantityOverrides || {});
     setItemMarks(persistedState?.itemMarks || {});
     setEditedItems(persistedState?.editedItems || {});
+    setEditedAtByRequestLineId(persistedState?.editedAtByRequestLineId || {});
 
     const seen = new Set<string>();
     const fallbackLogs: RequestDetailActivity[] = [];
@@ -574,11 +580,21 @@ export default function RequestedBatchDrawer({
 
     const serverLogs =
       (data.activities || []).length > 0
-        ? (data.activities || []).map((activity) => ({
-            ...activity,
-            date: activity.date ?? data.requestDate,
-            by: activity.by?.trim() ? activity.by.trim() : undefined,
-          }))
+        ? (data.activities || [])
+            .map((activity) => ({
+              ...activity,
+              date: activity.date ?? data.requestDate,
+              by: activity.by?.trim() ? activity.by.trim() : undefined,
+            }))
+            .filter((activity) => {
+              if (!access.canSpfApprover) return true;
+              const normalizedLabel = String(activity.label || '').trim().toLowerCase();
+              const normalizedDescription = String(activity.description || '').trim().toLowerCase();
+              return !(
+                normalizedLabel === 'item edited' &&
+                normalizedDescription === 'approver adjusted one or more approved quantities.'
+              );
+            })
         : fallbackLogs;
 
     setActivityLogs(
@@ -589,7 +605,7 @@ export default function RequestedBatchDrawer({
     );
     lastServerStatusRef.current = data.status;
     lastShipmentNoticeRef.current = data.status === 'ready_to_Pickup' && seededPicked.length > 0 ? 1 : 0;
-  }, [data.activities, data.items, data.pickupBatches, data.receivedItems, data.requestDate, data.status, data.requestId, open]);
+  }, [access.canSpfApprover, data.activities, data.items, data.pickupBatches, data.receivedItems, data.requestDate, data.status, data.requestId, open]);
 
   useEffect(() => {
     if (!open || !data.requestId || resetPersistRef.current) return;
@@ -599,8 +615,9 @@ export default function RequestedBatchDrawer({
       quantityOverrides,
       itemMarks,
       editedItems,
+      editedAtByRequestLineId,
     });
-  }, [activityLogs, data.requestId, editedItems, itemMarks, open, quantityOverrides]);
+  }, [activityLogs, data.requestId, editedAtByRequestLineId, editedItems, itemMarks, open, quantityOverrides]);
 
   const handleClose = () => {
     resetPersistRef.current = true;
@@ -609,6 +626,7 @@ export default function RequestedBatchDrawer({
       quantityOverrides,
       itemMarks,
       editedItems,
+      editedAtByRequestLineId,
     });
     setSpfOpen(false);
     setSelectedProductDetail(null);
@@ -716,6 +734,7 @@ export default function RequestedBatchDrawer({
     const nextQty = Math.max(1, Number(editingQuantity) || 1);
     const originalQty = Number(data.items.find((item) => item.productId === productId)?.quantityToReturn || 0);
     const isEdited = nextQty !== originalQty;
+    const editedAt = new Date().toISOString();
 
     setQuantityOverrides((prev) => {
       const next = { ...prev };
@@ -735,18 +754,18 @@ export default function RequestedBatchDrawer({
       }
       return next;
     });
-    if (isEdited) {
-      setActivityLogs((prev) => [
-        ...prev,
-        {
-          label: 'Item Edited',
-          description: `${productId} requested quantity updated to ${nextQty}`,
-          date: new Date().toISOString(),
-          by: currentActor,
-          dot: 'done',
-        },
-      ]);
-    }
+    setEditedAtByRequestLineId((prev) => {
+      const next = { ...prev };
+      const requestLineKey = String(editingItem.requestLineId || '');
+      if (!requestLineKey) return next;
+      if (isEdited) {
+        next[requestLineKey] = editedAt;
+      } else {
+        delete next[requestLineKey];
+      }
+      return next;
+    });
+    // Dynamic audit stays backend-driven; this drawer only stores editedAt for the later approve payload.
     setEditingItem(null);
     message.success(
       isEdited
@@ -1115,6 +1134,7 @@ export default function RequestedBatchDrawer({
       .map((item) => ({
         requestLineId: Number(item.requestLineId),
         approvedQty: Number(item.quantityToReturn || 0),
+        editedAt: editedAtByRequestLineId[String(item.requestLineId)] || undefined,
       }));
     const hasAnyApprovedQty = lines.some((item) => item.approvedQty > 0);
 
@@ -1285,6 +1305,13 @@ export default function RequestedBatchDrawer({
           };
         }
 
+        if (normalizedLabel === 'draft updated') {
+          return {
+            ...activity,
+            label: 'Draft Updated',
+          };
+        }
+
         if (normalizedLabel === 'completed') {
           return {
             ...activity,
@@ -1318,16 +1345,16 @@ export default function RequestedBatchDrawer({
               tableLayout="fixed"
               pagination={false}
               style={{ marginTop: 8 }}
-              rowSelection={{
-                selectedRowKeys: pickupSelection,
-                onChange: (keys) => setPickupSelection((keys || []).map((k) => String(k))),
-                getCheckboxProps: (record) => ({
-                  disabled:
-                    pickedProductIds.has(record.productId) ||
-                    Boolean(itemMarks[record.productId]) ||
-                    availablePickupQty(record, effectiveStatus) <= 0,
-                }),
-              }}
+              // rowSelection={{
+              //   selectedRowKeys: pickupSelection,
+              //   onChange: (keys) => setPickupSelection((keys || []).map((k) => String(k))),
+              //   getCheckboxProps: (record) => ({
+              //     disabled:
+              //       pickedProductIds.has(record.productId) ||
+              //       Boolean(itemMarks[record.productId]) ||
+              //       availablePickupQty(record, effectiveStatus) <= 0,
+              //   }),
+              // }}
               dataSource={activeRequestItems}
               columns={columnsForPickupTable}
             />

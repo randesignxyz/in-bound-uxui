@@ -24,6 +24,7 @@ interface ItemListViewProps {
 const ItemListView: React.FC<ItemListViewProps> = ({ services, activeTab, onSwitchToMyRequests }) => {
   const access = useAccess();
   const actionRef = useRef<ActionType>();
+  const canSeeStatusFilter = access.canSpfWarehouseStaff || access.canAdmin;
 
   const [searchValue, setSearchValue] = useState<string>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -100,21 +101,23 @@ const ItemListView: React.FC<ItemListViewProps> = ({ services, activeTab, onSwit
               actionRef.current?.reloadAndRest?.();
             }}
           />
-          <Select
-            allowClear
-            placeholder="Status"
-            style={{ minWidth: 140 }}
-            options={[
-              { label: 'Available', value: 'available' },
-              { label: 'Low', value: 'low' },
-              { label: 'No Stock', value: 'no-stock' },
-            ]}
-            onChange={(v) => {
-              setFilters((prev) => ({ ...prev, status: v }));
-              setSelectedRowKeys([]);
-              actionRef.current?.reloadAndRest?.();
-            }}
-          />
+          {canSeeStatusFilter ? (
+            <Select
+              allowClear
+              placeholder="Status"
+              style={{ minWidth: 140 }}
+              options={[
+                { label: 'Available', value: 'available' },
+                { label: 'Low', value: 'low' },
+                { label: 'No Stock', value: 'no-stock' },
+              ]}
+              onChange={(v) => {
+                setFilters((prev) => ({ ...prev, status: v }));
+                setSelectedRowKeys([]);
+                actionRef.current?.reloadAndRest?.();
+              }}
+            />
+          ) : null}
         </Space>
       </Card>
 

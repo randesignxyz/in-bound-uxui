@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Descriptions, Divider, Spin, Tag } from 'antd';
+import { Button, Descriptions, Divider, Spin, Tag, Space, Typography } from 'antd';
 import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
@@ -18,8 +18,15 @@ const poStatusColor: Record<PurchaseOrder['status'], string> = {
   'Fully Received': 'success',
 };
 
+const { Text } = Typography;
+
 export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSidebarProps) {
   if (!po) return null;
+
+  const deliveryNotes = po.deliveryNoteNumber
+    ?.split(',')
+    .map((value) => value.trim())
+    .filter(Boolean) || [];
 
   const itemColumns: ProColumns<POItem>[] = [
     { title: 'No', render: (_: any, _r: POItem, index: number) => index + 1, width: 50 },
@@ -73,6 +80,19 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
             </Descriptions.Item>
             <Descriptions.Item label="Expected Time">
               {po.expectedTime || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label={`Delivery Notes For ${po.poNumber}`} span={2}>
+              {deliveryNotes.length > 0 ? (
+                <Space size={[8, 8]} wrap>
+                  {deliveryNotes.map((deliveryNote) => (
+                    <Tag key={deliveryNote} color="processing" bordered={false}>
+                      {deliveryNote}
+                    </Tag>
+                  ))}
+                </Space>
+              ) : (
+                <Text type="secondary">No approved delivery note yet</Text>
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="Total Items">
               {po.totalItems}

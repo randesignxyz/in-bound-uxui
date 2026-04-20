@@ -121,6 +121,7 @@ export interface GRItem {
   expiryDate: string;
   batchNumber: string;
   barcode: string;
+  deliveryNoteNumber?: string;
   isMissing?: boolean;
   missingRemark?: string;
   qcDecision?: QcDecision;
@@ -153,6 +154,7 @@ export interface SupportingDocReference {
   fileId?: string | null;
   fileName: string;
   source?: SupportingDocSource | null;
+  poNumber?: string | null;
 }
 
 export interface GRDocumentChecklist {
@@ -185,6 +187,7 @@ export interface GoodsReceipt {
     supplier: string;
     expectedDate?: string;
     expectedTime?: string;
+    deliveryNoteNumber?: string;
   }>;
   supplierNames: string[];
   receiptType: 'Planned' | 'Unplanned';
@@ -620,7 +623,13 @@ function getActivitySecondaryText(performedBy?: string) {
 }
 
 function isSkipQcActivityText(activityText: string) {
-  return activityText.toLowerCase().includes('skip qc');
+  const normalizedText = activityText.toLowerCase();
+  return normalizedText.includes('skip qc') || normalizedText.includes('skipped qc');
+}
+
+function isMergeActivityText(activityText: string) {
+  const normalizedText = activityText.toLowerCase();
+  return normalizedText.includes('merged');
 }
 
 function hasActivityMatch(receipt: GoodsReceipt, text: string) {
@@ -947,21 +956,35 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
   }
 
   receipt.activities.forEach((activity) => {
-    const expandedStates = mapActivityProcessStateToTimelineStates(activity.processState);
+    const activityText = getActivityText(activity);
+    const isSkipQcActivity =
+      activity.processState === 'PENDING_SUPERVISOR_REVIEW' && isSkipQcActivityText(activityText);
+    const isWarehouseMergeActivity =
+      (activity.processState === 'PENDING_SUPERVISOR_REVIEW' ||
+        activity.processState === 'MERGED_TO_SUPERVISOR_REVIEW') &&
+      (isSkipQcActivity || isMergeActivityText(activityText));
+    const expandedStates = isWarehouseMergeActivity
+      ? [activity.processState]
+      : mapActivityProcessStateToTimelineStates(activity.processState);
     if (!expandedStates.length) return;
 
     expandedStates.forEach((state, index) => {
-      const activityText = getActivityText(activity);
-      const isSkipQcActivity =
-        activity.processState === 'PENDING_SUPERVISOR_REVIEW' && isSkipQcActivityText(activityText);
       const isDerivedQcPassed =
         state === 'QC_PASSED' && activity.processState === 'PENDING_SUPERVISOR_REVIEW' && index === 0;
-      const title = isDerivedQcPassed
+      const shouldUseActivityTextForTimelineState =
+        isWarehouseMergeActivity ||
+        ((state === 'PENDING_SUPERVISOR_REVIEW' || state === 'MERGED_TO_SUPERVISOR_REVIEW') &&
+          (isSkipQcActivityText(activityText) || isMergeActivityText(activityText)));
+      const title = shouldUseActivityTextForTimelineState
+        ? activity.title || officialStateLabel[state]
+        : isDerivedQcPassed
         ? isSkipQcActivity
           ? activity.title || 'Skip QC'
           : officialStateLabel.QC_PASSED
         : resolveHistoricalTimelineTitle(state, activityText);
-      const description = isDerivedQcPassed
+      const description = shouldUseActivityTextForTimelineState
+        ? activity.description || activity.title || officialStateLabel[state]
+        : isDerivedQcPassed
         ? isSkipQcActivity
           ? activity.description || activity.title || 'Skip QC'
           : officialStateLabel.QC_PASSED
@@ -982,7 +1005,18 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
     });
   });
 
-  const currentTimelineStates = mapActivityProcessStateToTimelineStates(receipt.processState);
+  const hasSkipQcMergeHistory = receipt.activities.some((activity) => {
+    const activityText = getActivityText(activity);
+    return (
+      (activity.processState === 'PENDING_SUPERVISOR_REVIEW' ||
+        activity.processState === 'MERGED_TO_SUPERVISOR_REVIEW') &&
+      (isSkipQcActivityText(activityText) || isMergeActivityText(activityText))
+    );
+  });
+  const currentTimelineStates =
+    receipt.processState === 'PENDING_SUPERVISOR_REVIEW' && hasSkipQcMergeHistory
+      ? (['PENDING_SUPERVISOR_REVIEW'] as InboundProcessState[])
+      : mapActivityProcessStateToTimelineStates(receipt.processState);
   const currentVisibleState =
     currentTimelineStates[currentTimelineStates.length - 1] || getVisibleWorkflowState(receipt.processState);
 
@@ -1031,7 +1065,11 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
   return timelineStates.map((item, index) => ({
     title:
       index === activeIndex
-        ? getReceiptDisplayStatus(receipt)
+        ? item.title &&
+          item.title !== officialStateLabel[item.processState] &&
+          item.title !== getReceiptDisplayStatus(receipt)
+          ? item.title
+          : getReceiptDisplayStatus(receipt)
         : item.title || resolveHistoricalTimelineTitle(item.processState, item.description || ''),
     description: item.description || officialStateLabel[item.processState],
     performedBy: item.performedBy,

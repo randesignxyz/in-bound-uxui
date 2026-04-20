@@ -14,6 +14,7 @@ import {
   Spin,
   Tag,
   Timeline,
+  Typography,
   Upload,
   message,
 } from 'antd';
@@ -44,10 +45,16 @@ import {
 } from '../workflow';
 import { SupportingDocsList } from './SupportingDocsList';
 
+const { Text } = Typography;
+
 type EditableSidebarItem = GRItem & {
   index: number;
   key: string;
 };
+
+function splitDeliveryNotes(value?: string) {
+  return value?.split(',').map((entry) => entry.trim()).filter(Boolean) ?? [];
+}
 
 type ReceiptMetadataItem = {
   label: string;
@@ -239,6 +246,7 @@ export function GRDetailSidebar({
 
   const supportingDocs = receipt?.documentChecklist.supportingDocs || [];
   const warehouseSupportingDocs = supportingDocs.filter((doc) => doc.source !== 'QC');
+  const receiptLevelSupportingDocs = supportingDocs.filter((doc) => !doc.poNumber);
   const timelineActivities = useMemo(
     () => (receipt ? buildReceiptTimelineActivities(receipt) : []),
     [receipt],
@@ -308,7 +316,6 @@ export function GRDetailSidebar({
     { label: 'Posting Date', value: receipt.postingDate },
     { label: 'Actual Receipt Date', value: receipt.actualReceiptDate },
     { label: 'Receiver Warehouse', value: receipt.receiverWarehouseName },
-    { label: 'Delivery Note', value: receipt.deliveryNoteNumber },
     { label: 'Created By', value: receipt.createdBy },
     { label: 'Created Date', value: receipt.createdDate },
     ...(receipt.approvedBy ? [{ label: reviewerLabel, value: receipt.approvedBy }] : []),
@@ -655,6 +662,16 @@ export function GRDetailSidebar({
       render: (_: unknown, row: EditableSidebarItem) => row.expiryDate || '-',
     },
     {
+      title: 'Delivery Note',
+      dataIndex: 'deliveryNoteNumber',
+      width: 140,
+      render: (_: unknown, row: EditableSidebarItem) => (
+        <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', fontSize: 12 }}>
+          {row.deliveryNoteNumber || '-'}
+        </div>
+      ),
+    },
+    {
       title: 'Batch Number',
       dataIndex: 'batchNumber',
       width: 120,
@@ -944,6 +961,8 @@ export function GRDetailSidebar({
               }
               items={groupedReceiptItems.map((group) => ({
                 key: group.key,
+                // Surface DN at the PO header level so users can immediately see
+                // which delivery note set belongs to this PO before opening item rows.
                 label: (
                   <div
                     style={{
@@ -982,6 +1001,51 @@ export function GRDetailSidebar({
                 ),
                 children: (
                   <div style={{ marginInline: -8 }}>
+                    <div
+                      style={{
+                        margin: '0 8px 16px',
+                        padding: '12px 16px',
+                        border: '1px solid #f0f0f0',
+                        borderRadius: 12,
+                        background: '#fafafa',
+                      }}
+                    >
+                      <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                        <div>
+                          <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 4 }}>
+                            Delivery Notes For {group.displayPoNumber}
+                          </div>
+                          {splitDeliveryNotes(
+                            receipt.poReferences.find((reference) => reference.poNumber === group.poNumber)
+                              ?.deliveryNoteNumber || receipt.deliveryNoteNumber,
+                          ).length > 0 ? (
+                            <Space size={[8, 8]} wrap>
+                              {splitDeliveryNotes(
+                                receipt.poReferences.find((reference) => reference.poNumber === group.poNumber)
+                                  ?.deliveryNoteNumber || receipt.deliveryNoteNumber,
+                              ).map((deliveryNote) => (
+                                <Tag key={`${group.key}-detail-${deliveryNote}`} color="processing" bordered={false}>
+                                  {deliveryNote}
+                                </Tag>
+                              ))}
+                            </Space>
+                          ) : (
+                            <Text strong>-</Text>
+                          )}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 8 }}>
+                            PO Documents
+                          </div>
+                          <SupportingDocsList
+                            docs={warehouseSupportingDocs.filter((doc) => doc.poNumber === group.poNumber)}
+                            emptyText="No PO-specific documents attached."
+                            displayMode="grid"
+                            collapsedLimit={4}
+                          />
+                        </div>
+                      </Space>
+                    </div>
                     <ProTable<EditableSidebarItem>
                       size="small"
                       search={false}
@@ -1012,8 +1076,8 @@ export function GRDetailSidebar({
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ fontWeight: 500, marginBottom: 8 }}>Warehouse Documents</div>
                   <SupportingDocsList
-                    docs={warehouseSupportingDocs}
-                    emptyText="No warehouse documents attached."
+                    docs={receiptLevelSupportingDocs.filter((doc) => doc.source !== 'QC')}
+                    emptyText="No receipt-level warehouse documents attached."
                     displayMode="grid"
                     collapsedLimit={5}
                   />
@@ -1049,7 +1113,10 @@ export function GRDetailSidebar({
                 </div>
               </>
             ) : (
-              <SupportingDocsList docs={supportingDocs} />
+              <SupportingDocsList
+                docs={receiptLevelSupportingDocs}
+                emptyText="No receipt-level documents attached."
+              />
             )}
           </div>
 

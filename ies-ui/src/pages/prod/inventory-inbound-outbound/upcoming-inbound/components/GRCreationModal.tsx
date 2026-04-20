@@ -105,18 +105,6 @@ function hasInvalidDateOrder(productDate?: string, expiryDate?: string) {
   return dayjs(productDate).isAfter(dayjs(expiryDate), 'day');
 }
 
-function resolveInheritedDeliveryNoteNumber(purchaseOrders: PurchaseOrder[]): string | undefined {
-  const deliveryNotes = Array.from(
-    new Set(
-      purchaseOrders
-        .map((purchaseOrder) => purchaseOrder.deliveryNoteNumber?.trim())
-        .filter((deliveryNote): deliveryNote is string => Boolean(deliveryNote)),
-    ),
-  );
-
-  return deliveryNotes.length === 1 ? deliveryNotes[0] : undefined;
-}
-
 function renderRequiredLabel(label: string) {
   return (
     <span>
@@ -124,6 +112,48 @@ function renderRequiredLabel(label: string) {
       {label}
     </span>
   );
+}
+
+function buildInitialPoDeliveryNotes(
+  purchaseOrders: PurchaseOrder[],
+  initialReceipt?: UpcomingInboundGoodsReceipt | null,
+) {
+  const receiptPoReferences = new Map(
+    (initialReceipt?.poReferences || []).map((reference) => [reference.poNumber, reference]),
+  );
+
+  return purchaseOrders.reduce<Record<string, string>>((result, purchaseOrder) => {
+    result[purchaseOrder.poNumber] =
+      receiptPoReferences.get(purchaseOrder.poNumber)?.deliveryNoteNumber || '';
+    return result;
+  }, {});
+}
+
+function buildInitialPoUploadFiles(
+  purchaseOrders: PurchaseOrder[],
+  initialReceipt?: UpcomingInboundGoodsReceipt | null,
+) {
+  return purchaseOrders.reduce<Record<string, UploadFile[]>>((result, purchaseOrder) => {
+    const poNumber = purchaseOrder.poNumber;
+    const poDocs =
+      initialReceipt?.documentChecklist.supportingDocs.filter((doc) => doc.poNumber === poNumber) || [];
+    result[poNumber] = supportingDocsToUploadFiles(poDocs);
+    return result;
+  }, {});
+}
+
+function summarizeDeliveryNotes(deliveryNotes: string[]) {
+  const normalizedDeliveryNotes = Array.from(
+    new Set(deliveryNotes.map((deliveryNote) => deliveryNote.trim()).filter(Boolean)),
+  );
+
+  if (normalizedDeliveryNotes.length === 0) {
+    return '';
+  }
+  if (normalizedDeliveryNotes.length === 1) {
+    return normalizedDeliveryNotes[0];
+  }
+  return `${normalizedDeliveryNotes.length} DNs`;
 }
 
 export function GRCreationModal({
@@ -150,14 +180,15 @@ export function GRCreationModal({
   const selectedVendor = getCombinedPurchaseOrderVendor(purchaseOrders) || supplierNames[0] || '';
   const receiptType = deriveReceiptType(purchaseOrders);
   const firstPO = purchaseOrders[0];
-  const inheritedDeliveryNoteNumber = resolveInheritedDeliveryNoteNumber(purchaseOrders);
-  const isDeliveryNoteInherited = Boolean(!initialReceipt && !correctionMode && inheritedDeliveryNoteNumber);
+  const isMultiPOReceipt = selectedPOCount > 1;
 
   const [postingDate, setPostingDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [actualReceiptDate, setActualReceiptDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [deliveryNoteNumber, setDeliveryNoteNumber] = useState('');
+  const [poDeliveryNotes, setPoDeliveryNotes] = useState<Record<string, string>>({});
   const [items, setItems] = useState<GRItem[]>(() => buildInitialItems(purchaseOrders));
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
+  const [poUploadedFiles, setPoUploadedFiles] = useState<Record<string, UploadFile[]>>({});
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [storedOnHoldConfirmed, setStoredOnHoldConfirmed] = useState(false);
   const [scanModalOpen, setScanModalOpen] = useState(false);
@@ -247,10 +278,44 @@ export function GRCreationModal({
     setUploadedFiles((prev) => prev.filter((file) => file.uid !== uid));
   };
 
+  const handlePoUploadChange = (poNumber: string): UploadProps['onChange'] => (info) => {
+    setPoUploadedFiles((prev) => ({
+      ...prev,
+      [poNumber]: normalizeUploadFileList(
+        info.fileList.map((file) => ({
+          ...file,
+          poNumber,
+        })),
+        10,
+        'WAREHOUSE',
+      ),
+    }));
+    setErrors((prev) => ({ ...prev, [`supportingDocs-${poNumber}`]: false }));
+  };
+
+  const removePoFile = (poNumber: string, uid: string) => {
+    setPoUploadedFiles((prev) => ({
+      ...prev,
+      [poNumber]: (prev[poNumber] || []).filter((file) => file.uid !== uid),
+    }));
+  };
+
   const validate = (): boolean => {
     const nextErrors: Record<string, boolean> = {};
     if (!postingDate) nextErrors.postingDate = true;
-    if (!deliveryNoteNumber.trim()) nextErrors.deliveryNote = true;
+    if (isMultiPOReceipt) {
+      purchaseOrders.forEach((purchaseOrder) => {
+        const poNumber = purchaseOrder.poNumber;
+        if (!poDeliveryNotes[poNumber]?.trim()) {
+          nextErrors[`deliveryNote-${poNumber}`] = true;
+        }
+        if (hasIncompleteAppFilesUpload(poUploadedFiles[poNumber] || [])) {
+          nextErrors[`supportingDocs-${poNumber}`] = true;
+        }
+      });
+    } else if (!deliveryNoteNumber.trim()) {
+      nextErrors.deliveryNote = true;
+    }
     if (!storedOnHoldConfirmed) nextErrors.onHoldConfirm = true;
 
     items.forEach((item, index) => {
@@ -270,7 +335,7 @@ export function GRCreationModal({
       }
     });
 
-    if (hasIncompleteAppFilesUpload(uploadedFiles)) {
+    if (!isMultiPOReceipt && hasIncompleteAppFilesUpload(uploadedFiles)) {
       nextErrors.supportingDocs = true;
     }
 
@@ -312,6 +377,7 @@ export function GRCreationModal({
   const buildGRData = (
     submissionMode: 'draft' | 'submit',
     supportingDocs = uploadFilesToSupportingDocs(uploadedFiles, 'WAREHOUSE'),
+    poSupportingDocs: Record<string, UploadFile[]> = poUploadedFiles,
   ) => {
     const hasDiscrepancy = hasReceiptDiscrepancy(items);
     const exceptionReason = buildReceiptExceptionReason(items);
@@ -319,6 +385,24 @@ export function GRCreationModal({
       correctionMode || submissionMode === 'draft'
         ? 'GRPO_DRAFT'
         : 'QC_PENDING';
+    const poReferences = selectedPOReferences.map((reference) => ({
+      ...reference,
+      deliveryNoteNumber:
+        isMultiPOReceipt
+          ? poDeliveryNotes[reference.poNumber] || ''
+          : deliveryNoteNumber,
+    }));
+    const normalizedSupportingDocs = isMultiPOReceipt
+      ? purchaseOrders.flatMap((purchaseOrder) =>
+          uploadFilesToSupportingDocs(poSupportingDocs[purchaseOrder.poNumber] || [], 'WAREHOUSE').map((doc) => ({
+            ...doc,
+            poNumber: purchaseOrder.poNumber,
+          })),
+        )
+      : supportingDocs;
+    const summarizedDeliveryNote = isMultiPOReceipt
+      ? summarizeDeliveryNotes(Object.values(poDeliveryNotes))
+      : deliveryNoteNumber;
 
     return {
       id: initialReceipt?.id,
@@ -335,17 +419,17 @@ export function GRCreationModal({
           : `${selectedPOCount} POs`,
       supplier:
         supplierNames.length === 1 ? supplierNames[0] : `${supplierNames.length} suppliers`,
-      poReferences: selectedPOReferences,
+      poReferences,
       supplierNames,
       receiptType,
       expectedDate: firstPO?.expectedDate,
       expectedTime: firstPO?.expectedTime,
       postingDate,
       actualReceiptDate,
-      deliveryNoteNumber,
+      deliveryNoteNumber: summarizedDeliveryNote,
       receiverWarehouseName,
       items,
-      uploadedFiles: supportingDocs,
+      uploadedFiles: normalizedSupportingDocs,
       specMatch: true,
       qtyMatch: !hasDiscrepancy,
       qualityCheckRequired: true,
@@ -353,10 +437,12 @@ export function GRCreationModal({
       exceptionReason,
       processState: nextProcessState,
       documentChecklist: {
-        vendorDN: deliveryNoteNumber.trim().length > 0,
+        vendorDN: isMultiPOReceipt
+          ? Object.values(poDeliveryNotes).some((value) => value.trim().length > 0)
+          : deliveryNoteNumber.trim().length > 0,
         goodsReceiptPOForm: true,
         pmrmStockCardForm: false,
-        supportingDocs,
+        supportingDocs: normalizedSupportingDocs,
       },
       storedOnHoldConfirmed,
     };
@@ -366,9 +452,42 @@ export function GRCreationModal({
     if (!validateDraftDateOrder()) return;
     setIsSubmitting(true);
     try {
-      const supportingDocs = await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
-      setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
-      const shouldClose = await onSaveDraft(buildGRData('draft', supportingDocs));
+      const supportingDocs = isMultiPOReceipt
+        ? []
+        : await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
+      const uploadedPoSupportingDocs = isMultiPOReceipt
+        ? await Promise.all(
+            purchaseOrders.map(
+              async (purchaseOrder): Promise<[string, UploadFile[]]> => [
+                purchaseOrder.poNumber,
+                applyUploadedSupportingDocs(
+                  poUploadedFiles[purchaseOrder.poNumber] || [],
+                  await uploadPendingSupportingDocs(
+                    poUploadedFiles[purchaseOrder.poNumber] || [],
+                    'WAREHOUSE',
+                  ),
+                ),
+              ],
+            ),
+          )
+        : [];
+      if (!isMultiPOReceipt) {
+        setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
+      } else {
+        setPoUploadedFiles((prev) =>
+          uploadedPoSupportingDocs.reduce<Record<string, UploadFile[]>>((next, [poNumber, docs]) => {
+            next[poNumber] = docs;
+            return next;
+          }, { ...prev }),
+        );
+      }
+      const shouldClose = await onSaveDraft(
+        buildGRData(
+          'draft',
+          supportingDocs,
+          Object.fromEntries(uploadedPoSupportingDocs) as Record<string, UploadFile[]>,
+        ),
+      );
       if (shouldClose) {
         onClose();
       }
@@ -383,10 +502,41 @@ export function GRCreationModal({
     if (!validate()) return;
     setIsSubmitting(true);
     try {
-      const supportingDocs = await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
-      setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
+      const supportingDocs = isMultiPOReceipt
+        ? []
+        : await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
+      const uploadedPoSupportingDocs = isMultiPOReceipt
+        ? await Promise.all(
+            purchaseOrders.map(
+              async (purchaseOrder): Promise<[string, UploadFile[]]> => [
+                purchaseOrder.poNumber,
+                applyUploadedSupportingDocs(
+                  poUploadedFiles[purchaseOrder.poNumber] || [],
+                  await uploadPendingSupportingDocs(
+                    poUploadedFiles[purchaseOrder.poNumber] || [],
+                    'WAREHOUSE',
+                  ),
+                ),
+              ],
+            ),
+          )
+        : [];
+      if (!isMultiPOReceipt) {
+        setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
+      } else {
+        setPoUploadedFiles((prev) =>
+          uploadedPoSupportingDocs.reduce<Record<string, UploadFile[]>>((next, [poNumber, docs]) => {
+            next[poNumber] = docs;
+            return next;
+          }, { ...prev }),
+        );
+      }
       const shouldClose = await onSubmit(
-        buildGRData(correctionMode ? 'draft' : 'submit', supportingDocs),
+        buildGRData(
+          correctionMode ? 'draft' : 'submit',
+          supportingDocs,
+          Object.fromEntries(uploadedPoSupportingDocs) as Record<string, UploadFile[]>,
+        ),
       );
       if (shouldClose) {
         onClose();
@@ -466,6 +616,7 @@ export function GRCreationModal({
       setPostingDate(initialReceipt.postingDate || dayjs().format('YYYY-MM-DD'));
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
       setDeliveryNoteNumber(initialReceipt.deliveryNoteNumber || '');
+      setPoDeliveryNotes(buildInitialPoDeliveryNotes(purchaseOrders, initialReceipt));
       setItems(
         initialReceipt.items.map((item) => ({
           ...item,
@@ -474,6 +625,7 @@ export function GRCreationModal({
         })),
       );
       setUploadedFiles(supportingDocsToUploadFiles(initialReceipt.documentChecklist.supportingDocs || []));
+      setPoUploadedFiles(buildInitialPoUploadFiles(purchaseOrders, initialReceipt));
       setStoredOnHoldConfirmed(true);
       setErrors({});
       setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
@@ -483,14 +635,16 @@ export function GRCreationModal({
 
     setPostingDate(dayjs().format('YYYY-MM-DD'));
     setActualReceiptDate(dayjs().format('YYYY-MM-DD'));
-    setDeliveryNoteNumber(inheritedDeliveryNoteNumber || '');
+    setDeliveryNoteNumber('');
+    setPoDeliveryNotes(buildInitialPoDeliveryNotes(purchaseOrders));
     setItems(buildInitialItems(purchaseOrders));
     setUploadedFiles([]);
+    setPoUploadedFiles(buildInitialPoUploadFiles(purchaseOrders));
     setErrors({});
     setStoredOnHoldConfirmed(false);
     setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
     closeScanModal();
-  }, [correctionMode, inheritedDeliveryNoteNumber, initialReceipt, open, purchaseOrders]);
+  }, [correctionMode, initialReceipt, open, purchaseOrders]);
 
   const groupedItems = purchaseOrders.map((purchaseOrder) => ({
     poNumber: purchaseOrder.poNumber,
@@ -762,80 +916,75 @@ export function GRCreationModal({
               />
             </div>
 
-          <Form layout="vertical" style={{ marginBottom: 6 }}>
-            <Row gutter={24}> 
-              <Col span={6}>
-                <Form.Item
-                  label="Delivery Note Number"
-                  required
-                  validateStatus={errors.deliveryNote ? 'error' : undefined}
-                  help={
-                    errors.deliveryNote
-                      ? 'Required'
-                      : isDeliveryNoteInherited
-                        ? 'Inherited from the previous approved receiving for the selected PO.'
-                        : undefined
-                  }
-                >
-                  <Input
-                    placeholder="From truck paperwork"
-                    size="middle"
-                    style={{ minHeight: 38 }}
-                    value={deliveryNoteNumber}
-                    disabled={isDeliveryNoteInherited}
-                    onChange={(event) => {
-                      setDeliveryNoteNumber(event.target.value);
-                      setErrors((prev) => ({ ...prev, deliveryNote: false }));
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={18}>
-                <Form.Item
-                  label="Documents"
-                  validateStatus={errors.supportingDocs ? 'error' : undefined}
-                  help={errors.supportingDocs ? 'Remove failed files before continuing.' : undefined}
-                  style={{ marginBottom: 8 }}
-                >
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '140px minmax(0, 1fr)',
-                      gap: 12,
-                      alignItems: 'start',
-                    }}
+          {!isMultiPOReceipt && (
+            <Form layout="vertical" style={{ marginBottom: 6 }}>
+              <Row gutter={24}>
+                <Col span={6}>
+                  <Form.Item
+                    label="Delivery Note Number"
+                    required
+                    validateStatus={errors.deliveryNote ? 'error' : undefined}
+                    help={errors.deliveryNote ? 'Required' : undefined}
                   >
-                    <div>
-                      <Upload
-                        multiple
-                        beforeUpload={stageSupportingDocBeforeUpload}
-                        fileList={uploadedFiles}
-                        showUploadList={false}
-                        onChange={handleUploadChange}
-                        onRemove={(file) => removeFile(file.uid)}
-                        onPreview={(file) => previewSupportingUploadFile(file)}
-                        accept=".pdf,.doc,.docx,image/*"
-                        listType="text"
-                      >
-                        <Button icon={<InboxOutlined />} size="middle" style={{ width: '100%', height: 38 }}>
-                          Upload Files
-                        </Button>
-                      </Upload>
+                    <Input
+                      placeholder="From truck paperwork"
+                      size="middle"
+                      style={{ minHeight: 38 }}
+                      value={deliveryNoteNumber}
+                      onChange={(event) => {
+                        setDeliveryNoteNumber(event.target.value);
+                        setErrors((prev) => ({ ...prev, deliveryNote: false }));
+                      }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={18}>
+                  <Form.Item
+                    label="Documents"
+                    validateStatus={errors.supportingDocs ? 'error' : undefined}
+                    help={errors.supportingDocs ? 'Remove failed files before continuing.' : undefined}
+                    style={{ marginBottom: 8 }}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '140px minmax(0, 1fr)',
+                        gap: 12,
+                        alignItems: 'start',
+                      }}
+                    >
+                      <div>
+                        <Upload
+                          multiple
+                          beforeUpload={stageSupportingDocBeforeUpload}
+                          fileList={uploadedFiles}
+                          showUploadList={false}
+                          onChange={handleUploadChange}
+                          onRemove={(file) => removeFile(file.uid)}
+                          onPreview={(file) => previewSupportingUploadFile(file)}
+                          accept=".pdf,.doc,.docx,image/*"
+                          listType="text"
+                        >
+                          <Button icon={<InboxOutlined />} size="middle" style={{ width: '100%', height: 38 }}>
+                            Upload Files
+                          </Button>
+                        </Upload>
+                      </div>
+                      <div>
+                        <SupportingDocsList
+                          files={uploadedFiles}
+                          fallbackSource="WAREHOUSE"
+                          onRemoveFile={removeFile}
+                          displayMode="grid"
+                          collapsedLimit={5}
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <SupportingDocsList
-                        files={uploadedFiles}
-                        fallbackSource="WAREHOUSE"
-                        onRemoveFile={removeFile}
-                        displayMode="grid"
-                        collapsedLimit={5}
-                      />
-                    </div>
-                  </div>
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
+          )}
 
           <div style={{ marginBottom: 14 }}>
             <div
@@ -925,6 +1074,94 @@ export function GRCreationModal({
                 ),
                 children: (
                   <div data-testid={`item-receipt-panel-body-${group.poNumber}`}>
+                    {isMultiPOReceipt && (
+                      <Card
+                        size="small"
+                        bordered={false}
+                        style={{ marginBottom: 16, background: '#fafafa' }}
+                        bodyStyle={{ padding: 16 }}
+                      >
+                        <Row gutter={16}>
+                          <Col span={8}>
+                            <Form.Item
+                              label="Delivery Note Number"
+                              required
+                              validateStatus={errors[`deliveryNote-${group.poNumber}`] ? 'error' : undefined}
+                              help={errors[`deliveryNote-${group.poNumber}`] ? 'Required' : undefined}
+                              style={{ marginBottom: 0 }}
+                            >
+                              <Input
+                                placeholder={`DN for ${group.poNumber}`}
+                                value={poDeliveryNotes[group.poNumber] || ''}
+                                onChange={(event) => {
+                                  const value = event.target.value;
+                                  setPoDeliveryNotes((prev) => ({
+                                    ...prev,
+                                    [group.poNumber]: value,
+                                  }));
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    [`deliveryNote-${group.poNumber}`]: false,
+                                  }));
+                                }}
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col span={16}>
+                            <Form.Item
+                              label="Documents"
+                              validateStatus={errors[`supportingDocs-${group.poNumber}`] ? 'error' : undefined}
+                              help={
+                                errors[`supportingDocs-${group.poNumber}`]
+                                  ? 'Remove failed files before continuing.'
+                                  : undefined
+                              }
+                              style={{ marginBottom: 0 }}
+                            >
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '140px minmax(0, 1fr)',
+                                  gap: 12,
+                                  alignItems: 'start',
+                                }}
+                              >
+                                <div>
+                                  <Upload
+                                    multiple
+                                    beforeUpload={stageSupportingDocBeforeUpload}
+                                    fileList={poUploadedFiles[group.poNumber] || []}
+                                    showUploadList={false}
+                                    onChange={handlePoUploadChange(group.poNumber)}
+                                    onRemove={(file) => removePoFile(group.poNumber, file.uid)}
+                                    onPreview={(file) => previewSupportingUploadFile(file)}
+                                    accept=".pdf,.doc,.docx,image/*"
+                                    listType="text"
+                                  >
+                                    <Button
+                                      icon={<InboxOutlined />}
+                                      size="middle"
+                                      style={{ width: '100%', height: 38 }}
+                                    >
+                                      Upload Files
+                                    </Button>
+                                  </Upload>
+                                </div>
+                                <div>
+                                  <SupportingDocsList
+                                    files={poUploadedFiles[group.poNumber] || []}
+                                    fallbackSource="WAREHOUSE"
+                                    onRemoveFile={(uid) => removePoFile(group.poNumber, uid)}
+                                    displayMode="grid"
+                                    collapsedLimit={5}
+                                  />
+                                </div>
+                              </div>
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                      </Card>
+                    )}
                     <Table
                       size="small"
                       columns={itemColumns}

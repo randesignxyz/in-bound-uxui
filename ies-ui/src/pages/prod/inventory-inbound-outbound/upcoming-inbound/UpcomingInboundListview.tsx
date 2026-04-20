@@ -795,8 +795,14 @@ export default function UpcomingInboundListview() {
       on_hold_warehouse_code: 'ON-HOLD',
       posting_date: data.postingDate,
       actual_receipt_date: data.actualReceiptDate,
-      delivery_note_number: data.deliveryNoteNumber || 'DRAFT',
-      poReferences: canonicalPoReferences,
+      delivery_note_number: data.deliveryNoteNumber || '',
+      poReferences: canonicalPoReferences.map((reference) => ({
+        poNumber: reference.poNumber,
+        supplier: reference.supplier,
+        expectedDate: reference.expectedDate,
+        expectedTime: reference.expectedTime,
+        deliveryNoteNumber: reference.deliveryNoteNumber || undefined,
+      })),
       items: (data.items || []).map((item: GRItem) => ({
         poNumber: item.poNumber || undefined,
         supplier: item.supplier || undefined,
@@ -828,7 +834,12 @@ export default function UpcomingInboundListview() {
         goodsReceiptPOForm: data.documentChecklist?.goodsReceiptPOForm ?? true,
         pmrmLabelForm: false,
         pmrmStockCardForm: data.documentChecklist?.pmrmStockCardForm ?? false,
-        supportingDocs: data.documentChecklist?.supportingDocs || [],
+        supportingDocs: (data.documentChecklist?.supportingDocs || []).map((doc: any) => ({
+          fileId: doc.fileId || undefined,
+          fileName: doc.fileName,
+          source: doc.source || undefined,
+          poNumber: doc.poNumber || undefined,
+        })),
       },
       labelForms: [],
     };

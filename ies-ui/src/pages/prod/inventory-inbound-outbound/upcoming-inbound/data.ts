@@ -80,6 +80,7 @@ export interface InboundGrPoReferenceApi {
   supplier?: string | null;
   expectedDate?: string | null;
   expectedTime?: string | null;
+  deliveryNoteNumber?: string | null;
 }
 
 export interface InboundGrItemApi {
@@ -102,6 +103,7 @@ export interface InboundGrItemApi {
   bestBeforeDate?: string | null;
   batchNumber?: string | null;
   barcode?: string | null;
+  deliveryNoteNumber?: string | null;
   qcDecision?: string | null;
   qcRemark?: string | null;
 }
@@ -118,6 +120,7 @@ export interface SupportingDocReferenceApi {
   fileId?: string | null;
   fileName: string;
   source?: string | null;
+  poNumber?: string | null;
 }
 
 export interface InboundPmrmLabelApi {

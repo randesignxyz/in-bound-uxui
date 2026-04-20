@@ -116,6 +116,7 @@ export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInb
             supplier: reference.supplier ?? api.supplier,
             expectedDate: reference.expectedDate ?? undefined,
             expectedTime: reference.expectedTime ?? undefined,
+            deliveryNoteNumber: reference.deliveryNoteNumber ?? undefined,
           }))
         : buildFallbackPoReferences(api),
     supplierNames: uniqueStrings([
@@ -205,6 +206,7 @@ function mapInboundGoodsReceiptItem(item: InboundGrItemApi): UpcomingInboundGood
     expiryDate: item.expiryDate ?? item.bestBeforeDate ?? '',
     batchNumber: item.batchNumber ?? '',
     barcode: item.barcode ?? '',
+    deliveryNoteNumber: item.deliveryNoteNumber ?? undefined,
     isMissing: item.isMissing,
     missingRemark: item.missingRemark ?? undefined,
     qcDecision: normalizeEnum(item.qcDecision, QC_DECISION_VALUES, undefined),
@@ -228,6 +230,7 @@ function mapSupportingDoc(doc: SupportingDocReferenceApi): SupportingDocReferenc
     fileId: doc.fileId ?? undefined,
     fileName: doc.fileName,
     source: normalizeSupportingDocSource(doc.source),
+    poNumber: doc.poNumber ?? undefined,
   };
 }
 
@@ -348,6 +351,7 @@ function buildFallbackPoReferences(api: InboundGoodsReceiptApi): UpcomingInbound
       supplier: api.supplier,
       expectedDate: undefined,
       expectedTime: undefined,
+      deliveryNoteNumber: api.deliveryNoteNumber ?? undefined,
     },
   ];
 }

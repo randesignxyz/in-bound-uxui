@@ -5,7 +5,10 @@ import type { RcFile, UploadProps } from 'antd/es/upload';
 import type { SupportingDocReference, SupportingDocSource } from './workflow';
 
 type UploadedSupportingDocResponse = SupportingDocReference & { fileId: string };
-export type SupportingUploadFile = UploadFile & { supportingDocSource?: SupportingDocSource | null };
+export type SupportingUploadFile = UploadFile & {
+  supportingDocSource?: SupportingDocSource | null;
+  poNumber?: string | null;
+};
 
 export const APP_PROD_SUPPORTING_DOC_UPLOAD_ACTION = `${getServiceUrl('PROD')}/inbound/supporting-docs/upload`;
 
@@ -21,6 +24,7 @@ export function supportingDocsToUploadFiles(docs: SupportingDocReference[]): Sup
     status: 'done',
     response: doc.fileId ?? undefined,
     supportingDocSource: doc.source ?? undefined,
+    poNumber: doc.poNumber ?? undefined,
   }));
 }
 
@@ -33,6 +37,7 @@ export function normalizeUploadFileList(
     ...file,
     status: file.status === 'error' ? 'error' : 'done',
     supportingDocSource: getUploadFileSource(file, fallbackSource),
+    poNumber: getUploadFilePoNumber(file),
   }));
 }
 
@@ -44,6 +49,7 @@ export function uploadFilesToSupportingDocs(
     fileId: typeof file.response === 'string' ? file.response : null,
     fileName: file.name,
     source: getUploadFileSource(file, fallbackSource) ?? undefined,
+    poNumber: getUploadFilePoNumber(file) ?? undefined,
   }));
 }
 
@@ -92,6 +98,7 @@ export async function uploadPendingSupportingDocs(
         fileId: file.response,
         fileName: file.name,
         source,
+        poNumber: getUploadFilePoNumber(file) ?? undefined,
       };
     }
     if (!file.originFileObj) {
@@ -99,6 +106,7 @@ export async function uploadPendingSupportingDocs(
         fileId: null,
         fileName: file.name,
         source,
+        poNumber: getUploadFilePoNumber(file) ?? undefined,
       };
     }
 
@@ -109,6 +117,7 @@ export async function uploadPendingSupportingDocs(
     return {
       ...uploaded,
       source,
+      poNumber: getUploadFilePoNumber(file) ?? undefined,
     };
   });
 }
@@ -123,6 +132,7 @@ export function applyUploadedSupportingDocs(
     response: docs[index]?.fileId ?? undefined,
     originFileObj: undefined,
     supportingDocSource: docs[index]?.source ?? getUploadFileSource(file),
+    poNumber: docs[index]?.poNumber ?? getUploadFilePoNumber(file),
   }));
 }
 
@@ -165,4 +175,8 @@ export function getUploadFileSource(
   fallbackSource?: SupportingDocSource,
 ): SupportingDocSource | null | undefined {
   return (file as SupportingUploadFile).supportingDocSource ?? fallbackSource;
+}
+
+export function getUploadFilePoNumber(file: UploadFile): string | null | undefined {
+  return (file as SupportingUploadFile).poNumber;
 }

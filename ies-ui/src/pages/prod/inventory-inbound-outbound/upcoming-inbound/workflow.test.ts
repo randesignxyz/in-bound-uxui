@@ -230,6 +230,7 @@ describe('groupReceiptItemsByPO', () => {
       totalPoQty: 8000,
       totalReceiveQty: 5000,
     });
+    expect(groups[0].items.map((item) => item.batchNumber)).toEqual(['BATCH-001', 'BATCH-002']);
   });
 });
 
@@ -275,5 +276,42 @@ describe('buildReceiptTimelineActivities', () => {
     const qcPendingActivity = activities.find((activity) => activity.title === 'QC Passed');
 
     expect(qcPendingActivity?.secondaryText).toBeUndefined();
+  });
+
+  it('keeps skip qc merge activities as warehouse actions instead of deriving qc passed states', () => {
+    const receipt = createReceipt({
+      processState: 'PENDING_SUPERVISOR_REVIEW',
+      displayStatus: 'Pending Supervisor Review',
+      activities: [
+        {
+          title: 'Skip QC by warehouse',
+          description: 'Warehouse skipped QC and merged the inbound receiving into IR-SUP while supervisor review was still pending',
+          performedBy: 'warehouse',
+          timestamp: '2026-04-20 03:12:20',
+          state: 'done',
+          processState: 'MERGED_TO_SUPERVISOR_REVIEW',
+        },
+        {
+          title: 'Warehouse skipped QC and merged item(s) into this supervisor receipt',
+          description: 'Item(s) from IR-001 merged after QC was skipped',
+          performedBy: 'warehouse',
+          timestamp: '2026-04-20 03:12:20',
+          state: 'done',
+          processState: 'PENDING_SUPERVISOR_REVIEW',
+        },
+      ],
+    });
+
+    const activities = buildReceiptTimelineActivities(receipt);
+
+    expect(activities.some((activity) => activity.title === 'QC Passed')).toBe(false);
+    expect(activities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ title: 'Skip QC by warehouse' }),
+        expect.objectContaining({
+          title: 'Warehouse skipped QC and merged item(s) into this supervisor receipt',
+        }),
+      ]),
+    );
   });
 });

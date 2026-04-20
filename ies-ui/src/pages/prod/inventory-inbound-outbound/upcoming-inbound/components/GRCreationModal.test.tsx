@@ -376,7 +376,7 @@ describe('GRCreationModal', () => {
     });
   });
 
-  it('inherits and locks the delivery note when the selected po already has one from a previous approved receiving', async () => {
+  it('keeps the single po delivery note editable even when the po already has a previous dn', async () => {
     render(
       <GRCreationModal
         open
@@ -387,8 +387,101 @@ describe('GRCreationModal', () => {
       />,
     );
 
-    const deliveryNoteInput = screen.getByDisplayValue('DN-LOCKED-001') as HTMLInputElement;
+    const deliveryNoteInput = screen.getByPlaceholderText('From truck paperwork') as HTMLInputElement;
 
-    expect(deliveryNoteInput.disabled).toBe(true);
+    expect(deliveryNoteInput.value).toBe('');
+    expect(deliveryNoteInput.disabled).toBe(false);
+  });
+
+  it('renders one delivery note field per po and submits the values by po for multi po receipts', async () => {
+    onSubmit.mockResolvedValue(true);
+    const initialReceipt = createInitialReceipt({
+      poNumber: 'PO-001',
+      poReferences: [
+        {
+          poNumber: 'PO-001',
+          supplier: 'Vendor A',
+          expectedDate: '2026-04-01',
+          expectedTime: '08:00',
+          deliveryNoteNumber: 'DN-OLD-001',
+        },
+        {
+          poNumber: 'PO-002',
+          supplier: 'Vendor A',
+          expectedDate: '2026-04-01',
+          expectedTime: '08:00',
+          deliveryNoteNumber: 'DN-OLD-002',
+        },
+      ],
+      items: [
+        {
+          code: 'ITEM-001',
+          name: 'Item 001',
+          poNumber: 'PO-001',
+          supplier: 'Vendor A',
+          poQty: 10,
+          receiveQty: 10,
+          uom: 'KG',
+          productDate: '2026-04-01',
+          expiryDate: '2027-04-01',
+          batchNumber: 'BATCH-001',
+          barcode: 'BARCODE-001',
+          isMissing: false,
+          missingRemark: '',
+        },
+        {
+          code: 'ITEM-002',
+          name: 'Item 002',
+          poNumber: 'PO-002',
+          supplier: 'Vendor A',
+          poQty: 10,
+          receiveQty: 10,
+          uom: 'KG',
+          productDate: '2026-04-02',
+          expiryDate: '2027-04-02',
+          batchNumber: 'BATCH-002',
+          barcode: 'BARCODE-002',
+          isMissing: false,
+          missingRemark: '',
+        },
+      ],
+    });
+
+    render(
+      <GRCreationModal
+        open
+        onClose={onClose}
+        purchaseOrders={[
+          createPurchaseOrder({ poNumber: 'PO-001' }),
+          createPurchaseOrder({
+            poNumber: 'PO-002',
+            items: [createPoItem({ code: 'ITEM-002', supplier: 'Vendor A' })],
+          }),
+        ]}
+        onSaveDraft={onSaveDraft}
+        onSubmit={onSubmit}
+        initialReceipt={initialReceipt}
+      />,
+    );
+
+    const poOnePanel = screen.getByTestId('item-receipt-panel-body-PO-001');
+    const poTwoPanel = screen.getByTestId('item-receipt-panel-body-PO-002');
+
+    fireEvent.change(within(poOnePanel).getByPlaceholderText('DN for PO-001'), {
+      target: { value: 'DN-001' },
+    });
+    fireEvent.change(within(poTwoPanel).getByPlaceholderText('DN for PO-002'), {
+      target: { value: 'DN-002' },
+    });
+    fireEvent.click(screen.getByText('Submit for QC'));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalled();
+    });
+
+    expect(onSubmit.mock.calls[0][0].poReferences).toEqual([
+      expect.objectContaining({ poNumber: 'PO-001', deliveryNoteNumber: 'DN-001' }),
+      expect.objectContaining({ poNumber: 'PO-002', deliveryNoteNumber: 'DN-002' }),
+    ]);
   });
 });

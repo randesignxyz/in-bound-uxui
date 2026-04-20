@@ -47,6 +47,7 @@ import {
   getReceiptApprovedGrNumber,
   getReceiptIrNumber,
   getReceiptPOReferences,
+  getExceptionQueueReceipts,
   poLinkStatusLabel,
   summarizePOReferences,
   summarizeSuppliers,
@@ -349,7 +350,7 @@ export default function UpcomingInboundListview() {
     }
     void loadDashboardSummary();
   }, [dashboardPeriodFilter, dashboardSummaryRange]);
-  
+
   useEffect(() => {
     if (isRoleSimulationEnabled) return;
     if (inboundRoleOptions.length === 0) return;
@@ -494,16 +495,7 @@ export default function UpcomingInboundListview() {
             },
           ];
 
-  const exceptionQueue = useMemo(
-    () =>
-      receipts.filter(
-        (r) =>
-          r.processState === 'MISMATCH_EXCEPTION' ||
-          !r.specMatch ||
-          !r.qtyMatch,
-      ),
-    [receipts],
-  );
+  const exceptionQueue = useMemo(() => getExceptionQueueReceipts(receipts), [receipts]);
 
   const qcRelevantReceipts = useMemo(
     () => receipts.filter((receipt) => getQcQueueStatus(receipt) !== null),
@@ -1530,7 +1522,7 @@ export default function UpcomingInboundListview() {
                   <Radio.Group
                     value={historyTypeFilter}
                     onChange={(e) => setHistoryTypeFilter(e.target.value)}
-                  > 
+                  >
                     <Radio.Button value="ALL">All</Radio.Button>
                     <Radio.Button value="Planned">Planned</Radio.Button>
                     <Radio.Button value="Unplanned">Unplanned</Radio.Button>

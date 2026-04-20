@@ -1,5 +1,6 @@
 import {
   buildReceiptTimelineActivities,
+  getExceptionQueueReceipts,
   type GoodsReceipt,
   type GRItem,
   getPurchaseOrderVendorOptions,
@@ -313,5 +314,121 @@ describe('buildReceiptTimelineActivities', () => {
         }),
       ]),
     );
+  });
+});
+
+describe('getExceptionQueueReceipts', () => {
+  it('hides a qty-only exception after another submitted receipt covers the same PO item', () => {
+    const originalException = createReceipt({
+      grNumber: 'IR-EX-001',
+      receivingNumber: 'IR-EX-001',
+      processState: 'MISMATCH_EXCEPTION',
+      qtyMatch: false,
+      items: [
+        createItem({
+          code: 'ITEM-001',
+          poNumber: 'PO-001',
+          poQty: 10,
+          receiveQty: 8,
+        }),
+      ],
+    });
+    const correctionReceipt = createReceipt({
+      grNumber: 'IR-FIX-001',
+      receivingNumber: 'IR-FIX-001',
+      processState: 'QC_PENDING',
+      qtyMatch: false,
+      items: [
+        createItem({
+          code: 'ITEM-001',
+          poNumber: 'PO-001',
+          poQty: 10,
+          receiveQty: 2,
+          batchNumber: 'BATCH-002',
+        }),
+      ],
+    });
+
+    expect(getExceptionQueueReceipts([originalException, correctionReceipt])).toEqual([]);
+  });
+
+  it('keeps a qty exception visible while the follow-up correction is still a draft', () => {
+    const originalException = createReceipt({
+      grNumber: 'IR-EX-001',
+      receivingNumber: 'IR-EX-001',
+      processState: 'MISMATCH_EXCEPTION',
+      qtyMatch: false,
+      items: [
+        createItem({
+          code: 'ITEM-001',
+          poNumber: 'PO-001',
+          poQty: 10,
+          receiveQty: 8,
+        }),
+      ],
+    });
+    const draftCorrection = createReceipt({
+      grNumber: 'IR-FIX-DRAFT',
+      receivingNumber: 'IR-FIX-DRAFT',
+      processState: 'GRPO_DRAFT',
+      qtyMatch: false,
+      items: [
+        createItem({
+          code: 'ITEM-001',
+          poNumber: 'PO-001',
+          poQty: 10,
+          receiveQty: 2,
+          batchNumber: 'BATCH-003',
+        }),
+      ],
+    });
+
+    expect(getExceptionQueueReceipts([originalException, draftCorrection])).toEqual([
+      originalException,
+      draftCorrection,
+    ]);
+  });
+
+  it('keeps QC-rejected receipts in the exception queue even when later receipts cover the same quantity', () => {
+    const qcRejectedReceipt = createReceipt({
+      grNumber: 'IR-QC-REJECT',
+      receivingNumber: 'IR-QC-REJECT',
+      processState: 'MISMATCH_EXCEPTION',
+      qtyMatch: true,
+      qcResult: 'Rejected',
+      activities: [
+        {
+          title: 'QC rejected inbound receiving',
+          description: 'Rejected during QC review',
+          timestamp: '2026-04-01 09:00:00',
+          state: 'done',
+          processState: 'MISMATCH_EXCEPTION',
+        },
+      ],
+      items: [
+        createItem({
+          code: 'ITEM-001',
+          poNumber: 'PO-001',
+          poQty: 10,
+          receiveQty: 10,
+        }),
+      ],
+    });
+    const followUpReceipt = createReceipt({
+      grNumber: 'IR-QC-FOLLOWUP',
+      receivingNumber: 'IR-QC-FOLLOWUP',
+      processState: 'QC_PENDING',
+      items: [
+        createItem({
+          code: 'ITEM-001',
+          poNumber: 'PO-001',
+          poQty: 10,
+          receiveQty: 10,
+          batchNumber: 'BATCH-004',
+        }),
+      ],
+    });
+
+    expect(getExceptionQueueReceipts([qcRejectedReceipt, followUpReceipt])).toEqual([qcRejectedReceipt]);
   });
 });

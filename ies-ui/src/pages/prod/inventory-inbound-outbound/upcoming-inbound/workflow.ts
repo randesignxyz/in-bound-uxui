@@ -371,6 +371,104 @@ export function buildReceiptExceptionReason(items: GRItem[]) {
     .join('; ');
 }
 
+const QTY_EXCEPTION_COVERAGE_STATES = new Set<InboundProcessState>([
+  'RECEIVED_CHECKING',
+  'MISMATCH_EXCEPTION',
+  'RECEIPT_CONFIRMED',
+  'STORED_ON_HOLD',
+  'QC_PENDING',
+  'QC_PASSED',
+  'PENDING_SUPERVISOR_REVIEW',
+  'CORRECTION_REQUIRED',
+  'SUPERVISOR_APPROVED',
+  'TRANSFERRED_TO_PM_RM_WH',
+  'FIN_SUBMITTED',
+  'DAILY_CLOSED',
+  'MONTHLY_SUMMARY_READY',
+]);
+
+type ReceiptQtyCoverage = {
+  expectedQty: number;
+  receiveQty: number;
+};
+
+export function getExceptionQueueReceipts(receipts: GoodsReceipt[]) {
+  const qtyCoverageByItem = buildReceiptQtyCoverage(receipts);
+
+  return receipts.filter((receipt) => isReceiptVisibleInExceptionQueue(receipt, qtyCoverageByItem));
+}
+
+function buildReceiptQtyCoverage(receipts: GoodsReceipt[]) {
+  const coverageByItem = new Map<string, ReceiptQtyCoverage>();
+
+  receipts.filter(isReceiptEligibleForQtyCoverage).forEach((receipt) => {
+    receipt.items.forEach((item) => {
+      const itemKey = buildReceiptItemKey(receipt, item);
+      if (!itemKey) return;
+
+      const currentCoverage = coverageByItem.get(itemKey) || { expectedQty: 0, receiveQty: 0 };
+      currentCoverage.expectedQty = Math.max(currentCoverage.expectedQty, item.poQty);
+      currentCoverage.receiveQty += Math.max(item.receiveQty, 0);
+      coverageByItem.set(itemKey, currentCoverage);
+    });
+  });
+
+  return coverageByItem;
+}
+
+function isReceiptEligibleForQtyCoverage(receipt: GoodsReceipt) {
+  if (!QTY_EXCEPTION_COVERAGE_STATES.has(receipt.processState)) {
+    return false;
+  }
+
+  if (!receipt.specMatch) {
+    return false;
+  }
+
+  return !isRejectedReceipt(receipt);
+}
+
+function isReceiptVisibleInExceptionQueue(
+  receipt: GoodsReceipt,
+  qtyCoverageByItem: Map<string, ReceiptQtyCoverage>,
+) {
+  if (!receipt.specMatch || isQcRejectedReceipt(receipt)) {
+    return true;
+  }
+
+  const quantityExceptionKeys = collectQuantityExceptionItemKeys(receipt);
+  if (quantityExceptionKeys.length > 0) {
+    return quantityExceptionKeys.some((itemKey) => {
+      const coverage = qtyCoverageByItem.get(itemKey);
+      return !coverage || coverage.receiveQty < coverage.expectedQty;
+    });
+  }
+
+  return !receipt.qtyMatch;
+}
+
+function collectQuantityExceptionItemKeys(receipt: GoodsReceipt) {
+  return Array.from(
+    new Set(
+      receipt.items
+        .filter((item) => item.isMissing || item.receiveQty < item.poQty)
+        .map((item) => buildReceiptItemKey(receipt, item))
+        .filter((itemKey): itemKey is string => Boolean(itemKey)),
+    ),
+  );
+}
+
+function buildReceiptItemKey(receipt: GoodsReceipt, item: ReceiptPoGroupedItemShape) {
+  const poNumber = normalizeReceiptItemPoNumber(receipt, item)?.trim().toUpperCase();
+  const itemCode = item.code?.trim().toUpperCase();
+
+  if (!poNumber || !itemCode) {
+    return undefined;
+  }
+
+  return `${poNumber}::${itemCode}`;
+}
+
 export const goodsReceiptSourceLabel: Record<GoodsReceiptSourceType, string> = {
   PLANNED: 'Planned',
   UNPLANNED_WITH_PO: 'Unplanned',

@@ -3,7 +3,7 @@ import { Button, Descriptions, Divider, Spin, Tag, Space, Typography } from 'ant
 import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
-import type { PurchaseOrder, POItem } from '../workflow';
+import { getPurchaseOrderStatusLabel, type PurchaseOrder, type POItem } from '../workflow';
 
 interface PODetailSidebarProps {
   open: boolean;
@@ -73,7 +73,7 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
               <Tag color={po.type === 'Planned' ? 'green' : 'orange'}>{po.type}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              <Tag color={poStatusColor[po.status]}>{po.status}</Tag>
+              <Tag color={poStatusColor[po.status]}>{getPurchaseOrderStatusLabel(po.status)}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Expected Date">
               {po.expectedDate || 'Unplanned'}

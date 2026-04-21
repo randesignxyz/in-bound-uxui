@@ -79,6 +79,19 @@ export interface PurchaseOrder {
   status: 'Expected' | 'Partial' | 'Fully Received';
 }
 
+export function getPurchaseOrderStatusLabel(status: PurchaseOrder['status']): string {
+  switch (status) {
+    case 'Expected':
+      return 'Ready to Receive';
+    case 'Partial':
+      return 'Receiving in Progress';
+    case 'Fully Received':
+      return 'Fully Received';
+    default:
+      return status;
+  }
+}
+
 export function getCombinedPurchaseOrderVendor(purchaseOrders: PurchaseOrder[]) {
   const normalizedSuppliers = Array.from(
     new Set(
@@ -1061,8 +1074,10 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
       (activity.processState === 'PENDING_SUPERVISOR_REVIEW' ||
         activity.processState === 'MERGED_TO_SUPERVISOR_REVIEW') &&
       (isSkipQcActivity || isMergeActivityText(activityText));
-    const expandedStates = isWarehouseMergeActivity
-      ? [activity.processState]
+    const expandedStates: InboundProcessState[] = isWarehouseMergeActivity
+      ? activity.processState
+        ? [activity.processState]
+        : []
       : mapActivityProcessStateToTimelineStates(activity.processState);
     if (!expandedStates.length) return;
 

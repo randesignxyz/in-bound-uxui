@@ -178,6 +178,7 @@ export function mapInboundDashboardSummary(summary: InboundDashboardSummaryApi):
     returnedForCorrection: summary.returnedForCorrection,
     awaitingPOLink: summary.awaitingPOLink,
     totalGRs: summary.totalGRs,
+    totalIrGrs: summary.totalIrGrs ?? summary.totalGRs,
   };
 }
 

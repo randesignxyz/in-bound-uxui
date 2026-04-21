@@ -2,7 +2,7 @@ import { useRef, type MouseEvent, type ReactNode } from 'react';
 import { Flex, Progress, Tag } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
-import type { PurchaseOrder } from '../workflow';
+import { getPurchaseOrderStatusLabel, type PurchaseOrder } from '../workflow';
 
 interface POListTableProps {
   purchaseOrders: PurchaseOrder[];
@@ -130,15 +130,15 @@ export function POListTable({
       render: (_: any, r: PurchaseOrder) =>
         r.status === 'Fully Received' ? (
           <Tag color="green" bordered={false}>
-            Fully Received
+            {getPurchaseOrderStatusLabel(r.status)}
           </Tag>
         ) : r.status === 'Partial' ? (
           <Tag color="blue" bordered={false}>
-            Partial
+            {getPurchaseOrderStatusLabel(r.status)}
           </Tag>
         ) : (
           <Tag color="gold" bordered={false}>
-            Expected
+            {getPurchaseOrderStatusLabel(r.status)}
           </Tag>
       ),
     },

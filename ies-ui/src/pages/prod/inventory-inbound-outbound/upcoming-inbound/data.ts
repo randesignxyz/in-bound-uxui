@@ -206,6 +206,7 @@ export interface InboundDashboardSummaryApi {
   returnedForCorrection: number;
   awaitingPOLink: number;
   totalGRs: number;
+  totalIrGrs: number;
 }
 
 export interface InboundSuccessPayloadResponse<T> {

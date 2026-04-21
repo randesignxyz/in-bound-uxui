@@ -14,7 +14,6 @@ import {
   InboundPurchaseOrderSearch,
   InboundSaveActivityInput,
   InboundSaveGoodsReceiptInput,
-  InboundStatusCountApi,
   InboundSubmitQcReviewInput,
   InboundSubmitSupervisorReviewInput,
   InboundSuccessPayloadResponse,
@@ -164,15 +163,6 @@ const UpcomingInboundAction = {
 
 export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
   return {
-    pagePurchaseOrders: async (
-      params: TableViewSearchParams<InboundPurchaseOrderAdvanceSearch>,
-    ): Promise<Paging<UpcomingInboundPurchaseOrder>> => {
-      const response = (await singleRequest<InboundPurchaseOrderApi>(
-        UpcomingInboundAction.pagePurchaseOrders(params),
-      )(requestAction)) as Paging<InboundPurchaseOrderApi>;
-      return mapPaging(response, mapInboundPurchaseOrder);
-    },
-
     detailPurchaseOrder: async (id: number): Promise<UpcomingInboundPurchaseOrder> => {
       const response = (await singleRequest<InboundPurchaseOrderApi>(
         UpcomingInboundAction.detailPurchaseOrder(id),
@@ -186,11 +176,6 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
       )(requestAction)) as InboundPurchaseOrderApi[];
       return mapInboundPurchaseOrders(response);
     },
-
-    getPurchaseOrderCounts: (params: InboundPurchaseOrderCountParams) =>
-      singleRequest<InboundStatusCountApi>(UpcomingInboundAction.getPurchaseOrderCounts(params))(
-        requestAction,
-      ) as Promise<InboundStatusCountApi[]>,
 
     pageGoodsReceipts: async (
       params: TableViewSearchParams<InboundGoodsReceiptSearch>,
@@ -207,11 +192,6 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
       )(requestAction)) as InboundGoodsReceiptApi;
       return mapInboundGoodsReceipt(response);
     },
-
-    getGoodsReceiptCounts: (params: InboundGoodsReceiptCountParams) =>
-      singleRequest<InboundStatusCountApi>(UpcomingInboundAction.getGoodsReceiptCounts(params))(
-        requestAction,
-      ) as Promise<InboundStatusCountApi[]>,
 
     getDashboardSummary: async (
       params: InboundDashboardSummaryParams = {},
@@ -239,11 +219,6 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
       )(requestAction)) as InboundSuccessPayloadResponse<InboundGoodsReceiptApi>;
       return mapPayloadResponse(response, mapInboundGoodsReceipt);
     },
-
-    saveActivity: (data: InboundSaveActivityInput) =>
-      singleRequest<InboundSuccessPayloadResponse<unknown>>(UpcomingInboundAction.saveActivity(data))(
-        requestAction,
-      ) as Promise<InboundSuccessPayloadResponse<unknown>>,
 
     linkPoToTempReceipt: async (
       data: InboundLinkPoInput,

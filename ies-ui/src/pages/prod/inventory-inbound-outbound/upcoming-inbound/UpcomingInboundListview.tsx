@@ -146,6 +146,27 @@ function isVisibleOperationalReceipt(receipt: GoodsReceipt) {
   return receipt.processState !== 'MERGED_TO_SUPERVISOR_REVIEW';
 }
 
+function sortPurchaseOrdersByLatestExpectedDate(purchaseOrders: PurchaseOrder[]): PurchaseOrder[] {
+  return [...purchaseOrders].sort((left, right) => {
+    const leftDate = left.expectedDate?.trim() || '';
+    const rightDate = right.expectedDate?.trim() || '';
+
+    if (leftDate !== rightDate) {
+      if (!leftDate) return 1;
+      if (!rightDate) return -1;
+      return rightDate.localeCompare(leftDate);
+    }
+
+    const leftTime = left.expectedTime?.trim() || '';
+    const rightTime = right.expectedTime?.trim() || '';
+    if (leftTime !== rightTime) {
+      return rightTime.localeCompare(leftTime);
+    }
+
+    return right.poNumber.localeCompare(left.poNumber);
+  });
+}
+
 export default function UpcomingInboundListview() {
   const access = useAccess();
   const requestActions = simpleRequestActions();
@@ -178,6 +199,7 @@ export default function UpcomingInboundListview() {
     returnedForCorrection: 0,
     awaitingPOLink: 0,
     totalGRs: 0,
+    totalIrGrs: 0,
   });
   const hasInitializedDashboardSummary = useRef(false);
 
@@ -285,7 +307,7 @@ export default function UpcomingInboundListview() {
     ]);
 
     if (poResult.status === 'fulfilled') {
-      const nextPurchaseOrders = poResult.value;
+      const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.value);
       setPurchaseOrders(nextPurchaseOrders);
       setSelectedPODetail((prev) => {
         if (!prev) return prev;
@@ -383,19 +405,19 @@ export default function UpcomingInboundListview() {
     return normalized;
   };
 
-  const dashboardExpectedTitle =
+  const dashboardIncomingTitle =
     dashboardSummaryRange === 'CUSTOM' && dashboardPeriodFilter
-      ? 'Expected in Selected Period'
+      ? 'Incoming in Selected Period'
       : dashboardSummaryRange === 'DAILY'
-        ? 'Expected Today'
+        ? 'Incoming Today'
         : dashboardSummaryRange === 'WEEKLY'
-          ? 'Expected This Week'
-          : 'Expected Overall';
+          ? 'Incoming This Week'
+          : 'Incoming Overall';
   const dashboardStatCards: DashboardStatCard[] =
     activeRole === 'WAREHOUSE_STAFF'
       ? [
           {
-            title: dashboardExpectedTitle,
+            title: dashboardIncomingTitle,
             value: inboundStats.expectedToday,
             color: '#1890ff',
             prefix: <InboxOutlined />,
@@ -433,7 +455,7 @@ export default function UpcomingInboundListview() {
         ? [
             {
               title: 'Total IR/GR',
-              value: inboundStats.totalGRs,
+              value: inboundStats.totalIrGrs,
               color: '#1890ff',
               prefix: <InboxOutlined />,
             },

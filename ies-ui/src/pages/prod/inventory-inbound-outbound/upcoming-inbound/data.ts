@@ -92,7 +92,6 @@ export interface InboundGrItemApi {
   receiveQty: number;
   uom: string;
   condition: string;
-  binLocation: string;
   damagedQty?: number | null;
   rowNumber?: string | null;
   isMissing: boolean;
@@ -223,7 +222,6 @@ export interface InboundSaveGoodsReceiptItemInput {
   receiveQty: number;
   uom: string;
   condition: string;
-  binLocation: string;
   damagedQty?: number | null;
   rowNumber?: string | null;
   isMissing?: boolean;

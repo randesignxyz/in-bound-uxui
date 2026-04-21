@@ -826,7 +826,6 @@ export default function UpcomingInboundListview() {
         receiveQty: item.receiveQty,
         uom: item.uom,
         condition: item.isMissing ? 'Missing' : 'Good',
-        binLocation: 'ON-HOLD',
         damagedQty: 0,
         rowNumber: undefined,
         isMissing: item.isMissing,

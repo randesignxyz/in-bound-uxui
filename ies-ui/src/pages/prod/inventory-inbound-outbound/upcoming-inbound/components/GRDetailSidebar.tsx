@@ -247,6 +247,7 @@ export function GRDetailSidebar({
   const supportingDocs = receipt?.documentChecklist.supportingDocs || [];
   const warehouseSupportingDocs = supportingDocs.filter((doc) => doc.source !== 'QC');
   const receiptLevelSupportingDocs = supportingDocs.filter((doc) => !doc.poNumber);
+  const qcSupportingDocs = supportingDocs.filter((doc) => doc.source === 'QC');
   const timelineActivities = useMemo(
     () => (receipt ? buildReceiptTimelineActivities(receipt) : []),
     [receipt],
@@ -266,6 +267,10 @@ export function GRDetailSidebar({
     () => (receipt ? groupReceiptItemsByPO(receipt, editableItems) : []),
     [editableItems, receipt],
   );
+  const isMultiPOReceipt = groupedReceiptItems.length > 1;
+  const shouldShowPoDocumentBlock = isMultiPOReceipt;
+  const warehouseReceiptLevelDocs = receiptLevelSupportingDocs.filter((doc) => doc.source !== 'QC');
+  const readonlySupportingDocs = isMultiPOReceipt ? qcSupportingDocs : receiptLevelSupportingDocs;
 
   useEffect(() => {
     if (!open || !receipt) {
@@ -1033,17 +1038,21 @@ export function GRDetailSidebar({
                             <Text strong>-</Text>
                           )}
                         </div>
-                        <div>
-                          <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 8 }}>
-                            PO Documents
+                        {shouldShowPoDocumentBlock && (
+                          <div>
+                            <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 8 }}>
+                              PO Documents
+                            </div>
+                            <div style={{ maxWidth: 900, maxHeight: 200 }}>
+                              <SupportingDocsList
+                                docs={warehouseSupportingDocs.filter((doc) => doc.poNumber === group.poNumber)}
+                                emptyText="No PO-specific documents attached."
+                                displayMode="grid"
+                                collapsedLimit={4}
+                              />
+                            </div>
                           </div>
-                          <SupportingDocsList
-                            docs={warehouseSupportingDocs.filter((doc) => doc.poNumber === group.poNumber)}
-                            emptyText="No PO-specific documents attached."
-                            displayMode="grid"
-                            collapsedLimit={4}
-                          />
-                        </div>
+                        )}
                       </Space>
                     </div>
                     <ProTable<EditableSidebarItem>
@@ -1073,15 +1082,17 @@ export function GRDetailSidebar({
             <div style={{ fontWeight: 600, marginBottom: 12 }}>Supporting Documents</div>
             {isQcEditable ? (
               <>
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontWeight: 500, marginBottom: 8 }}>Warehouse Documents</div>
-                  <SupportingDocsList
-                    docs={receiptLevelSupportingDocs.filter((doc) => doc.source !== 'QC')}
-                    emptyText="No receipt-level warehouse documents attached."
-                    displayMode="grid"
-                    collapsedLimit={5}
-                  />
-                </div>
+                {!isMultiPOReceipt && (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontWeight: 500, marginBottom: 8 }}>Warehouse Documents</div>
+                    <SupportingDocsList
+                      docs={warehouseReceiptLevelDocs}
+                      emptyText="No receipt-level warehouse documents attached."
+                      displayMode="grid"
+                      collapsedLimit={5}
+                    />
+                  </div>
+                )}
                 <div>
                   <div style={{ fontWeight: 500, marginBottom: 8 }}>QC Documents</div>
                   <Upload
@@ -1114,8 +1125,8 @@ export function GRDetailSidebar({
               </>
             ) : (
               <SupportingDocsList
-                docs={receiptLevelSupportingDocs}
-                emptyText="No receipt-level documents attached."
+                docs={readonlySupportingDocs}
+                emptyText={isMultiPOReceipt ? 'No QC documents attached.' : 'No receipt-level documents attached.'}
               />
             )}
           </div>

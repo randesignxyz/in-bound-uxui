@@ -41,10 +41,10 @@ interface SupportingDocsListProps {
 function getDocumentIcon(fileName: string) {
   const lowerName = fileName.toLowerCase();
   if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) {
-    return <FileExcelOutlined style={{ color: '#52c41a', fontSize: 18 }} />;
+    return <FileExcelOutlined style={{ color: '#52c41a', fontSize: 22 }} />;
   }
   if (lowerName.endsWith('.pdf')) {
-    return <FilePdfOutlined style={{ color: '#ff4d4f', fontSize: 18 }} />;
+    return <FilePdfOutlined style={{ color: '#ff4d4f', fontSize: 22 }} />;
   }
   if (
     lowerName.endsWith('.jpg') ||
@@ -52,9 +52,9 @@ function getDocumentIcon(fileName: string) {
     lowerName.endsWith('.png') ||
     lowerName.endsWith('.webp')
   ) {
-    return <FileImageOutlined style={{ color: '#1677ff', fontSize: 18 }} />;
+    return <FileImageOutlined style={{ color: '#1677ff', fontSize: 22 }} />;
   }
-  return <FileTextOutlined style={{ color: '#8c8c8c', fontSize: 18 }} />;
+  return <FileTextOutlined style={{ color: '#8c8c8c', fontSize: 22 }} />;
 }
 
 export function SupportingDocsList({
@@ -148,7 +148,7 @@ export function SupportingDocsList({
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${collapsedLimit}, minmax(0, 1fr))`,
-          gap: 12,
+          gap: 14,
           alignItems: 'stretch',
         }}
       >
@@ -157,11 +157,12 @@ export function SupportingDocsList({
             key={item.key}
             style={{
               minWidth: 0,
-              border: '1px solid #f0f0f0',
-              borderRadius: 10,
-              padding: '8px 10px',
-              background: '#fff',
-              minHeight: 78,
+              border: '1px solid #e5e7eb',
+              borderRadius: 14,
+              padding: '12px 12px 10px',
+              background: 'linear-gradient(180deg, #ffffff 0%, #fafcff 100%)',
+              minHeight: 118,
+              boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)',
             }}
           >
             <div
@@ -169,26 +170,41 @@ export function SupportingDocsList({
                 display: 'flex',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                gap: 10,
+                gap: 12,
               }}
             >
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: 8,
+                  gap: 10,
                   minWidth: 0,
                   flex: 1,
                 }}
               >
-                <span style={{ display: 'inline-flex', marginTop: 1 }}>{getDocumentIcon(item.fileName)}</span>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    marginTop: 1,
+                    width: 34,
+                    height: 34,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 10,
+                    background: '#f3f6fb',
+                    flexShrink: 0,
+                  }}
+                >
+                  {getDocumentIcon(item.fileName)}
+                </span>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   {item.isLegacy ? (
                     <Text
                       style={{
                         display: '-webkit-box',
-                        fontSize: 12,
-                        lineHeight: 1.35,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        lineHeight: 1.4,
                         overflow: 'hidden',
                         wordBreak: 'break-word',
                         WebkitLineClamp: 2,
@@ -202,8 +218,9 @@ export function SupportingDocsList({
                       onClick={() => void item.onView()}
                       style={{
                         display: '-webkit-box',
-                        fontSize: 12,
-                        lineHeight: 1.35,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        lineHeight: 1.4,
                         overflow: 'hidden',
                         wordBreak: 'break-word',
                         WebkitLineClamp: 2,
@@ -213,9 +230,23 @@ export function SupportingDocsList({
                       {item.fileName}
                     </Link>
                   )}
+                  <div style={{ marginTop: 6 }}>
+                    <Space size={6} wrap>
+                      {item.source && (
+                        <Tag style={{ marginInlineEnd: 0 }} color={getSupportingDocSourceColor(item.source)}>
+                          {supportingDocSourceLabel[item.source]}
+                        </Tag>
+                      )}
+                      {item.isLegacy && (
+                        <Tag style={{ marginInlineEnd: 0 }} color="default">
+                          Legacy
+                        </Tag>
+                      )}
+                    </Space>
+                  </div>
                 </div>
               </div>
-              <Space size={2}>
+              <Space size={0}>
                 <Button
                   size="small"
                   type="text"
@@ -392,7 +423,6 @@ export function SupportingDocsList({
             {(item.isPending || item.isLegacy) && (
               <div style={{ paddingLeft: 30, marginTop: 4 }}>
                 <Space size={8} wrap>
-                  {item.isPending && <Text type="secondary">Pending upload until action is confirmed</Text>}
                   {item.isLegacy && <Text type="secondary">Legacy attachment</Text>}
                 </Space>
               </div>

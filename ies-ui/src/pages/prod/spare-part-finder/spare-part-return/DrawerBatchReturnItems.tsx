@@ -47,6 +47,7 @@ interface ReturnItem {
   goodQty?: number;
   damagedQty?: number;
   itemRemark?: string;
+  forLine?: string;
   images?: string[];
 }
 
@@ -68,6 +69,7 @@ interface FetchReturnDetailResponseItem {
   damaged_qty?: number;
   remark?: string;
   images?: string[];
+  forLine?: string;
 }
 interface FetchReturnDetailResponseActivity {
   label?: string;
@@ -182,6 +184,7 @@ const mapFetchedItemToRow = (item: RequestDetailLineItem, index: number): Return
   qtyToReturn: item.quantity_to_return ?? 0,
   receivedQty: item.received_qty,
   goodQty: item.good_qty,
+  forLine: item.forLine,
   damagedQty: item.damaged_qty,
   itemRemark: item.remark,
   images: item.images,
@@ -232,6 +235,7 @@ const mapResponseToDetailData = (
     damaged_qty: line.damaged_qty,
     remark: line.remark,
     images: line.images,
+    forLine: line.forLine,
   })),
   activities: (item.activities ?? []).map((activity) => ({
     label: activity.label ?? '',
@@ -448,6 +452,16 @@ export default function DrawerBatchReturnItems({
       width: 90,
       render: (_, record) => (
         <span style={{ fontWeight: 600, color: '#52c41a' }}>{record.goodQty ?? '-'}</span>
+      ),
+    },
+    {
+      title: 'For Line',
+      key: 'forLine',
+      width: 90,
+      render: (_, record) => (
+        <span style={{ fontWeight: 600, color: '#1890ff' }}>
+          {record.forLine ?? '-'}
+        </span>
       ),
     },
     {

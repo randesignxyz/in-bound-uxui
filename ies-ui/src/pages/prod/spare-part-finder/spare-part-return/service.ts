@@ -43,7 +43,12 @@ const SparePartReturnAction = {
     endpoint: "FILE",
     payload: { imageId },
   }),
-
+  itemPickedDetails: (itemId: string, requestId: number): ServiceApiType<{ itemId: string; requestId: number }> => ({
+    type: "LIST_QUERY",
+    actionName: "get-spare-part-picked-by-item-id",
+    endpoint: "PROD",
+    payload: { itemId, requestId },
+  }),
   submit_Return_Request: (payload: any): ServiceApiType<any> => ({
     type: "EXEC",
     actionName: "return-spare-part-request",
@@ -143,6 +148,12 @@ const SparePartReturnAPI = (requestAction: RequestActions) => {
         ...res,
         items: (res.items || []).map(mapToMyRequestToReturn),
       };
+    },
+    itemPickedDetails: async (itemId: string, requestId: number): Promise<any> => {
+      const res = await singleRequest<any>(
+        SparePartReturnAction.itemPickedDetails(itemId, requestId),
+      )(requestAction);
+      return res;
     },
     fetch_spare_part_by_return_id: async (returnId: number): Promise<any> => {
       const res = (await singleRequest<any>(

@@ -86,6 +86,7 @@ export interface SparePartReturnListItem {
   // mapped to old field names to match table columns
   part_number?: string;
   spare_part_name?: string;
+  description?: string;
   request_id?: string;
   quantity?: number;
   UoM?: string;
@@ -236,6 +237,7 @@ export interface RequestDetailLineItem {
   quantity_to_return: number;
   used_quantity: number;
   total: number;
+  forLine?: string;
   // Warehouse receipt fields (present when state = COMPLETED)
   received_qty?: number;
   good_qty?: number;
@@ -258,6 +260,7 @@ export interface RequestDetailActivityItem {
   good_qty?: number;
   damage_message?: string | null;
   remark?: string;
+  forLine?: string;
 }
 
 /** One activity in Recent Activities timeline */

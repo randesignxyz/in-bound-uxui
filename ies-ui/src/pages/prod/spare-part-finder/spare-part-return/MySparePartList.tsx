@@ -69,8 +69,8 @@ export default function MySparePartList() {
     end: (status, reason) => console.log(status, reason),
   };
   const onDetailHandler = (data: SparePartReturnListItem) => {
-    setDrawerOpen(true);
     setSelectedItem(data);
+    setDrawerOpen(true);
   };
 
   const handleTogglePickedItemState = async (record: SparePartReturnListItem) => {
@@ -494,7 +494,14 @@ export default function MySparePartList() {
         onItemsChange={handleModalItemsChange}
         data={modalOpen.data}
       />
-      <DrawerViewItem open={drawerOpen} data={selectedItem} onClose={() => setDrawerOpen(false)} />
+      <DrawerViewItem
+        open={drawerOpen}
+        data={selectedItem}
+        onClose={() => {
+          setDrawerOpen(false);
+          setSelectedItem(null);
+        }}
+      />
     </>
   );
 }

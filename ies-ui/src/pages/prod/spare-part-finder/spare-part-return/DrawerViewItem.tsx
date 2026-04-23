@@ -143,6 +143,14 @@ export default function DrawerViewItem({
   const isClosed = detail?.isClosed ?? data?.isClosed ?? false;
   const title = detail?.itemName || data?.spare_part_name || data?.part_number || 'Product Details';
   const lineValue = detail?.forLine || (data as any)?.forLine || '-';
+  const pickedUpdates = useMemo(
+    () =>
+      [...(detail?.pickedUpdates ?? [])].sort(
+        (a, b) => dayjs(b.pickedDate).valueOf() - dayjs(a.pickedDate).valueOf(),
+      ),
+    [detail?.pickedUpdates],
+  );
+  const latestPickedUpdate = pickedUpdates[0];
   const categoryLabel = useMemo(() => {
     const category = detail?.category;
     if (typeof category === 'string') return category;
@@ -192,15 +200,16 @@ export default function DrawerViewItem({
             {title}
           </Title>
 
-          <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
-            Item ID: {detail?.itemId || data?.itemId || '-'}
+          <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 8 , fontWeight: 500}}>
+            {/* Item ID: */}
+             {detail?.itemId || data?.itemId || '-'}
           </Text>
-          <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 8 }}>
+          <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 8 , fontWeight: 500}}>
             Request No: {detail?.requestNo || data?.requestNo || '-'}
           </Text>
-          <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 24 }}>
+          {/* <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 24 }}>
             Fulfillment No: {detail?.fulfillmentNo || data?.fulfillmentNo || '-'}
-          </Text>
+          </Text> */}
 
           <div style={{ marginBottom: 24 }}>
             <Text
@@ -358,12 +367,53 @@ export default function DrawerViewItem({
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
               <Text style={{ color: '#8c8c8c' }}>Pickup Method</Text>
-              <Text>{detail?.pickupMethod || '-'}</Text>
+              <Text>{latestPickedUpdate?.pickupMethod || detail?.pickupMethod || '-'}</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>
               <Text style={{ color: '#8c8c8c' }}>Pickup Location</Text>
-              <Text>{detail?.pickedUpdates?.[0]?.pickupLocation || detail?.toWarehouseCode || '-'}</Text>
+              <Text>{latestPickedUpdate?.pickupLocation || detail?.toWarehouseCode || '-'}</Text>
             </div>
+
+            {pickedUpdates.length > 0 && (
+              <>
+                <div style={{ padding: '14px 20px', borderTop: '1px solid #f0f0f0', background: '#fcfcfc' }}>
+                  <Text strong style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                    Pickup Updates ({pickedUpdates.length})
+                  </Text>
+                </div>
+                {pickedUpdates.map((update, index) => (
+                  <div
+                    key={`${update.fulfillmentNo || 'pickup'}-${index}`}
+                    style={{
+                      padding: '14px 20px',
+                      borderTop: '1px solid #f5f5f5',
+                      borderBottom: index === pickedUpdates.length - 1 ? 'none' : '1px dashed #f0f0f0',
+                    }}
+                  >
+                    {/* <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ color: '#8c8c8c' }}>Fulfillment</Text>
+                      <Text>{update.fulfillmentNo || '-'}</Text>
+                    </div> */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ color: '#8c8c8c' }}>Picked By</Text>
+                      <Text>{update.pickedBy || '-'}</Text>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ color: '#8c8c8c' }}>Picked Date</Text>
+                      <Text>{formatDrawerDateTime(update.pickedDate)}</Text>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <Text style={{ color: '#8c8c8c' }}>Method</Text>
+                      <Text>{update.pickupMethod || '-'}</Text>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Text style={{ color: '#8c8c8c' }}>Location</Text>
+                      <Text>{update.pickupLocation || '-'}</Text>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </Card>
         </div>
 
@@ -401,11 +451,11 @@ export default function DrawerViewItem({
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
               <Text style={{ color: '#8c8c8c' }}>Picked By</Text>
-              <Text>{detail?.pickedBy || '-'}</Text>
+              <Text>{detail?.pickedBy || latestPickedUpdate?.pickedBy || '-'}</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>
               <Text style={{ color: '#8c8c8c' }}>Picked Date</Text>
-              <Text>{formatDrawerDateTime(detail?.pickedDate || detail?.firstPickedDate)}</Text>
+              <Text>{formatDrawerDateTime(detail?.pickedDate || latestPickedUpdate?.pickedDate || detail?.firstPickedDate)}</Text>
             </div>
           </Card>
         </div>
@@ -460,7 +510,7 @@ export default function DrawerViewItem({
           gap: 12,
         }}
       >
-        <Button
+        {/* <Button
           type="primary"
           size="large"
           block
@@ -472,7 +522,7 @@ export default function DrawerViewItem({
           onClick={onRequestParts}
         >
           Return Part
-        </Button>
+        </Button> */}
       </div>
     </Drawer>
   );

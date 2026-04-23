@@ -72,6 +72,7 @@ interface ReturnItem {
   goodQty?: number;
   damagedQty?: number;
   itemRemark?: string;
+  forLine?: string; // Not from API, but useful to show in table for warehouse staff to identify which line to receive against
   images?: string[];  // file IDs
 }
 
@@ -263,6 +264,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           uom: i.uom,
           usedQty: i.used_quantity ?? 0,
           qtyToReturn: i.quantity_to_return ?? 0,
+          forLine: i.forLine,
           // Receipt fields from completed returns
           receivedQty: i.received_qty,
           goodQty: i.good_qty,
@@ -358,6 +360,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             damaged_qty: i.damaged_qty,
             remark: i.remark,
             images: i.images,
+            forLine: i.forLine,
           })),
           activities: (item.activities ?? []).map((a: any) => ({
             label: a.label,
@@ -763,6 +766,15 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
               );
             },
             width: 100,
+          },
+          {
+            title: 'Line',
+            key: 'forLine',
+            render: (_: any, record: ReturnItem) => (
+            <span style={{ fontWeight: 600, color: '#1890ff' }}>
+              {record.forLine ?? '-'}
+            </span>
+          ),
           },
           {
             title: 'Damaged',
@@ -1200,6 +1212,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                           },
                           { title: 'From Warehouse', dataIndex: 'fromWarehouse' },
                           { title: 'To Warehouse', dataIndex: 'toWarehouse' },
+                          // {title: 'Line', dataIndex: 'forLine' },
                           { title: 'Business Unit', dataIndex: 'business_unit' },
                         ]}
                       />

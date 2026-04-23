@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Descriptions, Divider, Spin, Tag, Space, Typography } from 'antd';
 import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DrawerForm } from '@ant-design/pro-form';
@@ -21,9 +21,21 @@ const poStatusColor: Record<PurchaseOrder['status'], string> = {
 const { Text } = Typography;
 
 export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSidebarProps) {
-  if (!po) return null;
+  const [drawerOpen, setDrawerOpen] = useState(open);
+  const [renderedPO, setRenderedPO] = useState<PurchaseOrder | null>(po);
 
-  const deliveryNotes = po.deliveryNoteNumber
+  useEffect(() => {
+    if (po) {
+      setRenderedPO(po);
+    }
+    setDrawerOpen(open);
+  }, [open, po]);
+
+  const currentPO = po || renderedPO;
+
+  if (!currentPO) return null;
+
+  const deliveryNotes = currentPO.deliveryNoteNumber
     ?.split(',')
     .map((value) => value.trim())
     .filter(Boolean) || [];
@@ -51,12 +63,18 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
   return (
     <DrawerForm
       title="Purchase Order Detail"
-      open={open}
-      onOpenChange={(v: boolean) => !v && onClose()}
+      open={drawerOpen}
+      onOpenChange={(visible: boolean) => setDrawerOpen(visible)}
       submitter={false}
       width={720}
       drawerProps={{
-        destroyOnClose: true,
+        destroyOnClose: false,
+        afterOpenChange: (visible) => {
+          if (!visible) {
+            onClose();
+            setRenderedPO(null);
+          }
+        },
         bodyStyle: { paddingInline: 16, paddingTop: 16, paddingBottom: 16 },
       }}
     >
@@ -64,24 +82,26 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
         <ProCard bodyStyle={{ paddingInline: 8, paddingTop: 8, paddingBottom: 8 }}>
           <Descriptions column={2} size="small">
             <Descriptions.Item label="PO Number" style={{ fontWeight: 'bolder' }}>
-              {po.poNumber}
+              {currentPO.poNumber}
             </Descriptions.Item>
             <Descriptions.Item label="Supplier" style={{ fontWeight: 'bolder' }}>
-              {po.supplier}
+              {currentPO.supplier}
             </Descriptions.Item>
             <Descriptions.Item label="Type">
-              <Tag color={po.type === 'Planned' ? 'green' : 'orange'}>{po.type}</Tag>
+              <Tag color={currentPO.type === 'Planned' ? 'green' : 'orange'}>{currentPO.type}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              <Tag color={poStatusColor[po.status]}>{getPurchaseOrderStatusLabel(po.status)}</Tag>
+              <Tag color={poStatusColor[currentPO.status]}>
+                {getPurchaseOrderStatusLabel(currentPO.status)}
+              </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Expected Date">
-              {po.expectedDate || 'Unplanned'}
+              {currentPO.expectedDate || 'Unplanned'}
             </Descriptions.Item>
             <Descriptions.Item label="Expected Time">
-              {po.expectedTime || '—'}
+              {currentPO.expectedTime || '—'}
             </Descriptions.Item>
-            <Descriptions.Item label={`Delivery Notes For ${po.poNumber}`} span={2}>
+            <Descriptions.Item label={`Delivery Notes For ${currentPO.poNumber}`} span={2}>
               {deliveryNotes.length > 0 ? (
                 <Space size={[8, 8]} wrap>
                   {deliveryNotes.map((deliveryNote) => (
@@ -95,10 +115,10 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
               )}
             </Descriptions.Item>
             <Descriptions.Item label="Total Items">
-              {po.totalItems}
+              {currentPO.totalItems}
             </Descriptions.Item>
             <Descriptions.Item label="Total Qty">
-              {po.totalQty.toLocaleString()}
+              {currentPO.totalQty.toLocaleString()}
             </Descriptions.Item>
           </Descriptions>
 
@@ -108,7 +128,7 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
             size="small"
             search={false}
             rowKey="code"
-            dataSource={po.items}
+            dataSource={currentPO.items}
             options={{ density: false, fullScreen: false, reload: false, setting: false }}
             pagination={false}
             columns={itemColumns}
@@ -118,7 +138,7 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               type="primary"
-              onClick={() => onCreateGR(po)}
+              onClick={() => onCreateGR(currentPO)}
             >
               Create Inbound Receiving
             </Button>

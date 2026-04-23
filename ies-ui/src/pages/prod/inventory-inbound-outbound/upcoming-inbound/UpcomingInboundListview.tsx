@@ -127,6 +127,48 @@ const qcStatusOptions: Array<{ label: string; value: QcQueueStatusFilter }> = [
   { label: 'All', value: 'All' },
 ];
 
+const inboundWorkspaceMotionStyles = `
+  @keyframes inboundWorkspaceTabEnter {
+    from {
+      opacity: 0;
+      transform: translate3d(10px, 0, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  .inbound-workspace-tab-pane {
+    animation: inboundWorkspaceTabEnter 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .inbound-workspace-tab-button {
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .inbound-workspace-tab-button.ant-btn-primary {
+    transform: translateY(-1px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .inbound-workspace-tab-pane {
+      animation: none;
+      will-change: auto;
+    }
+
+    .inbound-workspace-tab-button {
+      transition: none;
+    }
+  }
+`;
+
 function normalizeReceiptForUI(receipt: GoodsReceipt): GoodsReceipt {
   const poReferences = getReceiptPOReferences(receipt);
   const supplierNames = receipt.supplierNames?.length
@@ -1263,6 +1305,7 @@ export default function UpcomingInboundListview() {
 
   return (
     <>
+      <style>{inboundWorkspaceMotionStyles}</style>
       <BreadCrumbCom separator=">" routes={routes} />
       {workspaceContent ? (
         workspaceContent
@@ -1416,6 +1459,7 @@ export default function UpcomingInboundListview() {
                     return (
                       <Button
                         key={option.value}
+                        className="inbound-workspace-tab-button"
                         type={isActive ? 'primary' : 'default'}
                         size="small"
                         icon={option.icon}
@@ -1568,105 +1612,42 @@ export default function UpcomingInboundListview() {
         </ProCard>
 
         {/* ── Inbound Operations View ── */}
-        {effectiveInboundView === 'operations' && (
-          <div>
-            {activeRole === 'WAREHOUSE_STAFF' ? (
-              <>
-                <POListTable
-                  purchaseOrders={filteredWarehousePurchaseOrders}
-                  onViewDetails={handleViewPODetail}
-                  headerTitle={poHeaderTitle}
-                  toolbarExtra={poHeaderActions}
-                  selectedRowKeys={selectedWarehousePONumbers}
-                  lockedSupplier={selectedWarehousePOVendor}
-                  onSelectionChange={handleWarehousePOSelectionChange}
-                />
+        <div
+          key={`${activeRole}-${effectiveInboundView}`}
+          className="inbound-workspace-tab-pane"
+        >
+          {effectiveInboundView === 'operations' && (
+            <div>
+              {activeRole === 'WAREHOUSE_STAFF' ? (
+                <>
+                  <POListTable
+                    purchaseOrders={filteredWarehousePurchaseOrders}
+                    onViewDetails={handleViewPODetail}
+                    headerTitle={poHeaderTitle}
+                    toolbarExtra={poHeaderActions}
+                    selectedRowKeys={selectedWarehousePONumbers}
+                    lockedSupplier={selectedWarehousePOVendor}
+                    onSelectionChange={handleWarehousePOSelectionChange}
+                  />
 
-                {awaitingPOLinkReceipts.length > 0 && (
-                  <Card
-                    size="small"
-                    style={{ marginBottom: 16, borderColor: '#d3adf7' }}
-                    title={
-                      <span>
-                        <Badge color="#722ed1" />
-                        <Text strong style={{ color: '#531dab', marginLeft: 8 }}>
-                          Awaiting PO Link
-                        </Text>
-                        <Badge
-                          count={awaitingPOLinkReceipts.length}
-                          style={{ marginLeft: 8, backgroundColor: '#722ed1' }}
-                        />
-                      </span>
-                    }
-                  >
-                    {awaitingPOLinkReceipts.map((gr) => (
-                      <div
-                        key={gr.grNumber}
-                        style={{
-                          padding: '8px 0',
-                          borderBottom: '1px solid #f0f0f0',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleOpenGRDetail(gr)}
-                      >
-                        <Row align="middle" justify="space-between" gutter={12}>
-                          <Col flex="auto">
-                            <div>
-                              <Text strong style={{ color: '#531dab', fontSize: 13 }}>
-                                {gr.tempReferenceNo || gr.grNumber}
-                              </Text>
-                              <Tag
-                                color={getGoodsReceiptSourceColor(gr.receiptSourceType)}
-                                style={{ marginLeft: 8 }}
-                              >
-                                Temporary Receiving
-                              </Tag>
-                              <Tag color="warning" style={{ marginLeft: 8 }}>
-                                {poLinkStatusLabel[gr.poLinkStatus]}
-                              </Tag>
-                            </div>
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              {summarizeSuppliers(gr)} · {gr.pendingPOReason || 'Waiting for procurement PO'}
-                            </Text>
-                          </Col>
-                          <Col>
-                            <Button
-                              size="small"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setLinkPOReceipt(gr);
-                              }}
-                            >
-                              Link PO
-                            </Button>
-                          </Col>
-                        </Row>
-                      </div>
-                    ))}
-                  </Card>
-                )}
-
-                {exceptionQueue.length > 0 && (
-                  <Card
-                    size="small"
-                    title={
-                      <span>
-                        <Badge status="error" />
-                        <Text strong style={{ color: '#cf1322', marginLeft: 8 }}>
-                          Exception Queue
-                        </Text>
-                        <Badge
-                          count={exceptionQueue.length}
-                          style={{ marginLeft: 8, backgroundColor: '#ff4d4f' }}
-                        />
-                      </span>
-                    }
-                    style={{ borderColor: '#ffa39e' }}
-                  >
-                    {exceptionQueue.map((gr) => {
-                      const displayStatus = getReceiptDisplayStatus(gr);
-
-                      return (
+                  {awaitingPOLinkReceipts.length > 0 && (
+                    <Card
+                      size="small"
+                      style={{ marginBottom: 16, borderColor: '#d3adf7' }}
+                      title={
+                        <span>
+                          <Badge color="#722ed1" />
+                          <Text strong style={{ color: '#531dab', marginLeft: 8 }}>
+                            Awaiting PO Link
+                          </Text>
+                          <Badge
+                            count={awaitingPOLinkReceipts.length}
+                            style={{ marginLeft: 8, backgroundColor: '#722ed1' }}
+                          />
+                        </span>
+                      }
+                    >
+                      {awaitingPOLinkReceipts.map((gr) => (
                         <div
                           key={gr.grNumber}
                           style={{
@@ -1676,59 +1657,127 @@ export default function UpcomingInboundListview() {
                           }}
                           onClick={() => handleOpenGRDetail(gr)}
                         >
-                          <Row align="middle" justify="space-between">
-                            <Col>
+                          <Row align="middle" justify="space-between" gutter={12}>
+                            <Col flex="auto">
                               <div>
-                                <Text strong style={{ color: '#cf1322', fontSize: 13 }}>
-                                  {gr.grNumber}
+                                <Text strong style={{ color: '#531dab', fontSize: 13 }}>
+                                  {gr.tempReferenceNo || gr.grNumber}
                                 </Text>
-                                <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
-                                  - {summarizePOReferences(gr)}
-                                </Text>
+                                <Tag
+                                  color={getGoodsReceiptSourceColor(gr.receiptSourceType)}
+                                  style={{ marginLeft: 8 }}
+                                >
+                                  Temporary Receiving
+                                </Tag>
+                                <Tag color="warning" style={{ marginLeft: 8 }}>
+                                  {poLinkStatusLabel[gr.poLinkStatus]}
+                                </Tag>
                               </div>
                               <Text type="secondary" style={{ fontSize: 12 }}>
-                                {summarizeSuppliers(gr)} &middot;{' '}
-                                <Tag color={getReceiptDisplayStatusColor(displayStatus)} bordered={false}>
-                                  {displayStatus}
-                                </Tag>
+                                {summarizeSuppliers(gr)} · {gr.pendingPOReason || 'Waiting for procurement PO'}
                               </Text>
+                            </Col>
+                            <Col>
+                              <Button
+                                size="small"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setLinkPOReceipt(gr);
+                                }}
+                              >
+                                Link PO
+                              </Button>
                             </Col>
                           </Row>
                         </div>
-                      );
-                    })}
-                  </Card>
-                )}
-              </>
-            ) : (
-              <GRQueueTable
-                receipts={filteredRoleQueue}
-                onViewDetail={handleOpenGRDetail}
-                statusMode={activeRole === 'QC' ? 'qc' : 'legacy'}
-                headerTitle={
-                  <div style={{ paddingLeft: 8 }}>
-                    <Text strong>{`Inbound Receiving (${filteredRoleQueue.length})`}</Text>
-                  </div>
-                }
-              />
-            )}
-          </div>
-        )}
+                      ))}
+                    </Card>
+                  )}
 
-        {/* ── GR History View ── */}
-        {effectiveInboundView === 'history' && (
-          <Card size="small" style={{ marginBottom: 16 }} bodyStyle={{ padding: 0 }}>
-            <div style={{ padding: '16px 16px 12px' }}>{inboundReceivingHeaderTitle}</div>
-            <InboundGRTable
-              receipts={historyReceipts}
-              onViewDetail={handleOpenGRDetail}
-              typeFilter={historyTypeFilter}
-              statusFilter={historyStatusFilter}
-              hideSourceAndPoLink={activeRole === 'WAREHOUSE_STAFF' || activeRole === 'WAREHOUSE_SUPERVISOR'}
-              showNotificationBadge={activeRole === 'WAREHOUSE_STAFF'}
-            />
-          </Card>
-        )}
+                  {exceptionQueue.length > 0 && (
+                    <Card
+                      size="small"
+                      title={
+                        <span>
+                          <Badge status="error" />
+                          <Text strong style={{ color: '#cf1322', marginLeft: 8 }}>
+                            Exception Queue
+                          </Text>
+                          <Badge
+                            count={exceptionQueue.length}
+                            style={{ marginLeft: 8, backgroundColor: '#ff4d4f' }}
+                          />
+                        </span>
+                      }
+                      style={{ borderColor: '#ffa39e' }}
+                    >
+                      {exceptionQueue.map((gr) => {
+                        const displayStatus = getReceiptDisplayStatus(gr);
+
+                        return (
+                          <div
+                            key={gr.grNumber}
+                            style={{
+                              padding: '8px 0',
+                              borderBottom: '1px solid #f0f0f0',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => handleOpenGRDetail(gr)}
+                          >
+                            <Row align="middle" justify="space-between">
+                              <Col>
+                                <div>
+                                  <Text strong style={{ color: '#cf1322', fontSize: 13 }}>
+                                    {gr.grNumber}
+                                  </Text>
+                                  <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                                    - {summarizePOReferences(gr)}
+                                  </Text>
+                                </div>
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  {summarizeSuppliers(gr)} &middot;{' '}
+                                  <Tag color={getReceiptDisplayStatusColor(displayStatus)} bordered={false}>
+                                    {displayStatus}
+                                  </Tag>
+                                </Text>
+                              </Col>
+                            </Row>
+                          </div>
+                        );
+                      })}
+                    </Card>
+                  )}
+                </>
+              ) : (
+                <GRQueueTable
+                  receipts={filteredRoleQueue}
+                  onViewDetail={handleOpenGRDetail}
+                  statusMode={activeRole === 'QC' ? 'qc' : 'legacy'}
+                  headerTitle={
+                    <div style={{ paddingLeft: 8 }}>
+                      <Text strong>{`Inbound Receiving (${filteredRoleQueue.length})`}</Text>
+                    </div>
+                  }
+                />
+              )}
+            </div>
+          )}
+
+          {/* ── GR History View ── */}
+          {effectiveInboundView === 'history' && (
+            <Card size="small" style={{ marginBottom: 16 }} bodyStyle={{ padding: 0 }}>
+              <div style={{ padding: '16px 16px 12px' }}>{inboundReceivingHeaderTitle}</div>
+              <InboundGRTable
+                receipts={historyReceipts}
+                onViewDetail={handleOpenGRDetail}
+                typeFilter={historyTypeFilter}
+                statusFilter={historyStatusFilter}
+                hideSourceAndPoLink={activeRole === 'WAREHOUSE_STAFF' || activeRole === 'WAREHOUSE_SUPERVISOR'}
+                showNotificationBadge={activeRole === 'WAREHOUSE_STAFF'}
+              />
+            </Card>
+          )}
+        </div>
       </div>
       )}
 

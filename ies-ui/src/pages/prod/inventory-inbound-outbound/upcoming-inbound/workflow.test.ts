@@ -315,6 +315,49 @@ describe('buildReceiptTimelineActivities', () => {
       ]),
     );
   });
+
+  it('shows skip qc as a warehouse action before the supervisor pending milestone', () => {
+    const receipt = createReceipt({
+      processState: 'PENDING_SUPERVISOR_REVIEW',
+      displayStatus: 'Pending Supervisor Review',
+      createdDate: '2026-04-22 01:50:47',
+      activities: [
+        {
+          title: 'QC Pending',
+          description: 'Submitted to QC',
+          performedBy: 'warehouse',
+          timestamp: '2026-04-22 01:50:47',
+          state: 'done',
+          processState: 'QC_PENDING',
+        },
+        {
+          title: 'Skip QC by warehouse',
+          description: 'Warehouse skipped QC and sent receipt to supervisor review',
+          performedBy: 'warehouse',
+          timestamp: '2026-04-22 01:50:53',
+          state: 'done',
+          processState: 'PENDING_SUPERVISOR_REVIEW',
+        },
+      ],
+    });
+
+    const activities = buildReceiptTimelineActivities(receipt);
+    const skipQcIndex = activities.findIndex((activity) => activity.title === 'Skip QC by warehouse');
+    const supervisorPendingIndex = activities.findIndex(
+      (activity) => activity.title === 'Supervisor Pending',
+    );
+
+    expect(skipQcIndex).toBeGreaterThan(-1);
+    expect(supervisorPendingIndex).toBe(skipQcIndex + 1);
+    expect(activities[skipQcIndex]).toMatchObject({
+      secondaryText: 'by warehouse',
+      timestamp: '',
+    });
+    expect(activities[supervisorPendingIndex]).toMatchObject({
+      timestamp: '2026-04-22 01:50:53',
+      processState: 'PENDING_SUPERVISOR_REVIEW',
+    });
+  });
 });
 
 describe('getExceptionQueueReceipts', () => {

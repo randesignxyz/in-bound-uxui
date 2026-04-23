@@ -997,20 +997,24 @@ function mapActivityProcessStateToTimelineStates(
   }
 }
 
+type TimelineState = {
+  processState: InboundProcessState;
+  title: string;
+  description: string;
+  performedBy?: string;
+  timestamp: string;
+};
+
 function appendTimelineState(
-  items: Array<{
-    processState: InboundProcessState;
-    title: string;
-    description: string;
-    timestamp: string;
-  }>,
+  items: TimelineState[],
   processState: InboundProcessState,
   title: string,
   description: string,
   timestamp: string,
+  replacePrevious = true,
 ) {
   const previous = items[items.length - 1];
-  if (previous?.processState === processState) {
+  if (replacePrevious && previous?.processState === processState) {
     items[items.length - 1] = {
       processState,
       title,
@@ -1023,13 +1027,32 @@ function appendTimelineState(
   items.push({ processState, title, description, timestamp });
 }
 
+function appendSkipQcTimelineStates(items: TimelineState[], activity: GRActivity) {
+  appendTimelineState(
+    items,
+    'MERGED_TO_SUPERVISOR_REVIEW',
+    activity.title || 'Skip QC',
+    activity.description || activity.title || 'Skip QC',
+    '',
+    false,
+  );
+
+  const skipQcActivity = items[items.length - 1];
+  if (skipQcActivity?.processState === 'MERGED_TO_SUPERVISOR_REVIEW') {
+    skipQcActivity.performedBy = activity.performedBy;
+  }
+
+  appendTimelineState(
+    items,
+    'PENDING_SUPERVISOR_REVIEW',
+    'Supervisor Pending',
+    officialStateLabel.PENDING_SUPERVISOR_REVIEW,
+    activity.timestamp,
+  );
+}
+
 function timelineEndsWithStates(
-  items: Array<{
-    processState: InboundProcessState;
-    title: string;
-    description: string;
-    timestamp: string;
-  }>,
+  items: TimelineState[],
   states: InboundProcessState[],
 ): boolean {
   if (states.length === 0 || items.length < states.length) return false;
@@ -1048,13 +1071,7 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
     );
   }
 
-  const timelineStates: Array<{
-    processState: InboundProcessState;
-    title: string;
-    description: string;
-    performedBy?: string;
-    timestamp: string;
-  }> = [];
+  const timelineStates: TimelineState[] = [];
 
   for (const baseState of ['RECEIVED_CHECKING', 'RECEIPT_CONFIRMED', 'STORED_ON_HOLD'] as InboundProcessState[]) {
     appendTimelineState(
@@ -1070,6 +1087,11 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
     const activityText = getActivityText(activity);
     const isSkipQcActivity =
       activity.processState === 'PENDING_SUPERVISOR_REVIEW' && isSkipQcActivityText(activityText);
+    if (isSkipQcActivity) {
+      appendSkipQcTimelineStates(timelineStates, activity);
+      return;
+    }
+
     const isWarehouseMergeActivity =
       (activity.processState === 'PENDING_SUPERVISOR_REVIEW' ||
         activity.processState === 'MERGED_TO_SUPERVISOR_REVIEW') &&

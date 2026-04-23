@@ -204,7 +204,7 @@ function isRejectedActivityTitle(title: string) {
 export function GRDetailSidebar({
   open,
   onClose,
-  receipt,
+  receipt: selectedReceipt,
   viewerRole,
   onUpdateProcessState,
   onOpenWarehouseCorrection,
@@ -220,7 +220,17 @@ export function GRDetailSidebar({
   const [supervisorNote, setSupervisorNote] = useState('');
   const [activePoPanels, setActivePoPanels] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(open);
+  const [renderedReceipt, setRenderedReceipt] = useState<GoodsReceipt | null>(selectedReceipt);
+  const receipt = selectedReceipt || renderedReceipt;
   const routingSummary = useMemo(() => summarizeQcRouting(items), [items]);
+
+  useEffect(() => {
+    if (selectedReceipt) {
+      setRenderedReceipt(selectedReceipt);
+    }
+    setDrawerOpen(open);
+  }, [open, selectedReceipt]);
 
   useEffect(() => {
     if (!open || !receipt) return;
@@ -794,12 +804,18 @@ export function GRDetailSidebar({
           <Space>{headerActions}</Space>
         </div>
       }
-      open={open}
-      onOpenChange={(value: boolean) => !value && onClose()}
+      open={drawerOpen}
+      onOpenChange={(visible: boolean) => setDrawerOpen(visible)}
       submitter={false}
       width="calc(100vw - 32px)"
       drawerProps={{
-        destroyOnClose: true,
+        destroyOnClose: false,
+        afterOpenChange: (visible) => {
+          if (!visible) {
+            onClose();
+            setRenderedReceipt(null);
+          }
+        },
         bodyStyle: { paddingInline: 16, paddingTop: 16, paddingBottom: 16 },
       }}
     >

@@ -116,6 +116,27 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some(
         (item) => item === 'ROLE_ADMIN',
       ) || false,
+    canSpfRequester:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_PROD_SPF_REQUESTER'].some((it) => it === item),
+      ) || false,
+    canSpfApprover:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_PROD_SPF_APPROVER'].some((it) => it === item),
+      ) || false,
+    canSpfWarehouseStaff:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_PROD_SPF_WAREHOUSE_STAFF'].some((it) => it === item),
+      ) || false,
+    canAccessSparePartFinder:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_PROD_SPF_REQUESTER',
+          'ROLE_PROD_SPF_APPROVER',
+          'ROLE_PROD_SPF_WAREHOUSE_STAFF',
+        ].some((it) => it === item),
+      ) || false,
 
     canConfirmDeliveryExpense:
       currentUser?.authorities.some((item) =>
@@ -615,6 +636,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         [
           ...OUTBOUND_TRANSFER_ROLES,
           'ROLE_PROD_WTP_ADMIN',
+          'ROLE_PROD_SPF_REQUESTER',
+          'ROLE_PROD_SPF_APPROVER',
+          'ROLE_PROD_SPF_WAREHOUSE_STAFF',
         ].some((it) => it === item),
       ) || hasInboundRole || false,
 
@@ -753,6 +777,24 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ].some((it) => it === item),
       ) || false,
 
+    canAccessSparePartRequestMenuItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_PROD_ADMIN',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_SPARE_PART_USER',
+        ].some((it) => it === item),
+      ) || false,
+    canAccessSparePartReturnMenuItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_PROD_ADMIN',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_SPARE_PART_USER',
+        ].some((it) => it === item),
+      ) || false,
 
     /*****Queque */
     canAccesSqueueMenu:

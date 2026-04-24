@@ -111,19 +111,9 @@ export default defineConfig({
   /**
    * @doc https://pro.ant.design/zh-cn/docs/openapi/
    */
-  openAPI: [
-    // {
-    //   requestLibPath: "import { request } from '@umijs/max'",
-    //   // schemaPath: "https://gw.alipayobjects.com/os/antfincdn/M%24jrzTTYJN/oneapi.json"
-    //   schemaPath: join(__dirname, 'oneapi.json'),
-    //   mock: false,
-    // },
-    // {
-    //   requestLibPath: "import { request } from '@umijs/max'",
-    //   schemaPath: 'https://gw.alipayobjects.com/os/antfincdn/CA1dOm%2631B/openapi.json',
-    //   projectName: 'swagger',
-    // },
-  ],
+  // Keep OpenAPI generation disabled here. An empty `openAPI` config still
+  // causes Umi to generate the `/umi/plugin/openapi` route under `.umi`,
+  // which is currently breaking the local generated bundle on this workspace.
   mfsu: {
     strategy: 'normal',
   },

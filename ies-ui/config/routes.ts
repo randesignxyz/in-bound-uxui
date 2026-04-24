@@ -1,5 +1,7 @@
 ﻿import icons from "@/.umi/plugin-layout/icons";
+import component from "@/locales/bn-BD/component";
 import { access } from "fs";
+import path from "path";
 
 /**
  *
@@ -1536,7 +1538,6 @@ export default [
     access: 'canAccessInventoryTranferMenuItem',
     component: './prod/inventory-transfer/',
   },
-
   {
     path: '/prod/daily-water-treatment/:view/*',
     name: 'dailyWaterTreatment',
@@ -1564,6 +1565,41 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessDailyHACCPMonitoringOzoneMenuItem',
     component: './prod/daily-haccp-monitoring-ozone/',
+  },
+  {
+    path: '/prod/spare-part-return/:view/*',
+    name: 'spare-parts',
+    hideInMenu: 'true',
+    access: 'canAccessSparePartFinder',
+    component: './prod/spare-part-finder/spare-part-return',
+  },
+    {
+    path: '/prod/spare-part-request/:view/*',
+    name: 'sparePartRequest',
+    hideInMenu: 'true',
+    access: 'canAccessSparePartFinder',
+    component: './prod/spare-part-finder/spare-part-request/',
+  },
+  {
+    path: '/prod/spare-part-request-test/:view/*',
+    name: 'sparePartRequestTest',
+    hideInMenu: 'true',
+    access: 'canAccessSparePartFinder',
+    component: './prod/spare-part-finder/spare-part-request-test',
+  },
+  {
+    path: '/prod/spare-part-warehouse/:view/*',
+    name: 'sparePartWarehouse',
+    hideInMenu: 'true',
+    access: 'canSpfWarehouseStaff',
+    component: './prod/spare-part-finder/spare-part-warehouse',
+  },
+  {
+   path: '/prod/spare-part-approval/:view/*',
+   name: 'sparePartApproval',
+   hideInMenu: 'true',
+   access:'canSpfApprover',
+   component: './prod/spare-part-finder/spare-part-approval',
   },
 
   //  ================= END Prod =================

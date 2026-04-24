@@ -25,10 +25,11 @@ export function POListTable({
 }: POListTableProps) {
   const actionRef = useRef<ActionType>();
   const hasActiveSelection = selectedRowKeys.length > 0;
+  const getRowKey = (purchaseOrder: PurchaseOrder) => `${purchaseOrder.businessUnit || 'UNSPECIFIED'}::${purchaseOrder.poNumber}`;
   const isSelectionLockedRow = (purchaseOrder: PurchaseOrder) =>
     Boolean(lockedSupplier) &&
     purchaseOrder.supplier !== lockedSupplier &&
-    !selectedRowKeys.includes(purchaseOrder.poNumber);
+    !selectedRowKeys.includes(getRowKey(purchaseOrder));
   const openPurchaseOrderDetails = (
     purchaseOrder: PurchaseOrder,
     event?: { preventDefault?: () => void; stopPropagation?: () => void },
@@ -72,6 +73,13 @@ export function POListTable({
       render: (_: any, r: PurchaseOrder) => (
         <Tag color={r.type === 'Planned' ? 'green' : 'orange'}>{r.type}</Tag>
       ),
+    },
+    {
+      key: 'businessUnit',
+      title: 'BU',
+      dataIndex: 'businessUnit',
+      width: 90,
+      render: (_: any, r: PurchaseOrder) => <Tag color="geekblue">{r.businessUnit || 'N/A'}</Tag>,
     },
     {
       key: 'supplier',
@@ -164,7 +172,7 @@ export function POListTable({
       headerTitle={headerTitle}
       columns={interactiveColumns}
       dataSource={purchaseOrders}
-      rowKey="poNumber"
+      rowKey={getRowKey}
       bordered
       size="small"
       search={false}
@@ -184,7 +192,7 @@ export function POListTable({
                 disabled:
                   Boolean(lockedSupplier) &&
                   record.supplier !== lockedSupplier &&
-                  !selectedRowKeys.includes(record.poNumber),
+                  !selectedRowKeys.includes(getRowKey(record)),
               }),
             }
           : undefined

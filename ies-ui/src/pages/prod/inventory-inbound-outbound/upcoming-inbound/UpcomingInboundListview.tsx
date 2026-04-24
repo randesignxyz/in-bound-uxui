@@ -28,7 +28,7 @@ import {
   ExportOutlined,
 } from '@ant-design/icons';
 import { useAccess } from '@umijs/max';
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type GRItem,
   type GoodsReceiptSourceType,
@@ -211,10 +211,26 @@ function sortPurchaseOrdersByLatestExpectedDate(purchaseOrders: PurchaseOrder[])
 
 export default function UpcomingInboundListview() {
   const access = useAccess();
+  const isInboundAdmin = Boolean(access?.inboundVisibleBusinessUnits?.includes?.('*'));
+  const inboundVisibleBusinessUnits: string[] = isInboundAdmin
+    ? []
+    : ((access?.inboundVisibleBusinessUnits as string[] | undefined) || []);
+  const inboundWarehouseBusinessUnits: string[] = isInboundAdmin
+    ? []
+    : ((access?.inboundWarehouseBusinessUnits as string[] | undefined) || []);
+  const inboundQcBusinessUnits: string[] = isInboundAdmin
+    ? []
+    : ((access?.inboundQcBusinessUnits as string[] | undefined) || []);
+  const inboundSupervisorBusinessUnits: string[] = isInboundAdmin
+    ? []
+    : ((access?.inboundSupervisorBusinessUnits as string[] | undefined) || []);
   const requestActions = simpleRequestActions();
   const services = UpcomingInboundServiceAPI(requestActions);
   const [inboundView, setInboundView] = useState<InboundViewMode>('operations');
   const [simulationRole, setSimulationRole] = useState<InboundWorkspaceRole>('WAREHOUSE_STAFF');
+  const [activeBusinessUnit, setActiveBusinessUnit] = useState<string | undefined>(
+    inboundVisibleBusinessUnits[0],
+  );
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
 
   // Shared PO filters
@@ -244,11 +260,17 @@ export default function UpcomingInboundListview() {
     totalIrGrs: 0,
   });
   const hasInitializedDashboardSummary = useRef(false);
+  const inboundVisibleBusinessUnitsKey = inboundVisibleBusinessUnits.join('|');
 
   // GR state (mirrors WarehouseStaffUI)
   const [receipts, setReceipts] = useState<GoodsReceipt[]>([]);
   const [selectedPOs, setSelectedPOs] = useState<PurchaseOrder[]>([]);
   const [selectedWarehousePONumbers, setSelectedWarehousePONumbers] = useState<string[]>([]);
+  const getPurchaseOrderRowKey = useCallback(
+    (purchaseOrder: Pick<PurchaseOrder, 'businessUnit' | 'poNumber'>) =>
+      `${purchaseOrder.businessUnit || 'UNSPECIFIED'}::${purchaseOrder.poNumber}`,
+    [],
+  );
   const [isGRCreationOpen, setIsGRCreationOpen] = useState(false);
   const [isTempGRCreationOpen, setIsTempGRCreationOpen] = useState(false);
   const [selectedPODetail, setSelectedPODetail] = useState<PurchaseOrder | null>(null);
@@ -258,18 +280,35 @@ export default function UpcomingInboundListview() {
   const [supervisorApprovalSuccess, setSupervisorApprovalSuccess] =
     useState<SupervisorApprovalSuccessData | null>(null);
   const [tempGRHint, setTempGRHint] = useState('');
+  const activeBusinessUnitFilter = isInboundAdmin ? undefined : activeBusinessUnit;
+  const hasActiveBusinessUnit = Boolean(activeBusinessUnitFilter);
+  const canUseWarehouseRole =
+    isInboundAdmin ||
+    (hasActiveBusinessUnit
+      ? inboundWarehouseBusinessUnits.includes(activeBusinessUnitFilter!)
+      : inboundWarehouseBusinessUnits.length > 0);
+  const canUseQcRole =
+    isInboundAdmin ||
+    (hasActiveBusinessUnit
+      ? inboundQcBusinessUnits.includes(activeBusinessUnitFilter!)
+      : inboundQcBusinessUnits.length > 0);
+  const canUseSupervisorRole =
+    isInboundAdmin ||
+    (hasActiveBusinessUnit
+      ? inboundSupervisorBusinessUnits.includes(activeBusinessUnitFilter!)
+      : inboundSupervisorBusinessUnits.length > 0);
+  const tempReceiptBusinessUnits =
+    activeBusinessUnitFilter && canUseWarehouseRole
+      ? [activeBusinessUnitFilter]
+      : inboundWarehouseBusinessUnits;
 
   const inboundRoleOptions = useMemo(() => {
     const roles: InboundWorkspaceRole[] = [];
-    if (access.canAccessInboundWarehouseStaff) roles.push('WAREHOUSE_STAFF');
-    if (access.canAccessInboundQc) roles.push('QC');
-    if (access.canAccessInboundSupervisor) roles.push('WAREHOUSE_SUPERVISOR');
+    if (canUseWarehouseRole) roles.push('WAREHOUSE_STAFF');
+    if (canUseQcRole) roles.push('QC');
+    if (canUseSupervisorRole) roles.push('WAREHOUSE_SUPERVISOR');
     return roles;
-  }, [
-    access.canAccessInboundWarehouseStaff,
-    access.canAccessInboundQc,
-    access.canAccessInboundSupervisor,
-  ]);
+  }, [canUseQcRole, canUseSupervisorRole, canUseWarehouseRole]);
 
   const isRoleSimulationEnabled = USE_STATIC_AUTH;
   const activeRole: InboundWorkspaceRole =
@@ -290,6 +329,10 @@ export default function UpcomingInboundListview() {
 
   const filteredWarehousePurchaseOrders = useMemo(() => {
     let data = [...purchaseOrders];
+
+    if (activeBusinessUnitFilter) {
+      data = data.filter((po) => po.businessUnit === activeBusinessUnitFilter);
+    }
 
     if (poSearchValue.trim()) {
       const term = poSearchValue.trim().toUpperCase();
@@ -314,14 +357,14 @@ export default function UpcomingInboundListview() {
     }
 
     return data;
-  }, [poDateRangeFilter, poSearchValue, poTypeFilter, poVendorFilter, purchaseOrders]);
+  }, [activeBusinessUnitFilter, poDateRangeFilter, poSearchValue, poTypeFilter, poVendorFilter, purchaseOrders]);
 
   const selectedWarehousePOs = useMemo(
     () =>
       filteredWarehousePurchaseOrders.filter((purchaseOrder) =>
-        selectedWarehousePONumbers.includes(purchaseOrder.poNumber),
+        selectedWarehousePONumbers.includes(getPurchaseOrderRowKey(purchaseOrder)),
       ),
-    [filteredWarehousePurchaseOrders, selectedWarehousePONumbers],
+    [filteredWarehousePurchaseOrders, getPurchaseOrderRowKey, selectedWarehousePONumbers],
   );
 
   const selectedWarehousePOVendor = useMemo(
@@ -329,17 +372,34 @@ export default function UpcomingInboundListview() {
     [selectedWarehousePOs],
   );
 
+  const buildBusinessUnitCriteria = () => ({
+    businessUnit: activeBusinessUnitFilter || null,
+  });
+
   const buildDashboardSummaryParams = (): InboundDashboardSummaryParams => ({
+    ...buildBusinessUnitCriteria(),
     range: dashboardSummaryRange === 'CUSTOM' ? null : dashboardSummaryRange,
     dateFrom: dashboardPeriodFilter?.[0] ?? null,
     dateTo: dashboardPeriodFilter?.[1] ?? null,
   });
 
   const loadInboundData = async () => {
+    if (!isInboundAdmin && inboundVisibleBusinessUnits.length > 0 && !activeBusinessUnitFilter) {
+      return;
+    }
+
     const [poResult, receiptResult, summaryResult] = await Promise.allSettled([
-      services.listPurchaseOrders(),
+      services.pagePurchaseOrders({
+        criteria: {
+          advanceSearch: buildBusinessUnitCriteria(),
+        },
+        pagination: {
+          current: 1,
+          pageSize: 200,
+        },
+      }),
       services.pageGoodsReceipts({
-        criteria: {},
+        criteria: buildBusinessUnitCriteria(),
         pagination: {
           current: 1,
           pageSize: 200,
@@ -349,25 +409,29 @@ export default function UpcomingInboundListview() {
     ]);
 
     if (poResult.status === 'fulfilled') {
-      const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.value);
+      const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.value.items);
       setPurchaseOrders(nextPurchaseOrders);
       setSelectedPODetail((prev) => {
         if (!prev) return prev;
-        return nextPurchaseOrders.find((po) => po.id === prev.id || po.poNumber === prev.poNumber) || null;
+        return (
+          nextPurchaseOrders.find(
+            (po) => po.id === prev.id || getPurchaseOrderRowKey(po) === getPurchaseOrderRowKey(prev),
+          ) || null
+        );
       });
       setSelectedPOs((prev) =>
         prev
           .map(
             (selected) =>
               nextPurchaseOrders.find(
-                (po) => po.id === selected.id || po.poNumber === selected.poNumber,
+                (po) => po.id === selected.id || getPurchaseOrderRowKey(po) === getPurchaseOrderRowKey(selected),
               ) || null,
           )
           .filter((po): po is PurchaseOrder => po !== null),
       );
-      setSelectedWarehousePONumbers((prev) =>
-        prev.filter((poNumber) =>
-          nextPurchaseOrders.some((purchaseOrder) => purchaseOrder.poNumber === poNumber),
+      setSelectedWarehousePONumbers((prevSelectedKeys) =>
+        prevSelectedKeys.filter((poKey) =>
+          nextPurchaseOrders.some((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder) === poKey),
         ),
       );
     } else {
@@ -404,8 +468,27 @@ export default function UpcomingInboundListview() {
   };
 
   useEffect(() => {
+    if (isInboundAdmin) return;
+    const firstBusinessUnit = inboundVisibleBusinessUnits[0];
+    if (!firstBusinessUnit) {
+      setActiveBusinessUnit(undefined);
+      return;
+    }
+    if (!activeBusinessUnit || !inboundVisibleBusinessUnits.includes(activeBusinessUnit)) {
+      setActiveBusinessUnit(firstBusinessUnit);
+    }
+  }, [activeBusinessUnit, inboundVisibleBusinessUnitsKey, isInboundAdmin]);
+
+  useEffect(() => {
+    setSelectedPOs([]);
+    setSelectedWarehousePONumbers([]);
+    setSelectedPODetail(null);
+    setSelectedGR(null);
+    setWarehouseCorrectionReceipt(null);
+    setLinkPOReceipt(null);
+    setSupervisorApprovalSuccess(null);
     void loadInboundData();
-  }, []);
+  }, [activeBusinessUnit]);
 
   useEffect(() => {
     if (!hasInitializedDashboardSummary.current) {
@@ -638,6 +721,13 @@ export default function UpcomingInboundListview() {
 
   // Handlers (mirrors WarehouseStaffUI)
   const hydratePurchaseOrder = async (po: PurchaseOrder): Promise<PurchaseOrder> => {
+    if (po.businessUnit) {
+      return services.detailPurchaseOrderByKey({
+        po_number: po.poNumber,
+        business_unit: po.businessUnit,
+      });
+    }
+
     if (!po.id) {
       return po;
     }
@@ -648,7 +738,7 @@ export default function UpcomingInboundListview() {
   const handleCreateGR = async (purchaseOrders: PurchaseOrder[]) => {
     if (!purchaseOrders.length) return;
     if (!canCombinePurchaseOrders(purchaseOrders)) {
-      message.error('You can only combine purchase orders from the same vendor into one IR/GR.');
+      message.error('You can only combine purchase orders from the same business unit and vendor into one IR/GR.');
       return;
     }
 
@@ -657,7 +747,7 @@ export default function UpcomingInboundListview() {
     try {
       const hydratedPurchaseOrders = await Promise.all(purchaseOrders.map(hydratePurchaseOrder));
       if (!canCombinePurchaseOrders(hydratedPurchaseOrders)) {
-        message.error('Selected purchase orders no longer share the same vendor. Please reselect them.');
+        message.error('Selected purchase orders no longer share the same business unit and vendor. Please reselect them.');
         return;
       }
       setSelectedPOs(
@@ -675,18 +765,22 @@ export default function UpcomingInboundListview() {
 
   const handleWarehousePOSelectionChange = (nextSelectedRowKeys: string[]) => {
     const nextSelectedPOs = filteredWarehousePurchaseOrders.filter((purchaseOrder) =>
-      nextSelectedRowKeys.includes(purchaseOrder.poNumber),
+      nextSelectedRowKeys.includes(getPurchaseOrderRowKey(purchaseOrder)),
     );
 
     if (!canCombinePurchaseOrders(nextSelectedPOs)) {
-      message.warning('Please select purchase orders from the same vendor only.');
+      message.warning('Please select purchase orders from the same business unit and vendor only.');
       return;
     }
 
-    setSelectedWarehousePONumbers(nextSelectedPOs.map((purchaseOrder) => purchaseOrder.poNumber));
+    setSelectedWarehousePONumbers(nextSelectedPOs.map((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder)));
   };
 
   const handleCreateTempGR = (hint?: string) => {
+    if (!canUseWarehouseRole) {
+      message.error('You do not have warehouse permission for the selected business unit.');
+      return;
+    }
     setTempGRHint(hint?.trim() ? `SAP PO not found for: ${hint.trim()}` : '');
     setIsTempGRCreationOpen(true);
   };
@@ -822,8 +916,12 @@ export default function UpcomingInboundListview() {
       new Map(
         [...(data.poReferences || [])]
           .filter((reference) => reference?.poNumber)
-          .sort((left, right) => left.poNumber.localeCompare(right.poNumber))
-          .map((reference) => [reference.poNumber, reference]),
+          .sort((left, right) =>
+            `${left.businessUnit || ''}::${left.poNumber}`.localeCompare(
+              `${right.businessUnit || ''}::${right.poNumber}`,
+            ),
+          )
+          .map((reference) => [`${reference.businessUnit || ''}::${reference.poNumber}`, reference]),
       ).values(),
     );
     const primaryPoReference = canonicalPoReferences[0];
@@ -838,6 +936,7 @@ export default function UpcomingInboundListview() {
       gr_number: data.grNumber || undefined,
       receiving_number: data.receivingNumber || data.grNumber || undefined,
       process_state: data.processState || undefined,
+      business_unit: data.businessUnit || primaryPoReference?.businessUnit || undefined,
       po_number: primaryPoReference?.poNumber || data.linkedPoNumber || undefined,
       supplier: primaryPoReference?.supplier || data.supplier,
       receipt_type: data.receiptType,
@@ -854,6 +953,7 @@ export default function UpcomingInboundListview() {
       delivery_note_number: data.deliveryNoteNumber || '',
       poReferences: canonicalPoReferences.map((reference) => ({
         poNumber: reference.poNumber,
+        businessUnit: reference.businessUnit,
         supplier: reference.supplier,
         expectedDate: reference.expectedDate,
         expectedTime: reference.expectedTime,
@@ -1121,15 +1221,15 @@ export default function UpcomingInboundListview() {
   };
 
   useEffect(() => {
-    const visiblePurchaseOrderNumbers = new Set(
-      filteredWarehousePurchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber),
+    const visiblePurchaseOrderKeys = new Set(
+      filteredWarehousePurchaseOrders.map((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder)),
     );
 
     setSelectedWarehousePONumbers((prev) => {
-      const next = prev.filter((poNumber) => visiblePurchaseOrderNumbers.has(poNumber));
+      const next = prev.filter((poKey) => visiblePurchaseOrderKeys.has(poKey));
       return next.length === prev.length ? prev : next;
     });
-  }, [filteredWarehousePurchaseOrders]);
+  }, [filteredWarehousePurchaseOrders, getPurchaseOrderRowKey]);
 
   useEffect(() => {
     if (poVendorFilter === 'ALL') {
@@ -1152,7 +1252,7 @@ export default function UpcomingInboundListview() {
       <Text type="secondary" style={{ fontSize: 12 }}>
         {selectedWarehousePOs.length > 0 && selectedWarehousePOVendor
           ? `${selectedWarehousePOs.length} PO${selectedWarehousePOs.length > 1 ? 's' : ''} selected from ${selectedWarehousePOVendor}`
-          : 'Select same-vendor POs to create one IR/GR'}
+          : 'Select same-BU, same-vendor POs to create one IR/GR'}
       </Text>
       <Button
         type="primary"
@@ -1185,6 +1285,7 @@ export default function UpcomingInboundListview() {
     label: simulationRoleLabel[role],
     value: role,
   }));
+  const shouldShowBusinessUnitSelector = !isInboundAdmin && inboundVisibleBusinessUnits.length > 1;
 
   const shouldShowRoleSelector = isRoleSimulationEnabled || inboundRoleOptions.length > 1;
   const shouldShowInboundTabs = activeRole !== 'QC';
@@ -1259,6 +1360,7 @@ export default function UpcomingInboundListview() {
           initialMissingPOHint={warehouseCorrectionReceipt.pendingPOReason}
           initialReceipt={warehouseCorrectionReceipt}
           correctionMode
+          availableBusinessUnits={tempReceiptBusinessUnits}
         />
       ) : (
         <GRCreationModal
@@ -1290,6 +1392,7 @@ export default function UpcomingInboundListview() {
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmitGR}
         initialMissingPOHint={tempGRHint}
+        availableBusinessUnits={tempReceiptBusinessUnits}
       />
     )) ||
     (linkPOReceipt && (
@@ -1339,6 +1442,30 @@ export default function UpcomingInboundListview() {
           </Col>
           <Col>
             <Space size={12} wrap>
+              {shouldShowBusinessUnitSelector && (
+                <Space size={8}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Business Unit
+                  </Text>
+                  <Select
+                    value={activeBusinessUnit}
+                    onChange={(value) => {
+                      setActiveBusinessUnit(value);
+                      resetWorkspaceFilters();
+                    }}
+                    style={{ width: 120 }}
+                    options={inboundVisibleBusinessUnits.map((businessUnit) => ({
+                      label: businessUnit,
+                      value: businessUnit,
+                    }))}
+                  />
+                </Space>
+              )}
+              {!shouldShowBusinessUnitSelector && activeBusinessUnitFilter && (
+                <Tag color="geekblue" style={{ marginRight: 0 }}>
+                  BU: {activeBusinessUnitFilter}
+                </Tag>
+              )}
               <Button
                 icon={<ExportOutlined />}
                 onClick={handleExportReportClick}

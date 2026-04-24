@@ -75,18 +75,23 @@ const LEGACY_STATUS_VALUES: LegacyGRStatus[] = [
 ];
 
 export function mapInboundPurchaseOrder(api: InboundPurchaseOrderApi): UpcomingInboundPurchaseOrder {
+  const items = readArray<InboundPoItemApi>(api, 'items');
+
   return {
-    id: api.id,
-    poNumber: api.po_number,
-    supplier: api.supplier,
-    expectedDate: api.expected_date,
-    expectedTime: api.expected_time,
-    deliveryNoteNumber: api.delivery_note_number ?? undefined,
-    items: api.items.map(mapInboundPurchaseOrderItem),
-    totalItems: api.total_items,
-    totalQty: api.total_qty,
-    type: normalizeEnum(api.type, PO_TYPE_VALUES, 'Planned'),
-    status: normalizeEnum(api.status, PO_STATUS_VALUES, 'Expected'),
+    id: readValue<number | null>(api, 'id') ?? undefined,
+    businessUnit: readString(api, 'businessUnit', 'business_unit'),
+    poNumber: readString(api, 'poNumber', 'po_number'),
+    supplier: readString(api, 'supplier'),
+    expectedDate: readString(api, 'expectedDate', 'expected_date'),
+    expectedTime: readString(api, 'expectedTime', 'expected_time'),
+    deliveryNoteNumber: readValue<string | null>(api, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
+    items: items.map(mapInboundPurchaseOrderItem),
+    totalItems: readNumber(api, 'totalItems', 'total_items') ?? items.length,
+    totalQty:
+      readNumber(api, 'totalQty', 'total_qty') ??
+      items.reduce((sum, item) => sum + (readNumber(item, 'poQty', 'po_qty') ?? 0), 0),
+    type: normalizeEnum(readString(api, 'type'), PO_TYPE_VALUES, 'Planned'),
+    status: normalizeEnum(readString(api, 'status'), PO_STATUS_VALUES, 'Expected'),
   };
 }
 
@@ -95,70 +100,99 @@ export function mapInboundPurchaseOrders(orders: InboundPurchaseOrderApi[]): Upc
 }
 
 export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInboundGoodsReceipt {
-  const processState = normalizeEnum(api.processState, PROCESS_STATE_VALUES, 'GRPO_DRAFT');
-  const createdDate = formatDisplayTimestamp(api.createdDate);
-  const fallbackStepTitle = api.workflowLabel || api.recordTypeLabel || mapProcessStateToLegacyStatus(processState);
-  const qcResult = normalizeQcResult(api.qcResult, processState);
+  const poReferences = readArray<InboundGoodsReceiptApi['poReferences'][number]>(
+    api,
+    'poReferences',
+    'po_references',
+  );
+  const items = readArray<InboundGrItemApi>(api, 'items');
+  const activities = readArray<InboundGrActivityApi>(api, 'activities');
+  const processState = normalizeEnum(readString(api, 'processState', 'process_state'), PROCESS_STATE_VALUES, 'GRPO_DRAFT');
+  const createdDate = formatDisplayTimestamp(readValue<string | null>(api, 'createdDate', 'created_date'));
+  const workflowLabel = readString(api, 'workflowLabel', 'workflow_label');
+  const recordTypeLabel = readString(api, 'recordTypeLabel', 'record_type_label');
+  const fallbackStepTitle = workflowLabel || recordTypeLabel || mapProcessStateToLegacyStatus(processState);
+  const qcResult = normalizeQcResult(readString(api, 'qcResult', 'qc_result'), processState);
 
   return {
-    id: api.id,
-    grNumber: api.grNumber,
-    receivingNumber: api.receivingNumber,
-    approvedGrNumber: api.approvedGrNumber ?? undefined,
-    previousReceivingNumber: api.previousReceivingNumber ?? undefined,
-    previousApprovedGrNumber: api.previousApprovedGrNumber ?? undefined,
-    poNumber: api.poNumber ?? api.poReferences[0]?.poNumber ?? '',
-    supplier: api.supplier,
+    id: readValue<number | null>(api, 'id') ?? undefined,
+    grNumber: readString(api, 'grNumber', 'gr_number'),
+    receivingNumber: readString(api, 'receivingNumber', 'receiving_number'),
+    businessUnit: readString(api, 'businessUnit', 'business_unit'),
+    approvedGrNumber: readValue<string | null>(api, 'approvedGrNumber', 'approved_gr_number') ?? undefined,
+    previousReceivingNumber:
+      readValue<string | null>(api, 'previousReceivingNumber', 'previous_receiving_number') ?? undefined,
+    previousApprovedGrNumber:
+      readValue<string | null>(api, 'previousApprovedGrNumber', 'previous_approved_gr_number') ?? undefined,
+    poNumber: readString(api, 'poNumber', 'po_number') || readString(poReferences[0], 'poNumber', 'po_number'),
+    supplier: readString(api, 'supplier'),
     poReferences:
-      api.poReferences.length > 0
-        ? api.poReferences.map((reference) => ({
-            poNumber: reference.poNumber,
-            supplier: reference.supplier ?? api.supplier,
-            expectedDate: reference.expectedDate ?? undefined,
-            expectedTime: reference.expectedTime ?? undefined,
-            deliveryNoteNumber: reference.deliveryNoteNumber ?? undefined,
+      poReferences.length > 0
+        ? poReferences.map((reference) => ({
+            poNumber: readString(reference, 'poNumber', 'po_number'),
+            businessUnit: readValue<string | null>(reference, 'businessUnit', 'business_unit') ?? undefined,
+            supplier: readValue<string | null>(reference, 'supplier') ?? readString(api, 'supplier'),
+            expectedDate: readValue<string | null>(reference, 'expectedDate', 'expected_date') ?? undefined,
+            expectedTime: readValue<string | null>(reference, 'expectedTime', 'expected_time') ?? undefined,
+            deliveryNoteNumber:
+              readValue<string | null>(reference, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
           }))
         : buildFallbackPoReferences(api),
     supplierNames: uniqueStrings([
-      api.supplier,
-      ...api.poReferences.map((reference) => reference.supplier ?? ''),
+      readString(api, 'supplier'),
+      ...poReferences.map((reference) => readValue<string | null>(reference, 'supplier') ?? ''),
     ]),
-    receiptType: normalizeEnum(api.receiptType, RECEIPT_TYPE_VALUES, 'Planned'),
-    receiptSourceType: normalizeEnum(api.receiptSourceType, RECEIPT_SOURCE_VALUES, 'PLANNED'),
-    poLinkStatus: normalizeEnum(api.poLinkStatus, PO_LINK_STATUS_VALUES, 'NOT_REQUIRED'),
-    tempReferenceNo: api.tempReferenceNo ?? undefined,
-    pendingPOReason: api.pendingPoReason ?? undefined,
-    linkedPoNumber: api.linkedPoNumber ?? undefined,
-    linkBlockReason: api.linkBlockReason ?? undefined,
-    expectedDate: api.poReferences[0]?.expectedDate ?? undefined,
-    expectedTime: api.poReferences[0]?.expectedTime ?? undefined,
-    postingDate: api.postingDate,
-    actualReceiptDate: api.actualReceiptDate,
-    deliveryNoteNumber: api.deliveryNoteNumber,
+    receiptType: normalizeEnum(readString(api, 'receiptType', 'receipt_type'), RECEIPT_TYPE_VALUES, 'Planned'),
+    receiptSourceType: normalizeEnum(
+      readString(api, 'receiptSourceType', 'receipt_source_type'),
+      RECEIPT_SOURCE_VALUES,
+      'PLANNED',
+    ),
+    poLinkStatus: normalizeEnum(readString(api, 'poLinkStatus', 'po_link_status'), PO_LINK_STATUS_VALUES, 'NOT_REQUIRED'),
+    tempReferenceNo: readValue<string | null>(api, 'tempReferenceNo', 'temp_reference_no') ?? undefined,
+    pendingPOReason: readValue<string | null>(api, 'pendingPoReason', 'pending_po_reason') ?? undefined,
+    linkedPoNumber: readValue<string | null>(api, 'linkedPoNumber', 'linked_po_number') ?? undefined,
+    linkBlockReason: readValue<string | null>(api, 'linkBlockReason', 'link_block_reason') ?? undefined,
+    expectedDate: readValue<string | null>(poReferences[0], 'expectedDate', 'expected_date') ?? undefined,
+    expectedTime: readValue<string | null>(poReferences[0], 'expectedTime', 'expected_time') ?? undefined,
+    postingDate: readString(api, 'postingDate', 'posting_date'),
+    actualReceiptDate: readString(api, 'actualReceiptDate', 'actual_receipt_date'),
+    deliveryNoteNumber: readString(api, 'deliveryNoteNumber', 'delivery_note_number'),
     receiverWarehouseName:
-      api.onHoldWarehouseCode ?? api.releaseWarehouseCode ?? api.receivedByUser ?? 'On-Hold Warehouse',
-    items: api.items.map(mapInboundGoodsReceiptItem),
-    status: normalizeLegacyStatus(api.status, processState),
+      readValue<string | null>(api, 'onHoldWarehouseCode', 'on_hold_warehouse_code') ??
+      readValue<string | null>(api, 'releaseWarehouseCode', 'release_warehouse_code') ??
+      readValue<string | null>(api, 'receivedByUser', 'received_by_user') ??
+      'On-Hold Warehouse',
+    items: items.map(mapInboundGoodsReceiptItem),
+    status: normalizeLegacyStatus(readValue<string | null>(api, 'status'), processState),
     processState,
-    displayStatus: api.displayStatus ?? undefined,
-    legacyStatus: normalizeLegacyStatus(api.legacyStatus, processState),
-    createdBy: api.createdBy ?? '',
+    displayStatus: readValue<string | null>(api, 'displayStatus', 'display_status') ?? undefined,
+    legacyStatus: normalizeLegacyStatus(readValue<string | null>(api, 'legacyStatus', 'legacy_status'), processState),
+    createdBy: readValue<string | null>(api, 'createdBy', 'created_by') ?? '',
     createdDate,
-    approvedBy: api.approvedBy ?? api.qcReviewedBy ?? undefined,
-    approvedDate: formatDisplayTimestamp(api.approvedDate ?? api.qcReviewedAt),
-    specMatch: api.specMatch,
-    qtyMatch: api.qtyMatch,
-    qualityCheckRequired: api.qualityCheckRequired,
+    approvedBy:
+      readValue<string | null>(api, 'approvedBy', 'approved_by') ??
+      readValue<string | null>(api, 'qcReviewedBy', 'qc_reviewed_by') ??
+      undefined,
+    approvedDate: formatDisplayTimestamp(
+      readValue<string | null>(api, 'approvedDate', 'approved_date') ??
+        readValue<string | null>(api, 'qcReviewedAt', 'qc_reviewed_at'),
+    ),
+    specMatch: readBoolean(api, 'specMatch', 'spec_match'),
+    qtyMatch: readBoolean(api, 'qtyMatch', 'qty_match'),
+    qualityCheckRequired: readBoolean(api, 'qualityCheckRequired', 'quality_check_required'),
     qcResult,
-    exceptionReason: api.exceptionReason ?? undefined,
-    workflowLabel: api.workflowLabel,
-    recordTypeLabel: api.recordTypeLabel,
-    isAppendable: api.isAppendable,
-    documentChecklist: mapInboundDocumentChecklist(api.documentChecklist),
+    exceptionReason: readValue<string | null>(api, 'exceptionReason', 'exception_reason') ?? undefined,
+    workflowLabel,
+    recordTypeLabel,
+    isAppendable: readBoolean(api, 'isAppendable', 'is_appendable'),
+    documentChecklist: mapInboundDocumentChecklist(
+      readValue<InboundGrDocumentChecklistApi | undefined>(api, 'documentChecklist', 'document_checklist'),
+    ),
     scenario: buildInboundScenarioMeta(api, processState, fallbackStepTitle),
     activities:
-      api.activities.length > 0
-        ? api.activities.map(mapInboundActivity)
+      activities.length > 0
+        ? activities.map(mapInboundActivity)
         : buildActivities(processState, createdDate, fallbackStepTitle),
   };
 }
@@ -184,54 +218,60 @@ export function mapInboundDashboardSummary(summary: InboundDashboardSummaryApi):
 
 function mapInboundPurchaseOrderItem(item: InboundPoItemApi): UpcomingInboundPurchaseOrder['items'][number] {
   return {
-    code: item.code,
-    name: item.name,
-    poQty: item.poQty,
-    receivedQty: item.receivedQty,
-    remainingQty: item.remainingQty,
-    uom: item.uom,
-    supplier: item.supplier,
+    code: readString(item, 'code'),
+    name: readString(item, 'name'),
+    poQty: readNumber(item, 'poQty', 'po_qty') ?? 0,
+    receivedQty: readNumber(item, 'receivedQty', 'received_qty') ?? 0,
+    remainingQty: readNumber(item, 'remainingQty', 'remaining_qty') ?? 0,
+    uom: readString(item, 'uom'),
+    supplier: readString(item, 'supplier'),
   };
 }
 
 function mapInboundGoodsReceiptItem(item: InboundGrItemApi): UpcomingInboundGoodsReceiptItem {
   return {
-    code: item.code,
-    name: item.name,
-    poNumber: item.poNumber ?? '',
-    supplier: item.supplier ?? '',
-    poQty: item.poQty,
-    receiveQty: item.receiveQty,
-    uom: item.uom,
-    productDate: item.productDate ?? item.manufacturingDate ?? '',
-    expiryDate: item.expiryDate ?? item.bestBeforeDate ?? '',
-    batchNumber: item.batchNumber ?? '',
-    barcode: item.barcode ?? '',
-    deliveryNoteNumber: item.deliveryNoteNumber ?? undefined,
-    isMissing: item.isMissing,
-    missingRemark: item.missingRemark ?? undefined,
-    qcDecision: normalizeEnum(item.qcDecision, QC_DECISION_VALUES, undefined),
-    qcRemark: item.qcRemark ?? undefined,
+    code: readString(item, 'code'),
+    name: readString(item, 'name'),
+    poNumber: readValue<string | null>(item, 'poNumber', 'po_number') ?? '',
+    supplier: readValue<string | null>(item, 'supplier') ?? '',
+    poQty: readNumber(item, 'poQty', 'po_qty') ?? 0,
+    receiveQty: readNumber(item, 'receiveQty', 'receive_qty') ?? 0,
+    uom: readString(item, 'uom'),
+    productDate:
+      readValue<string | null>(item, 'productDate', 'product_date') ??
+      readValue<string | null>(item, 'manufacturingDate', 'manufacturing_date') ??
+      '',
+    expiryDate:
+      readValue<string | null>(item, 'expiryDate', 'expiry_date') ??
+      readValue<string | null>(item, 'bestBeforeDate', 'best_before_date') ??
+      '',
+    batchNumber: readValue<string | null>(item, 'batchNumber', 'batch_number') ?? '',
+    barcode: readValue<string | null>(item, 'barcode') ?? '',
+    deliveryNoteNumber: readValue<string | null>(item, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
+    isMissing: readBoolean(item, 'isMissing', 'is_missing'),
+    missingRemark: readValue<string | null>(item, 'missingRemark', 'missing_remark') ?? undefined,
+    qcDecision: normalizeEnum(readValue<string | null>(item, 'qcDecision', 'qc_decision'), QC_DECISION_VALUES, undefined),
+    qcRemark: readValue<string | null>(item, 'qcRemark', 'qc_remark') ?? undefined,
   };
 }
 
 function mapInboundDocumentChecklist(
-  checklist: InboundGrDocumentChecklistApi,
+  checklist?: InboundGrDocumentChecklistApi,
 ): UpcomingInboundDocumentChecklist {
   return {
-    vendorDN: checklist.vendorDN,
-    goodsReceiptPOForm: checklist.goodsReceiptPOForm,
-    pmrmStockCardForm: checklist.pmrmStockCardForm,
-    supportingDocs: checklist.supportingDocs.map(mapSupportingDoc),
+    vendorDN: readBoolean(checklist, 'vendorDN', 'vendor_dn'),
+    goodsReceiptPOForm: readBoolean(checklist, 'goodsReceiptPOForm', 'goods_receipt_po_form'),
+    pmrmStockCardForm: readBoolean(checklist, 'pmrmStockCardForm', 'pmrm_stock_card_form'),
+    supportingDocs: readArray<SupportingDocReferenceApi>(checklist, 'supportingDocs', 'supporting_docs').map(mapSupportingDoc),
   };
 }
 
 function mapSupportingDoc(doc: SupportingDocReferenceApi): SupportingDocReference {
   return {
-    fileId: doc.fileId ?? undefined,
-    fileName: doc.fileName,
-    source: normalizeSupportingDocSource(doc.source),
-    poNumber: doc.poNumber ?? undefined,
+    fileId: readValue<string | null>(doc, 'fileId', 'file_id') ?? undefined,
+    fileName: readString(doc, 'fileName', 'file_name'),
+    source: normalizeSupportingDocSource(readValue<string | null>(doc, 'source')),
+    poNumber: readValue<string | null>(doc, 'poNumber', 'po_number') ?? undefined,
   };
 }
 
@@ -250,12 +290,12 @@ function normalizeSupportingDocSource(value?: string | null): SupportingDocSourc
 
 export function mapInboundActivity(activity: InboundGrActivityApi): UpcomingInboundActivity {
   return {
-    title: activity.title,
-    description: activity.description ?? activity.title,
-    performedBy: activity.performedBy ?? undefined,
-    timestamp: formatDisplayTimestamp(activity.timestamp),
-    state: normalizeActivityState(activity.state),
-    processState: normalizeEnum(activity.state, PROCESS_STATE_VALUES, undefined),
+    title: readString(activity, 'title'),
+    description: readValue<string | null>(activity, 'description') ?? readString(activity, 'title'),
+    performedBy: readValue<string | null>(activity, 'performedBy', 'performed_by') ?? undefined,
+    timestamp: formatDisplayTimestamp(readValue<string | null>(activity, 'timestamp')),
+    state: normalizeActivityState(readString(activity, 'state')),
+    processState: normalizeEnum(readString(activity, 'state'), PROCESS_STATE_VALUES, undefined),
   };
 }
 
@@ -274,7 +314,7 @@ function buildInboundScenarioMeta(
   const scenarioPath = inferScenarioPath(api, processState);
 
   return {
-    scenarioId: `LIVE-${api.receivingNumber}`,
+    scenarioId: `LIVE-${readString(api, 'receivingNumber', 'receiving_number')}`,
     scenarioName: scenarioNameByPath(scenarioPath),
     scenarioPath,
     stepNumber: scenarioStepNumber(processState),
@@ -289,8 +329,8 @@ function inferScenarioPath(
 ): GRScenarioPath {
   if (processState === 'MISMATCH_EXCEPTION') return 'MISMATCH_CORRECTION';
   if (processState === 'CORRECTION_REQUIRED') return 'CORRECTION_LOOP';
-  if (api.receiptSourceType === 'TEMP_NO_PO' || api.receiptType === 'Unplanned') return 'UNPLANNED_ARRIVAL';
-  if (api.qcResult === 'Rejected') return 'QC_REJECTED';
+  if (readString(api, 'receiptSourceType', 'receipt_source_type') === 'TEMP_NO_PO' || readString(api, 'receiptType', 'receipt_type') === 'Unplanned') return 'UNPLANNED_ARRIVAL';
+  if (readString(api, 'qcResult', 'qc_result') === 'Rejected') return 'QC_REJECTED';
   if (
     processState === 'TRANSFERRED_TO_PM_RM_WH' ||
     processState === 'FIN_SUBMITTED' ||
@@ -344,15 +384,17 @@ function scenarioStepNumber(processState: UpcomingInboundProcessState): number {
 }
 
 function buildFallbackPoReferences(api: InboundGoodsReceiptApi): UpcomingInboundGoodsReceipt['poReferences'] {
-  if (!api.poNumber) return [];
+  const poNumber = readValue<string | null>(api, 'poNumber', 'po_number');
+  if (!poNumber) return [];
 
   return [
     {
-      poNumber: api.poNumber,
-      supplier: api.supplier,
+      poNumber,
+      businessUnit: readString(api, 'businessUnit', 'business_unit'),
+      supplier: readString(api, 'supplier'),
       expectedDate: undefined,
       expectedTime: undefined,
-      deliveryNoteNumber: api.deliveryNoteNumber ?? undefined,
+      deliveryNoteNumber: readValue<string | null>(api, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
     },
   ];
 }
@@ -389,6 +431,39 @@ function normalizeActivityState(value: string): UpcomingInboundActivity['state']
 
 function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
+}
+
+function readValue<T = unknown>(source: unknown, ...keys: string[]): T | undefined {
+  if (!source || typeof source !== 'object') return undefined;
+  const record = source as Record<string, unknown>;
+  for (const key of keys) {
+    if (record[key] !== undefined) return record[key] as T;
+  }
+  return undefined;
+}
+
+function readString(source: unknown, ...keys: string[]): string {
+  const value = readValue<unknown>(source, ...keys);
+  return value == null ? '' : String(value);
+}
+
+function readNumber(source: unknown, ...keys: string[]): number | undefined {
+  const value = readValue<unknown>(source, ...keys);
+  if (value == null || value === '') return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function readBoolean(source: unknown, ...keys: string[]): boolean {
+  const value = readValue<unknown>(source, ...keys);
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value.toLowerCase() === 'true';
+  return Boolean(value);
+}
+
+function readArray<T>(source: unknown, ...keys: string[]): T[] {
+  const value = readValue<unknown>(source, ...keys);
+  return Array.isArray(value) ? value as T[] : [];
 }
 
 function normalizeEnum<T extends string>(

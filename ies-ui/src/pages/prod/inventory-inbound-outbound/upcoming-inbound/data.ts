@@ -18,6 +18,8 @@ export interface InboundPurchaseOrderSearch {
     createdDate?: SortOrder;
   };
   advanceSearch?: {
+    businessUnit?: string | null;
+    business_unit?: string | null;
     type?: string | null;
     status?: string | null;
     expectedDate?: string | null;
@@ -25,6 +27,8 @@ export interface InboundPurchaseOrderSearch {
 }
 
 export interface InboundPurchaseOrderCountParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
   status?: string | null;
 }
 
@@ -34,17 +38,23 @@ export interface InboundGoodsReceiptSearch {
     createdDate?: SortOrder;
     actual_receipt_date?: SortOrder;
   };
+  businessUnit?: string | null;
+  business_unit?: string | null;
   status?: string | null;
   processState?: string | null;
 }
 
 export interface InboundGoodsReceiptCountParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
   status?: string | null;
 }
 
 export type InboundDashboardSummaryRange = 'DAILY' | 'WEEKLY' | 'OVERALL';
 
 export interface InboundDashboardSummaryParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
   expectedDate?: string | null;
   range?: InboundDashboardSummaryRange | null;
   dateFrom?: string | null;
@@ -63,6 +73,7 @@ export interface InboundPoItemApi {
 
 export interface InboundPurchaseOrderApi {
   id?: number | null;
+  business_unit: string;
   po_number: string;
   supplier: string;
   expected_date: string;
@@ -77,6 +88,7 @@ export interface InboundPurchaseOrderApi {
 
 export interface InboundGrPoReferenceApi {
   poNumber: string;
+  businessUnit?: string | null;
   supplier?: string | null;
   expectedDate?: string | null;
   expectedTime?: string | null;
@@ -147,6 +159,7 @@ export interface InboundGoodsReceiptApi {
   id?: number | null;
   grNumber: string;
   receivingNumber: string;
+  businessUnit: string;
   approvedGrNumber?: string | null;
   previousReceivingNumber?: string | null;
   previousApprovedGrNumber?: string | null;
@@ -241,6 +254,7 @@ export interface InboundSaveGoodsReceiptInput {
   gr_number?: string | null;
   receiving_number?: string | null;
   process_state?: string | null;
+  business_unit?: string | null;
   po_number?: string | null;
   supplier: string;
   receipt_type: string;

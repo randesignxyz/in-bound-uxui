@@ -67,6 +67,7 @@ export interface POItem {
 }
 
 export interface PurchaseOrder {
+  businessUnit?: string;
   poNumber: string;
   supplier: string;
   expectedDate: string;
@@ -115,7 +116,11 @@ export function getPurchaseOrderVendorOptions(purchaseOrders: PurchaseOrder[]) {
 }
 
 export function canCombinePurchaseOrders(purchaseOrders: PurchaseOrder[]) {
-  return purchaseOrders.length <= 1 || Boolean(getCombinedPurchaseOrderVendor(purchaseOrders));
+  const businessUnits = Array.from(new Set(purchaseOrders.map((purchaseOrder) => purchaseOrder.businessUnit)));
+  return (
+    businessUnits.length <= 1 &&
+    (purchaseOrders.length <= 1 || Boolean(getCombinedPurchaseOrderVendor(purchaseOrders)))
+  );
 }
 
 export type GoodsReceiptSourceType = 'PLANNED' | 'UNPLANNED_WITH_PO' | 'TEMP_NO_PO';
@@ -190,6 +195,7 @@ export interface GRActivity {
 export interface GoodsReceipt {
   grNumber: string;
   receivingNumber?: string;
+  businessUnit?: string;
   approvedGrNumber?: string;
   previousReceivingNumber?: string;
   previousApprovedGrNumber?: string;
@@ -197,6 +203,7 @@ export interface GoodsReceipt {
   supplier: string;
   poReferences: Array<{
     poNumber: string;
+    businessUnit?: string;
     supplier: string;
     expectedDate?: string;
     expectedTime?: string;
@@ -243,6 +250,7 @@ export function getReceiptPOReferences(receipt: GoodsReceipt) {
       return [
         {
           poNumber: receipt.linkedPoNumber,
+          businessUnit: receipt.businessUnit,
           supplier: receipt.supplier,
           expectedDate: receipt.expectedDate,
           expectedTime: receipt.expectedTime,
@@ -258,6 +266,7 @@ export function getReceiptPOReferences(receipt: GoodsReceipt) {
     : [
         {
           poNumber: receipt.poNumber,
+          businessUnit: receipt.businessUnit,
           supplier: receipt.supplier,
           expectedDate: receipt.expectedDate,
           expectedTime: receipt.expectedTime,

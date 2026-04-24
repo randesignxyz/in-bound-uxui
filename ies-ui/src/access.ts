@@ -17,11 +17,26 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     // "ROLE_DSD_ADMIN"
   ];
 
-  const INBOUND_OUTBOUND_ROLES = [
-    'ROLE_INBOUND_OUTBOUND_WAREHOUSE_STAFF',
-    'ROLE_INBOUND_OUTBOUND_QC',
-    'ROLE_INBOUND_OUTBOUND_SUPERVISOR',
-  ];
+  const buildInboundBusinessUnits = (prefix: string) =>
+    Array.from(
+      new Set(
+        roles
+          .filter((role) => role.startsWith(prefix) && role.length > prefix.length)
+          .map((role) => role.slice(prefix.length).trim().toUpperCase())
+          .filter(Boolean),
+      ),
+    ).sort();
+
+  const inboundWarehouseBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_OUTBOUND_WAREHOUSE_STAFF_');
+  const inboundQcBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_OUTBOUND_QC_');
+  const inboundSupervisorBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_OUTBOUND_SUPERVISOR_');
+  const inboundVisibleBusinessUnits = Array.from(
+    new Set([
+      ...inboundWarehouseBusinessUnits,
+      ...inboundQcBusinessUnits,
+      ...inboundSupervisorBusinessUnits,
+    ]),
+  ).sort();
 
   const OUTBOUND_TRANSFER_ROLES = [
     'ROLE_ADMIN',
@@ -33,9 +48,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     'ROLE_PROD_WARE_ADMIN',
   ];
 
-  const hasInboundWarehouseRole = roles.includes('ROLE_INBOUND_OUTBOUND_WAREHOUSE_STAFF');
-  const hasInboundQcRole = roles.includes('ROLE_INBOUND_OUTBOUND_QC');
-  const hasInboundSupervisorRole = roles.includes('ROLE_INBOUND_OUTBOUND_SUPERVISOR');
+  const hasInboundWarehouseRole = inboundWarehouseBusinessUnits.length > 0;
+  const hasInboundQcRole = inboundQcBusinessUnits.length > 0;
+  const hasInboundSupervisorRole = inboundSupervisorBusinessUnits.length > 0;
+  const hasInboundRole = hasInboundWarehouseRole || hasInboundQcRole || hasInboundSupervisorRole;
 
   // Check if user has ANY super role (auto allow all)
   const isSuperAdmin = roles.some(r => SUPER_ROLES.includes(r));
@@ -146,6 +162,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessInboundWarehouseStaff: hasInboundWarehouseRole || isSuperAdmin,
     canAccessInboundQc: hasInboundQcRole || isSuperAdmin,
     canAccessInboundSupervisor: hasInboundSupervisorRole || isSuperAdmin,
+    inboundVisibleBusinessUnits: isSuperAdmin ? ['*'] : inboundVisibleBusinessUnits,
+    inboundWarehouseBusinessUnits: isSuperAdmin ? ['*'] : inboundWarehouseBusinessUnits,
+    inboundQcBusinessUnits: isSuperAdmin ? ['*'] : inboundQcBusinessUnits,
+    inboundSupervisorBusinessUnits: isSuperAdmin ? ['*'] : inboundSupervisorBusinessUnits,
 
     canAccessQuotationMenuItem:
       currentUser?.authorities.some((item) => item === 'ROLE_ADMIN') || false,
@@ -595,25 +615,18 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         [
           ...OUTBOUND_TRANSFER_ROLES,
           'ROLE_PROD_WTP_ADMIN',
-          ...INBOUND_OUTBOUND_ROLES,
         ].some((it) => it === item),
-      ) || false,
+      ) || hasInboundRole || false,
 
     canAccessUpcomingInboundMenuItem:
       currentUser?.authorities.some((item) =>
-        [
-          ...OUTBOUND_TRANSFER_ROLES,
-          ...INBOUND_OUTBOUND_ROLES,
-        ].some((it) => it === item),
-      ) || false,
+        OUTBOUND_TRANSFER_ROLES.some((it) => it === item),
+      ) || hasInboundRole || false,
 
     canAccessInventoryInboundOutboundHub:
       currentUser?.authorities.some((item) =>
-        [
-          ...OUTBOUND_TRANSFER_ROLES,
-          ...INBOUND_OUTBOUND_ROLES,
-        ].some((it) => it === item),
-      ) || false,
+        OUTBOUND_TRANSFER_ROLES.some((it) => it === item),
+      ) || hasInboundRole || false,
 
     canAccessInventoryTranferRequestMenuItem:
       currentUser?.authorities.some((item) =>

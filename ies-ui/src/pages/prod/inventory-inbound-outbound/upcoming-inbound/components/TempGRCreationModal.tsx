@@ -11,6 +11,7 @@ import {
   Input,
   InputNumber,
   Row,
+  Select,
   Space,
   Table,
   Tag,
@@ -52,6 +53,7 @@ interface TempGRCreationModalProps {
   initialMissingPOHint?: string;
   initialReceipt?: UpcomingInboundGoodsReceipt | null;
   correctionMode?: boolean;
+  availableBusinessUnits?: string[];
 }
 
 const receiverWarehouseName = 'warehouse.staff01';
@@ -88,10 +90,12 @@ export function TempGRCreationModal({
   initialMissingPOHint,
   initialReceipt,
   correctionMode = false,
+  availableBusinessUnits = [],
 }: TempGRCreationModalProps) {
   const [postingDate, setPostingDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [actualReceiptDate, setActualReceiptDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [supplier, setSupplier] = useState('');
+  const [businessUnit, setBusinessUnit] = useState('');
   const [deliveryNoteNumber, setDeliveryNoteNumber] = useState('');
   const [pendingPOReason, setPendingPOReason] = useState('');
   const [items, setItems] = useState<GRItem[]>([buildEmptyItem()]);
@@ -105,6 +109,7 @@ export function TempGRCreationModal({
     if (initialReceipt) {
       setPostingDate(initialReceipt.postingDate || dayjs().format('YYYY-MM-DD'));
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
+      setBusinessUnit(initialReceipt.businessUnit || availableBusinessUnits[0] || '');
       setSupplier(initialReceipt.supplier || '');
       setDeliveryNoteNumber(initialReceipt.deliveryNoteNumber || '');
       setPendingPOReason(initialReceipt.pendingPOReason || initialMissingPOHint || '');
@@ -122,6 +127,7 @@ export function TempGRCreationModal({
     }
     setPostingDate(dayjs().format('YYYY-MM-DD'));
     setActualReceiptDate(dayjs().format('YYYY-MM-DD'));
+    setBusinessUnit(availableBusinessUnits.length === 1 ? availableBusinessUnits[0] : '');
     setSupplier('');
     setDeliveryNoteNumber('');
     setPendingPOReason(initialMissingPOHint || '');
@@ -129,7 +135,7 @@ export function TempGRCreationModal({
     setUploadedFiles([]);
     setStoredOnHoldConfirmed(false);
     setErrors({});
-  }, [initialMissingPOHint, initialReceipt, open]);
+  }, [availableBusinessUnits, initialMissingPOHint, initialReceipt, open]);
 
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     setItems((prev) =>
@@ -222,6 +228,7 @@ export function TempGRCreationModal({
   const validate = () => {
     const nextErrors: Record<string, boolean> = {};
     if (!supplier.trim()) nextErrors.supplier = true;
+    if (availableBusinessUnits.length > 1 && !businessUnit.trim()) nextErrors.businessUnit = true;
     if (!deliveryNoteNumber.trim()) nextErrors.deliveryNote = true;
     if (!pendingPOReason.trim()) nextErrors.pendingPOReason = true;
     if (!storedOnHoldConfirmed) nextErrors.onHoldConfirm = true;
@@ -280,6 +287,7 @@ export function TempGRCreationModal({
       id: initialReceipt?.id,
       grNumber: initialReceipt?.grNumber,
       receivingNumber: initialReceipt?.receivingNumber || initialReceipt?.grNumber,
+      businessUnit: businessUnit.trim(),
       poNumber: '',
       supplier: supplier.trim(),
       poReferences: initialReceipt?.poReferences || [],
@@ -585,6 +593,22 @@ export function TempGRCreationModal({
 
           <Form layout="vertical" style={{ marginBottom: 10 }}>
             <Row gutter={24}>
+              <Col span={8}>
+                <Form.Item
+                  label="Business Unit"
+                  required={availableBusinessUnits.length > 1}
+                  validateStatus={errors.businessUnit ? 'error' : undefined}
+                  help={errors.businessUnit ? 'Required' : undefined}
+                >
+                  <Select
+                    value={businessUnit || undefined}
+                    onChange={setBusinessUnit}
+                    disabled={availableBusinessUnits.length <= 1 || correctionMode}
+                    placeholder="Select BU"
+                    options={availableBusinessUnits.map((value) => ({ label: value, value }))}
+                  />
+                </Form.Item>
+              </Col>
               <Col span={8}>
                 <Form.Item
                   label="Supplier"

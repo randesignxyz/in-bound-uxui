@@ -170,6 +170,7 @@ export function GRCreationModal({
     .sort((left, right) => left.poNumber.localeCompare(right.poNumber))
     .map((purchaseOrder) => ({
       poNumber: purchaseOrder.poNumber,
+      businessUnit: purchaseOrder.businessUnit,
       supplier: purchaseOrder.supplier,
       expectedDate: purchaseOrder.expectedDate,
       expectedTime: purchaseOrder.expectedTime,

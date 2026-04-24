@@ -27,6 +27,10 @@ interface ComparisonRow {
 }
 
 function validateLink(receipt: GoodsReceipt, purchaseOrder: PurchaseOrder) {
+  if (receipt.businessUnit && purchaseOrder.businessUnit && receipt.businessUnit !== purchaseOrder.businessUnit) {
+    return 'Business unit does not match the temporary receiving.';
+  }
+
   const normalizedReceiptSupplier = receipt.supplier.trim().toUpperCase();
   const normalizedPOSupplier = purchaseOrder.supplier.trim().toUpperCase();
 
@@ -105,7 +109,9 @@ export function LinkPOModal({
 
     const normalizedSearch = searchTerm.trim().toUpperCase();
     const found = purchaseOrders.find(
-      (purchaseOrder) => purchaseOrder.poNumber.toUpperCase() === normalizedSearch,
+      (purchaseOrder) =>
+        purchaseOrder.poNumber.toUpperCase() === normalizedSearch &&
+        (!receipt.businessUnit || purchaseOrder.businessUnit === receipt.businessUnit),
     );
 
     if (!found) {

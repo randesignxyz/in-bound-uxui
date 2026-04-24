@@ -62,6 +62,12 @@ export function GRQueueTable({
         ]
       : []),
     {
+      key: 'businessUnit',
+      title: 'BU',
+      dataIndex: 'businessUnit',
+      render: (_: any, row: GoodsReceipt) => <Tag color="geekblue">{row.businessUnit || 'N/A'}</Tag>,
+    },
+    {
       key: 'poNumber',
       title: 'PO Reference',
       dataIndex: 'poNumber',

@@ -88,6 +88,8 @@ export default function DrawerViewItem({
 }: DrawerViewItemProps) {
   const [detail, setDetail] = useState<PickedItemDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedImageId, setSelectedImageId] = useState<string | undefined>(undefined);
+  const [imageTransitioning, setImageTransitioning] = useState(false);
 
   const requestAction: RequestActions = {
     start: (serviceName) => console.log(`Loading: ${serviceName}`),
@@ -140,6 +142,26 @@ export default function DrawerViewItem({
     };
   }, [itemId, open, requestId]);
 
+  const imageIds = useMemo(() => {
+    const ids = detail?.imageId ?? data?.imageId;
+    return Array.isArray(ids) ? ids.filter(Boolean) : (ids ? [ids] : []);
+  }, [detail?.imageId, data?.imageId]);
+
+  const firstImageId = imageIds[0];
+
+  useEffect(() => {
+    setSelectedImageId(firstImageId);
+  }, [firstImageId, open]);
+
+  const mainImageId = selectedImageId || firstImageId;
+
+  useEffect(() => {
+    if (!open || !mainImageId) return;
+    setImageTransitioning(true);
+    const timeout = window.setTimeout(() => setImageTransitioning(false), 180);
+    return () => window.clearTimeout(timeout);
+  }, [mainImageId, open]);
+
   const isClosed = detail?.isClosed ?? data?.isClosed ?? false;
   const title = detail?.itemName || data?.spare_part_name || data?.part_number || 'Product Details';
   const lineValue = detail?.forLine || (data as any)?.forLine || '-';
@@ -175,14 +197,70 @@ export default function DrawerViewItem({
         <div
           style={{
             backgroundColor: '#fff',
-            padding: '24px',
+            padding: '24px 0',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             minHeight: 300,
           }}
         >
-          <SparePartImage imageId={detail?.imageId ?? data?.imageId} alt={title} size={220} />
+          {imageIds.length > 0 ? (
+            <div
+              style={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                alignItems: 'center',
+              }}
+            >
+              <div
+                style={{
+                  transition: 'opacity 180ms ease, transform 180ms ease',
+                  opacity: imageTransitioning ? 0.55 : 1,
+                  transform: imageTransitioning ? 'scale(0.985)' : 'scale(1)',
+                }}
+              >
+                <SparePartImage imageId={mainImageId} alt={title} size={280} />
+              </div>
+
+              {imageIds.length > 1 && (
+                <div
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    gap: 10,
+                    flexWrap: 'wrap',
+                    padding: '0 24px',
+                    justifyContent: 'start',
+                  }}
+                >
+                  {imageIds.map((id, index) => {
+                    const isActive = id === mainImageId;
+                    return (
+                      <div key={`${id}-${index}`} style={{ position: 'relative' }}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedImageId(id)}
+                          style={{
+                            border: isActive ? '2px solid #d4a574' : '1px solid #d9d9d9',
+                            borderRadius: 8,
+                            padding: 4,
+                            background: '#fff',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <SparePartImage imageId={id} alt={title} size={64} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <SparePartImage imageId={detail?.imageId ?? data?.imageId} alt={title} size={220} />
+          )}
         </div>
 
         <div style={{ padding: '24px', backgroundColor: '#fff' }}>

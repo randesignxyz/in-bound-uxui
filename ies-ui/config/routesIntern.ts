@@ -1,4 +1,4 @@
-﻿import icons from "@/.umi/plugin-layout/icons";
+import icons from "@/.umi/plugin-layout/icons";
 import { access } from "fs";
 
 /**
@@ -44,6 +44,34 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessInventoryTranferMenuItem',
     component: './prod/inventory-transfer/',
+  },
+  {
+    path: '/prod/inventory-inbound-outbound/:view/*',
+    name: 'inventoryInboundOutbound',
+    hideInMenu: 'true',
+    access: 'canAccessInventoryInboundOutboundHub',
+    component: './prod/inventory-inbound-outbound/',
+  },
+  {
+    path: '/prod/inventory-inbound-outbound/request/:view/*',
+    name: 'inventoryInboundRequest',
+    hideInMenu: 'true',
+    access: 'canAccessInventoryTranferRequestMenuItem',
+    component: './prod/inventory-inbound-outbound/request/',
+  },
+  {
+    path: '/prod/inventory-inbound-outbound/transfer/:view/*',
+    name: 'inventoryOutboundTransfer',
+    hideInMenu: 'true',
+    access: 'canAccessInventoryTranferMenuItem',
+    component: './prod/inventory-inbound-outbound/transfer/',
+  },
+  {
+    path: '/prod/inventory-inbound-outbound/upcoming-inbound/:view/*',
+    name: 'upcomingInbound',
+    hideInMenu: 'true',
+    access: 'canAccessUpcomingInboundMenuItem',
+    component: './prod/inventory-inbound-outbound/upcoming-inbound/',
   },
 
   {

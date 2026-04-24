@@ -1,0 +1,190 @@
+import { useMemo, useRef } from 'react';
+import { Badge, Flex, Progress, Tag } from 'antd';
+import ProTable from '@ant-design/pro-table';
+import type { ActionType, ProColumns } from '@ant-design/pro-table';
+import {
+  GoodsReceipt,
+  InboundHistoryStatus,
+  getGoodsReceiptWorkflowProgress,
+  getInboundHistoryStatus,
+  getInboundHistoryStatusColor,
+  getGoodsReceiptSourceColor,
+  getPOLinkStatusColor,
+  getReceiptApprovedGrNumber,
+  getReceiptIrNumber,
+  getReceiptPOReferences,
+  goodsReceiptSourceLabel,
+  poLinkStatusLabel,
+  summarizePOReferences,
+  summarizeSuppliers,
+} from '../workflow';
+
+interface InboundGRTableProps {
+  receipts: GoodsReceipt[];
+  onViewDetail: (gr: GoodsReceipt) => void;
+  typeFilter: 'ALL' | 'Planned' | 'Unplanned';
+  statusFilter: 'ALL' | InboundHistoryStatus;
+  hideSourceAndPoLink?: boolean;
+  showNotificationBadge?: boolean;
+}
+
+export function InboundGRTable({
+  receipts,
+  onViewDetail,
+  typeFilter,
+  statusFilter,
+  hideSourceAndPoLink = false,
+  showNotificationBadge = false,
+}: InboundGRTableProps) {
+  const actionRef = useRef<ActionType>();
+
+  const filteredReceipts = useMemo(() => {
+    let data = receipts;
+    if (typeFilter !== 'ALL') {
+      data = data.filter((r) => r.receiptType === typeFilter);
+    }
+    if (statusFilter !== 'ALL') {
+      data = data.filter((r) => getInboundHistoryStatus(r) === statusFilter);
+    }
+    return data;
+  }, [receipts, typeFilter, statusFilter]);
+  const showApprovedGrColumn = filteredReceipts.some((receipt) => getReceiptApprovedGrNumber(receipt));
+
+  const columns: ProColumns<GoodsReceipt>[] = [
+    {
+      key: 'receivingNumber',
+      title: 'IR Number',
+      dataIndex: 'receivingNumber',
+      render: (_: any, r: GoodsReceipt) => {
+        const shouldShowRowBadge =
+          showNotificationBadge && getInboundHistoryStatus(r) === 'Rejected';
+
+        return (
+          <Badge
+            dot={shouldShowRowBadge}
+            color="#ff4d4f"
+            offset={[2, 2]}
+          >
+            <a onClick={() => onViewDetail(r)}>{getReceiptIrNumber(r)}</a>
+          </Badge>
+        );
+      },
+    },
+    ...(showApprovedGrColumn
+      ? [
+          {
+            key: 'approvedGrNumber',
+            title: 'GR Number',
+            dataIndex: 'approvedGrNumber',
+            render: (_: any, r: GoodsReceipt) => getReceiptApprovedGrNumber(r) || '-',
+          } as ProColumns<GoodsReceipt>,
+        ]
+      : []),
+    {
+      key: 'poNumber',
+      title: 'PO Reference',
+      dataIndex: 'poNumber',
+      renderText: (_: string, r: GoodsReceipt) =>
+        getReceiptPOReferences(r).length > 0 ? summarizePOReferences(r) : undefined,
+    },
+    {
+      key: 'receiptType',
+      title: 'Type',
+      dataIndex: 'receiptType',
+      render: (_: any, r: GoodsReceipt) => (
+        <Tag color={r.receiptType === 'Planned' ? 'green' : 'orange'}>{r.receiptType}</Tag>
+      ),
+    },
+    ...(!hideSourceAndPoLink
+      ? [
+          {
+            key: 'receiptSourceType',
+            title: 'Source',
+            render: (_: any, r: GoodsReceipt) => (
+              <Tag color={getGoodsReceiptSourceColor(r.receiptSourceType)}>
+                {goodsReceiptSourceLabel[r.receiptSourceType]}
+              </Tag>
+            ),
+          } as ProColumns<GoodsReceipt>,
+          {
+            key: 'poLinkStatus',
+            title: 'PO Link',
+            render: (_: any, r: GoodsReceipt) => (
+              <Tag color={getPOLinkStatusColor(r.poLinkStatus)}>
+                {poLinkStatusLabel[r.poLinkStatus]}
+              </Tag>
+            ),
+          } as ProColumns<GoodsReceipt>,
+        ]
+      : []),
+    {
+      key: 'supplier',
+      title: 'Supplier',
+      render: (_: any, r: GoodsReceipt) => summarizeSuppliers(r),
+    },
+    {
+      key: 'items',
+      title: 'Items',
+      render: (_: any, r: GoodsReceipt) => r.items.length,
+    },
+    {
+      key: 'createdBy',
+      title: 'Created By',
+      dataIndex: 'createdBy',
+    },
+    {
+      key: 'createdDate',
+      title: 'Created Date',
+      dataIndex: 'createdDate',
+      sorter: (a: GoodsReceipt, b: GoodsReceipt) => a.createdDate.localeCompare(b.createdDate),
+    },
+    {
+      key: 'progress',
+      title: 'Progress',
+      render: (_: any, r: GoodsReceipt) => {
+        const pct = getGoodsReceiptWorkflowProgress(r);
+        return (
+          <Flex vertical gap="small" style={{ width: 100 }}>
+            <Progress
+              percent={pct}
+              strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }}
+              size="small"
+              status="active"
+            />
+          </Flex>
+        );
+      },
+    },
+    {
+      key: 'status',
+      title: 'Status',
+      render: (_: any, r: GoodsReceipt) => {
+        const historyStatus = getInboundHistoryStatus(r);
+
+        return (
+          <Tag color={getInboundHistoryStatusColor(historyStatus)} bordered={false}>
+            {historyStatus}
+          </Tag>
+        );
+      },
+    },
+  ];
+
+  return (
+    <ProTable<GoodsReceipt>
+      actionRef={actionRef}
+      columns={columns}
+      dataSource={filteredReceipts}
+      rowKey={(record) => record.receivingNumber || record.grNumber}
+      bordered
+      size="small"
+      search={false}
+      options={{ density: false, reload: false, setting: false }}
+      pagination={{ pageSize: 10, showSizeChanger: true }}
+      onRow={(record) => ({
+        onClick: () => onViewDetail(record),
+        style: { cursor: 'pointer' },
+      })}
+    />
+  );
+}

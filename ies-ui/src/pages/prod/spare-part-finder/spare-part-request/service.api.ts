@@ -39,6 +39,7 @@ export interface SparePartRequestListApiItem {
   imageId?: string[];
   isActive: boolean;
   businessUnit?: string | null;
+  stockStatus?: string | null;
   createdBy?: string;
   createdDate?: string;
   updatedBy?: string;
@@ -57,6 +58,7 @@ interface Location {
   reservedQty?: number;
   availableQty: number;
   reorderLevel: number;
+  stockStatus?: string | null;
   sapStock?: number | null;
   lastSyncedAt?: string | null;
 }
@@ -117,10 +119,23 @@ const SparePartRequestTestAction = {
   // createRequest: 
 };
 
-const mapStockStatus = (stock: number): SparePartStockStatus => {
+const mapStockStatus = (stock: number, reorderLevel?: number): SparePartStockStatus => {
   if (stock <= 0) return 'no-stock';
-  if (stock <= 2) return 'low';
+  if ((reorderLevel ?? 0) > 0 && stock <= (reorderLevel ?? 0)) return 'low';
   return 'available';
+};
+
+const mapBackendStockStatus = (status?: string | null): SparePartStockStatus | undefined => {
+  switch (status?.trim().toUpperCase()) {
+    case 'OUT_OF_STOCK':
+      return 'no-stock';
+    case 'LOW_STOCK':
+      return 'low';
+    case 'IN_STOCK':
+      return 'available';
+    default:
+      return undefined;
+  }
 };
 
 const normalizeUomOptions = (value?: string | string[] | null): string[] => {
@@ -159,6 +174,8 @@ const resolveCategoryId = (item: SparePartRequestListApiItem): number | undefine
 export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string): SparePartRequestItem => {
   const firstLocation = item.locations?.[0];
   const stock = firstLocation?.availableQty ?? item.avalailableStock ?? item.stock ?? 0;
+  const reorderLevel = firstLocation?.reorderLevel;
+  const backendStockStatus = mapBackendStockStatus(firstLocation?.stockStatus ?? item.stockStatus);
   const uomOptions = normalizeUomOptions(item.uom);
 
   return {
@@ -174,8 +191,9 @@ export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: s
     uomOptions,
     stock,
     businessUnit: item.businessUnit || '-',
-    status: mapStockStatus(stock),
+    status: backendStockStatus || mapStockStatus(stock, reorderLevel),
     warehouse: firstLocation?.warehouseCode || fallbackWarehouse || '',
+    stockStatus: firstLocation?.stockStatus || item.stockStatus || undefined,
     locations: item.locations || [],
     tab: 'spare-list',
     createdDate: item.createdDate,

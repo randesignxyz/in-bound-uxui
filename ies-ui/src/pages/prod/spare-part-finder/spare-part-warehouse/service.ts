@@ -300,7 +300,7 @@ const mapIssueLineToWarehouseLine = (item: IssueLineDto) => ({
   itemName: item.sparePartName,
   quantity: Number(item.approvedQty || 0),
   receivedQuantity: Number(item.issuedQty || 0),
-  businessUnit: item.unit || 'pcs',
+  businessUnit: item.forLine || '',
   uom: item.unit || 'pcs',
 });
 
@@ -386,10 +386,10 @@ const buildActivities = (
     orderedHistory.length > 0 && confirmedHistory.length === orderedHistory.length;
   const finalConfirmedEntry = hasAllShipmentsConfirmed
     ? [...confirmedHistory].sort((left, right) => {
-        const leftTime = new Date(left.pickupConfirmedAt || left.issuedAt || item.requestedDate || '').getTime();
-        const rightTime = new Date(right.pickupConfirmedAt || right.issuedAt || item.requestedDate || '').getTime();
-        return leftTime - rightTime;
-      })[confirmedHistory.length - 1]
+      const leftTime = new Date(left.pickupConfirmedAt || left.issuedAt || item.requestedDate || '').getTime();
+      const rightTime = new Date(right.pickupConfirmedAt || right.issuedAt || item.requestedDate || '').getTime();
+      return leftTime - rightTime;
+    })[confirmedHistory.length - 1]
     : undefined;
   const activities: RequestDetailActivity[] = [
     {

@@ -23,7 +23,7 @@ export default function ListView() {
         {
           label: 'Spare Part Request List',
           key: '1',
-          children: <SparePartListTest />,
+          // children: <SparePartListTest />,
         },
       ]}
       />

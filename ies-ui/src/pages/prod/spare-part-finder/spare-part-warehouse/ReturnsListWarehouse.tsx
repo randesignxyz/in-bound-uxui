@@ -1,13 +1,18 @@
-import { EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+import { EyeOutlined, FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, Card, DatePicker, Input, Select, Tag, Typography } from 'antd';
+import { Button, Card, DatePicker, Input, Select, Tag, Typography, message } from 'antd';
 import { Space } from 'antd/lib';
-import { useRef, useState } from 'react';
-import { RequestActions } from '@/services/apiGateway';
+import dayjs from 'dayjs';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { downloadGenericReport, RequestActions } from '@/services/apiGateway';
+import { SparePartRequestAPI } from '../spare-part-request/service.api';
 import { SparePartWarehouseReturnAPI } from './service.return';
 import type { RequestDetailData, ReturnStatus } from '../spare-part-return/data';
 import ReturnsListDrawer from './ReturnsListDrawer';
 import { formatSpfDateTime } from '../shared/dateTime';
+import RequestsWarehouseExportExcel, {
+  type RequestsWarehouseExportValues,
+} from './RequestsWarehouseExportExcel';
 
 const { RangePicker } = DatePicker;
 
@@ -78,11 +83,95 @@ export default function ReturnsListWarehouse() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [knownBusinessUnits, setKnownBusinessUnits] = useState<string[]>([]);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const exportInFlightRef = useRef(false);
 
-  const requestAction: RequestActions = {
-    start: (name) => console.log(`Loading: ${name}`),
-    end: (status) => console.log(status),
-  };
+  const requestAction: RequestActions = useMemo(
+    () => ({
+      start: (name) => console.log(`Loading: ${name}`),
+      end: (status) => console.log(status),
+    }),
+    [],
+  );
+
+  const loadBusinessUnits = useCallback(async () => {
+    try {
+      const sparePartServices = SparePartRequestAPI(requestAction);
+      const response = await sparePartServices.page({
+        criteria: {
+          searchValue: '',
+          category: '',
+          status: 'All',
+          warehouse: '',
+        },
+        pagination: {
+          current: 1,
+          pageSize: 1000,
+        },
+      });
+
+      const businessUnits = Array.from(
+        new Set(
+          (response.items || [])
+            .map((item) => item.businessUnit)
+            .filter((item): item is string => Boolean(item && item !== '-')),
+        ),
+      ).sort();
+
+      setKnownBusinessUnits(businessUnits);
+    } catch (error) {
+      message.error('Failed to load business units.');
+    }
+  }, [requestAction]);
+
+  useEffect(() => {
+    loadBusinessUnits();
+  }, [loadBusinessUnits]);
+
+  const exportRequests = useCallback(
+    async ({ dateRange, businessUnits }: RequestsWarehouseExportValues) => {
+      if (exportInFlightRef.current) return;
+
+      exportInFlightRef.current = true;
+      setExportLoading(true);
+      try {
+        await downloadGenericReport(requestAction)({
+          fileName: `spare-part-returns-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
+          type: 'EXCEL',
+          data: {
+            reportName: 'prod_spf_returns',
+            reportPath: '',
+            data: [
+              {
+                key: 'StartDate',
+                value: dateRange[0].startOf('day').toISOString(),
+                type: 'dateTime',
+              },
+              {
+                key: 'EndDate',
+                value: dateRange[1].endOf('day').toISOString(),
+                type: 'dateTime',
+              },
+              {
+                key: 'BusinessUnit',
+                value: businessUnits.length > 0 ? businessUnits.join(',') : 'All',
+                type: 'string',
+              },
+            ],
+          },
+        });
+        setExportModalOpen(false);
+      } catch (error) {
+        message.error('Failed to export Excel.');
+      } finally {
+        exportInFlightRef.current = false;
+        setExportLoading(false);
+      }
+    },
+    [requestAction],
+  );
 
   const fetchData = async (params: { current?: number; pageSize?: number }) => {
     const page = params.current ?? 1;
@@ -209,6 +298,9 @@ export default function ReturnsListWarehouse() {
             ]}
           />
           <RangePicker style={{ width: 280 }} />
+          <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
+            Export Excel
+          </Button>
         </Space>
       </div>
 
@@ -259,6 +351,14 @@ export default function ReturnsListWarehouse() {
           activities: [],
         } : null}
         returnId={selectedReturn?.returnId}
+      />
+      <RequestsWarehouseExportExcel
+        open={exportModalOpen}
+        loading={exportLoading}
+        businessUnitOptions={knownBusinessUnits}
+        reportName="return_by_date_range(default_today_7dayts)_promt_by_BU"
+        onCancel={() => setExportModalOpen(false)}
+        onSave={exportRequests}
       />
     </>
   );

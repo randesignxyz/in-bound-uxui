@@ -19,7 +19,6 @@ export const ProdPaths = {
   dailyHACCPMonitoringtOzone: '/prod/daily-haccp-monitoring-ozone',
   dailyHACCPMonitoring: '/prod/daily-haccp-monitoring',
   sparePartReturn: '/prod/spare-part-return',
-  sparePartRequestTest: '/prod/spare-part-request-test',
   sparePartWarehouse: '/prod/spare-part-warehouse',
   sparePartApproval: '/prod/spare-part-approval',
 };
@@ -117,13 +116,6 @@ export default () => {
       icon: warehouseTransferIcon,
       link: `${ProdPaths.sparePartApproval}/list`,
       visible: access.canSpfApprover,
-    },
-    {
-      id: 'SparePartsListTest',
-      name: 'Spare Parts',
-      description: 'Spare Part Request List',
-      link: `${ProdPaths.sparePartRequestTest}/list`,
-      visible: access.canAdmin
     },
     {
       id: 'sparePartRequestWarehouse',

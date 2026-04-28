@@ -8,7 +8,7 @@ type ExportPeriod = 'week' | 'month' | 'year' | 'custom';
 type BusinessUnitMode = 'all' | 'select';
 
 export type RequestsWarehouseExportValues = {
-  dateRange: [Dayjs, Dayjs];
+  dateRange?: [Dayjs, Dayjs];
   businessUnits: string[];
 };
 
@@ -17,6 +17,7 @@ type Props = {
   loading?: boolean;
   businessUnitOptions: string[];
   reportName: string;
+  showDateRange?: boolean;
   onCancel: () => void;
   onSave: (values: RequestsWarehouseExportValues) => Promise<void> | void;
 };
@@ -47,6 +48,7 @@ export default function RequestsWarehouseExportExcel({
   loading,
   businessUnitOptions,
   reportName,
+  showDateRange = true,
   onCancel,
   onSave,
 }: Props) {
@@ -58,12 +60,12 @@ export default function RequestsWarehouseExportExcel({
     if (!open) return;
 
     form.setFieldsValue({
-      period: 'week',
-      dateRange: getDateRangeByPeriod('week'),
+      period: showDateRange ? 'week' : undefined,
+      dateRange: showDateRange ? getDateRangeByPeriod('week') : undefined,
       businessUnitMode: 'all',
       businessUnits: [],
     });
-  }, [form, open]);
+  }, [form, open, showDateRange]);
 
   return (
     <Modal
@@ -82,7 +84,9 @@ export default function RequestsWarehouseExportExcel({
           loading={loading}
           onClick={async () => {
             const values = await form.validateFields();
-            const dateRange = values.dateRange || getDateRangeByPeriod(values.period);
+            const dateRange = showDateRange
+              ? values.dateRange || getDateRangeByPeriod(values.period)
+              : undefined;
 
             await onSave({
               dateRange,
@@ -95,34 +99,38 @@ export default function RequestsWarehouseExportExcel({
       ]}
     >
       <Form form={form} layout="vertical">
-        <Form.Item name="period" label="Date Range" rules={[{ required: true }]}>
-          <Radio.Group
-            optionType="button"
-            buttonStyle="solid"
-            onChange={(event) => {
-              const nextPeriod = event.target.value as ExportPeriod;
-              form.setFieldValue('dateRange', getDateRangeByPeriod(nextPeriod));
-            }}
-            options={[
-              { label: 'A Week', value: 'week' },
-              { label: 'A Month', value: 'month' },
-              { label: 'A Year', value: 'year' },
-              { label: 'Select Range', value: 'custom' },
-            ]}
-          />
-        </Form.Item>
+        {showDateRange !== false ? (
+          <>
+            <Form.Item name="period" label="Date Range" rules={[{ required: true }]}>
+              <Radio.Group
+                optionType="button"
+                buttonStyle="solid"
+                onChange={(event) => {
+                  const nextPeriod = event.target.value as ExportPeriod;
+                  form.setFieldValue('dateRange', getDateRangeByPeriod(nextPeriod));
+                }}
+                options={[
+                  { label: 'A Week', value: 'week' },
+                  { label: 'A Month', value: 'month' },
+                  { label: 'A Year', value: 'year' },
+                  { label: 'Select Range', value: 'custom' },
+                ]}
+              />
+            </Form.Item>
 
-        <Form.Item
-          name="dateRange"
-          rules={[{ required: true, message: 'Please select a date range.' }]}
-        >
-          <RangePicker
-            allowClear={false}
-            disabled={period !== 'custom'}
-            style={{ width: '100%' }}
-            format="YYYY-MM-DD"
-          />
-        </Form.Item>
+            <Form.Item
+              name="dateRange"
+              rules={[{ required: true, message: 'Please select a date range.' }]}
+            >
+              <RangePicker
+                allowClear={false}
+                disabled={period !== 'custom'}
+                style={{ width: '100%' }}
+                format="YYYY-MM-DD"
+              />
+            </Form.Item>
+          </>
+        ) : null}
 
         <Form.Item name="businessUnitMode" label="Business Unit" rules={[{ required: true }]}>
           <Radio.Group

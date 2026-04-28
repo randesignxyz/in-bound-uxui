@@ -134,6 +134,11 @@ export default function ReturnsListWarehouse() {
     async ({ dateRange, businessUnits }: RequestsWarehouseExportValues) => {
       if (exportInFlightRef.current) return;
 
+      if (!dateRange?.[0] || !dateRange?.[1]) {
+        message.error('Please select a date range.');
+        return;
+      }
+
       exportInFlightRef.current = true;
       setExportLoading(true);
       try {
@@ -141,13 +146,14 @@ export default function ReturnsListWarehouse() {
           fileName: `spare-part-returns-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
           type: 'EXCEL',
           data: {
-            reportName: 'prod_spf_returns',
+            reportName: 'spare_parts_returns',
             reportPath: '',
             data: [
               {
                 key: 'StartDate',
                 value: dateRange[0].startOf('day').toISOString(),
                 type: 'dateTime',
+                
               },
               {
                 key: 'EndDate',

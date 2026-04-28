@@ -1,15 +1,17 @@
-import Icon, { ReloadOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
+import Icon, { FileExcelOutlined, ReloadOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import { Button, Card, DatePicker, Input, Modal, Select, Space, Tag, Typography, message } from 'antd';
 import dayjs from 'dayjs';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import RequestItemModal from './requestItem';
 import { fetchSparePartCategories, SparePartRequestAPI, uploadFilesToFileService } from './service.api';
 import { SparePartRequestService } from './service';
 import SparePartImage from './SparePartImage';
 import SpfDetails from './SpfDetails';
+import RequestsWarehouseExportExcel from '../spare-part-warehouse/RequestsWarehouseExportExcel';
 
 const statusOptions = [
   { label: 'All Status', value: 'All' },
@@ -81,6 +83,9 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const [knownCategories, setKnownCategories] = useState([]);
   const [knownWarehouses, setKnownWarehouses] = useState([]);
   const [knownBusinessUnits, setKnownBusinessUnits] = useState([]);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const exportInFlightRef = useRef(false);
   const [filters, setFilters] = useState({
     businessUnits: [],
     category: undefined,
@@ -390,6 +395,39 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     closeDetails();
   };
 
+  const exportRequests = useCallback(
+    async ({ dateRange, businessUnits }) => {
+      if (exportInFlightRef.current) return;
+
+      exportInFlightRef.current = true;
+      setExportLoading(true);
+      try {
+        await downloadGenericReport(requestActions)?.({
+          fileName: `spare-parts-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
+          type: 'EXCEL',
+          data: {
+            reportName: 'spare_parts',
+            reportPath: '',
+            data: [
+              {
+                key: 'BusinessUnit',
+                value: businessUnits.length > 0 ? businessUnits.join(',') : 'All',
+                type: 'string',
+              },
+            ],
+          },
+        });
+        setExportModalOpen(false);
+      } catch (error) {
+        message.error('Failed to export Excel.');
+      } finally {
+        exportInFlightRef.current = false;
+        setExportLoading(false);
+      }
+    },
+    [requestActions],
+  );
+
   const handleUploadProductImages = async (files) => {
     if (!detailsItem?.productId) return;
     const uploadedImageIds = await uploadFilesToFileService(files);
@@ -502,6 +540,10 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
               }}
             />
           ) : null}
+
+          <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
+            Export Excel
+          </Button>
 
           {/* <RangePicker
             allowClear
@@ -739,6 +781,16 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         accept=".xlsx"
         style={{ display: 'none' }}
         onChange={handleImportFileChange}
+      />
+
+      <RequestsWarehouseExportExcel
+        open={exportModalOpen}
+        loading={exportLoading}
+        businessUnitOptions={knownBusinessUnits}
+        reportName="spare_parts"
+          showDateRange={false}
+        onCancel={() => setExportModalOpen(false)}
+        onSave={exportRequests}
       />
 
       <SpfDetails

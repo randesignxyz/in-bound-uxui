@@ -174,7 +174,10 @@ export default function RequestsListWarehouse() {
   const exportRequests = useCallback(
     async ({ dateRange, businessUnits }: RequestsWarehouseExportValues) => {
       if (exportInFlightRef.current) return;
-
+        if (!dateRange?.[0] || !dateRange?.[1]) {
+        message.error('Please select a date range.');
+        return;
+      }
       exportInFlightRef.current = true;
       setExportLoading(true);
       try {
@@ -182,7 +185,7 @@ export default function RequestsListWarehouse() {
           fileName: `spare-part-warehouse-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
           type: 'EXCEL',
           data: {
-            reportName: 'prod_spf_requests',
+            reportName: 'spare_parts_requests',
             reportPath: '',
             data: [
               {

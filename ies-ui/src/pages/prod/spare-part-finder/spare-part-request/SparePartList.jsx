@@ -81,7 +81,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState(null);
   const [currentRows, setCurrentRows] = useState([]);
-  const [knownCategories, setKnownCategories] = useState([]);
+  const [categoryItems, setCategoryItems] = useState([]);
   const [knownWarehouses, setKnownWarehouses] = useState([]);
   const [knownBusinessUnits, setKnownBusinessUnits] = useState([]);
   const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -97,7 +97,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
   const categoryOptions = [
     { label: 'All Categories', value: '' },
-    ...knownCategories.map((item) => ({ label: item, value: item })),
+    ...categoryItems.map((item) => ({ label: item.category_name, value: item.category_name })),
   ];
 
   const warehouseOptions = [
@@ -109,7 +109,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
   useEffect(() => {
     fetchSparePartCategories()
-      .then((items) => setKnownCategories(items.map((item) => item.category_name).filter(Boolean)))
+      .then((items) => setCategoryItems(items.filter((item) => item?.id && item?.category_name)))
       .catch(() => undefined);
   }, []);
 
@@ -156,7 +156,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       });
 
       (rows || []).forEach((r) => {
-        if (r?.id != null) {
+        if (r?.id !== null && r?.id !== undefined) {
           next[String(r.id)] = r;
         }
       });
@@ -446,6 +446,19 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
     const updatedDetail = await services.deleteImages(detailsItem.productId, [imageId]);
     setDetailsItem(updatedDetail);
+    reloadTable(false);
+  };
+
+  const handleUpdateProductDetail = async (payload) => {
+    const updatedDetail = await services.updateDetail(payload);
+    setDetailsItem(updatedDetail);
+    setCurrentRows((previous) =>
+      previous.map((row) => (row.id === updatedDetail.id ? { ...row, ...updatedDetail } : row)),
+    );
+    setSelectedItemsById((previous) => ({
+      ...previous,
+      [String(updatedDetail.id)]: updatedDetail,
+    }));
     reloadTable(false);
   };
 
@@ -795,26 +808,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
       <SpfDetails
         open={detailsOpen}
-        data={
-          detailsItem
-            ? {
-                image: detailsItem.image,
-                imageId: detailsItem.imageId,
-                locations: detailsItem.locations,
-                spare_part_name: detailsItem.partName,
-                part_number: detailsItem.productId,
-                description: detailsItem.description,
-                stock_quantity: detailsItem.stock,
-                receiving_from_warehouse: detailsItem.warehouse,
-                company: detailsItem.company,
-                category: detailsItem.category,
-                uom: detailsItem.uom,
-                business_unit: detailsItem.businessUnit,
-                requested_date: detailsItem.createdDate,
-                updated_date: detailsItem.updatedDate,
-              }
-            : undefined
-        }
+        data={detailsItem || undefined}
         loading={detailsLoading}
         error={detailsError}
         onClose={closeDetails}
@@ -824,6 +818,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         canManageImages={canManageImages}
         onUploadImages={canManageImages ? handleUploadProductImages : undefined}
         onDeleteImage={canManageImages ? handleDeleteProductImage : undefined}
+        onUpdateDetail={canManageImages ? handleUpdateProductDetail : undefined}
+        categoryOptions={categoryItems.map((item) => ({
+          label: item.category_name,
+          value: item.id,
+        }))}
       />
 
     </>

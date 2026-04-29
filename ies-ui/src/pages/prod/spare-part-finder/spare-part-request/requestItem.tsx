@@ -429,10 +429,12 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     },
   ];
 
+  const totalRequestedQty = rows.reduce((sum, row) => sum + Number(row.quantity || 0), 0);
+
   const modalTitle = (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: 24 }}>
       <Typography.Text strong style={{ fontSize: 16 }}>
-        Spare part Request({rows.length} items)
+        Spare part Request({totalRequestedQty} items)
       </Typography.Text>
       {onAddMore && (
         <Button type="link" icon={<PlusOutlined />} onClick={onAddMore}>
@@ -544,7 +546,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       <ValidationPopup
         open={submitPopupOpen}
         title="Submit Request"
-        description={`Submit this spare part request with ${rows.length} item(s)?`}
+        description={`Submit this spare part request with ${totalRequestedQty} item(s)?`}
         confirmText="Submit"
         loading={confirmLoading}
         onCancel={() => setSubmitPopupOpen(false)}

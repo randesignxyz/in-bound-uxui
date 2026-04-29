@@ -1,11 +1,10 @@
 import { useMemo, useRef } from 'react';
-import { Badge, Flex, Progress, Tag } from 'antd';
+import { Badge, Tag, Typography } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
 import {
   GoodsReceipt,
   InboundHistoryStatus,
-  getGoodsReceiptWorkflowProgress,
   getInboundHistoryStatus,
   getInboundHistoryStatusColor,
   getGoodsReceiptSourceColor,
@@ -18,6 +17,8 @@ import {
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
+
+const { Text } = Typography;
 
 interface InboundGRTableProps {
   receipts: GoodsReceipt[];
@@ -84,8 +85,12 @@ export function InboundGRTable({
       key: 'poNumber',
       title: 'PO Reference',
       dataIndex: 'poNumber',
-      renderText: (_: string, r: GoodsReceipt) =>
-        getReceiptPOReferences(r).length > 0 ? summarizePOReferences(r) : undefined,
+      render: (_: string, r: GoodsReceipt) =>
+        getReceiptPOReferences(r).length > 0 ? (
+          summarizePOReferences(r)
+        ) : (
+          <Text style={{ color: '#ff4d4f', fontWeight: 600 }}>No PO</Text>
+        ),
     },
     {
       key: 'receiptType',
@@ -137,23 +142,6 @@ export function InboundGRTable({
       title: 'Created Date',
       dataIndex: 'createdDate',
       sorter: (a: GoodsReceipt, b: GoodsReceipt) => a.createdDate.localeCompare(b.createdDate),
-    },
-    {
-      key: 'progress',
-      title: 'Progress',
-      render: (_: any, r: GoodsReceipt) => {
-        const pct = getGoodsReceiptWorkflowProgress(r);
-        return (
-          <Flex vertical gap="small" style={{ width: 100 }}>
-            <Progress
-              percent={pct}
-              strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }}
-              size="small"
-              status="active"
-            />
-          </Flex>
-        );
-      },
     },
     {
       key: 'status',

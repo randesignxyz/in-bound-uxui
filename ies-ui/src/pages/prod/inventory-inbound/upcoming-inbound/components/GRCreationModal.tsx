@@ -3,7 +3,6 @@ import {
   Alert,
   Button,
   Card,
-  Checkbox,
   Collapse,
   DatePicker,
   Divider,
@@ -37,22 +36,22 @@ import {
 import dayjs from 'dayjs';
 import {
   buildReceiptExceptionReason,
-  getCombinedPurchaseOrderVendor,
   hasReceiptDiscrepancy,
 } from '../workflow';
 import type { GRItem, PurchaseOrder } from '../workflow';
 import type { UpcomingInboundGoodsReceipt } from '../data';
 import {
   applyUploadedSupportingDocs,
+  getSupportingUploadFilePreview,
   hasIncompleteAppFilesUpload,
   normalizeUploadFileList,
-  previewSupportingUploadFile,
   stageSupportingDocBeforeUpload,
   supportingDocsToUploadFiles,
   uploadPendingSupportingDocs,
   uploadFilesToSupportingDocs,
 } from '../supportingDocs';
 import { FullscreenModal } from './FullscreenModal';
+import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
 import { SupportingDocsList } from './SupportingDocsList';
 
 const { Text } = Typography;
@@ -178,7 +177,6 @@ export function GRCreationModal({
   const supplierNames = Array.from(
     new Set(purchaseOrders.map((purchaseOrder) => purchaseOrder.supplier)),
   );
-  const selectedVendor = getCombinedPurchaseOrderVendor(purchaseOrders) || supplierNames[0] || '';
   const receiptType = deriveReceiptType(purchaseOrders);
   const firstPO = purchaseOrders[0];
   const isMultiPOReceipt = selectedPOCount > 1;
@@ -191,10 +189,14 @@ export function GRCreationModal({
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
   const [poUploadedFiles, setPoUploadedFiles] = useState<Record<string, UploadFile[]>>({});
   const [errors, setErrors] = useState<Record<string, boolean>>({});
-  const [storedOnHoldConfirmed, setStoredOnHoldConfirmed] = useState(false);
   const [scanModalOpen, setScanModalOpen] = useState(false);
   const [scanTargetPoNumber, setScanTargetPoNumber] = useState<string | null>(null);
   const [scannedValue, setScannedValue] = useState('');
+  const [previewState, setPreviewState] = useState<{
+    fileName?: string;
+    url?: string;
+    revokeOnClose?: boolean;
+  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeItemPanels, setActiveItemPanels] = useState<string[]>([]);
 
@@ -317,8 +319,6 @@ export function GRCreationModal({
     } else if (!deliveryNoteNumber.trim()) {
       nextErrors.deliveryNote = true;
     }
-    if (!storedOnHoldConfirmed) nextErrors.onHoldConfirm = true;
-
     items.forEach((item, index) => {
       if (item.isMissing) {
         if (!item.missingRemark?.trim()) nextErrors[`missingRemark-${index}`] = true;
@@ -445,7 +445,6 @@ export function GRCreationModal({
         pmrmStockCardForm: false,
         supportingDocs: normalizedSupportingDocs,
       },
-      storedOnHoldConfirmed,
     };
   };
 
@@ -501,52 +500,74 @@ export function GRCreationModal({
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    setIsSubmitting(true);
-    try {
-      const supportingDocs = isMultiPOReceipt
-        ? []
-        : await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
-      const uploadedPoSupportingDocs = isMultiPOReceipt
-        ? await Promise.all(
-            purchaseOrders.map(
-              async (purchaseOrder): Promise<[string, UploadFile[]]> => [
-                purchaseOrder.poNumber,
-                applyUploadedSupportingDocs(
-                  poUploadedFiles[purchaseOrder.poNumber] || [],
-                  await uploadPendingSupportingDocs(
-                    poUploadedFiles[purchaseOrder.poNumber] || [],
-                    'WAREHOUSE',
-                  ),
+    Modal.confirm({
+      title: 'Submit to QC?',
+      content: 'This will submit the inbound receiving to QC for review.',
+      okText: 'Confirm',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        setIsSubmitting(true);
+        try {
+          const supportingDocs = isMultiPOReceipt
+            ? []
+            : await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
+          const uploadedPoSupportingDocs = isMultiPOReceipt
+            ? await Promise.all(
+                purchaseOrders.map(
+                  async (purchaseOrder): Promise<[string, UploadFile[]]> => [
+                    purchaseOrder.poNumber,
+                    applyUploadedSupportingDocs(
+                      poUploadedFiles[purchaseOrder.poNumber] || [],
+                      await uploadPendingSupportingDocs(
+                        poUploadedFiles[purchaseOrder.poNumber] || [],
+                        'WAREHOUSE',
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              )
+            : [];
+          if (!isMultiPOReceipt) {
+            setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
+          } else {
+            setPoUploadedFiles((prev) =>
+              uploadedPoSupportingDocs.reduce<Record<string, UploadFile[]>>((next, [poNumber, docs]) => {
+                next[poNumber] = docs;
+                return next;
+              }, { ...prev }),
+            );
+          }
+          const shouldClose = await onSubmit(
+            buildGRData(
+              correctionMode ? 'draft' : 'submit',
+              supportingDocs,
+              Object.fromEntries(uploadedPoSupportingDocs) as Record<string, UploadFile[]>,
             ),
-          )
-        : [];
-      if (!isMultiPOReceipt) {
-        setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
-      } else {
-        setPoUploadedFiles((prev) =>
-          uploadedPoSupportingDocs.reduce<Record<string, UploadFile[]>>((next, [poNumber, docs]) => {
-            next[poNumber] = docs;
-            return next;
-          }, { ...prev }),
-        );
-      }
-      const shouldClose = await onSubmit(
-        buildGRData(
-          correctionMode ? 'draft' : 'submit',
-          supportingDocs,
-          Object.fromEntries(uploadedPoSupportingDocs) as Record<string, UploadFile[]>,
-        ),
-      );
-      if (shouldClose) {
-        onClose();
-      }
-    } catch (error: any) {
-      message.error(error?.message || 'Failed to prepare supporting documents.');
-    } finally {
-      setIsSubmitting(false);
+          );
+          if (shouldClose) {
+            onClose();
+          }
+        } catch (error: any) {
+          message.error(error?.message || 'Failed to prepare supporting documents.');
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+    });
+  };
+
+  const handlePreviewFile = async (file: UploadFile) => {
+    const preview = await getSupportingUploadFilePreview(file);
+    if (preview) {
+      setPreviewState({
+        fileName: file.name,
+        url: preview.url,
+        revokeOnClose: preview.revokeOnClose,
+      });
+      return;
     }
+
+    message.error('Preview is not available for this file.');
   };
 
   const openScanModal = (poNumber: string) => {
@@ -627,7 +648,6 @@ export function GRCreationModal({
       );
       setUploadedFiles(supportingDocsToUploadFiles(initialReceipt.documentChecklist.supportingDocs || []));
       setPoUploadedFiles(buildInitialPoUploadFiles(purchaseOrders, initialReceipt));
-      setStoredOnHoldConfirmed(true);
       setErrors({});
       setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
       closeScanModal();
@@ -642,7 +662,6 @@ export function GRCreationModal({
     setUploadedFiles([]);
     setPoUploadedFiles(buildInitialPoUploadFiles(purchaseOrders));
     setErrors({});
-    setStoredOnHoldConfirmed(false);
     setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
     closeScanModal();
   }, [correctionMode, initialReceipt, open, purchaseOrders]);
@@ -962,7 +981,7 @@ export function GRCreationModal({
                           showUploadList={false}
                           onChange={handleUploadChange}
                           onRemove={(file) => removeFile(file.uid)}
-                          onPreview={(file) => previewSupportingUploadFile(file)}
+                          onPreview={(file) => void handlePreviewFile(file)}
                           accept=".pdf,.doc,.docx,image/*"
                           listType="text"
                         >
@@ -1135,7 +1154,7 @@ export function GRCreationModal({
                                     showUploadList={false}
                                     onChange={handlePoUploadChange(group.poNumber)}
                                     onRemove={(file) => removePoFile(group.poNumber, file.uid)}
-                                    onPreview={(file) => previewSupportingUploadFile(file)}
+                                    onPreview={(file) => void handlePreviewFile(file)}
                                     accept=".pdf,.doc,.docx,image/*"
                                     listType="text"
                                   >
@@ -1156,8 +1175,15 @@ export function GRCreationModal({
                                     displayMode="grid"
                                     collapsedLimit={5}
                                   />
-                                </div>
-                              </div>
+        </div>
+        <SupportingDocPreviewModal
+          open={Boolean(previewState)}
+          fileName={previewState?.fileName}
+          previewUrl={previewState?.url}
+          revokeOnClose={previewState?.revokeOnClose}
+          onClose={() => setPreviewState(null)}
+        />
+      </div>
                             </Form.Item>
                           </Col>
                         </Row>
@@ -1177,20 +1203,6 @@ export function GRCreationModal({
             />
           </div>
 
-            <Form.Item
-              validateStatus={errors.onHoldConfirm ? 'error' : undefined}
-              help={errors.onHoldConfirm ? 'Required' : undefined}
-            >
-              <Checkbox
-                checked={storedOnHoldConfirmed}
-                onChange={(event) => {
-                  setStoredOnHoldConfirmed(event.target.checked);
-                  setErrors((prev) => ({ ...prev, onHoldConfirm: false }));
-                }}
-              >
-                I confirm received PM/RM is stored in On-Hold Warehouse before QC Approve.
-              </Checkbox>
-            </Form.Item>
           </div>
 
           <div
@@ -1212,7 +1224,7 @@ export function GRCreationModal({
                 <Button
                   type="primary"
                   onClick={handleSubmit}
-                  disabled={!storedOnHoldConfirmed || isSubmitting}
+                  disabled={isSubmitting}
                   loading={isSubmitting}
                 >
                   {hasDiscrepancy ? 'Submit Exception' : 'Submit for QC'}

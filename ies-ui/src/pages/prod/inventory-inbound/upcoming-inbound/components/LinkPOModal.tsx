@@ -156,7 +156,7 @@ export function LinkPOModal({
 
   return (
     <FullscreenModal
-      title="Link Temporary Inbound Receiving to SAP PO"
+      title="Link SAP PO"
       open={open}
       onCancel={onClose}
       footer={null}

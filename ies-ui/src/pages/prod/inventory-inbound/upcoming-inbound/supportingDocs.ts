@@ -9,6 +9,10 @@ export type SupportingUploadFile = UploadFile & {
   supportingDocSource?: SupportingDocSource | null;
   poNumber?: string | null;
 };
+export type SupportingDocPreviewPayload = {
+  url: string;
+  revokeOnClose?: boolean;
+};
 
 export const APP_PROD_SUPPORTING_DOC_UPLOAD_ACTION = `${getServiceUrl('PROD')}/inbound/supporting-docs/upload`;
 
@@ -26,6 +30,48 @@ export function supportingDocsToUploadFiles(docs: SupportingDocReference[]): Sup
     supportingDocSource: doc.source ?? undefined,
     poNumber: doc.poNumber ?? undefined,
   }));
+}
+
+export function getUploadFileSource(
+  file: UploadFile,
+  fallbackSource?: SupportingDocSource,
+): SupportingDocSource | null | undefined {
+  return (file as SupportingUploadFile).supportingDocSource ?? fallbackSource;
+}
+
+export function getUploadFilePoNumber(file: UploadFile): string | null | undefined {
+  return (file as SupportingUploadFile).poNumber;
+}
+
+export async function getSupportingUploadFilePreview(
+  file: UploadFile,
+): Promise<SupportingDocPreviewPayload | null> {
+  if (file.originFileObj) {
+    return {
+      url: URL.createObjectURL(file.originFileObj as Blob),
+      revokeOnClose: true,
+    };
+  }
+
+  if (typeof file.response === 'string') {
+    return {
+      url: await getUploadFileObjectUrlV2()(file.response),
+    };
+  }
+
+  return null;
+}
+
+export async function getSupportingDocPreview(
+  doc: SupportingDocReference,
+): Promise<SupportingDocPreviewPayload | null> {
+  if (!doc.fileId) {
+    return null;
+  }
+
+  return {
+    url: await getUploadFileObjectUrlV2()(doc.fileId),
+  };
 }
 
 export function normalizeUploadFileList(
@@ -137,29 +183,13 @@ export function applyUploadedSupportingDocs(
 }
 
 export async function previewSupportingUploadFile(file: UploadFile): Promise<boolean> {
-  if (file.originFileObj) {
-    const objectUrl = URL.createObjectURL(file.originFileObj as Blob);
-    window.open(objectUrl, '_blank', 'noopener,noreferrer');
-    return true;
-  }
-
-  if (typeof file.response === 'string') {
-    const objectUrl = await getUploadFileObjectUrlV2()(file.response);
-    window.open(objectUrl, '_blank', 'noopener,noreferrer');
-    return true;
-  }
-
-  return false;
+  const preview = await getSupportingUploadFilePreview(file);
+  return Boolean(preview?.url);
 }
 
 export async function openSupportingDoc(doc: SupportingDocReference): Promise<boolean> {
-  if (!doc.fileId) {
-    return false;
-  }
-
-  const objectUrl = await getUploadFileObjectUrlV2()(doc.fileId);
-  window.open(objectUrl, '_blank', 'noopener,noreferrer');
-  return true;
+  const preview = await getSupportingDocPreview(doc);
+  return Boolean(preview?.url);
 }
 
 export async function downloadSupportingDoc(doc: SupportingDocReference): Promise<boolean> {
@@ -168,15 +198,4 @@ export async function downloadSupportingDoc(doc: SupportingDocReference): Promis
   }
   await downloadUploadFileV2()(doc.fileId, doc.fileName);
   return true;
-}
-
-export function getUploadFileSource(
-  file: UploadFile,
-  fallbackSource?: SupportingDocSource,
-): SupportingDocSource | null | undefined {
-  return (file as SupportingUploadFile).supportingDocSource ?? fallbackSource;
-}
-
-export function getUploadFilePoNumber(file: UploadFile): string | null | undefined {
-  return (file as SupportingUploadFile).poNumber;
 }

@@ -1,10 +1,9 @@
 import { useRef, type ReactNode } from 'react';
-import { Flex, Progress, Tag } from 'antd';
+import { Tag, Typography } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
 import type { GoodsReceipt, LegacyGRStatus } from '../workflow';
 import {
-  getGoodsReceiptWorkflowProgress,
   getQcQueueStatus,
   getQcQueueStatusColor,
   getReceiptApprovedGrNumber,
@@ -13,6 +12,8 @@ import {
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
+
+const { Text } = Typography;
 
 interface GRQueueTableProps {
   receipts: GoodsReceipt[];
@@ -65,8 +66,12 @@ export function GRQueueTable({
       key: 'poNumber',
       title: 'PO Reference',
       dataIndex: 'poNumber',
-      renderText: (_: string, row: GoodsReceipt) =>
-        getReceiptPOReferences(row).length > 0 ? summarizePOReferences(row) : undefined,
+      render: (_: string, row: GoodsReceipt) =>
+        getReceiptPOReferences(row).length > 0 ? (
+          summarizePOReferences(row)
+        ) : (
+          <Text style={{ color: '#ff4d4f', fontWeight: 600 }}>No PO</Text>
+        ),
     },
     {
       key: 'supplier',
@@ -103,23 +108,6 @@ export function GRQueueTable({
       title: 'Submitted Date',
       dataIndex: 'createdDate',
       sorter: (a: GoodsReceipt, b: GoodsReceipt) => a.createdDate.localeCompare(b.createdDate),
-    },
-    {
-      key: 'progress',
-      title: 'Progress',
-      render: (_: any, row: GoodsReceipt) => {
-        const percent = getGoodsReceiptWorkflowProgress(row);
-        return (
-          <Flex vertical gap="small" style={{ width: 100 }}>
-            <Progress
-              percent={percent}
-              strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }}
-              size="small"
-              status="active"
-            />
-          </Flex>
-        );
-      },
     },
     {
       key: 'status',

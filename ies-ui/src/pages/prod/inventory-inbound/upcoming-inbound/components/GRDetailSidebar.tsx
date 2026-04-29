@@ -22,9 +22,9 @@ import type { UploadFile, UploadProps } from 'antd';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   applyUploadedSupportingDocs,
+  getSupportingUploadFilePreview,
   hasIncompleteAppFilesUpload,
   normalizeUploadFileList,
-  previewSupportingUploadFile,
   stageSupportingDocBeforeUpload,
   supportingDocsToUploadFiles,
   uploadPendingSupportingDocs,
@@ -43,6 +43,7 @@ import {
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
+import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
 import { SupportingDocsList } from './SupportingDocsList';
 
 const { Text } = Typography;
@@ -203,6 +204,11 @@ export function GRDetailSidebar({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(open);
   const [renderedReceipt, setRenderedReceipt] = useState<GoodsReceipt | null>(selectedReceipt);
+  const [previewState, setPreviewState] = useState<{
+    fileName?: string;
+    url?: string;
+    revokeOnClose?: boolean;
+  } | null>(null);
   const receipt = selectedReceipt || renderedReceipt;
   const routingSummary = useMemo(() => summarizeQcRouting(items), [items]);
 
@@ -422,24 +428,32 @@ export function GRDetailSidebar({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const uploadedDocs = await uploadPendingSupportingDocs(uploadedFiles, 'QC');
-      setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, uploadedDocs));
-      const outcome = deriveQcOutcome(items);
-      await onSubmitQCVerification(receipt, {
-        items,
-        ...outcome,
-        documentChecklist: {
-          ...receipt.documentChecklist,
-          supportingDocs: [...warehouseSupportingDocs, ...uploadedDocs],
-        },
-      });
-    } catch (error: any) {
-      message.error(error?.message || 'Failed to prepare supporting documents.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    Modal.confirm({
+      title: 'Submit QC review?',
+      content: 'This will submit the QC review for this inbound receiving.',
+      okText: 'Submit Review',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        setIsSubmitting(true);
+        try {
+          const uploadedDocs = await uploadPendingSupportingDocs(uploadedFiles, 'QC');
+          setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, uploadedDocs));
+          const outcome = deriveQcOutcome(items);
+          await onSubmitQCVerification(receipt, {
+            items,
+            ...outcome,
+            documentChecklist: {
+              ...receipt.documentChecklist,
+              supportingDocs: [...warehouseSupportingDocs, ...uploadedDocs],
+            },
+          });
+        } catch (error: any) {
+          message.error(error?.message || 'Failed to prepare supporting documents.');
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+    });
   };
 
   const handleSubmitSupervisorAction = async (
@@ -451,6 +465,28 @@ export function GRDetailSidebar({
     const nextNote = noteOverride ?? supervisorNote;
     if (action === 'reject' && !nextNote?.trim()) {
       openSupervisorRemarkEditor(true, 'reject');
+      return;
+    }
+
+    if (action === 'approve') {
+      Modal.confirm({
+        title: 'Approve inbound receiving?',
+        content: 'This will approve the inbound receiving and continue the workflow.',
+        okText: 'Approve',
+        cancelText: 'Cancel',
+        onOk: async () => {
+          setIsSubmitting(true);
+          try {
+            await onSubmitSupervisorReview(receipt, {
+              action,
+              note: nextNote?.trim() || undefined,
+            });
+            setSupervisorNote('');
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      });
       return;
     }
 
@@ -485,6 +521,20 @@ export function GRDetailSidebar({
           'SKIP_QC',
         ),
     });
+  };
+
+  const handlePreviewFile = async (file: UploadFile) => {
+    const preview = await getSupportingUploadFilePreview(file);
+    if (preview) {
+      setPreviewState({
+        fileName: file.name,
+        url: preview.url,
+        revokeOnClose: preview.revokeOnClose,
+      });
+      return;
+    }
+
+    message.error('Preview is not available for this file.');
   };
 
   const handleSaveRemark = async () => {
@@ -525,7 +575,15 @@ export function GRDetailSidebar({
       <Button
         key="submit-qc"
         type="primary"
-        onClick={() => onUpdateProcessState(receipt.grNumber, 'QC_PENDING', 'Submitted for QC')}
+        onClick={() =>
+          Modal.confirm({
+            title: 'Submit to QC?',
+            content: 'This will submit the inbound receiving to QC for review.',
+            okText: 'Confirm',
+            cancelText: 'Cancel',
+            onOk: () => onUpdateProcessState(receipt.grNumber, 'QC_PENDING', 'Submitted for QC'),
+          })
+        }
       >
         Submit for QC
       </Button>,
@@ -1021,7 +1079,7 @@ export function GRDetailSidebar({
                       removeFile(file.uid);
                       return true;
                     }}
-                    onPreview={(file) => previewSupportingUploadFile(file)}
+                    onPreview={(file) => void handlePreviewFile(file)}
                     accept=".pdf,.doc,.docx,image/*"
                     listType="text"
                   >
@@ -1104,6 +1162,13 @@ export function GRDetailSidebar({
           onChange={(event) => setDraftRemark(event.target.value)}
         />
       </Modal>
+      <SupportingDocPreviewModal
+        open={Boolean(previewState)}
+        fileName={previewState?.fileName}
+        previewUrl={previewState?.url}
+        revokeOnClose={previewState?.revokeOnClose}
+        onClose={() => setPreviewState(null)}
+      />
     </DrawerForm>
   );
 }

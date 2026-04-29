@@ -115,6 +115,7 @@ const warehouseHistoryStatusOptions: Array<{ label: string; value: HistoryStatus
 
 const supervisorHistoryStatusOptions: Array<{ label: string; value: HistoryStatusFilter }> = [
   { label: 'All Status', value: 'ALL' },
+  { label: 'Pending', value: 'Pending' },
   { label: 'Complete', value: 'Complete' },
   { label: 'Rejected', value: 'Rejected' },
 ];
@@ -279,7 +280,6 @@ export default function UpcomingInboundListview() {
   const [linkPOReceipt, setLinkPOReceipt] = useState<GoodsReceipt | null>(null);
   const [supervisorApprovalSuccess, setSupervisorApprovalSuccess] =
     useState<SupervisorApprovalSuccessData | null>(null);
-  const [tempGRHint, setTempGRHint] = useState('');
   const activeBusinessUnitFilter = isInboundAdmin ? undefined : activeBusinessUnit;
   const hasActiveBusinessUnit = Boolean(activeBusinessUnitFilter);
   const canUseWarehouseRole =
@@ -649,8 +649,12 @@ export default function UpcomingInboundListview() {
     [receipts],
   );
 
-  const supervisorQueueReceipts = useMemo(
-    () => receipts.filter((r) => r.processState === 'PENDING_SUPERVISOR_REVIEW'),
+  const supervisorStatusReceipts = useMemo(
+    () =>
+      receipts.filter((receipt) => {
+        const status = getInboundHistoryStatus(receipt);
+        return status === 'Pending' || status === 'Complete' || status === 'Rejected';
+      }),
     [receipts],
   );
 
@@ -672,7 +676,7 @@ export default function UpcomingInboundListview() {
       activeRole === 'QC'
         ? qcRelevantReceipts
         : activeRole === 'WAREHOUSE_SUPERVISOR'
-          ? supervisorQueueReceipts
+          ? supervisorStatusReceipts
           : [];
 
     let data = [...source];
@@ -702,10 +706,16 @@ export default function UpcomingInboundListview() {
       if (qcStatusFilter !== 'All') {
         data = data.filter((receipt) => getQcQueueStatus(receipt) === qcStatusFilter);
       }
-    } else if (queueSourceFilter === 'STANDARD') {
-      data = data.filter((receipt) => receipt.receiptSourceType !== 'TEMP_NO_PO');
-    } else if (queueSourceFilter === 'TEMP') {
-      data = data.filter((receipt) => receipt.receiptSourceType === 'TEMP_NO_PO');
+    } else {
+      if (historyStatusFilter !== 'ALL') {
+        data = data.filter((receipt) => getInboundHistoryStatus(receipt) === historyStatusFilter);
+      }
+
+      if (queueSourceFilter === 'STANDARD') {
+        data = data.filter((receipt) => receipt.receiptSourceType !== 'TEMP_NO_PO');
+      } else if (queueSourceFilter === 'TEMP') {
+        data = data.filter((receipt) => receipt.receiptSourceType === 'TEMP_NO_PO');
+      }
     }
 
     return data.sort((a, b) => b.createdDate.localeCompare(a.createdDate));
@@ -716,7 +726,8 @@ export default function UpcomingInboundListview() {
     queueSourceFilter,
     queueTypeFilter,
     activeRole,
-    supervisorQueueReceipts,
+    historyStatusFilter,
+    supervisorStatusReceipts,
   ]);
 
   // Handlers (mirrors WarehouseStaffUI)
@@ -776,12 +787,11 @@ export default function UpcomingInboundListview() {
     setSelectedWarehousePONumbers(nextSelectedPOs.map((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder)));
   };
 
-  const handleCreateTempGR = (hint?: string) => {
+  const handleCreateTempGR = () => {
     if (!canUseWarehouseRole) {
       message.error('You do not have warehouse permission for the selected business unit.');
       return;
     }
-    setTempGRHint(hint?.trim() ? `SAP PO not found for: ${hint.trim()}` : '');
     setIsTempGRCreationOpen(true);
   };
 
@@ -838,7 +848,7 @@ export default function UpcomingInboundListview() {
 
     const hasMatchingPO = purchaseOrders.some((po) => po.poNumber.toUpperCase().includes(term));
     if (!hasMatchingPO) {
-      handleCreateTempGR(value);
+      handleCreateTempGR();
     }
   };
 
@@ -1007,7 +1017,6 @@ export default function UpcomingInboundListview() {
       const updatedReceipt = normalizeReceiptForUI(response.data);
       setSelectedPOs([]);
       setSelectedWarehousePONumbers([]);
-      setTempGRHint('');
       await loadInboundData();
       syncReceiptInState(updatedReceipt);
       if (
@@ -1181,9 +1190,9 @@ export default function UpcomingInboundListview() {
       syncReceiptInState(response.data);
       setLinkPOReceipt(null);
       await loadInboundData();
-      message.success('Temporary inbound receiving linked to PO.');
+      message.success('Linked to PO Successfully.');
     } catch (error: any) {
-      message.error(error?.message || 'Failed to link temporary inbound receiving to PO.');
+      message.error(error?.message || 'Failed to link temporary PO.');
     }
   };
 
@@ -1241,6 +1250,34 @@ export default function UpcomingInboundListview() {
     }
   }, [poVendorFilter, warehouseVendorOptions]);
 
+  const lastStatusRefreshKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const refreshKey =
+      activeRole === 'QC'
+        ? `QC:${qcStatusFilter}`
+        : activeRole === 'WAREHOUSE_SUPERVISOR'
+          ? `WAREHOUSE_SUPERVISOR:${historyStatusFilter}`
+          : null;
+
+    if (!refreshKey) {
+      lastStatusRefreshKeyRef.current = null;
+      return;
+    }
+
+    if (lastStatusRefreshKeyRef.current === null) {
+      lastStatusRefreshKeyRef.current = refreshKey;
+      return;
+    }
+
+    if (lastStatusRefreshKeyRef.current === refreshKey) {
+      return;
+    }
+
+    lastStatusRefreshKeyRef.current = refreshKey;
+    void loadInboundData();
+  }, [activeRole, historyStatusFilter, qcStatusFilter]);
+
   const poHeaderTitle = (
     <div style={{ paddingLeft: 8 }}>
       <Text strong>{`Purchase Orders (${filteredWarehousePurchaseOrders.length})`}</Text>
@@ -1288,9 +1325,9 @@ export default function UpcomingInboundListview() {
   const shouldShowBusinessUnitSelector = !isInboundAdmin && inboundVisibleBusinessUnits.length > 1;
 
   const shouldShowRoleSelector = isRoleSimulationEnabled || inboundRoleOptions.length > 1;
-  const shouldShowInboundTabs = activeRole !== 'QC';
+  const shouldShowInboundTabs = activeRole === 'WAREHOUSE_STAFF';
   const effectiveInboundView: InboundViewMode =
-    activeRole === 'QC' ? 'operations' : inboundView;
+    activeRole === 'WAREHOUSE_STAFF' ? inboundView : 'operations';
   const dashboardSummaryTitle =
     activeRole === 'WAREHOUSE_STAFF'
       ? 'Inbound Upcoming Dashboard'
@@ -1304,7 +1341,18 @@ export default function UpcomingInboundListview() {
       <Space size={6}>
         <span>Inbound Receiving</span>
         {warehouseRejectedReceiptCount > 0 && (
-          <Badge count={warehouseRejectedReceiptCount} size="small" />
+          <Badge
+            count={warehouseRejectedReceiptCount}
+            style={{
+              backgroundColor: '#ff4d4f',
+              fontSize: 13,
+              fontWeight: 700,
+              minWidth: 24,
+              height: 24,
+              lineHeight: '24px',
+              boxShadow: '0 0 0 1px #fff',
+            }}
+          />
         )}
       </Space>
     );
@@ -1357,7 +1405,6 @@ export default function UpcomingInboundListview() {
           onClose={() => setWarehouseCorrectionReceipt(null)}
           onSaveDraft={handleSaveDraft}
           onSubmit={handleSubmitGR}
-          initialMissingPOHint={warehouseCorrectionReceipt.pendingPOReason}
           initialReceipt={warehouseCorrectionReceipt}
           correctionMode
           availableBusinessUnits={tempReceiptBusinessUnits}
@@ -1387,11 +1434,9 @@ export default function UpcomingInboundListview() {
         open={true}
         onClose={() => {
           setIsTempGRCreationOpen(false);
-          setTempGRHint('');
         }}
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmitGR}
-        initialMissingPOHint={tempGRHint}
         availableBusinessUnits={tempReceiptBusinessUnits}
       />
     )) ||
@@ -1566,7 +1611,7 @@ export default function UpcomingInboundListview() {
           ))}
         </div>
 
-        <ProCard bordered style={{ marginBottom: 16 }}>
+        <ProCard bordered style={{ marginBottom: 0 }}>
           <Row justify="space-between" align="middle" gutter={[12, 12]}>
             {shouldShowInboundTabs && (
               <Col>
@@ -1707,6 +1752,12 @@ export default function UpcomingInboundListview() {
                       <Radio.Button value="STANDARD">Standard</Radio.Button>
                       <Radio.Button value="TEMP">Temporary</Radio.Button>
                     </Radio.Group>
+                    <Select<HistoryStatusFilter>
+                      value={historyStatusFilter}
+                      onChange={(value) => setHistoryStatusFilter(value)}
+                      options={supervisorHistoryStatusOptions}
+                      style={{ width: 160 }}
+                    />
                   </Space>
                 )
               ) : effectiveInboundView === 'history' ? (

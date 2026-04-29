@@ -75,13 +75,6 @@ export function POListTable({
       ),
     },
     {
-      key: 'businessUnit',
-      title: 'BU',
-      dataIndex: 'businessUnit',
-      width: 90,
-      render: (_: any, r: PurchaseOrder) => <Tag color="geekblue">{r.businessUnit || 'N/A'}</Tag>,
-    },
-    {
       key: 'supplier',
       title: 'Supplier',
       dataIndex: 'supplier',

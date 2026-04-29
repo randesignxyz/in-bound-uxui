@@ -1,1 +1,0 @@
-export const ENABLE_FRONTEND_IIO_STATIC_MOCK = true;

@@ -25,6 +25,7 @@ import {
 
 const { Link, Text } = Typography;
 const GRID_ACTION_BASE_COLOR = '#8c8c8c';
+const MAX_FILE_NAME_LENGTH = 16;
 
 type GridActionKind = 'view' | 'download' | 'delete';
 
@@ -36,6 +37,14 @@ interface SupportingDocsListProps {
   onRemoveFile?: (uid: string) => void;
   displayMode?: 'list' | 'grid';
   collapsedLimit?: number;
+}
+
+function formatDisplayFileName(fileName: string) {
+  if (fileName.length <= MAX_FILE_NAME_LENGTH) {
+    return fileName;
+  }
+
+  return `${fileName.slice(0, MAX_FILE_NAME_LENGTH)}...`;
 }
 
 function getDocumentIcon(fileName: string) {
@@ -146,10 +155,10 @@ export function SupportingDocsList({
     return (
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${collapsedLimit}, minmax(0, 1fr))`,
-          gap: 14,
-          alignItems: 'stretch',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 8,
+          alignItems: 'center',
         }}
       >
         {visibleItems.map((item) => (
@@ -158,26 +167,28 @@ export function SupportingDocsList({
             style={{
               minWidth: 0,
               border: '1px solid #e5e7eb',
-              borderRadius: 14,
-              padding: '12px 12px 10px',
+              borderRadius: 10,
+              padding: '6px 10px',
               background: 'linear-gradient(180deg, #ffffff 0%, #fafcff 100%)',
-              minHeight: 118,
-              boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)',
+              minHeight: 38,
+              maxWidth: '100%',
+              flex: '1 1 220px',
+              boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
             }}
           >
             <div
               style={{
                 display: 'flex',
-                alignItems: 'flex-start',
+                alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: 12,
+                gap: 8,
               }}
             >
               <div
                 style={{
                   display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 10,
+                  alignItems: 'center',
+                  gap: 8,
                   minWidth: 0,
                   flex: 1,
                 }}
@@ -185,65 +196,72 @@ export function SupportingDocsList({
                 <span
                   style={{
                     display: 'inline-flex',
-                    marginTop: 1,
-                    width: 34,
-                    height: 34,
+                    width: 24,
+                    height: 24,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    borderRadius: 10,
+                    borderRadius: 8,
                     background: '#f3f6fb',
                     flexShrink: 0,
                   }}
                 >
                   {getDocumentIcon(item.fileName)}
                 </span>
-                <div style={{ minWidth: 0, flex: 1 }}>
+                <div
+                  style={{
+                    minWidth: 0,
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
                   {item.isLegacy ? (
                     <Text
+                      title={item.fileName}
                       style={{
-                        display: '-webkit-box',
-                        fontSize: 13,
+                        display: 'block',
+                        fontSize: 12,
                         fontWeight: 600,
-                        lineHeight: 1.4,
+                        lineHeight: '24px',
                         overflow: 'hidden',
-                        wordBreak: 'break-word',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        minWidth: 0,
+                        flex: 1,
                       }}
                     >
-                      {item.fileName}
+                      {formatDisplayFileName(item.fileName)}
                     </Text>
                   ) : (
                     <Link
                       onClick={() => void item.onView()}
+                      title={item.fileName}
                       style={{
-                        display: '-webkit-box',
-                        fontSize: 13,
+                        display: 'block',
+                        fontSize: 12,
                         fontWeight: 600,
-                        lineHeight: 1.4,
+                        lineHeight: '24px',
                         overflow: 'hidden',
-                        wordBreak: 'break-word',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        minWidth: 0,
+                        flex: 1,
                       }}
                     >
-                      {item.fileName}
+                      {formatDisplayFileName(item.fileName)}
                     </Link>
                   )}
-                  <div style={{ marginTop: 6 }}>
-                    <Space size={6} wrap>
-                      {item.source && (
-                        <Tag style={{ marginInlineEnd: 0 }} color={getSupportingDocSourceColor(item.source)}>
-                          {supportingDocSourceLabel[item.source]}
-                        </Tag>
-                      )}
-                      {item.isLegacy && (
-                        <Tag style={{ marginInlineEnd: 0 }} color="default">
-                          Legacy
-                        </Tag>
-                      )}
-                    </Space>
-                  </div>
+                  {item.source && (
+                    <Tag style={{ marginInlineEnd: 0, lineHeight: '18px', paddingInline: 6, flexShrink: 0 }} color={getSupportingDocSourceColor(item.source)}>
+                      {supportingDocSourceLabel[item.source]}
+                    </Tag>
+                  )}
+                  {item.isLegacy && (
+                    <Tag style={{ marginInlineEnd: 0, lineHeight: '18px', paddingInline: 6, flexShrink: 0 }} color="default">
+                      Legacy
+                    </Tag>
+                  )}
                 </div>
               </div>
               <Space size={0}>
@@ -290,8 +308,6 @@ export function SupportingDocsList({
           <Button
             type="link"
             style={{
-              gridColumn: '1 / -1',
-              justifySelf: 'start',
               paddingInline: 0,
               height: 'auto',
             }}
@@ -304,8 +320,6 @@ export function SupportingDocsList({
           <Button
             type="link"
             style={{
-              gridColumn: '1 / -1',
-              justifySelf: 'start',
               paddingInline: 0,
               height: 'auto',
             }}
@@ -407,10 +421,12 @@ export function SupportingDocsList({
                 }}
               >
                 {item.isLegacy ? (
-                  <Text style={{ lineHeight: 1.5 }}>{item.fileName}</Text>
+                  <Text title={item.fileName} style={{ lineHeight: 1.5 }}>
+                    {formatDisplayFileName(item.fileName)}
+                  </Text>
                 ) : (
-                  <Link onClick={() => void item.onView()} style={{ lineHeight: 1.5 }}>
-                    {item.fileName}
+                  <Link onClick={() => void item.onView()} title={item.fileName} style={{ lineHeight: 1.5 }}>
+                    {formatDisplayFileName(item.fileName)}
                   </Link>
                 )}
                 {item.source && (

@@ -119,15 +119,12 @@ interface GRDetailSidebarProps {
 
 function summarizeQcRouting(items: GRItem[]) {
   const passedItems = items.filter((item) => item.qcDecision === 'Pass');
-  const correctionItems = items.filter(
-    (item) => item.qcDecision === 'Reject' || item.qcDecision === 'On-Hold',
-  );
+  const correctionItems = items.filter((item) => item.qcDecision === 'Reject');
 
   if (passedItems.length > 0 && correctionItems.length > 0) {
     return {
       type: 'warning' as const,
-      message:
-        'Mixed QC result: passed items move to supervisor review, while rejected or on-hold items return for warehouse correction.',
+      message: 'Mixed QC result: passed items move to supervisor review, while rejected items return for warehouse correction.',
     };
   }
 
@@ -162,22 +159,6 @@ function deriveQcOutcome(
         passedCount > 0
           ? 'QC forwarded passed item(s) to supervisor and returned rejected item(s) for correction'
           : 'QC rejected item(s) and returned receipt to warehouse for correction',
-    };
-  }
-
-  const onHold = items.filter((item) => item.qcDecision === 'On-Hold');
-
-  if (onHold.length > 0) {
-    return {
-      processState: 'CORRECTION_REQUIRED',
-      qcResult: 'On Hold',
-      exceptionReason: onHold
-        .map((item) => `${item.code}: ${item.qcRemark?.trim() || 'Marked on hold during QC'}`)
-        .join('; '),
-      stepTitle:
-        passedCount > 0
-          ? 'QC forwarded passed item(s) to supervisor and returned on-hold item(s) for correction'
-          : 'QC placed item(s) on hold and returned receipt to warehouse for correction',
     };
   }
 
@@ -338,11 +319,6 @@ export function GRDetailSidebar({
     ...(receipt.linkedPoLinkedAt ? [{ label: 'Linked At', value: receipt.linkedPoLinkedAt }] : []),
     ...(receipt.linkedPoLinkedBy ? [{ label: 'Linked By', value: receipt.linkedPoLinkedBy }] : []),
   ];
-  const primaryMetadataItems = shortMetadataItems.slice(0, 15);
-  const primaryMetadataColumns = Array.from({ length: 3 }, (_value, columnIndex) =>
-    primaryMetadataItems.slice(columnIndex * 5, (columnIndex + 1) * 5),
-  );
-  const overflowMetadataItems = shortMetadataItems.slice(15);
   const noteMetadataItems: ReceiptMetadataItem[] = [
     ...(receipt.pendingPOReason ? [{ label: 'Pending PO Note', value: receipt.pendingPOReason }] : []),
   ];
@@ -415,7 +391,7 @@ export function GRDetailSidebar({
         hasMissingDecision = true;
       }
       if (
-        (item.qcDecision === 'On-Hold' || item.qcDecision === 'Reject') &&
+        item.qcDecision === 'Reject' &&
         !item.qcRemark?.trim()
       ) {
         nextErrors[`remark-${index}`] = true;
@@ -498,7 +474,7 @@ export function GRDetailSidebar({
     Modal.confirm({
       title: 'Skip QC?',
       content:
-        'This will bypass QC review for this receipt and send it directly to supervisor review. You can only do this after the receipt has already been submitted to QC.',
+        'This will bypass QC review for this receipt and send it directly to supervisor review.',
       okText: 'Skip QC',
       cancelText: 'Cancel',
       onOk: () =>
@@ -747,7 +723,6 @@ export function GRDetailSidebar({
             status={errors[`decision-${row.index}`] ? 'error' : undefined}
             options={[
               { value: 'Pass', label: 'Pass' },
-              { value: 'On-Hold', label: 'On-Hold' },
               { value: 'Reject', label: 'Reject' },
             ]}
           />
@@ -771,15 +746,7 @@ export function GRDetailSidebar({
         key: 'qcDecision',
         width: 120,
         render: (_: unknown, row: EditableSidebarItem) => (
-          <Tag
-            color={
-              row.qcDecision === 'Reject'
-                ? 'red'
-                : row.qcDecision === 'On-Hold'
-                  ? 'gold'
-                  : 'green'
-            }
-          >
+          <Tag color={row.qcDecision === 'Reject' ? 'red' : 'green'}>
             {row.qcDecision || 'Pass'}
           </Tag>
         ),
@@ -824,85 +791,36 @@ export function GRDetailSidebar({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: 16,
             }}
           >
-            {primaryMetadataColumns.map((columnItems, columnIndex) => (
-              <div
-                key={`primary-column-${columnIndex}`}
-                style={{
-                  display: 'grid',
-                  gap: 12,
-                  alignContent: 'start',
-                }}
-              >
-                {columnItems.map((item) => (
-                  <div key={item.label} style={{ minWidth: 0 }}>
-                    <div
-                      style={{
-                        marginBottom: 4,
-                        fontSize: 12,
-                        lineHeight: '18px',
-                        color: '#8c8c8c',
-                      }}
-                    >
-                      {item.label}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: item.emphasize ? 600 : 400,
-                        color: '#262626',
-                        whiteSpace: 'normal',
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {renderMetadataValue(item.value)}
-                    </div>
-                  </div>
-                ))}
+            {shortMetadataItems.map((item) => (
+              <div key={item.label} style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    marginBottom: 4,
+                    fontSize: 12,
+                    lineHeight: '18px',
+                    color: '#8c8c8c',
+                  }}
+                >
+                  {item.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: item.emphasize ? 600 : 400,
+                    color: '#262626',
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {renderMetadataValue(item.value)}
+                </div>
               </div>
             ))}
           </div>
-
-          {overflowMetadataItems.length > 0 && (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                gap: '12px 16px',
-                marginTop: 12,
-                paddingTop: 12,
-                borderTop: '1px solid #f0f0f0',
-              }}
-            >
-              {overflowMetadataItems.map((item) => (
-                <div key={item.label} style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      marginBottom: 4,
-                      fontSize: 12,
-                      lineHeight: '18px',
-                      color: '#8c8c8c',
-                    }}
-                  >
-                    {item.label}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      color: '#262626',
-                      whiteSpace: 'normal',
-                      wordBreak: 'break-word',
-                    }}
-                  >
-                    {renderMetadataValue(item.value)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
 
           {noteMetadataItems.length > 0 && (
             <div
@@ -939,24 +857,6 @@ export function GRDetailSidebar({
                 </div>
               ))}
             </div>
-          )}
-
-          {(!receipt.specMatch ||
-            !receipt.qtyMatch ||
-            receipt.processState === 'MISMATCH_EXCEPTION') && (
-            <>
-              <Divider style={{ margin: '12px 0' }} />
-              <Alert
-                type="error"
-                showIcon
-                message={
-                  <span>
-                    <strong>Exception:</strong> Receipt requires follow-up before it can proceed.
-                    {receipt.exceptionReason ? ` ${receipt.exceptionReason}` : ''}
-                  </span>
-                }
-              />
-            </>
           )}
 
           {isQcEditable && (

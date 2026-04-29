@@ -63,7 +63,7 @@ const RECEIPT_SOURCE_VALUES: UpcomingInboundGoodsReceipt['receiptSourceType'][] 
   'TEMP_NO_PO',
 ];
 
-const QC_DECISION_VALUES: QcDecision[] = ['Pass', 'On-Hold', 'Reject'];
+const QC_DECISION_VALUES: QcDecision[] = ['Pass', 'Reject'];
 
 const LEGACY_STATUS_VALUES: LegacyGRStatus[] = [
   'Draft',
@@ -250,7 +250,7 @@ function mapInboundGoodsReceiptItem(item: InboundGrItemApi): UpcomingInboundGood
     deliveryNoteNumber: readValue<string | null>(item, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
     isMissing: readBoolean(item, 'isMissing', 'is_missing'),
     missingRemark: readValue<string | null>(item, 'missingRemark', 'missing_remark') ?? undefined,
-    qcDecision: normalizeEnum(readValue<string | null>(item, 'qcDecision', 'qc_decision'), QC_DECISION_VALUES, undefined),
+    qcDecision: normalizeQcDecision(readValue<string | null>(item, 'qcDecision', 'qc_decision')),
     qcRemark: readValue<string | null>(item, 'qcRemark', 'qc_remark') ?? undefined,
   };
 }
@@ -408,14 +408,28 @@ function normalizeQcResult(value: string, processState: UpcomingInboundProcessSt
     case 'Pass':
       return 'Pass';
     case 'Rejected':
-      return 'Rejected';
     case 'On Hold':
     case 'On-Hold':
-      return 'On Hold';
+      return 'Rejected';
     case 'Pending':
       return 'Pending';
     default:
       return processState === 'SUPERVISOR_APPROVED' ? 'Pass' : 'Pending';
+  }
+}
+
+function normalizeQcDecision(value?: string | null): QcDecision | undefined {
+  switch ((value || '').trim().toLowerCase()) {
+    case 'pass':
+      return 'Pass';
+    case 'reject':
+    case 'rejected':
+    case 'on hold':
+    case 'on-hold':
+    case 'on_hold':
+      return 'Reject';
+    default:
+      return normalizeEnum(value, QC_DECISION_VALUES, undefined);
   }
 }
 

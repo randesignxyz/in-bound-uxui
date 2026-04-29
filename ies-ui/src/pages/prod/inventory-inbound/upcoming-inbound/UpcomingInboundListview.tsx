@@ -318,7 +318,7 @@ export default function UpcomingInboundListview() {
 
   const routes = [
     { path: ProdPaths.prod, label: 'Prod' },
-    { path: `${ProdPaths.inventoryInboundOutbound}/list`, label: 'Inventory Inbound Outbound' },
+    { path: `${ProdPaths.inventoryInbound}/list`, label: 'Inventory Inbound' },
     { path: '', label: 'Upcoming Inbound' },
   ];
 

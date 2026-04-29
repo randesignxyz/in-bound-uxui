@@ -182,7 +182,7 @@ export default function RequestsListWarehouse() {
       setExportLoading(true);
       try {
         await downloadGenericReport(requestActions)({
-          fileName: `spare-part-warehouse-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
+          fileName: `spare-part-requests-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
           type: 'EXCEL',
           data: {
             reportName: 'spare_parts_requests',

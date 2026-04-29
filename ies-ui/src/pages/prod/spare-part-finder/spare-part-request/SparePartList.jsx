@@ -4,6 +4,7 @@ import { useAccess } from '@umijs/max';
 import { Button, Card, DatePicker, Input, Modal, Select, Space, Tag, Typography, message } from 'antd';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getUrlReporting } from '@/pages/ReportUrl';
 import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import RequestItemModal from './requestItem';
@@ -413,11 +414,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
                 key: 'BusinessUnit',
                 value: businessUnits.length > 0 ? businessUnits.join(',') : 'All',
                 type: 'string',
-              },
+              }
             ],
           },
         });
-        setExportModalOpen(false);
+        setExportModalOpen(false);spare-parts-warehouse
       } catch (error) {
         message.error('Failed to export Excel.');
       } finally {
@@ -787,7 +788,6 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         open={exportModalOpen}
         loading={exportLoading}
         businessUnitOptions={knownBusinessUnits}
-        reportName="spare_parts"
           showDateRange={false}
         onCancel={() => setExportModalOpen(false)}
         onSave={exportRequests}

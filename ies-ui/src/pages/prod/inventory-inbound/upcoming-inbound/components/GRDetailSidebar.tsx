@@ -319,11 +319,6 @@ export function GRDetailSidebar({
     ...(receipt.linkedPoLinkedAt ? [{ label: 'Linked At', value: receipt.linkedPoLinkedAt }] : []),
     ...(receipt.linkedPoLinkedBy ? [{ label: 'Linked By', value: receipt.linkedPoLinkedBy }] : []),
   ];
-  const primaryMetadataItems = shortMetadataItems.slice(0, 15);
-  const primaryMetadataColumns = Array.from({ length: 3 }, (_value, columnIndex) =>
-    primaryMetadataItems.slice(columnIndex * 5, (columnIndex + 1) * 5),
-  );
-  const overflowMetadataItems = shortMetadataItems.slice(15);
   const noteMetadataItems: ReceiptMetadataItem[] = [
     ...(receipt.pendingPOReason ? [{ label: 'Pending PO Note', value: receipt.pendingPOReason }] : []),
   ];
@@ -796,85 +791,36 @@ export function GRDetailSidebar({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: 16,
             }}
           >
-            {primaryMetadataColumns.map((columnItems, columnIndex) => (
-              <div
-                key={`primary-column-${columnIndex}`}
-                style={{
-                  display: 'grid',
-                  gap: 12,
-                  alignContent: 'start',
-                }}
-              >
-                {columnItems.map((item) => (
-                  <div key={item.label} style={{ minWidth: 0 }}>
-                    <div
-                      style={{
-                        marginBottom: 4,
-                        fontSize: 12,
-                        lineHeight: '18px',
-                        color: '#8c8c8c',
-                      }}
-                    >
-                      {item.label}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: item.emphasize ? 600 : 400,
-                        color: '#262626',
-                        whiteSpace: 'normal',
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {renderMetadataValue(item.value)}
-                    </div>
-                  </div>
-                ))}
+            {shortMetadataItems.map((item) => (
+              <div key={item.label} style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    marginBottom: 4,
+                    fontSize: 12,
+                    lineHeight: '18px',
+                    color: '#8c8c8c',
+                  }}
+                >
+                  {item.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: item.emphasize ? 600 : 400,
+                    color: '#262626',
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {renderMetadataValue(item.value)}
+                </div>
               </div>
             ))}
           </div>
-
-          {overflowMetadataItems.length > 0 && (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                gap: '12px 16px',
-                marginTop: 12,
-                paddingTop: 12,
-                borderTop: '1px solid #f0f0f0',
-              }}
-            >
-              {overflowMetadataItems.map((item) => (
-                <div key={item.label} style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      marginBottom: 4,
-                      fontSize: 12,
-                      lineHeight: '18px',
-                      color: '#8c8c8c',
-                    }}
-                  >
-                    {item.label}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      color: '#262626',
-                      whiteSpace: 'normal',
-                      wordBreak: 'break-word',
-                    }}
-                  >
-                    {renderMetadataValue(item.value)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
 
           {noteMetadataItems.length > 0 && (
             <div

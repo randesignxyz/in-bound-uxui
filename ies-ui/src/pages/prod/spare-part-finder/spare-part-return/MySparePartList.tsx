@@ -228,7 +228,7 @@ export default function MySparePartList() {
           />
 
           {/* Desktop: Radio Group */}
-          <div className="radio-group-desktop">
+          {/* <div className="radio-group-desktop">
           <Select
             mode="multiple"
             allowClear
@@ -241,10 +241,10 @@ export default function MySparePartList() {
               value: opt.value,
             }))}
           />
-        </div>
+        </div> */}
 
           {/* Mobile: Dropdown */}
-          <div className="radio-group-mobile">
+          {/* <div className="radio-group-mobile">
             <Dropdown
               menu={{
                 items: radioOptions.map((opt) => ({
@@ -267,7 +267,7 @@ export default function MySparePartList() {
                 {selectedWarehouseLabel} <MoreOutlined />
               </Button>
             </Dropdown>
-          </div>
+          </div> */}
 
           <Select
             value={selectedCategory}

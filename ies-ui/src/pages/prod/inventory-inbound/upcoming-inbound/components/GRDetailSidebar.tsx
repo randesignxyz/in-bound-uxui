@@ -119,15 +119,12 @@ interface GRDetailSidebarProps {
 
 function summarizeQcRouting(items: GRItem[]) {
   const passedItems = items.filter((item) => item.qcDecision === 'Pass');
-  const correctionItems = items.filter(
-    (item) => item.qcDecision === 'Reject' || item.qcDecision === 'On-Hold',
-  );
+  const correctionItems = items.filter((item) => item.qcDecision === 'Reject');
 
   if (passedItems.length > 0 && correctionItems.length > 0) {
     return {
       type: 'warning' as const,
-      message:
-        'Mixed QC result: passed items move to supervisor review, while rejected or on-hold items return for warehouse correction.',
+      message: 'Mixed QC result: passed items move to supervisor review, while rejected items return for warehouse correction.',
     };
   }
 
@@ -162,22 +159,6 @@ function deriveQcOutcome(
         passedCount > 0
           ? 'QC forwarded passed item(s) to supervisor and returned rejected item(s) for correction'
           : 'QC rejected item(s) and returned receipt to warehouse for correction',
-    };
-  }
-
-  const onHold = items.filter((item) => item.qcDecision === 'On-Hold');
-
-  if (onHold.length > 0) {
-    return {
-      processState: 'CORRECTION_REQUIRED',
-      qcResult: 'On Hold',
-      exceptionReason: onHold
-        .map((item) => `${item.code}: ${item.qcRemark?.trim() || 'Marked on hold during QC'}`)
-        .join('; '),
-      stepTitle:
-        passedCount > 0
-          ? 'QC forwarded passed item(s) to supervisor and returned on-hold item(s) for correction'
-          : 'QC placed item(s) on hold and returned receipt to warehouse for correction',
     };
   }
 
@@ -415,7 +396,7 @@ export function GRDetailSidebar({
         hasMissingDecision = true;
       }
       if (
-        (item.qcDecision === 'On-Hold' || item.qcDecision === 'Reject') &&
+        item.qcDecision === 'Reject' &&
         !item.qcRemark?.trim()
       ) {
         nextErrors[`remark-${index}`] = true;
@@ -498,7 +479,7 @@ export function GRDetailSidebar({
     Modal.confirm({
       title: 'Skip QC?',
       content:
-        'This will bypass QC review for this receipt and send it directly to supervisor review. You can only do this after the receipt has already been submitted to QC.',
+        'This will bypass QC review for this receipt and send it directly to supervisor review.',
       okText: 'Skip QC',
       cancelText: 'Cancel',
       onOk: () =>
@@ -747,7 +728,6 @@ export function GRDetailSidebar({
             status={errors[`decision-${row.index}`] ? 'error' : undefined}
             options={[
               { value: 'Pass', label: 'Pass' },
-              { value: 'On-Hold', label: 'On-Hold' },
               { value: 'Reject', label: 'Reject' },
             ]}
           />
@@ -771,15 +751,7 @@ export function GRDetailSidebar({
         key: 'qcDecision',
         width: 120,
         render: (_: unknown, row: EditableSidebarItem) => (
-          <Tag
-            color={
-              row.qcDecision === 'Reject'
-                ? 'red'
-                : row.qcDecision === 'On-Hold'
-                  ? 'gold'
-                  : 'green'
-            }
-          >
+          <Tag color={row.qcDecision === 'Reject' ? 'red' : 'green'}>
             {row.qcDecision || 'Pass'}
           </Tag>
         ),

@@ -164,7 +164,7 @@ export interface ReceiptPoItemGroup<TItem extends ReceiptPoGroupedItemShape = GR
   items: TItem[];
 }
 
-export type QcDecision = 'Pass' | 'On-Hold' | 'Reject';
+export type QcDecision = 'Pass' | 'Reject';
 
 export type SupportingDocSource = 'WAREHOUSE' | 'QC' | 'SUPERVISOR';
 
@@ -237,7 +237,7 @@ export interface GoodsReceipt {
   specMatch: boolean;
   qtyMatch: boolean;
   qualityCheckRequired: boolean;
-  qcResult: 'Pending' | 'Pass' | 'Rejected' | 'On Hold';
+  qcResult: 'Pending' | 'Pass' | 'Rejected';
   exceptionReason?: string;
   documentChecklist: GRDocumentChecklist;
   scenario: GRScenarioMeta;

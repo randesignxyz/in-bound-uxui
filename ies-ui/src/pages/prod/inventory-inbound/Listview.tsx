@@ -15,7 +15,7 @@ export default () => {
     },
     {
       path: '',
-      label: 'Inbound Outbound',
+      label: 'Inventory Inbound',
     },
   ];
 

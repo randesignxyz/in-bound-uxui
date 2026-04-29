@@ -941,24 +941,6 @@ export function GRDetailSidebar({
             </div>
           )}
 
-          {(!receipt.specMatch ||
-            !receipt.qtyMatch ||
-            receipt.processState === 'MISMATCH_EXCEPTION') && (
-            <>
-              <Divider style={{ margin: '12px 0' }} />
-              <Alert
-                type="error"
-                showIcon
-                message={
-                  <span>
-                    <strong>Exception:</strong> Receipt requires follow-up before it can proceed.
-                    {receipt.exceptionReason ? ` ${receipt.exceptionReason}` : ''}
-                  </span>
-                }
-              />
-            </>
-          )}
-
           {isQcEditable && (
             <>
               <Divider style={{ margin: '12px 0' }} />

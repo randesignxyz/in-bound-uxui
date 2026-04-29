@@ -46,32 +46,19 @@ export default [
     component: './prod/inventory-transfer/',
   },
   {
-    path: '/prod/inventory-inbound-outbound/:view/*',
-    name: 'inventoryInboundOutbound',
+    path: '/prod/inventory-inbound/:view/*',
+    name: 'inventoryInbound',
     hideInMenu: 'true',
-    access: 'canAccessInventoryInboundOutboundHub',
-    component: './prod/inventory-inbound-outbound/',
+    access: 'canAccessInventoryInboundHub',
+    component: './prod/inventory-inbound/',
   },
+
   {
-    path: '/prod/inventory-inbound-outbound/request/:view/*',
-    name: 'inventoryInboundRequest',
-    hideInMenu: 'true',
-    access: 'canAccessInventoryTranferRequestMenuItem',
-    component: './prod/inventory-inbound-outbound/request/',
-  },
-  {
-    path: '/prod/inventory-inbound-outbound/transfer/:view/*',
-    name: 'inventoryOutboundTransfer',
-    hideInMenu: 'true',
-    access: 'canAccessInventoryTranferMenuItem',
-    component: './prod/inventory-inbound-outbound/transfer/',
-  },
-  {
-    path: '/prod/inventory-inbound-outbound/upcoming-inbound/:view/*',
+    path: '/prod/inventory-inbound/upcoming-inbound/:view/*',
     name: 'upcomingInbound',
     hideInMenu: 'true',
     access: 'canAccessUpcomingInboundMenuItem',
-    component: './prod/inventory-inbound-outbound/upcoming-inbound/',
+    component: './prod/inventory-inbound/upcoming-inbound/',
   },
 
   {

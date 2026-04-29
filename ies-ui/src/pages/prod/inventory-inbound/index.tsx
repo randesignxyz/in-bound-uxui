@@ -4,7 +4,7 @@ import ListView from './Listview';
 
 export default () => {
   return (
-    <CrudWrapper baseURL={ProdPaths.inventoryInboundOutbound}>
+    <CrudWrapper baseURL={ProdPaths.inventoryInbound}>
       {(view) => {
         if (view === 'list') {
           return <ListView />;

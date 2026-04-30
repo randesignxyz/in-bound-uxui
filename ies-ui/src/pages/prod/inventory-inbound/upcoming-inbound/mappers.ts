@@ -76,6 +76,7 @@ const LEGACY_STATUS_VALUES: LegacyGRStatus[] = [
 
 export function mapInboundPurchaseOrder(api: InboundPurchaseOrderApi): UpcomingInboundPurchaseOrder {
   const items = readArray<InboundPoItemApi>(api, 'items');
+  const receiptLogs = readArray<any>(api, 'receiptLogs', 'receipt_logs');
 
   return {
     id: readValue<number | null>(api, 'id') ?? undefined,
@@ -92,6 +93,7 @@ export function mapInboundPurchaseOrder(api: InboundPurchaseOrderApi): UpcomingI
       items.reduce((sum, item) => sum + (readNumber(item, 'poQty', 'po_qty') ?? 0), 0),
     type: normalizeEnum(readString(api, 'type'), PO_TYPE_VALUES, 'Planned'),
     status: normalizeEnum(readString(api, 'status'), PO_STATUS_VALUES, 'Expected'),
+    receiptLogs: receiptLogs.map(mapInboundPoReceiptLog),
   };
 }
 
@@ -235,6 +237,29 @@ function mapInboundPurchaseOrderItem(item: InboundPoItemApi): UpcomingInboundPur
     remainingQty: readNumber(item, 'remainingQty', 'remaining_qty') ?? 0,
     uom: readString(item, 'uom'),
     supplier: readString(item, 'supplier'),
+  };
+}
+
+function mapInboundPoReceiptLogItem(
+  item: any,
+): NonNullable<UpcomingInboundPurchaseOrder['receiptLogs']>[number]['receivedItems'][number] {
+  return {
+    code: readString(item, 'code'),
+    name: readString(item, 'name'),
+    qty: readNumber(item, 'qty') ?? 0,
+  };
+}
+
+function mapInboundPoReceiptLog(log: any): NonNullable<UpcomingInboundPurchaseOrder['receiptLogs']>[number] {
+  return {
+    receivingNumber: readString(log, 'receivingNumber', 'receiving_number'),
+    statusLabel: readString(log, 'statusLabel', 'status_label'),
+    receivedBy: readValue<string | null>(log, 'receivedBy', 'received_by') ?? undefined,
+    receivedAt: formatDisplayTimestamp(readValue<string | null>(log, 'receivedAt', 'received_at')),
+    totalReceivedQty: readNumber(log, 'totalReceivedQty', 'total_received_qty') ?? 0,
+    receivedItems: readArray<any>(log, 'receivedItems', 'received_items').map(mapInboundPoReceiptLogItem),
+    approvedItems: readArray<any>(log, 'approvedItems', 'approved_items').map(mapInboundPoReceiptLogItem),
+    rejectedItems: readArray<any>(log, 'rejectedItems', 'rejected_items').map(mapInboundPoReceiptLogItem),
   };
 }
 

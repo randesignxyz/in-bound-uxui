@@ -71,6 +71,23 @@ export interface InboundPoItemApi {
   supplier: string;
 }
 
+export interface InboundPoReceiptLogItemApi {
+  code: string;
+  name: string;
+  qty: number;
+}
+
+export interface InboundPoReceiptLogApi {
+  receiving_number: string;
+  status_label: string;
+  received_by?: string | null;
+  received_at?: string | null;
+  total_received_qty: number;
+  received_items: InboundPoReceiptLogItemApi[];
+  approved_items: InboundPoReceiptLogItemApi[];
+  rejected_items: InboundPoReceiptLogItemApi[];
+}
+
 export interface InboundPurchaseOrderApi {
   id?: number | null;
   business_unit: string;
@@ -84,6 +101,7 @@ export interface InboundPurchaseOrderApi {
   total_qty: number;
   type: string;
   status: string;
+  receipt_logs?: InboundPoReceiptLogApi[];
 }
 
 export interface InboundGrPoReferenceApi {

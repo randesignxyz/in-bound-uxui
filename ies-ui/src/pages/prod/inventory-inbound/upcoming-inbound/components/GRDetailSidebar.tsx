@@ -4,6 +4,7 @@ import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
 import {
   Alert,
+  Badge,
   Button,
   Collapse,
   Divider,
@@ -22,9 +23,9 @@ import type { UploadFile, UploadProps } from 'antd';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   applyUploadedSupportingDocs,
+  getSupportingUploadFilePreview,
   hasIncompleteAppFilesUpload,
   normalizeUploadFileList,
-  previewSupportingUploadFile,
   stageSupportingDocBeforeUpload,
   supportingDocsToUploadFiles,
   uploadPendingSupportingDocs,
@@ -39,10 +40,12 @@ import {
   getReceiptDisplayStatusColor,
   getReceiptApprovedGrNumber,
   getReceiptIrNumber,
+  getReceiptPOReferences,
   groupReceiptItemsByPO,
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
+import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
 import { SupportingDocsList } from './SupportingDocsList';
 
 const { Text } = Typography;
@@ -117,31 +120,6 @@ interface GRDetailSidebarProps {
   ) => Promise<boolean> | boolean;
 }
 
-function summarizeQcRouting(items: GRItem[]) {
-  const passedItems = items.filter((item) => item.qcDecision === 'Pass');
-  const correctionItems = items.filter((item) => item.qcDecision === 'Reject');
-
-  if (passedItems.length > 0 && correctionItems.length > 0) {
-    return {
-      type: 'warning' as const,
-      message: 'Mixed QC result: passed items move to supervisor review, while rejected items return for warehouse correction.',
-    };
-  }
-
-  if (correctionItems.length > 0) {
-    return {
-      type: 'warning' as const,
-      message: 'All reviewed items will return to warehouse correction after this QC submission.',
-    };
-  }
-
-  return {
-    type: 'success' as const,
-    message:
-      'All reviewed items and received quantities will move to supervisor review after this QC submission.',
-  };
-}
-
 function deriveQcOutcome(
   items: GRItem[],
 ): Pick<QCReviewSubmitPayload, 'processState' | 'qcResult' | 'exceptionReason' | 'stepTitle'> {
@@ -203,8 +181,12 @@ export function GRDetailSidebar({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(open);
   const [renderedReceipt, setRenderedReceipt] = useState<GoodsReceipt | null>(selectedReceipt);
+  const [previewState, setPreviewState] = useState<{
+    fileName?: string;
+    url?: string;
+    revokeOnClose?: boolean;
+  } | null>(null);
   const receipt = selectedReceipt || renderedReceipt;
-  const routingSummary = useMemo(() => summarizeQcRouting(items), [items]);
 
   useEffect(() => {
     if (selectedReceipt) {
@@ -295,10 +277,16 @@ export function GRDetailSidebar({
   const reviewerDateLabel = reviewerLabel === 'QC Reviewed By' ? 'QC Reviewed Date' : 'Approved Date';
   const displayedStatus = getReceiptDisplayStatus(receipt);
   const approvedGrNumber = getReceiptApprovedGrNumber(receipt);
+  const poReferenceValue =
+    getReceiptPOReferences(receipt).length > 0 ? (
+      summarizePOReferences(receipt)
+    ) : (
+      <Text style={{ color: '#ff4d4f', fontWeight: 600 }}>No PO</Text>
+    );
   const shortMetadataItems: ReceiptMetadataItem[] = [
     { label: 'IR Number', value: getReceiptIrNumber(receipt), emphasize: true },
     ...(approvedGrNumber ? [{ label: 'GR Number', value: approvedGrNumber, emphasize: true }] : []),
-    { label: 'PO Reference', value: summarizePOReferences(receipt), emphasize: true },
+    { label: 'PO Reference', value: poReferenceValue, emphasize: true },
     { label: 'Supplier', value: summarizeSuppliers(receipt) },
     { label: 'Type', value: receipt.receiptType },
     {
@@ -422,24 +410,32 @@ export function GRDetailSidebar({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const uploadedDocs = await uploadPendingSupportingDocs(uploadedFiles, 'QC');
-      setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, uploadedDocs));
-      const outcome = deriveQcOutcome(items);
-      await onSubmitQCVerification(receipt, {
-        items,
-        ...outcome,
-        documentChecklist: {
-          ...receipt.documentChecklist,
-          supportingDocs: [...warehouseSupportingDocs, ...uploadedDocs],
-        },
-      });
-    } catch (error: any) {
-      message.error(error?.message || 'Failed to prepare supporting documents.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    Modal.confirm({
+      title: 'Submit QC review?',
+      content: 'This will submit the QC review for this inbound receiving.',
+      okText: 'Submit Review',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        setIsSubmitting(true);
+        try {
+          const uploadedDocs = await uploadPendingSupportingDocs(uploadedFiles, 'QC');
+          setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, uploadedDocs));
+          const outcome = deriveQcOutcome(items);
+          await onSubmitQCVerification(receipt, {
+            items,
+            ...outcome,
+            documentChecklist: {
+              ...receipt.documentChecklist,
+              supportingDocs: [...warehouseSupportingDocs, ...uploadedDocs],
+            },
+          });
+        } catch (error: any) {
+          message.error(error?.message || 'Failed to prepare supporting documents.');
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+    });
   };
 
   const handleSubmitSupervisorAction = async (
@@ -454,15 +450,34 @@ export function GRDetailSidebar({
       return;
     }
 
+    if (action === 'approve') {
+      Modal.confirm({
+        title: 'Approve inbound receiving?',
+        content: 'This will approve the inbound receiving and continue the workflow.',
+        okText: 'Approve',
+        cancelText: 'Cancel',
+        onOk: async () => {
+          setIsSubmitting(true);
+          try {
+            await onSubmitSupervisorReview(receipt, {
+              action,
+              note: nextNote?.trim() || undefined,
+            });
+            setSupervisorNote('');
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await onSubmitSupervisorReview(receipt, {
         action,
         note: nextNote?.trim() || undefined,
       });
-      if (action === 'approve') {
-        setSupervisorNote('');
-      }
     } finally {
       setIsSubmitting(false);
     }
@@ -485,6 +500,20 @@ export function GRDetailSidebar({
           'SKIP_QC',
         ),
     });
+  };
+
+  const handlePreviewFile = async (file: UploadFile) => {
+    const preview = await getSupportingUploadFilePreview(file);
+    if (preview) {
+      setPreviewState({
+        fileName: file.name,
+        url: preview.url,
+        revokeOnClose: preview.revokeOnClose,
+      });
+      return;
+    }
+
+    message.error('Preview is not available for this file.');
   };
 
   const handleSaveRemark = async () => {
@@ -525,7 +554,15 @@ export function GRDetailSidebar({
       <Button
         key="submit-qc"
         type="primary"
-        onClick={() => onUpdateProcessState(receipt.grNumber, 'QC_PENDING', 'Submitted for QC')}
+        onClick={() =>
+          Modal.confirm({
+            title: 'Submit to QC?',
+            content: 'This will submit the inbound receiving to QC for review.',
+            okText: 'Confirm',
+            cancelText: 'Cancel',
+            onOk: () => onUpdateProcessState(receipt.grNumber, 'QC_PENDING', 'Submitted for QC'),
+          })
+        }
       >
         Submit for QC
       </Button>,
@@ -613,7 +650,9 @@ export function GRDetailSidebar({
       width: 180,
       render: (_: unknown, row: EditableSidebarItem) => (
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 500 }}>{row.code}</div>
+          <Badge dot={isQcEditable && !row.qcDecision} color="#faad14" offset={[4, 2]}>
+            <div style={{ fontWeight: 500, display: 'inline-block' }}>{row.code}</div>
+          </Badge>
           <div
             style={{
               fontSize: 12,
@@ -859,13 +898,6 @@ export function GRDetailSidebar({
             </div>
           )}
 
-          {isQcEditable && (
-            <>
-              <Divider style={{ margin: '12px 0' }} />
-              <Alert type={routingSummary.type} showIcon message={routingSummary.message} />
-            </>
-          )}
-
           <Divider />
           <div style={{ fontWeight: 600, marginBottom: 16 }}>Receipt Items</div>
           {groupedReceiptItems.length > 0 ? (
@@ -1021,7 +1053,7 @@ export function GRDetailSidebar({
                       removeFile(file.uid);
                       return true;
                     }}
-                    onPreview={(file) => previewSupportingUploadFile(file)}
+                    onPreview={(file) => void handlePreviewFile(file)}
                     accept=".pdf,.doc,.docx,image/*"
                     listType="text"
                   >
@@ -1104,6 +1136,13 @@ export function GRDetailSidebar({
           onChange={(event) => setDraftRemark(event.target.value)}
         />
       </Modal>
+      <SupportingDocPreviewModal
+        open={Boolean(previewState)}
+        fileName={previewState?.fileName}
+        previewUrl={previewState?.url}
+        revokeOnClose={previewState?.revokeOnClose}
+        onClose={() => setPreviewState(null)}
+      />
     </DrawerForm>
   );
 }

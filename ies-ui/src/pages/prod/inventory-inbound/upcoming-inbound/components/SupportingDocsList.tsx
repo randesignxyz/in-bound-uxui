@@ -12,9 +12,9 @@ import { Button, List, Space, Tag, Typography } from 'antd';
 import type { UploadFile } from 'antd';
 import {
   downloadSupportingDoc,
+  getSupportingDocPreview,
+  getSupportingUploadFilePreview,
   getUploadFileSource,
-  openSupportingDoc,
-  previewSupportingUploadFile,
 } from '../supportingDocs';
 import {
   getSupportingDocSourceColor,
@@ -22,6 +22,7 @@ import {
   type SupportingDocReference,
   type SupportingDocSource,
 } from '../workflow';
+import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
 
 const { Link, Text } = Typography;
 const GRID_ACTION_BASE_COLOR = '#8c8c8c';
@@ -78,6 +79,11 @@ export function SupportingDocsList({
   const [expanded, setExpanded] = useState(false);
   const [hoveredAction, setHoveredAction] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
+  const [previewState, setPreviewState] = useState<{
+    fileName?: string;
+    url?: string;
+    revokeOnClose?: boolean;
+  } | null>(null);
   const items = files
     ? files.map((file) => ({
         key: file.uid,
@@ -86,7 +92,16 @@ export function SupportingDocsList({
         source: getUploadFileSource(file, fallbackSource) ?? undefined,
         isPending: !!file.originFileObj,
         isLegacy: !file.originFileObj && typeof file.response !== 'string',
-        onView: () => previewSupportingUploadFile(file),
+        onView: async () => {
+          const preview = await getSupportingUploadFilePreview(file);
+          if (preview) {
+            setPreviewState({
+              fileName: file.name,
+              url: preview.url,
+              revokeOnClose: preview.revokeOnClose,
+            });
+          }
+        },
         onRemove: onRemoveFile ? () => onRemoveFile(file.uid) : undefined,
       }))
     : (docs ?? []).map((doc, index) => ({
@@ -96,7 +111,16 @@ export function SupportingDocsList({
         source: doc.source ?? undefined,
         isPending: false,
         isLegacy: !doc.fileId,
-        onView: () => openSupportingDoc(doc),
+        onView: async () => {
+          const preview = await getSupportingDocPreview(doc);
+          if (preview) {
+            setPreviewState({
+              fileName: doc.fileName,
+              url: preview.url,
+              revokeOnClose: preview.revokeOnClose,
+            });
+          }
+        },
         onRemove: undefined,
       }));
 
@@ -153,7 +177,8 @@ export function SupportingDocsList({
     const remainingItems = items.length - collapsedLimit;
 
     return (
-      <div
+      <>
+        <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -328,7 +353,15 @@ export function SupportingDocsList({
             See less
           </Button>
         )}
-      </div>
+        </div>
+        <SupportingDocPreviewModal
+          open={Boolean(previewState)}
+          fileName={previewState?.fileName}
+          previewUrl={previewState?.url}
+          revokeOnClose={previewState?.revokeOnClose}
+          onClose={() => setPreviewState(null)}
+        />
+      </>
     );
   }
 
@@ -337,7 +370,8 @@ export function SupportingDocsList({
   }
 
   return (
-    <List
+    <>
+      <List
       bordered
       size="small"
       dataSource={items}
@@ -446,6 +480,14 @@ export function SupportingDocsList({
           </div>
         </List.Item>
       )}
-    />
+      />
+      <SupportingDocPreviewModal
+        open={Boolean(previewState)}
+        fileName={previewState?.fileName}
+        previewUrl={previewState?.url}
+        revokeOnClose={previewState?.revokeOnClose}
+        onClose={() => setPreviewState(null)}
+      />
+    </>
   );
 }

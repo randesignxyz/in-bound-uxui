@@ -25,11 +25,39 @@ interface InboundGRTableProps {
   receipts: GoodsReceipt[];
   onViewDetail: (gr: GoodsReceipt) => void;
   typeFilter: 'ALL' | 'Planned' | 'Unplanned';
-  statusFilter: 'ALL' | InboundHistoryStatus;
+  statusFilter:
+    | 'ALL'
+    | InboundHistoryStatus
+    | 'SUPERVISOR_PENDING'
+    | 'QC_PENDING'
+    | 'QC_REJECTED';
   headerTitle?: ReactNode;
   hideSourceAndPoLink?: boolean;
   showNotificationBadge?: boolean;
   onRefresh?: () => Promise<void> | void;
+}
+
+function matchesStatusFilter(
+  receipt: GoodsReceipt,
+  statusFilter: InboundGRTableProps['statusFilter'],
+) {
+  if (statusFilter === 'ALL') {
+    return true;
+  }
+
+  if (statusFilter === 'SUPERVISOR_PENDING') {
+    return receipt.processState === 'PENDING_SUPERVISOR_REVIEW';
+  }
+
+  if (statusFilter === 'QC_PENDING') {
+    return receipt.processState === 'QC_PENDING';
+  }
+
+  if (statusFilter === 'QC_REJECTED') {
+    return receipt.processState === 'CORRECTION_REQUIRED';
+  }
+
+  return getInboundHistoryStatus(receipt) === statusFilter;
 }
 
 export function InboundGRTable({
@@ -50,9 +78,7 @@ export function InboundGRTable({
     if (typeFilter !== 'ALL') {
       data = data.filter((r) => r.receiptType === typeFilter);
     }
-    if (statusFilter !== 'ALL') {
-      data = data.filter((r) => getInboundHistoryStatus(r) === statusFilter);
-    }
+    data = data.filter((r) => matchesStatusFilter(r, statusFilter));
     return data;
   }, [receipts, typeFilter, statusFilter]);
   const showApprovedGrColumn = filteredReceipts.some((receipt) => getReceiptApprovedGrNumber(receipt));

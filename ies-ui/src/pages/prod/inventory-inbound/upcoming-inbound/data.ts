@@ -190,6 +190,10 @@ export interface InboundGoodsReceiptApi {
   approvedDate?: string | null;
   qcReviewedBy?: string | null;
   qcReviewedAt?: string | null;
+  qcSubmittedViewedBy?: string | null;
+  qcSubmittedViewedAt?: string | null;
+  qcRejectedViewedBy?: string | null;
+  qcRejectedViewedAt?: string | null;
   specMatch: boolean;
   qtyMatch: boolean;
   qualityCheckRequired: boolean;
@@ -318,6 +322,11 @@ export interface InboundSubmitSupervisorReviewInput {
   id: number;
   action: string;
   note?: string | null;
+}
+
+export interface InboundMarkQcBadgeViewedInput {
+  id: number;
+  status: 'Submitted' | 'Rejected';
 }
 
 export type UpcomingInboundPurchaseOrder = PurchaseOrder & {

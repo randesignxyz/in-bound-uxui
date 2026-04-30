@@ -178,6 +178,16 @@ export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInb
       readValue<string | null>(api, 'approvedDate', 'approved_date') ??
         readValue<string | null>(api, 'qcReviewedAt', 'qc_reviewed_at'),
     ),
+    qcSubmittedViewedBy:
+      readValue<string | null>(api, 'qcSubmittedViewedBy', 'qc_submitted_viewed_by') ?? undefined,
+    qcSubmittedViewedAt: formatDisplayTimestamp(
+      readValue<string | null>(api, 'qcSubmittedViewedAt', 'qc_submitted_viewed_at'),
+    ),
+    qcRejectedViewedBy:
+      readValue<string | null>(api, 'qcRejectedViewedBy', 'qc_rejected_viewed_by') ?? undefined,
+    qcRejectedViewedAt: formatDisplayTimestamp(
+      readValue<string | null>(api, 'qcRejectedViewedAt', 'qc_rejected_viewed_at'),
+    ),
     specMatch: readBoolean(api, 'specMatch', 'spec_match'),
     qtyMatch: readBoolean(api, 'qtyMatch', 'qty_match'),
     qualityCheckRequired: readBoolean(api, 'qualityCheckRequired', 'quality_check_required'),

@@ -4,6 +4,7 @@ import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
 import {
   Alert,
+  Badge,
   Button,
   Collapse,
   Divider,
@@ -119,31 +120,6 @@ interface GRDetailSidebarProps {
   ) => Promise<boolean> | boolean;
 }
 
-function summarizeQcRouting(items: GRItem[]) {
-  const passedItems = items.filter((item) => item.qcDecision === 'Pass');
-  const correctionItems = items.filter((item) => item.qcDecision === 'Reject');
-
-  if (passedItems.length > 0 && correctionItems.length > 0) {
-    return {
-      type: 'warning' as const,
-      message: 'Mixed QC result: passed items move to supervisor review, while rejected items return for warehouse correction.',
-    };
-  }
-
-  if (correctionItems.length > 0) {
-    return {
-      type: 'warning' as const,
-      message: 'All reviewed items will return to warehouse correction after this QC submission.',
-    };
-  }
-
-  return {
-    type: 'success' as const,
-    message:
-      'All reviewed items and received quantities will move to supervisor review after this QC submission.',
-  };
-}
-
 function deriveQcOutcome(
   items: GRItem[],
 ): Pick<QCReviewSubmitPayload, 'processState' | 'qcResult' | 'exceptionReason' | 'stepTitle'> {
@@ -211,7 +187,6 @@ export function GRDetailSidebar({
     revokeOnClose?: boolean;
   } | null>(null);
   const receipt = selectedReceipt || renderedReceipt;
-  const routingSummary = useMemo(() => summarizeQcRouting(items), [items]);
 
   useEffect(() => {
     if (selectedReceipt) {
@@ -503,9 +478,6 @@ export function GRDetailSidebar({
         action,
         note: nextNote?.trim() || undefined,
       });
-      if (action === 'approve') {
-        setSupervisorNote('');
-      }
     } finally {
       setIsSubmitting(false);
     }
@@ -678,7 +650,9 @@ export function GRDetailSidebar({
       width: 180,
       render: (_: unknown, row: EditableSidebarItem) => (
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 500 }}>{row.code}</div>
+          <Badge dot={isQcEditable && !row.qcDecision} color="#faad14" offset={[4, 2]}>
+            <div style={{ fontWeight: 500, display: 'inline-block' }}>{row.code}</div>
+          </Badge>
           <div
             style={{
               fontSize: 12,
@@ -922,13 +896,6 @@ export function GRDetailSidebar({
                 </div>
               ))}
             </div>
-          )}
-
-          {isQcEditable && (
-            <>
-              <Divider style={{ margin: '12px 0' }} />
-              <Alert type={routingSummary.type} showIcon message={routingSummary.message} />
-            </>
           )}
 
           <Divider />

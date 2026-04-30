@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Tag, Typography } from 'antd';
+import { Badge, Tag, Typography } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
 import type { GoodsReceipt, LegacyGRStatus } from '../workflow';
@@ -22,6 +22,7 @@ interface GRQueueTableProps {
   toolbarExtra?: ReactNode;
   statusMode?: 'legacy' | 'qc';
   onRefresh?: () => Promise<void> | void;
+  shouldShowNotificationBadge?: (receipt: GoodsReceipt) => boolean;
 }
 
 const statusColor: Record<LegacyGRStatus, string> = {
@@ -40,6 +41,7 @@ export function GRQueueTable({
   toolbarExtra,
   statusMode = 'legacy',
   onRefresh,
+  shouldShowNotificationBadge,
 }: GRQueueTableProps) {
   const actionRef = useRef<ActionType>();
   const originalReloadRef = useRef<ActionType['reload']>();
@@ -51,9 +53,18 @@ export function GRQueueTable({
       key: 'receivingNumber',
       title: 'IR Number',
       dataIndex: 'receivingNumber',
-      render: (_: any, row: GoodsReceipt) => (
-        <a onClick={() => onViewDetail(row)}>{getReceiptIrNumber(row)}</a>
-      ),
+      render: (_: any, row: GoodsReceipt) => {
+        const shouldShowQcBadge =
+          typeof shouldShowNotificationBadge === 'function'
+            ? shouldShowNotificationBadge(row)
+            : statusMode === 'qc' && row.items.some((item) => !item.qcDecision);
+
+        return (
+          <Badge dot={shouldShowQcBadge} color="#faad14" offset={[4, 2]}>
+            <a onClick={() => onViewDetail(row)}>{getReceiptIrNumber(row)}</a>
+          </Badge>
+        );
+      },
     },
     ...(showApprovedGrColumn
       ? [

@@ -38,6 +38,7 @@ import {
   type QcQueueStatus,
   getGoodsReceiptSourceColor,
   getInboundHistoryStatus,
+  isQcRejectedReceipt,
   getPurchaseOrderVendorOptions,
   getQcQueueStatus,
   canCombinePurchaseOrders,
@@ -82,6 +83,11 @@ type InboundWorkspaceRole = 'WAREHOUSE_STAFF' | 'QC' | 'WAREHOUSE_SUPERVISOR';
 type SupervisorHistoryStatusFilter = 'SUPERVISOR_PENDING' | 'QC_PENDING' | 'QC_REJECTED';
 type HistoryStatusFilter = 'ALL' | InboundHistoryStatus | SupervisorHistoryStatusFilter;
 type QcQueueStatusFilter = QcQueueStatus | 'All';
+type QcStatusOptionWithBadge = {
+  label: string;
+  value: QcQueueStatusFilter;
+  badgeCount?: number;
+};
 type DashboardSummaryViewMode = InboundDashboardSummaryRange | 'CUSTOM';
 type DashboardStatCard = {
   title: string;
@@ -685,6 +691,66 @@ export default function UpcomingInboundListview() {
     () => receipts.filter((receipt) => getQcQueueStatus(receipt) !== null),
     [receipts],
   );
+  const shouldShowQcReceiptNotificationBadge = useCallback(
+    (receipt: GoodsReceipt) => {
+      const status = getQcQueueStatus(receipt);
+
+      if (!status) {
+        return false;
+      }
+
+      if (status === 'Pending') {
+        return receipt.items.some((item) => !item.qcDecision);
+      }
+
+      if (status === 'Submitted' || status === 'Rejected') {
+        if (status === 'Submitted') {
+          return !receipt.qcSubmittedViewedAt;
+        }
+
+        return isQcRejectedReceipt(receipt) && !receipt.qcRejectedViewedAt;
+      }
+
+      return false;
+    },
+    [],
+  );
+  const qcStatusCounts = useMemo(() => {
+    const counts = {
+      Pending: 0,
+      Submitted: 0,
+      Rejected: 0,
+    };
+
+    qcRelevantReceipts.forEach((receipt) => {
+      const status = getQcQueueStatus(receipt);
+      if (
+        (status === 'Pending' || status === 'Submitted' || status === 'Rejected') &&
+        shouldShowQcReceiptNotificationBadge(receipt)
+      ) {
+        counts[status] += 1;
+      }
+    });
+
+    return counts;
+  }, [qcRelevantReceipts, shouldShowQcReceiptNotificationBadge]);
+  const qcStatusOptionsWithBadge = useMemo<QcStatusOptionWithBadge[]>(
+    () =>
+      qcStatusOptions.map((option) => {
+        if (
+          (option.value === 'Pending' || option.value === 'Submitted' || option.value === 'Rejected') &&
+          qcStatusCounts[option.value] > 0
+        ) {
+          return {
+            ...option,
+            badgeCount: qcStatusCounts[option.value],
+          };
+        }
+
+        return option;
+      }),
+    [qcStatusCounts],
+  );
 
   const supervisorStatusReceipts = useMemo(
     () => receipts,
@@ -953,6 +1019,7 @@ export default function UpcomingInboundListview() {
   };
 
   const handleOpenGRDetail = async (gr: GoodsReceipt) => {
+    const qcStatus = activeRole === 'QC' ? getQcQueueStatus(gr) : null;
     if (!gr.id) {
       const latest = receipts.find((row) => row.grNumber === gr.grNumber) || gr;
       setSelectedGR(latest);
@@ -960,6 +1027,17 @@ export default function UpcomingInboundListview() {
     }
 
     try {
+      if (qcStatus === 'Submitted' || (qcStatus === 'Rejected' && isQcRejectedReceipt(gr))) {
+        const viewedResponse = await services.markQcBadgeViewed({
+          id: gr.id,
+          status: qcStatus,
+        });
+        const viewedReceipt = normalizeReceiptForUI(viewedResponse.data);
+        syncReceiptInState(viewedReceipt);
+        setSelectedGR(viewedReceipt);
+        return;
+      }
+
       const detail = await services.detailGoodsReceipt(gr.id);
       setSelectedGR(normalizeReceiptForUI(detail));
     } catch (error: any) {
@@ -1781,10 +1859,15 @@ export default function UpcomingInboundListview() {
                       value={qcStatusFilter}
                       onChange={(event) => setQcStatusFilter(event.target.value)}
                     >
-                      {qcStatusOptions.map((option) => (
-                        <Radio.Button key={option.value} value={option.value}>
-                          {option.label}
-                        </Radio.Button>
+                      {qcStatusOptionsWithBadge.map((option) => (
+                        <Badge
+                          key={option.value}
+                          count={option.badgeCount ?? 0}
+                          size="small"
+                          offset={[-6, 6]}
+                        >
+                          <Radio.Button value={option.value}>{option.label}</Radio.Button>
+                        </Badge>
                       ))}
                     </Radio.Group>
                   </Space>
@@ -1994,6 +2077,9 @@ export default function UpcomingInboundListview() {
                   onViewDetail={handleOpenGRDetail}
                   statusMode={activeRole === 'QC' ? 'qc' : 'legacy'}
                   onRefresh={loadInboundData}
+                  shouldShowNotificationBadge={
+                    activeRole === 'QC' ? shouldShowQcReceiptNotificationBadge : undefined
+                  }
                   headerTitle={
                     <div style={{ paddingLeft: 8 }}>
                       <Text strong>{`Inbound Receiving (${filteredRoleQueue.length})`}</Text>

@@ -76,7 +76,7 @@ function buildInitialItems(purchaseOrders: PurchaseOrder[]): GRItem[] {
       poNumber: purchaseOrder.poNumber,
       supplier: purchaseOrder.supplier,
       poQty: item.remainingQty,
-      receiveQty: item.remainingQty,
+      receiveQty: 0,
       uom: item.uom,
       productDate: '',
       expiryDate: '',

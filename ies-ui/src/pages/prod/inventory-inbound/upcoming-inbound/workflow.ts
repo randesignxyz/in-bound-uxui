@@ -234,6 +234,10 @@ export interface GoodsReceipt {
   createdDate: string;
   approvedBy?: string;
   approvedDate?: string;
+  qcSubmittedViewedBy?: string;
+  qcSubmittedViewedAt?: string;
+  qcRejectedViewedBy?: string;
+  qcRejectedViewedAt?: string;
   specMatch: boolean;
   qtyMatch: boolean;
   qualityCheckRequired: boolean;
@@ -764,7 +768,7 @@ function isRejectedReceipt(receipt: GoodsReceipt) {
   return isSupervisorRejectedCorrection(receipt) || isQcRejectedReceipt(receipt);
 }
 
-function isQcRejectedReceipt(receipt: GoodsReceipt) {
+export function isQcRejectedReceipt(receipt: GoodsReceipt) {
   return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || isQcRejectedCorrection(receipt);
 }
 

@@ -9,6 +9,7 @@ import {
   InboundGoodsReceiptSearch,
   InboundGoodsReceiptStatusChangeInput,
   InboundLinkPoInput,
+  InboundMarkQcBadgeViewedInput,
   InboundPurchaseOrderApi,
   InboundPurchaseOrderCountParams,
   InboundPurchaseOrderSearch,
@@ -175,6 +176,15 @@ const UpcomingInboundAction = {
     actionName: 'inbound-submit-supervisor-review',
     payload: data,
   }),
+
+  markQcBadgeViewed: (
+    data: InboundMarkQcBadgeViewedInput,
+  ): ServiceApiType<InboundMarkQcBadgeViewedInput> => ({
+    type: 'EXEC',
+    endpoint: 'PROD',
+    actionName: 'inbound-mark-qc-badge-viewed',
+    payload: data,
+  }),
 };
 
 export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
@@ -298,6 +308,15 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
     ): Promise<InboundSuccessPayloadResponse<UpcomingInboundGoodsReceipt>> => {
       const response = (await singleRequest<InboundSuccessPayloadResponse<InboundGoodsReceiptApi>>(
         UpcomingInboundAction.submitSupervisorReview(data),
+      )(requestAction)) as InboundSuccessPayloadResponse<InboundGoodsReceiptApi>;
+      return mapPayloadResponse(response, mapInboundGoodsReceipt);
+    },
+
+    markQcBadgeViewed: async (
+      data: InboundMarkQcBadgeViewedInput,
+    ): Promise<InboundSuccessPayloadResponse<UpcomingInboundGoodsReceipt>> => {
+      const response = (await singleRequest<InboundSuccessPayloadResponse<InboundGoodsReceiptApi>>(
+        UpcomingInboundAction.markQcBadgeViewed(data),
       )(requestAction)) as InboundSuccessPayloadResponse<InboundGoodsReceiptApi>;
       return mapPayloadResponse(response, mapInboundGoodsReceipt);
     },

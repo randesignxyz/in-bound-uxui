@@ -3,6 +3,7 @@ import { Button, Descriptions, Divider, Spin, Tag, Space, Typography } from 'ant
 import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
+import { ExportOutlined } from '@ant-design/icons';
 import { getPurchaseOrderStatusLabel, type PurchaseOrder, type POItem } from '../workflow';
 
 interface PODetailSidebarProps {
@@ -10,6 +11,7 @@ interface PODetailSidebarProps {
   onClose: () => void;
   po: PurchaseOrder | null;
   onCreateGR: (po: PurchaseOrder) => void;
+  onOpenReceiptInNewTab: (receiptId: number) => void;
 }
 
 const poStatusColor: Record<PurchaseOrder['status'], string> = {
@@ -32,7 +34,7 @@ function getReceiptItemLabel(name: string, code: string) {
   return name?.trim() || code?.trim() || 'Item';
 }
 
-export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSidebarProps) {
+export function PODetailSidebar({ open, onClose, po, onCreateGR, onOpenReceiptInNewTab }: PODetailSidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(open);
   const [renderedPO, setRenderedPO] = useState<PurchaseOrder | null>(po);
 
@@ -45,6 +47,10 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
 
   const currentPO = po || renderedPO;
   const receiptLogs = currentPO?.receiptLogs || [];
+  const linkedReceiptLogs = receiptLogs.filter((log, index, logs) =>
+    typeof log.receiptId === 'number' &&
+    logs.findIndex((candidate) => candidate.receiptId === log.receiptId) === index,
+  );
 
   if (!currentPO) return null;
 
@@ -88,11 +94,20 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
             setRenderedPO(null);
           }
         },
-        bodyStyle: { paddingInline: 16, paddingTop: 16, paddingBottom: 16 },
+        bodyStyle: {
+          paddingInline: 16,
+          paddingTop: 16,
+          paddingBottom: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        },
       }}
     >
-      <Spin spinning={false}>
-        <ProCard bodyStyle={{ paddingInline: 8, paddingTop: 8, paddingBottom: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 140px)', minHeight: 0 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: 16 }}>
+          <Spin spinning={false}>
+            <ProCard bodyStyle={{ paddingInline: 8, paddingTop: 8, paddingBottom: 8 }}>
           <Descriptions column={2} size="small">
             <Descriptions.Item label="PO Number" style={{ fontWeight: 'bolder' }}>
               {currentPO.poNumber}
@@ -132,6 +147,29 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
             </Descriptions.Item>
             <Descriptions.Item label="Total Qty">
               {currentPO.totalQty.toLocaleString()}
+            </Descriptions.Item>
+            <Descriptions.Item label="Linked IR" span={2}>
+              {linkedReceiptLogs.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {linkedReceiptLogs.map((log) => (
+                    <Button
+                      key={`linked-ir-${log.receiptId}`}
+                      type="link"
+                      icon={<ExportOutlined />}
+                      style={{ paddingInline: 0, justifyContent: 'flex-start', width: 'fit-content' }}
+                      onClick={() => {
+                        if (typeof log.receiptId === 'number') {
+                          onOpenReceiptInNewTab(log.receiptId);
+                        }
+                      }}
+                    >
+                      {log.receivingNumber}
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <Text type="secondary">No linked inbound receiving yet</Text>
+              )}
             </Descriptions.Item>
           </Descriptions>
 
@@ -220,17 +258,29 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
             <Text type="secondary">No inbound activity has been recorded for this PO yet.</Text>
           )}
 
-          <Divider />
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              type="primary"
-              onClick={() => onCreateGR(currentPO)}
-            >
-              Create Inbound Receiving
-            </Button>
-          </div>
-        </ProCard>
-      </Spin>
+            </ProCard>
+          </Spin>
+        </div>
+        <div
+          style={{
+            flexShrink: 0,
+            minHeight: 88,
+            padding: '12px 0 24px',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'flex-start',
+            background: '#fff',
+            borderTop: '1px solid #f0f0f0',
+          }}
+        >
+          <Button
+            type="primary"
+            onClick={() => onCreateGR(currentPO)}
+          >
+            Create Inbound Receiving
+          </Button>
+        </div>
+      </div>
     </DrawerForm>
   );
 }

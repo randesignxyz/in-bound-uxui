@@ -78,6 +78,7 @@ export interface InboundPoReceiptLogItemApi {
 }
 
 export interface InboundPoReceiptLogApi {
+  receipt_id?: number | null;
   receiving_number: string;
   status_label: string;
   received_by?: string | null;

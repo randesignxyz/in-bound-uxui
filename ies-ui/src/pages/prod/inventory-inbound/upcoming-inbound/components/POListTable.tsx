@@ -1,5 +1,5 @@
 import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
-import { Flex, Progress, Tag } from 'antd';
+import { Flex, Progress, Tag, Tooltip } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
 import { getPurchaseOrderStatusLabel, type PurchaseOrder } from '../workflow';
@@ -117,12 +117,14 @@ export function POListTable({
         const pct = totalPO > 0 ? Math.round((totalReceived / totalPO) * 100) : 0;
         return (
           <Flex vertical gap="small" style={{ width: 100 }}>
-            <Progress
-              percent={pct}
-              strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }}
-              size="small"
-              status="active"
-            />
+            <Tooltip title={`${totalReceived.toLocaleString()}/${totalPO.toLocaleString()}`}>
+              <Progress
+                percent={pct}
+                strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }}
+                size="small"
+                status="active"
+              />
+            </Tooltip>
           </Flex>
         );
       },

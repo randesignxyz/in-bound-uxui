@@ -58,6 +58,18 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const actionRef = useRef();
   const importInputRef = useRef();
   const detailRequestRef = useRef(0);
+  const searchDebounceRef = useRef();
+  const searchValueRef = useRef('');
+  const filtersRef = useRef({
+    businessUnits: [],
+    category: undefined,
+    status: 'All',
+    warehouse: '',
+    createdDateRange: undefined,
+  });
+  const requestSeqRef = useRef(0);
+  const activeListControllerRef = useRef();
+  const currentRowsRef = useRef([]);
   const requestActions = simpleRequestActions();
   const services = SparePartRequestAPI(requestActions);
   const requestServices = SparePartRequestService(requestActions);
@@ -67,6 +79,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const canSelectRows = access.canSpfRequester || access.canSpfApprover;
   const canManageImages = access.canSpfWarehouseStaff || access.canAdmin;
 
+  const [searchInputValue, setSearchInputValue] = useState('');
   const [searchValue, setSearchValue] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedItemsById, setSelectedItemsById] = useState({});
@@ -95,6 +108,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     createdDateRange: undefined,
   });
 
+  const abortActiveListRequest = () => {
+    activeListControllerRef.current?.abort?.();
+    activeListControllerRef.current = undefined;
+  };
+
   const categoryOptions = [
     { label: 'All Categories', value: '' },
     ...categoryItems.map((item) => ({ label: item.category_name, value: item.category_name })),
@@ -111,6 +129,35 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     fetchSparePartCategories()
       .then((items) => setCategoryItems(items.filter((item) => item?.id && item?.category_name)))
       .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (searchInputValue === searchValue) return;
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
+      searchValueRef.current = searchInputValue;
+      setSearchValue(searchInputValue);
+      reloadTable(true);
+    }, 350);
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [searchInputValue, searchValue]);
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+      abortActiveListRequest();
+    };
   }, []);
 
   useEffect(() => {
@@ -140,6 +187,26 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       actionRef.current?.setPageInfo?.({ current: 1 });
     }
     actionRef.current?.reload?.();
+  };
+
+  const commitSearchValue = (value) => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    abortActiveListRequest();
+    searchValueRef.current = value;
+    setSearchInputValue(value);
+    setSearchValue(value);
+    reloadTable(true);
+  };
+
+  const applyFiltersAndReload = (updater, resetPage = true) => {
+    const nextFilters = typeof updater === 'function' ? updater(filtersRef.current) : updater;
+    filtersRef.current = nextFilters;
+    setFilters(nextFilters);
+    abortActiveListRequest();
+    reloadTable(resetPage);
   };
 
   const syncSelection = (normalizedKeys, rows = []) => {
@@ -177,37 +244,60 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   };
 
   const updateBusinessUnitFilters = (nextBusinessUnits) => {
-    setFilters((previous) => ({ ...previous, businessUnits: nextBusinessUnits }));
-    reloadTable(true);
+    applyFiltersAndReload((previous) => ({ ...previous, businessUnits: nextBusinessUnits }));
   };
 
   const toggleBusinessUnitFilter = (businessUnit) => {
-    const isSelected = filters.businessUnits.includes(businessUnit);
+    const isSelected = filtersRef.current.businessUnits.includes(businessUnit);
     updateBusinessUnitFilters(
       isSelected
-        ? filters.businessUnits.filter((item) => item !== businessUnit)
-        : [...filters.businessUnits, businessUnit],
+        ? filtersRef.current.businessUnits.filter((item) => item !== businessUnit)
+        : [...filtersRef.current.businessUnits, businessUnit],
     );
   };
 
   const requestData = async (params) => {
-    const response = await services.page({
-      criteria: {
-        searchValue,
-        category: filters.category || '',
-        status: filters.status,
-        warehouse: filters.warehouse || '',
-      },
-      pagination: {
-        current: params.current,
-        pageSize: params.pageSize,
-      },
-    });
+    const requestSeq = ++requestSeqRef.current;
+    const requestFilters = filtersRef.current;
+    const controller = new AbortController();
+
+    abortActiveListRequest();
+    activeListControllerRef.current = controller;
+
+    let response;
+    try {
+      response = await services.page({
+        criteria: {
+          searchValue: searchValueRef.current,
+          category: requestFilters.category || '',
+          status: requestFilters.status,
+          warehouse: requestFilters.warehouse || '',
+        },
+        pagination: {
+          current: params.current,
+          pageSize: params.pageSize,
+        },
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (controller.signal.aborted || error?.name === 'AbortError') {
+        return {
+          data: currentRowsRef.current,
+          total: currentRowsRef.current.length,
+          success: true,
+        };
+      }
+      throw error;
+    } finally {
+      if (activeListControllerRef.current === controller) {
+        activeListControllerRef.current = undefined;
+      }
+    }
 
     let rows = response.items || [];
 
-    if (filters.createdDateRange?.length === 2) {
-      const [startIso, endIso] = filters.createdDateRange;
+    if (requestFilters.createdDateRange?.length === 2) {
+      const [startIso, endIso] = requestFilters.createdDateRange;
       const startAt = dayjs(startIso).startOf('day');
       const endAt = dayjs(endIso).endOf('day');
       rows = rows.filter((item) => {
@@ -217,11 +307,20 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       });
     }
 
-    if (filters.businessUnits.length > 0) {
-      rows = rows.filter((item) => filters.businessUnits.includes(item.businessUnit));
+    if (requestFilters.businessUnits.length > 0) {
+      rows = rows.filter((item) => requestFilters.businessUnits.includes(item.businessUnit));
+    }
+
+    if (requestSeq !== requestSeqRef.current) {
+      return {
+        data: currentRowsRef.current,
+        total: currentRowsRef.current.length,
+        success: true,
+      };
     }
 
     setCurrentRows(rows);
+    currentRowsRef.current = rows;
     setSelectedItemsById((previous) => {
       if (!selectedRowKeys?.length) return previous;
       const next = { ...previous };
@@ -244,7 +343,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     return {
       data: rows,
       total:
-        filters.createdDateRange?.length === 2
+        requestFilters.createdDateRange?.length === 2
           ? rows.length
           : response.total || 0,
       success: true,
@@ -418,7 +517,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             ],
           },
         });
-        setExportModalOpen(false);spare-parts-warehouse
+        setExportModalOpen(false);
       } catch (error) {
         message.error('Failed to export Excel.');
       } finally {
@@ -470,12 +569,15 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
           <Input.Search
             allowClear
             enterButton={<SearchOutlined />}
-            value={searchValue}
+            value={searchInputValue}
             placeholder="Search by product ID or part name"
             style={{ width: 320 }}
             onChange={(event) => {
-              setSearchValue(event.target.value || '');
-              reloadTable(true);
+              abortActiveListRequest();
+              setSearchInputValue(event.target.value || '');
+            }}
+            onSearch={(value) => {
+              commitSearchValue(value || '');
             }}
           />
 
@@ -525,8 +627,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
               value={filters.warehouse}
               options={warehouseOptions}
               onChange={(value) => {
-                setFilters((previous) => ({ ...previous, warehouse: value || '' }));
-                reloadTable(true);
+                applyFiltersAndReload((previous) => ({ ...previous, warehouse: value || '' }));
               }}
             />
           {/* )} */}
@@ -536,8 +637,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             value={filters.category || ''}
             options={categoryOptions}
             onChange={(value) => {
-              setFilters((previous) => ({ ...previous, category: value || undefined }));
-              reloadTable(true);
+              applyFiltersAndReload((previous) => ({ ...previous, category: value || undefined }));
             }}
           />
 
@@ -549,8 +649,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
               value={filters.status}
               options={statusOptions}
               onChange={(value) => {
-                setFilters((previous) => ({ ...previous, status: value }));
-                reloadTable(true);
+                applyFiltersAndReload((previous) => ({ ...previous, status: value }));
               }}
             />
           ) : null}
@@ -565,14 +664,13 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             placeholder={['Created from', 'Created to']}
             onChange={(dates) => {
               if (dates && dates[0] && dates[1]) {
-                setFilters((previous) => ({
+                applyFiltersAndReload((previous) => ({
                   ...previous,
                   createdDateRange: [dates[0].toISOString(), dates[1].toISOString()],
                 }));
               } else {
-                setFilters((previous) => ({ ...previous, createdDateRange: undefined }));
+                applyFiltersAndReload((previous) => ({ ...previous, createdDateRange: undefined }));
               }
-              reloadTable(true);
             }}
           /> */}
         </Space>

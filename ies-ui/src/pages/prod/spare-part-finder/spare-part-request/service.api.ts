@@ -1,6 +1,7 @@
 import { Paging } from '@/services/API';
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
+import { request } from 'umi';
 import type { SparePartRequestItem, SparePartStockStatus } from './data';
 
 export interface SparePartRequestListSearch { 
@@ -86,6 +87,7 @@ type SparePartRequestPageParams = {
     current?: number;
     pageSize?: number;
   };
+  signal?: AbortSignal;
 };
 
 const SparePartRequestTestAction = {
@@ -251,9 +253,34 @@ const mapPagingResult = (
 
 export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
   page: async (params: SparePartRequestPageParams): Promise<Paging<SparePartRequestItem>> => {
-    const response = await singleRequest<SparePartRequestListApiItem>(SparePartRequestTestAction.page(params))(
-      requestAction,
-    );
+    const action = SparePartRequestTestAction.page(params);
+    let response: Paging<SparePartRequestListApiItem> | SparePartRequestListApiItem[] | SparePartRequestListApiItem;
+
+    if (params.signal) {
+      try {
+        requestAction?.start?.();
+        response = await request<Paging<SparePartRequestListApiItem>>(
+          `${getServiceUrl(action.endpoint)}/name/${action.actionName}/list-paging/page/${(action.pagination?.page || 1) - 1
+          }/size/${action.pagination?.pageSize || 20}`,
+          {
+            method: 'POST',
+            data: action.payload || {},
+            signal: params.signal,
+          } as any,
+        );
+        requestAction?.end?.('SUCCESS');
+      } catch (error: any) {
+        if (params.signal.aborted || error?.name === 'AbortError') {
+          requestAction?.end?.('SUCCESS');
+          throw error;
+        }
+        requestAction?.end?.('FAILED');
+        throw error;
+      }
+    } else {
+      response = await singleRequest<SparePartRequestListApiItem>(action)(requestAction);
+    }
+
     return mapPagingResult(response, params);
   },
   detail: async (params: SparePartDetailParams): Promise<SparePartRequestItem> => {

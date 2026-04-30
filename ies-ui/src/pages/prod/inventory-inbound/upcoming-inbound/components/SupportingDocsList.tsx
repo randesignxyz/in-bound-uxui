@@ -184,6 +184,7 @@ export function SupportingDocsList({
           flexWrap: 'wrap',
           gap: 8,
           alignItems: 'center',
+          justifyContent: 'flex-start',
         }}
       >
         {visibleItems.map((item) => (
@@ -193,11 +194,12 @@ export function SupportingDocsList({
               minWidth: 0,
               border: '1px solid #e5e7eb',
               borderRadius: 10,
-              padding: '6px 10px',
+              padding: '9px 10px',
               background: 'linear-gradient(180deg, #ffffff 0%, #fafcff 100%)',
-              minHeight: 38,
-              maxWidth: '100%',
-              flex: '1 1 220px',
+              minHeight: 46,
+              width: 'min(100%, 260px)',
+              maxWidth: 260,
+              flex: '0 1 260px',
               boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
             }}
           >

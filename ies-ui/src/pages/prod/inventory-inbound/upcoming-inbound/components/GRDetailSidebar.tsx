@@ -39,6 +39,7 @@ import {
   getReceiptDisplayStatusColor,
   getReceiptApprovedGrNumber,
   getReceiptIrNumber,
+  getReceiptPOReferences,
   groupReceiptItemsByPO,
   summarizePOReferences,
   summarizeSuppliers,
@@ -301,10 +302,16 @@ export function GRDetailSidebar({
   const reviewerDateLabel = reviewerLabel === 'QC Reviewed By' ? 'QC Reviewed Date' : 'Approved Date';
   const displayedStatus = getReceiptDisplayStatus(receipt);
   const approvedGrNumber = getReceiptApprovedGrNumber(receipt);
+  const poReferenceValue =
+    getReceiptPOReferences(receipt).length > 0 ? (
+      summarizePOReferences(receipt)
+    ) : (
+      <Text style={{ color: '#ff4d4f', fontWeight: 600 }}>No PO</Text>
+    );
   const shortMetadataItems: ReceiptMetadataItem[] = [
     { label: 'IR Number', value: getReceiptIrNumber(receipt), emphasize: true },
     ...(approvedGrNumber ? [{ label: 'GR Number', value: approvedGrNumber, emphasize: true }] : []),
-    { label: 'PO Reference', value: summarizePOReferences(receipt), emphasize: true },
+    { label: 'PO Reference', value: poReferenceValue, emphasize: true },
     { label: 'Supplier', value: summarizeSuppliers(receipt) },
     { label: 'Type', value: receipt.receiptType },
     {

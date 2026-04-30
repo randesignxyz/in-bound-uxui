@@ -1,7 +1,8 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Badge, Tag, Typography } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
+import type { ReactNode } from 'react';
 import {
   GoodsReceipt,
   InboundHistoryStatus,
@@ -25,8 +26,10 @@ interface InboundGRTableProps {
   onViewDetail: (gr: GoodsReceipt) => void;
   typeFilter: 'ALL' | 'Planned' | 'Unplanned';
   statusFilter: 'ALL' | InboundHistoryStatus;
+  headerTitle?: ReactNode;
   hideSourceAndPoLink?: boolean;
   showNotificationBadge?: boolean;
+  onRefresh?: () => Promise<void> | void;
 }
 
 export function InboundGRTable({
@@ -34,10 +37,13 @@ export function InboundGRTable({
   onViewDetail,
   typeFilter,
   statusFilter,
+  headerTitle,
   hideSourceAndPoLink = false,
   showNotificationBadge = false,
+  onRefresh,
 }: InboundGRTableProps) {
   const actionRef = useRef<ActionType>();
+  const originalReloadRef = useRef<ActionType['reload']>();
 
   const filteredReceipts = useMemo(() => {
     let data = receipts;
@@ -89,7 +95,7 @@ export function InboundGRTable({
         getReceiptPOReferences(r).length > 0 ? (
           summarizePOReferences(r)
         ) : (
-          <Text style={{ color: '#ff4d4f', fontWeight: 600 }}>No PO</Text>
+          <Text style={{ color: '#ff4d4f', fontWeight: 600, fontSize: '110%' }}>No PO</Text>
         ),
     },
     {
@@ -158,16 +164,32 @@ export function InboundGRTable({
     },
   ];
 
+  useEffect(() => {
+    if (!actionRef.current || !onRefresh) {
+      return;
+    }
+
+    if (!originalReloadRef.current) {
+      originalReloadRef.current = actionRef.current.reload?.bind(actionRef.current);
+    }
+
+    actionRef.current.reload = async (resetPageIndex?: boolean) => {
+      await onRefresh();
+      return originalReloadRef.current?.(resetPageIndex);
+    };
+  }, [onRefresh]);
+
   return (
     <ProTable<GoodsReceipt>
       actionRef={actionRef}
+      headerTitle={headerTitle}
       columns={columns}
       dataSource={filteredReceipts}
       rowKey={(record) => record.receivingNumber || record.grNumber}
       bordered
       size="small"
       search={false}
-      options={{ density: false, reload: false, setting: false }}
+      options={{ density: false, setting: false }}
       pagination={{ pageSize: 10, showSizeChanger: true }}
       onRow={(record) => ({
         onClick: () => onViewDetail(record),

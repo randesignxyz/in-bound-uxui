@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Tag, Typography } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
@@ -21,6 +21,7 @@ interface GRQueueTableProps {
   headerTitle?: ReactNode;
   toolbarExtra?: ReactNode;
   statusMode?: 'legacy' | 'qc';
+  onRefresh?: () => Promise<void> | void;
 }
 
 const statusColor: Record<LegacyGRStatus, string> = {
@@ -38,8 +39,10 @@ export function GRQueueTable({
   headerTitle,
   toolbarExtra,
   statusMode = 'legacy',
+  onRefresh,
 }: GRQueueTableProps) {
   const actionRef = useRef<ActionType>();
+  const originalReloadRef = useRef<ActionType['reload']>();
   const toolbarContent = toolbarExtra ? [toolbarExtra] : headerTitle ? [<div key="spacer" style={{ minHeight: 32 }} />] : [];
   const showApprovedGrColumn = receipts.some((receipt) => getReceiptApprovedGrNumber(receipt));
 
@@ -70,7 +73,7 @@ export function GRQueueTable({
         getReceiptPOReferences(row).length > 0 ? (
           summarizePOReferences(row)
         ) : (
-          <Text style={{ color: '#ff4d4f', fontWeight: 600 }}>No PO</Text>
+          <Text style={{ color: '#ff4d4f', fontWeight: 600, fontSize: '110%' }}>No PO</Text>
         ),
     },
     {
@@ -130,6 +133,21 @@ export function GRQueueTable({
       },
     },
   ];
+
+  useEffect(() => {
+    if (!actionRef.current || !onRefresh) {
+      return;
+    }
+
+    if (!originalReloadRef.current) {
+      originalReloadRef.current = actionRef.current.reload?.bind(actionRef.current);
+    }
+
+    actionRef.current.reload = async (resetPageIndex?: boolean) => {
+      await onRefresh();
+      return originalReloadRef.current?.(resetPageIndex);
+    };
+  }, [onRefresh]);
 
   return (
     <ProTable<GoodsReceipt>

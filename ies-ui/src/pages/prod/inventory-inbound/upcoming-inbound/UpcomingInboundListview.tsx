@@ -79,7 +79,8 @@ const { Text } = Typography;
 
 type InboundViewMode = 'operations' | 'history';
 type InboundWorkspaceRole = 'WAREHOUSE_STAFF' | 'QC' | 'WAREHOUSE_SUPERVISOR';
-type HistoryStatusFilter = 'ALL' | InboundHistoryStatus;
+type SupervisorHistoryStatusFilter = 'SUPERVISOR_PENDING' | 'QC_PENDING' | 'QC_REJECTED';
+type HistoryStatusFilter = 'ALL' | InboundHistoryStatus | SupervisorHistoryStatusFilter;
 type QcQueueStatusFilter = QcQueueStatus | 'All';
 type DashboardSummaryViewMode = InboundDashboardSummaryRange | 'CUSTOM';
 type DashboardStatCard = {
@@ -115,7 +116,9 @@ const warehouseHistoryStatusOptions: Array<{ label: string; value: HistoryStatus
 
 const supervisorHistoryStatusOptions: Array<{ label: string; value: HistoryStatusFilter }> = [
   { label: 'All Status', value: 'ALL' },
-  { label: 'Pending', value: 'Pending' },
+  { label: 'Pending Approval', value: 'SUPERVISOR_PENDING' },
+  { label: 'QC Pending', value: 'QC_PENDING' },
+  { label: 'QC Rejected', value: 'QC_REJECTED' },
   { label: 'Complete', value: 'Complete' },
   { label: 'Rejected', value: 'Rejected' },
 ];
@@ -208,6 +211,40 @@ function sortPurchaseOrdersByLatestExpectedDate(purchaseOrders: PurchaseOrder[])
 
     return right.poNumber.localeCompare(left.poNumber);
   });
+}
+
+function getDefaultHistoryStatusFilter(role: InboundWorkspaceRole): HistoryStatusFilter {
+  return role === 'WAREHOUSE_SUPERVISOR' ? 'SUPERVISOR_PENDING' : 'ALL';
+}
+
+function matchesSupervisorHistoryStatusFilter(
+  receipt: GoodsReceipt,
+  filter: HistoryStatusFilter,
+): boolean {
+  if (filter === 'ALL') {
+    return true;
+  }
+
+  if (filter === 'SUPERVISOR_PENDING') {
+    return receipt.processState === 'PENDING_SUPERVISOR_REVIEW';
+  }
+
+  if (filter === 'QC_PENDING') {
+    return receipt.processState === 'QC_PENDING';
+  }
+
+  if (filter === 'QC_REJECTED') {
+    return receipt.processState === 'CORRECTION_REQUIRED' || receipt.processState === 'MISMATCH_EXCEPTION';
+  }
+
+  return getInboundHistoryStatus(receipt) === filter;
+}
+
+function getSupervisorSortPriority(receipt: GoodsReceipt): number {
+  if (receipt.processState === 'PENDING_SUPERVISOR_REVIEW') return 0;
+  if (receipt.processState === 'QC_PENDING') return 1;
+  if (receipt.processState === 'CORRECTION_REQUIRED' || receipt.processState === 'MISMATCH_EXCEPTION') return 2;
+  return 3;
 }
 
 export default function UpcomingInboundListview() {
@@ -650,11 +687,7 @@ export default function UpcomingInboundListview() {
   );
 
   const supervisorStatusReceipts = useMemo(
-    () =>
-      receipts.filter((receipt) => {
-        const status = getInboundHistoryStatus(receipt);
-        return status === 'Pending' || status === 'Complete' || status === 'Rejected';
-      }),
+    () => receipts,
     [receipts],
   );
 
@@ -708,7 +741,11 @@ export default function UpcomingInboundListview() {
       }
     } else {
       if (historyStatusFilter !== 'ALL') {
-        data = data.filter((receipt) => getInboundHistoryStatus(receipt) === historyStatusFilter);
+        data = data.filter((receipt) =>
+          activeRole === 'WAREHOUSE_SUPERVISOR'
+            ? matchesSupervisorHistoryStatusFilter(receipt, historyStatusFilter)
+            : getInboundHistoryStatus(receipt) === historyStatusFilter,
+        );
       }
 
       if (queueSourceFilter === 'STANDARD') {
@@ -718,7 +755,16 @@ export default function UpcomingInboundListview() {
       }
     }
 
-    return data.sort((a, b) => b.createdDate.localeCompare(a.createdDate));
+    return data.sort((a, b) => {
+      if (activeRole === 'WAREHOUSE_SUPERVISOR') {
+        const priorityDiff = getSupervisorSortPriority(a) - getSupervisorSortPriority(b);
+        if (priorityDiff !== 0) {
+          return priorityDiff;
+        }
+      }
+
+      return b.createdDate.localeCompare(a.createdDate);
+    });
   }, [
     qcRelevantReceipts,
     qcStatusFilter,
@@ -857,7 +903,7 @@ export default function UpcomingInboundListview() {
     setDashboardPeriodFilter(null);
   };
 
-  const resetWorkspaceFilters = () => {
+  const resetWorkspaceFilters = (role: InboundWorkspaceRole = activeRole) => {
     setSelectedWarehousePONumbers([]);
     setPOSearchValue('');
     setPOVendorFilter('ALL');
@@ -868,7 +914,7 @@ export default function UpcomingInboundListview() {
     setQueueSourceFilter('ALL');
     setQcStatusFilter('Pending');
     setHistoryTypeFilter('ALL');
-    setHistoryStatusFilter('ALL');
+    setHistoryStatusFilter(getDefaultHistoryStatusFilter(role));
     resetDashboardFilters();
   };
 
@@ -894,7 +940,7 @@ export default function UpcomingInboundListview() {
     if (nextRole === 'QC') {
       setInboundView('operations');
     }
-    resetWorkspaceFilters();
+    resetWorkspaceFilters(nextRole);
   };
 
   const handleViewPODetail = async (po: PurchaseOrder) => {
@@ -1250,6 +1296,17 @@ export default function UpcomingInboundListview() {
     }
   }, [poVendorFilter, warehouseVendorOptions]);
 
+  const previousRoleRef = useRef<InboundWorkspaceRole | null>(null);
+
+  useEffect(() => {
+    if (previousRoleRef.current === activeRole) {
+      return;
+    }
+
+    previousRoleRef.current = activeRole;
+    setHistoryStatusFilter(getDefaultHistoryStatusFilter(activeRole));
+  }, [activeRole]);
+
   const lastStatusRefreshKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -1345,11 +1402,11 @@ export default function UpcomingInboundListview() {
             count={warehouseRejectedReceiptCount}
             style={{
               backgroundColor: '#ff4d4f',
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: 700,
-              minWidth: 24,
-              height: 24,
-              lineHeight: '24px',
+              minWidth: 20,
+              height: 20,
+              lineHeight: '20px',
               boxShadow: '0 0 0 1px #fff',
             }}
           />
@@ -1380,10 +1437,14 @@ export default function UpcomingInboundListview() {
       data = data.filter((receipt) => receipt.receiptType === historyTypeFilter);
     }
     if (historyStatusFilter !== 'ALL') {
-      data = data.filter((receipt) => getInboundHistoryStatus(receipt) === historyStatusFilter);
+      data = data.filter((receipt) =>
+        activeRole === 'WAREHOUSE_SUPERVISOR'
+          ? matchesSupervisorHistoryStatusFilter(receipt, historyStatusFilter)
+          : getInboundHistoryStatus(receipt) === historyStatusFilter,
+      );
     }
     return data.length;
-  }, [historyReceipts, historyStatusFilter, historyTypeFilter]);
+  }, [activeRole, historyReceipts, historyStatusFilter, historyTypeFilter]);
   const historyHeaderTitle =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Good Receipt' : 'Inbound Receiving';
   const historyStatusFilterOptions =
@@ -1806,6 +1867,7 @@ export default function UpcomingInboundListview() {
                     selectedRowKeys={selectedWarehousePONumbers}
                     lockedSupplier={selectedWarehousePOVendor}
                     onSelectionChange={handleWarehousePOSelectionChange}
+                    onRefresh={loadInboundData}
                   />
 
                   {awaitingPOLinkReceipts.length > 0 && (
@@ -1931,6 +1993,7 @@ export default function UpcomingInboundListview() {
                   receipts={filteredRoleQueue}
                   onViewDetail={handleOpenGRDetail}
                   statusMode={activeRole === 'QC' ? 'qc' : 'legacy'}
+                  onRefresh={loadInboundData}
                   headerTitle={
                     <div style={{ paddingLeft: 8 }}>
                       <Text strong>{`Inbound Receiving (${filteredRoleQueue.length})`}</Text>
@@ -1944,14 +2007,15 @@ export default function UpcomingInboundListview() {
           {/* ── GR History View ── */}
           {effectiveInboundView === 'history' && (
             <Card size="small" style={{ marginBottom: 16 }} bodyStyle={{ padding: 0 }}>
-              <div style={{ padding: '16px 16px 12px' }}>{inboundReceivingHeaderTitle}</div>
               <InboundGRTable
                 receipts={historyReceipts}
                 onViewDetail={handleOpenGRDetail}
                 typeFilter={historyTypeFilter}
                 statusFilter={historyStatusFilter}
+                headerTitle={inboundReceivingHeaderTitle}
                 hideSourceAndPoLink={activeRole === 'WAREHOUSE_STAFF' || activeRole === 'WAREHOUSE_SUPERVISOR'}
                 showNotificationBadge={activeRole === 'WAREHOUSE_STAFF'}
+                onRefresh={loadInboundData}
               />
             </Card>
           )}

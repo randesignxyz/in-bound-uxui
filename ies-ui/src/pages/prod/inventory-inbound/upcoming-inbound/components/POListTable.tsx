@@ -1,4 +1,4 @@
-import { useRef, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
 import { Flex, Progress, Tag } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
@@ -12,6 +12,7 @@ interface POListTableProps {
   selectedRowKeys?: string[];
   lockedSupplier?: string;
   onSelectionChange?: (selectedRowKeys: string[]) => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
 export function POListTable({
@@ -22,8 +23,10 @@ export function POListTable({
   selectedRowKeys = [],
   lockedSupplier,
   onSelectionChange,
+  onRefresh,
 }: POListTableProps) {
   const actionRef = useRef<ActionType>();
+  const originalReloadRef = useRef<ActionType['reload']>();
   const hasActiveSelection = selectedRowKeys.length > 0;
   const getRowKey = (purchaseOrder: PurchaseOrder) => `${purchaseOrder.businessUnit || 'UNSPECIFIED'}::${purchaseOrder.poNumber}`;
   const isSelectionLockedRow = (purchaseOrder: PurchaseOrder) =>
@@ -158,6 +161,21 @@ export function POListTable({
       style: { cursor: hasActiveSelection ? 'default' : 'pointer' },
     }),
   }));
+
+  useEffect(() => {
+    if (!actionRef.current || !onRefresh) {
+      return;
+    }
+
+    if (!originalReloadRef.current) {
+      originalReloadRef.current = actionRef.current.reload?.bind(actionRef.current);
+    }
+
+    actionRef.current.reload = async (resetPageIndex?: boolean) => {
+      await onRefresh();
+      return originalReloadRef.current?.(resetPageIndex);
+    };
+  }, [onRefresh]);
 
   return (
     <ProTable<PurchaseOrder>

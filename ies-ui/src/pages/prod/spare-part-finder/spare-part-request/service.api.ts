@@ -32,6 +32,7 @@ export interface SparePartRequestListApiItem {
   partName: string;
   description?: string;
   uom?: string | string[] | null;
+  kind?: string | null;
   category_id?: number | null;
   category?: { id?: number | null; category_name?: string | null } | string | null;
   stock: number;
@@ -39,6 +40,7 @@ export interface SparePartRequestListApiItem {
   imageId?: string[];
   isActive: boolean;
   businessUnit?: string | null;
+  stockStatus?: string | null;
   createdBy?: string;
   createdDate?: string;
   updatedBy?: string;
@@ -57,6 +59,7 @@ interface Location {
   reservedQty?: number;
   availableQty: number;
   reorderLevel: number;
+  stockStatus?: string | null;
   sapStock?: number | null;
   lastSyncedAt?: string | null;
 }
@@ -64,6 +67,17 @@ interface Location {
 type SparePartDetailParams = {
   id?: number;
   productId?: string;
+};
+
+export type UpdateSparePartDetailPayload = {
+  id?: number;
+  productId?: string;
+  partName: string;
+  description?: string;
+  uom: string[];
+  kind?: string;
+  categoryId?: number;
+  isActive: boolean;
 };
         
 type SparePartRequestPageParams = {
@@ -108,6 +122,12 @@ const SparePartRequestTestAction = {
     actionName: 'update-spare-part-images',
     payload,
   }),
+  updateDetail: (payload: UpdateSparePartDetailPayload): ServiceApiType<UpdateSparePartDetailPayload> => ({
+    type: 'EXEC',
+    endpoint: 'PROD',
+    actionName: 'update-spare-part-detail',
+    payload,
+  }),
   deleteImages: (payload: { productId: string; images: string[] }): ServiceApiType<{ productId: string; images: string[] }> => ({
     type: 'EXEC',
     endpoint: 'PROD',
@@ -117,10 +137,23 @@ const SparePartRequestTestAction = {
   // createRequest: 
 };
 
-const mapStockStatus = (stock: number): SparePartStockStatus => {
+const mapStockStatus = (stock: number, reorderLevel?: number): SparePartStockStatus => {
   if (stock <= 0) return 'no-stock';
-  if (stock <= 2) return 'low';
+  if ((reorderLevel ?? 0) > 0 && stock <= (reorderLevel ?? 0)) return 'low';
   return 'available';
+};
+
+const mapBackendStockStatus = (status?: string | null): SparePartStockStatus | undefined => {
+  switch (status?.trim().toUpperCase()) {
+    case 'OUT_OF_STOCK':
+      return 'no-stock';
+    case 'LOW_STOCK':
+      return 'low';
+    case 'IN_STOCK':
+      return 'available';
+    default:
+      return undefined;
+  }
 };
 
 const normalizeUomOptions = (value?: string | string[] | null): string[] => {
@@ -159,6 +192,8 @@ const resolveCategoryId = (item: SparePartRequestListApiItem): number | undefine
 export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string): SparePartRequestItem => {
   const firstLocation = item.locations?.[0];
   const stock = firstLocation?.availableQty ?? item.avalailableStock ?? item.stock ?? 0;
+  const reorderLevel = firstLocation?.reorderLevel;
+  const backendStockStatus = mapBackendStockStatus(firstLocation?.stockStatus ?? item.stockStatus);
   const uomOptions = normalizeUomOptions(item.uom);
 
   return {
@@ -168,14 +203,17 @@ export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: s
     productId: item.productId,
     partName: item.partName,
     description: item.description,
+    kind: item.kind || undefined,
     categoryId: resolveCategoryId(item),
     category: resolveCategoryName(item.category),
     uom: uomOptions[0],
     uomOptions,
     stock,
     businessUnit: item.businessUnit || '-',
-    status: mapStockStatus(stock),
+    isActive: item.isActive,
+    status: backendStockStatus || mapStockStatus(stock, reorderLevel),
     warehouse: firstLocation?.warehouseCode || fallbackWarehouse || '',
+    stockStatus: firstLocation?.stockStatus || item.stockStatus || undefined,
     locations: item.locations || [],
     tab: 'spare-list',
     createdDate: item.createdDate,
@@ -230,6 +268,11 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
     );
     const payload = response?.data ?? response;
     return mapItem(payload as SparePartRequestListApiItem);
+  },
+  updateDetail: async (payload: UpdateSparePartDetailPayload): Promise<SparePartRequestItem> => {
+    const response = await singleRequest<any>(SparePartRequestTestAction.updateDetail(payload))(requestAction);
+    const nextPayload = response?.data ?? response;
+    return mapItem(nextPayload as SparePartRequestListApiItem);
   },
   deleteImages: async (productId: string, images: string[]): Promise<SparePartRequestItem> => {
     const response = await singleRequest<any>(SparePartRequestTestAction.deleteImages({ productId, images }))(

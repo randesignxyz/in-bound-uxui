@@ -304,6 +304,7 @@ export default function UpcomingInboundListview() {
     totalIrGrs: 0,
   });
   const hasInitializedDashboardSummary = useRef(false);
+  const hasOpenedReceiptFromQueryRef = useRef(false);
   const inboundVisibleBusinessUnitsKey = inboundVisibleBusinessUnits.join('|');
 
   // GR state (mirrors WarehouseStaffUI)
@@ -1018,6 +1019,36 @@ export default function UpcomingInboundListview() {
     }
   };
 
+  const clearReceiptQueryParams = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const nextUrl = new URL(window.location.href);
+    let changed = false;
+    ['inboundReceiptId', 'inboundView'].forEach((key) => {
+      if (nextUrl.searchParams.has(key)) {
+        nextUrl.searchParams.delete(key);
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+    }
+  }, []);
+
+  const handleOpenReceiptInNewTab = useCallback((receiptId: number) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set('inboundReceiptId', String(receiptId));
+    nextUrl.searchParams.set('inboundView', 'operations');
+    window.open(nextUrl.toString(), '_blank', 'noopener,noreferrer');
+  }, []);
+
   const handleOpenGRDetail = async (gr: GoodsReceipt) => {
     const qcStatus = activeRole === 'QC' ? getQcQueueStatus(gr) : null;
     if (!gr.id) {
@@ -1044,6 +1075,34 @@ export default function UpcomingInboundListview() {
       message.error(error?.message || 'Failed to load inbound receiving detail.');
     }
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || hasOpenedReceiptFromQueryRef.current) {
+      return;
+    }
+
+    const receiptIdParam = window.location.search
+      ? new URLSearchParams(window.location.search).get('inboundReceiptId')
+      : null;
+    const receiptId = Number(receiptIdParam);
+    if (!receiptIdParam || Number.isNaN(receiptId) || receiptId <= 0) {
+      return;
+    }
+
+    hasOpenedReceiptFromQueryRef.current = true;
+    setInboundView('operations');
+
+    void (async () => {
+      try {
+        const detail = await services.detailGoodsReceipt(receiptId);
+        setSelectedPODetail(null);
+        setSelectedGR(normalizeReceiptForUI(detail));
+      } catch (error: any) {
+        clearReceiptQueryParams();
+        message.error(error?.message || 'Failed to open inbound receiving detail.');
+      }
+    })();
+  }, [clearReceiptQueryParams, services]);
 
   const mapDraftToSaveInput = (data: any): InboundSaveGoodsReceiptInput => {
     const canonicalPoReferences = Array.from(
@@ -2117,11 +2176,15 @@ export default function UpcomingInboundListview() {
             onClose={() => setSelectedPODetail(null)}
             po={selectedPODetail}
             onCreateGR={(po) => void handleCreateGR([po])}
+            onOpenReceiptInNewTab={handleOpenReceiptInNewTab}
           />
 
           <GRDetailSidebar
             open={selectedGR !== null}
-            onClose={() => setSelectedGR(null)}
+            onClose={() => {
+              setSelectedGR(null);
+              clearReceiptQueryParams();
+            }}
             receipt={selectedGR}
             viewerRole={activeRole}
             onUpdateProcessState={handleUpdateGRProcessState}

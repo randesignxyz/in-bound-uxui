@@ -252,6 +252,7 @@ function mapInboundPoReceiptLogItem(
 
 function mapInboundPoReceiptLog(log: any): NonNullable<UpcomingInboundPurchaseOrder['receiptLogs']>[number] {
   return {
+    receiptId: readValue<number | null>(log, 'receiptId', 'receipt_id') ?? undefined,
     receivingNumber: readString(log, 'receivingNumber', 'receiving_number'),
     statusLabel: readString(log, 'statusLabel', 'status_label'),
     receivedBy: readValue<string | null>(log, 'receivedBy', 'received_by') ?? undefined,

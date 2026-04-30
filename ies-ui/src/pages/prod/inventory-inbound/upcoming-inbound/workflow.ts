@@ -73,6 +73,7 @@ export interface POReceiptLogItem {
 }
 
 export interface POReceiptLog {
+  receiptId?: number;
   receivingNumber: string;
   statusLabel: string;
   receivedBy?: string;

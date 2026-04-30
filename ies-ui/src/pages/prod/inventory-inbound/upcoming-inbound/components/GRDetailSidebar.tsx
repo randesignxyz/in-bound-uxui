@@ -1075,6 +1075,8 @@ export function GRDetailSidebar({
               <SupportingDocsList
                 docs={readonlySupportingDocs}
                 emptyText={isMultiPOReceipt ? 'No QC documents attached.' : 'No receipt-level documents attached.'}
+                displayMode="grid"
+                collapsedLimit={5}
               />
             )}
           </div>

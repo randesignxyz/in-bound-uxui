@@ -997,6 +997,7 @@ export function GRCreationModal({
                           onRemoveFile={removeFile}
                           displayMode="grid"
                           collapsedLimit={5}
+                          fitCountInRow={4}
                         />
                       </div>
                     </div>
@@ -1174,6 +1175,7 @@ export function GRCreationModal({
                                     onRemoveFile={(uid) => removePoFile(group.poNumber, uid)}
                                     displayMode="grid"
                                     collapsedLimit={5}
+                                    fitCountInRow={4}
                                   />
         </div>
         <SupportingDocPreviewModal

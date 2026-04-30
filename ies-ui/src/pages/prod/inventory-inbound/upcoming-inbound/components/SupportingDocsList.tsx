@@ -38,6 +38,7 @@ interface SupportingDocsListProps {
   onRemoveFile?: (uid: string) => void;
   displayMode?: 'list' | 'grid';
   collapsedLimit?: number;
+  fitCountInRow?: number;
 }
 
 function formatDisplayFileName(fileName: string) {
@@ -75,6 +76,7 @@ export function SupportingDocsList({
   onRemoveFile,
   displayMode = 'list',
   collapsedLimit = 4,
+  fitCountInRow,
 }: SupportingDocsListProps) {
   const [expanded, setExpanded] = useState(false);
   const [hoveredAction, setHoveredAction] = useState<string | null>(null);
@@ -175,6 +177,8 @@ export function SupportingDocsList({
 
     const visibleItems = expanded ? items : items.slice(0, collapsedLimit);
     const remainingItems = items.length - collapsedLimit;
+    const shouldFitItemsInRow = Boolean(fitCountInRow && visibleItems.length >= fitCountInRow);
+    const fittedItemWidth = fitCountInRow ? `calc((100% - ${(fitCountInRow - 1) * 8}px) / ${fitCountInRow})` : undefined;
 
     return (
       <>
@@ -197,9 +201,9 @@ export function SupportingDocsList({
               padding: '9px 10px',
               background: 'linear-gradient(180deg, #ffffff 0%, #fafcff 100%)',
               minHeight: 46,
-              width: 'min(100%, 260px)',
-              maxWidth: 260,
-              flex: '0 1 260px',
+              width: shouldFitItemsInRow ? fittedItemWidth : 'min(100%, 260px)',
+              maxWidth: shouldFitItemsInRow ? fittedItemWidth : 260,
+              flex: shouldFitItemsInRow ? `0 1 ${fittedItemWidth}` : '0 1 260px',
               boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
             }}
           >

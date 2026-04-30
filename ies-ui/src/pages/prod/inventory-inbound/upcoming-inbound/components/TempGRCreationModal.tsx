@@ -1,27 +1,25 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Button,
   Card,
-  Checkbox,
   Col,
   DatePicker,
   Descriptions,
   Form,
   Input,
   InputNumber,
+  Modal,
   Row,
   Select,
   Space,
   Table,
   Tag,
-  Typography,
   Upload,
   message,
 } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { CloseCircleFilled, DeleteOutlined, InboxOutlined, PlusOutlined, WarningFilled } from '@ant-design/icons';
+import { DeleteOutlined, InboxOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
   buildReceiptExceptionReason,
@@ -32,25 +30,23 @@ import type { GRItem } from '../workflow';
 import type { UpcomingInboundGoodsReceipt } from '../data';
 import {
   applyUploadedSupportingDocs,
+  getSupportingUploadFilePreview,
   hasIncompleteAppFilesUpload,
   normalizeUploadFileList,
-  previewSupportingUploadFile,
   stageSupportingDocBeforeUpload,
   supportingDocsToUploadFiles,
   uploadPendingSupportingDocs,
   uploadFilesToSupportingDocs,
 } from '../supportingDocs';
 import { FullscreenModal } from './FullscreenModal';
+import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
 import { SupportingDocsList } from './SupportingDocsList';
-
-const { Text } = Typography;
 
 interface TempGRCreationModalProps {
   open: boolean;
   onClose: () => void;
   onSaveDraft: (data: Record<string, unknown>) => Promise<boolean> | boolean;
   onSubmit: (data: Record<string, unknown>) => Promise<boolean> | boolean;
-  initialMissingPOHint?: string;
   initialReceipt?: UpcomingInboundGoodsReceipt | null;
   correctionMode?: boolean;
   availableBusinessUnits?: string[];
@@ -87,7 +83,6 @@ export function TempGRCreationModal({
   onClose,
   onSaveDraft,
   onSubmit,
-  initialMissingPOHint,
   initialReceipt,
   correctionMode = false,
   availableBusinessUnits = [],
@@ -97,12 +92,15 @@ export function TempGRCreationModal({
   const [supplier, setSupplier] = useState('');
   const [businessUnit, setBusinessUnit] = useState('');
   const [deliveryNoteNumber, setDeliveryNoteNumber] = useState('');
-  const [pendingPOReason, setPendingPOReason] = useState('');
   const [items, setItems] = useState<GRItem[]>([buildEmptyItem()]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
-  const [storedOnHoldConfirmed, setStoredOnHoldConfirmed] = useState(false);
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewState, setPreviewState] = useState<{
+    fileName?: string;
+    url?: string;
+    revokeOnClose?: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -112,7 +110,6 @@ export function TempGRCreationModal({
       setBusinessUnit(initialReceipt.businessUnit || availableBusinessUnits[0] || '');
       setSupplier(initialReceipt.supplier || '');
       setDeliveryNoteNumber(initialReceipt.deliveryNoteNumber || '');
-      setPendingPOReason(initialReceipt.pendingPOReason || initialMissingPOHint || '');
       setItems(
         initialReceipt.items.map((item) => ({
           ...item,
@@ -121,7 +118,6 @@ export function TempGRCreationModal({
         })),
       );
       setUploadedFiles(supportingDocsToUploadFiles(initialReceipt.documentChecklist.supportingDocs || []));
-      setStoredOnHoldConfirmed(true);
       setErrors({});
       return;
     }
@@ -130,12 +126,10 @@ export function TempGRCreationModal({
     setBusinessUnit(availableBusinessUnits.length === 1 ? availableBusinessUnits[0] : '');
     setSupplier('');
     setDeliveryNoteNumber('');
-    setPendingPOReason(initialMissingPOHint || '');
     setItems([buildEmptyItem()]);
     setUploadedFiles([]);
-    setStoredOnHoldConfirmed(false);
     setErrors({});
-  }, [availableBusinessUnits, initialMissingPOHint, initialReceipt, open]);
+  }, [availableBusinessUnits, initialReceipt, open]);
 
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     setItems((prev) =>
@@ -144,9 +138,6 @@ export function TempGRCreationModal({
 
         if (field === 'poQty' || field === 'receiveQty') {
           const nextValue = Math.max(0, Number(value) || 0);
-          if (field === 'receiveQty' && nextValue > 0 && item.isMissing) {
-            return { ...item, receiveQty: nextValue, isMissing: false, missingRemark: '' };
-          }
           return { ...item, [field]: nextValue } as GRItem;
         }
 
@@ -168,40 +159,6 @@ export function TempGRCreationModal({
 
       return nextErrors;
     });
-  }, []);
-
-  const toggleMissingItem = useCallback((index: number) => {
-    setItems((prev) =>
-      prev.map((item, itemIndex) => {
-        if (itemIndex !== index) return item;
-        if (item.isMissing) {
-          return {
-            ...item,
-            isMissing: false,
-            missingRemark: '',
-            receiveQty: item.receiveQty > 0 ? item.receiveQty : item.poQty,
-          };
-        }
-
-        return {
-          ...item,
-          isMissing: true,
-          receiveQty: 0,
-          productDate: '',
-          expiryDate: '',
-          batchNumber: '',
-          barcode: '',
-        };
-      }),
-    );
-    setErrors((prev) => ({
-      ...prev,
-      [`receiveQty-${index}`]: false,
-      [`productDate-${index}`]: false,
-      [`expiryDate-${index}`]: false,
-      [`batchNumber-${index}`]: false,
-      [`missingRemark-${index}`]: false,
-    }));
   }, []);
 
   const addItemRow = () => setItems((prev) => [...prev, buildEmptyItem()]);
@@ -230,8 +187,6 @@ export function TempGRCreationModal({
     if (!supplier.trim()) nextErrors.supplier = true;
     if (availableBusinessUnits.length > 1 && !businessUnit.trim()) nextErrors.businessUnit = true;
     if (!deliveryNoteNumber.trim()) nextErrors.deliveryNote = true;
-    if (!pendingPOReason.trim()) nextErrors.pendingPOReason = true;
-    if (!storedOnHoldConfirmed) nextErrors.onHoldConfirm = true;
 
     const itemCodes = new Set<string>();
 
@@ -248,11 +203,6 @@ export function TempGRCreationModal({
       }
 
       if (item.poQty <= 0) nextErrors[`poQty-${index}`] = true;
-
-      if (item.isMissing) {
-        if (!item.missingRemark?.trim()) nextErrors[`missingRemark-${index}`] = true;
-        return;
-      }
 
       if (item.receiveQty <= 0) nextErrors[`receiveQty-${index}`] = true;
       if (!item.productDate) nextErrors[`productDate-${index}`] = true;
@@ -322,8 +272,6 @@ export function TempGRCreationModal({
         pmrmStockCardForm: false,
         supportingDocs,
       },
-      storedOnHoldConfirmed,
-      pendingPOReason: pendingPOReason.trim(),
     };
   };
 
@@ -346,24 +294,49 @@ export function TempGRCreationModal({
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    setIsSubmitting(true);
-    try {
-      const supportingDocs = await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
-      setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
-      const shouldClose = await onSubmit(buildPayload(correctionMode ? 'draft' : 'submit', supportingDocs));
-      if (shouldClose) {
-        onClose();
-      }
-    } catch (error: any) {
-      message.error(error?.message || 'Failed to prepare supporting documents.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    const currentHasDiscrepancy = items.some((item) => item.poQty > item.receiveQty);
+    Modal.confirm({
+      title: currentHasDiscrepancy ? 'Submit inbound exception?' : 'Submit to QC?',
+      content: currentHasDiscrepancy
+        ? 'This receipt has discrepancies and will be submitted with exception details.'
+        : 'This will submit the inbound receiving to QC for review.',
+      okText: 'Confirm',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        setIsSubmitting(true);
+        try {
+          const supportingDocs = await uploadPendingSupportingDocs(uploadedFiles, 'WAREHOUSE');
+          setUploadedFiles((prev) => applyUploadedSupportingDocs(prev, supportingDocs));
+          const shouldClose = await onSubmit(
+            buildPayload(correctionMode ? 'draft' : 'submit', supportingDocs),
+          );
+          if (shouldClose) {
+            onClose();
+          }
+        } catch (error: any) {
+          message.error(error?.message || 'Failed to prepare supporting documents.');
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+    });
   };
 
-  const missingItemsCount = items.filter((item) => item.isMissing).length;
-  const shortItemsCount = items.filter((item) => !item.isMissing && item.poQty > item.receiveQty).length;
-  const hasDiscrepancy = missingItemsCount > 0 || shortItemsCount > 0;
+  const handlePreviewFile = async (file: UploadFile) => {
+    const preview = await getSupportingUploadFilePreview(file);
+    if (preview) {
+      setPreviewState({
+        fileName: file.name,
+        url: preview.url,
+        revokeOnClose: preview.revokeOnClose,
+      });
+      return;
+    }
+
+    message.error('Preview is not available for this file.');
+  };
+
+  const hasDiscrepancy = items.some((item) => item.poQty > item.receiveQty);
 
   const itemColumns: ColumnsType<GRItem & { index: number }> = useMemo(
     () => [
@@ -371,67 +344,45 @@ export function TempGRCreationModal({
         title: 'Item',
         key: 'item',
         width: 240,
-        render: (_, record) => {
-          const shortQty = Math.max(0, record.poQty - record.receiveQty);
-
-          return (
-            <div
-              data-testid={`temp-gr-item-identity-${record.index}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}
-            >
-              <Input
-                placeholder="Item code"
-                value={record.code}
-                onChange={(event) => updateItem(record.index, 'code', event.target.value.toUpperCase())}
-                status={
-                  errors[`code-${record.index}`] || errors[`duplicate-${record.index}`]
-                    ? 'error'
-                    : undefined
-                }
-                style={{ width: 104, flex: '0 0 104px' }}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                {record.isMissing ? (
-                  <CloseCircleFilled style={{ color: '#ff4d4f', flex: 'none' }} />
-                ) : shortQty > 0 ? (
-                  <WarningFilled style={{ color: '#faad14', flex: 'none' }} />
-                ) : null}
-                <Input
-                  placeholder="Item name"
-                  value={record.name}
-                  onChange={(event) => updateItem(record.index, 'name', event.target.value)}
-                  status={errors[`name-${record.index}`] ? 'error' : undefined}
-                  style={{ flex: 1, minWidth: 0 }}
-                />
-              </div>
-            </div>
-          );
-        },
+        render: (_, record) => (
+          <div
+            data-testid={`temp-gr-item-identity-${record.index}`}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}
+          >
+            <Input
+              placeholder="Item code"
+              value={record.code}
+              onChange={(event) => updateItem(record.index, 'code', event.target.value)}
+              status={
+                errors[`code-${record.index}`] || errors[`duplicate-${record.index}`]
+                  ? 'error'
+                  : undefined
+              }
+              style={{ width: 120, flex: '0 0 120px' }}
+            />
+            <Input
+              placeholder="Item name"
+              value={record.name}
+              onChange={(event) => updateItem(record.index, 'name', event.target.value)}
+              status={errors[`name-${record.index}`] ? 'error' : undefined}
+              style={{ flex: 1, minWidth: 0 }}
+            />
+          </div>
+        ),
       },
       {
-        title: 'Doc Qty',
+        title: 'Qty',
         key: 'poQty',
         width: 92,
-        render: (_, record) => {
-          const shortQty = Math.max(0, record.poQty - record.receiveQty);
-
-          return (
-            <Space direction="vertical" size={4} style={{ width: '100%' }}>
-              <InputNumber
-                min={0}
-                value={record.poQty}
-                onChange={(value) => updateItem(record.index, 'poQty', value ?? 0)}
-                status={errors[`poQty-${record.index}`] ? 'error' : undefined}
-                style={{ width: '100%' }}
-              />
-              {record.isMissing ? (
-                <Text style={{ fontSize: 11, color: '#cf1322' }}>Missing item</Text>
-              ) : shortQty > 0 ? (
-                <Text style={{ fontSize: 11, color: '#ad6800' }}>Short by {shortQty}</Text>
-              ) : null}
-            </Space>
-          );
-        },
+        render: (_, record) => (
+          <InputNumber
+            min={0}
+            value={record.poQty}
+            onChange={(value) => updateItem(record.index, 'poQty', value ?? 0)}
+            status={errors[`poQty-${record.index}`] ? 'error' : undefined}
+            style={{ width: '100%' }}
+          />
+        ),
       },
       {
         title: 'Received',
@@ -444,7 +395,6 @@ export function TempGRCreationModal({
             onChange={(value) => updateItem(record.index, 'receiveQty', value ?? 0)}
             status={errors[`receiveQty-${record.index}`] ? 'error' : undefined}
             style={{ width: '100%' }}
-            disabled={record.isMissing}
           />
         ),
       },
@@ -476,7 +426,6 @@ export function TempGRCreationModal({
               Boolean(record.expiryDate) && current.isAfter(dayjs(record.expiryDate), 'day')
             }
             status={errors[`productDate-${record.index}`] ? 'error' : undefined}
-            disabled={record.isMissing}
           />
         ),
       },
@@ -495,7 +444,6 @@ export function TempGRCreationModal({
               Boolean(record.productDate) && current.isBefore(dayjs(record.productDate), 'day')
             }
             status={errors[`expiryDate-${record.index}`] ? 'error' : undefined}
-            disabled={record.isMissing}
           />
         ),
       },
@@ -508,48 +456,9 @@ export function TempGRCreationModal({
             value={record.batchNumber}
             onChange={(event) => updateItem(record.index, 'batchNumber', event.target.value)}
             status={errors[`batchNumber-${record.index}`] ? 'error' : undefined}
-            disabled={record.isMissing}
             placeholder="Batch"
           />
         ),
-      },
-      {
-        title: 'Status',
-        key: 'status',
-        width: 170,
-        render: (_, record) => {
-          const shortQty = Math.max(0, record.poQty - record.receiveQty);
-          return (
-            <Space direction="vertical" size={8} style={{ width: '100%' }}>
-              <Space wrap>
-                <Tag color={record.isMissing ? 'error' : shortQty > 0 ? 'warning' : 'success'}>
-                  {record.isMissing ? 'Missing' : shortQty > 0 ? 'Short' : 'OK'}
-                </Tag>
-                <Button
-                  size="small"
-                  type={record.isMissing ? 'default' : 'dashed'}
-                  danger={!record.isMissing}
-                  onClick={() => toggleMissingItem(record.index)}
-                >
-                  {record.isMissing ? 'Undo' : 'Missing'}
-                </Button>
-              </Space>
-              {record.isMissing ? (
-                <Input.TextArea
-                  autoSize={{ minRows: 1, maxRows: 3 }}
-                  placeholder="Remark"
-                  value={record.missingRemark}
-                  onChange={(event) => updateItem(record.index, 'missingRemark', event.target.value)}
-                  status={errors[`missingRemark-${record.index}`] ? 'error' : undefined}
-                />
-              ) : shortQty > 0 ? (
-                <Text type="secondary">Received less than document qty.</Text>
-              ) : (
-                <Text type="secondary">Quantity matches document.</Text>
-              )}
-            </Space>
-          );
-        },
       },
       {
         title: '',
@@ -566,12 +475,12 @@ export function TempGRCreationModal({
         ),
       },
     ],
-    [errors, items.length, toggleMissingItem, updateItem],
+    [errors, items.length, updateItem],
   );
 
   return (
     <FullscreenModal
-      title={correctionMode ? 'Warehouse Recheck Temporary Inbound Receiving' : 'Create Temporary Inbound Receiving'}
+      title={correctionMode ? 'Warehouse Recheck Temporary Inbound Receiving' : 'Receive without PO'}
       open={open}
       onCancel={onClose}
       footer={null}
@@ -649,20 +558,6 @@ export function TempGRCreationModal({
                   />
                 </Form.Item>
               </Col>
-              <Col span={16}>
-                <Form.Item
-                  label="Why SAP PO Is Missing"
-                  required
-                  validateStatus={errors.pendingPOReason ? 'error' : undefined}
-                  help={errors.pendingPOReason ? 'Required' : undefined}
-                >
-                  <Input
-                    value={pendingPOReason}
-                    onChange={(event) => setPendingPOReason(event.target.value)}
-                    placeholder="Explain why procurement has not created the SAP PO yet"
-                  />
-                </Form.Item>
-              </Col>
             </Row>
           </Form>
 
@@ -687,7 +582,7 @@ export function TempGRCreationModal({
                 dataSource={items.map((item, index) => ({
                   ...item,
                   index,
-                  key: `${item.code || 'row'}-${index}`,
+                  key: `temp-row-${index}`,
                 }))}
                 pagination={false}
                 scroll={{ x: 1360 }}
@@ -721,7 +616,7 @@ export function TempGRCreationModal({
                       removeFile(file.uid);
                       return true;
                     }}
-                    onPreview={(file) => previewSupportingUploadFile(file)}
+                    onPreview={(file) => void handlePreviewFile(file)}
                     accept=".pdf,.doc,.docx,image/*"
                     listType="text"
                   >
@@ -743,17 +638,6 @@ export function TempGRCreationModal({
             </Form.Item>
           </div>
 
-          <Form.Item
-            validateStatus={errors.onHoldConfirm ? 'error' : undefined}
-            help={errors.onHoldConfirm ? 'Required' : undefined}
-          >
-            <Checkbox
-              checked={storedOnHoldConfirmed}
-              onChange={(event) => setStoredOnHoldConfirmed(event.target.checked)}
-            >
-              I confirm received PM/RM is stored in On-Hold Warehouse before QC Approve.
-            </Checkbox>
-          </Form.Item>
         </div>
 
         <div
@@ -779,6 +663,13 @@ export function TempGRCreationModal({
           </Space>
         </div>
       </div>
+      <SupportingDocPreviewModal
+        open={Boolean(previewState)}
+        fileName={previewState?.fileName}
+        previewUrl={previewState?.url}
+        revokeOnClose={previewState?.revokeOnClose}
+        onClose={() => setPreviewState(null)}
+      />
     </FullscreenModal>
   );
 }

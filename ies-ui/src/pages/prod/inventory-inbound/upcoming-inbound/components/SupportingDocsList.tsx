@@ -12,9 +12,9 @@ import { Button, List, Space, Tag, Typography } from 'antd';
 import type { UploadFile } from 'antd';
 import {
   downloadSupportingDoc,
+  getSupportingDocPreview,
+  getSupportingUploadFilePreview,
   getUploadFileSource,
-  openSupportingDoc,
-  previewSupportingUploadFile,
 } from '../supportingDocs';
 import {
   getSupportingDocSourceColor,
@@ -22,6 +22,7 @@ import {
   type SupportingDocReference,
   type SupportingDocSource,
 } from '../workflow';
+import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
 
 const { Link, Text } = Typography;
 const GRID_ACTION_BASE_COLOR = '#8c8c8c';
@@ -37,6 +38,7 @@ interface SupportingDocsListProps {
   onRemoveFile?: (uid: string) => void;
   displayMode?: 'list' | 'grid';
   collapsedLimit?: number;
+  fitCountInRow?: number;
 }
 
 function formatDisplayFileName(fileName: string) {
@@ -74,10 +76,16 @@ export function SupportingDocsList({
   onRemoveFile,
   displayMode = 'list',
   collapsedLimit = 4,
+  fitCountInRow,
 }: SupportingDocsListProps) {
   const [expanded, setExpanded] = useState(false);
   const [hoveredAction, setHoveredAction] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
+  const [previewState, setPreviewState] = useState<{
+    fileName?: string;
+    url?: string;
+    revokeOnClose?: boolean;
+  } | null>(null);
   const items = files
     ? files.map((file) => ({
         key: file.uid,
@@ -86,7 +94,16 @@ export function SupportingDocsList({
         source: getUploadFileSource(file, fallbackSource) ?? undefined,
         isPending: !!file.originFileObj,
         isLegacy: !file.originFileObj && typeof file.response !== 'string',
-        onView: () => previewSupportingUploadFile(file),
+        onView: async () => {
+          const preview = await getSupportingUploadFilePreview(file);
+          if (preview) {
+            setPreviewState({
+              fileName: file.name,
+              url: preview.url,
+              revokeOnClose: preview.revokeOnClose,
+            });
+          }
+        },
         onRemove: onRemoveFile ? () => onRemoveFile(file.uid) : undefined,
       }))
     : (docs ?? []).map((doc, index) => ({
@@ -96,7 +113,16 @@ export function SupportingDocsList({
         source: doc.source ?? undefined,
         isPending: false,
         isLegacy: !doc.fileId,
-        onView: () => openSupportingDoc(doc),
+        onView: async () => {
+          const preview = await getSupportingDocPreview(doc);
+          if (preview) {
+            setPreviewState({
+              fileName: doc.fileName,
+              url: preview.url,
+              revokeOnClose: preview.revokeOnClose,
+            });
+          }
+        },
         onRemove: undefined,
       }));
 
@@ -151,14 +177,18 @@ export function SupportingDocsList({
 
     const visibleItems = expanded ? items : items.slice(0, collapsedLimit);
     const remainingItems = items.length - collapsedLimit;
+    const shouldFitItemsInRow = Boolean(fitCountInRow && visibleItems.length >= fitCountInRow);
+    const fittedItemWidth = fitCountInRow ? `calc((100% - ${(fitCountInRow - 1) * 8}px) / ${fitCountInRow})` : undefined;
 
     return (
-      <div
+      <>
+        <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: 8,
           alignItems: 'center',
+          justifyContent: 'flex-start',
         }}
       >
         {visibleItems.map((item) => (
@@ -168,11 +198,12 @@ export function SupportingDocsList({
               minWidth: 0,
               border: '1px solid #e5e7eb',
               borderRadius: 10,
-              padding: '6px 10px',
+              padding: '9px 10px',
               background: 'linear-gradient(180deg, #ffffff 0%, #fafcff 100%)',
-              minHeight: 38,
-              maxWidth: '100%',
-              flex: '1 1 220px',
+              minHeight: 46,
+              width: shouldFitItemsInRow ? fittedItemWidth : 'min(100%, 260px)',
+              maxWidth: shouldFitItemsInRow ? fittedItemWidth : 260,
+              flex: shouldFitItemsInRow ? `0 1 ${fittedItemWidth}` : '0 1 260px',
               boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
             }}
           >
@@ -328,7 +359,15 @@ export function SupportingDocsList({
             See less
           </Button>
         )}
-      </div>
+        </div>
+        <SupportingDocPreviewModal
+          open={Boolean(previewState)}
+          fileName={previewState?.fileName}
+          previewUrl={previewState?.url}
+          revokeOnClose={previewState?.revokeOnClose}
+          onClose={() => setPreviewState(null)}
+        />
+      </>
     );
   }
 
@@ -337,7 +376,8 @@ export function SupportingDocsList({
   }
 
   return (
-    <List
+    <>
+      <List
       bordered
       size="small"
       dataSource={items}
@@ -446,6 +486,14 @@ export function SupportingDocsList({
           </div>
         </List.Item>
       )}
-    />
+      />
+      <SupportingDocPreviewModal
+        open={Boolean(previewState)}
+        fileName={previewState?.fileName}
+        previewUrl={previewState?.url}
+        revokeOnClose={previewState?.revokeOnClose}
+        onClose={() => setPreviewState(null)}
+      />
+    </>
   );
 }

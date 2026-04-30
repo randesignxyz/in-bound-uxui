@@ -66,6 +66,24 @@ export interface POItem {
   supplier: string;
 }
 
+export interface POReceiptLogItem {
+  code: string;
+  name: string;
+  qty: number;
+}
+
+export interface POReceiptLog {
+  receiptId?: number;
+  receivingNumber: string;
+  statusLabel: string;
+  receivedBy?: string;
+  receivedAt?: string;
+  totalReceivedQty: number;
+  receivedItems: POReceiptLogItem[];
+  approvedItems: POReceiptLogItem[];
+  rejectedItems: POReceiptLogItem[];
+}
+
 export interface PurchaseOrder {
   businessUnit?: string;
   poNumber: string;
@@ -78,6 +96,7 @@ export interface PurchaseOrder {
   totalQty: number;
   type: 'Planned' | 'Unplanned';
   status: 'Expected' | 'Partial' | 'Fully Received';
+  receiptLogs?: POReceiptLog[];
 }
 
 export function getPurchaseOrderStatusLabel(status: PurchaseOrder['status']): string {
@@ -234,6 +253,10 @@ export interface GoodsReceipt {
   createdDate: string;
   approvedBy?: string;
   approvedDate?: string;
+  qcSubmittedViewedBy?: string;
+  qcSubmittedViewedAt?: string;
+  qcRejectedViewedBy?: string;
+  qcRejectedViewedAt?: string;
   specMatch: boolean;
   qtyMatch: boolean;
   qualityCheckRequired: boolean;
@@ -764,7 +787,7 @@ function isRejectedReceipt(receipt: GoodsReceipt) {
   return isSupervisorRejectedCorrection(receipt) || isQcRejectedReceipt(receipt);
 }
 
-function isQcRejectedReceipt(receipt: GoodsReceipt) {
+export function isQcRejectedReceipt(receipt: GoodsReceipt) {
   return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || isQcRejectedCorrection(receipt);
 }
 

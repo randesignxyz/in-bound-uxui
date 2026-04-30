@@ -1,11 +1,11 @@
-import { useMemo, useRef } from 'react';
-import { Badge, Flex, Progress, Tag } from 'antd';
+import { useEffect, useMemo, useRef } from 'react';
+import { Badge, Tag, Typography } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
+import type { ReactNode } from 'react';
 import {
   GoodsReceipt,
   InboundHistoryStatus,
-  getGoodsReceiptWorkflowProgress,
   getInboundHistoryStatus,
   getInboundHistoryStatusColor,
   getGoodsReceiptSourceColor,
@@ -19,13 +19,45 @@ import {
   summarizeSuppliers,
 } from '../workflow';
 
+const { Text } = Typography;
+
 interface InboundGRTableProps {
   receipts: GoodsReceipt[];
   onViewDetail: (gr: GoodsReceipt) => void;
   typeFilter: 'ALL' | 'Planned' | 'Unplanned';
-  statusFilter: 'ALL' | InboundHistoryStatus;
+  statusFilter:
+    | 'ALL'
+    | InboundHistoryStatus
+    | 'SUPERVISOR_PENDING'
+    | 'QC_PENDING'
+    | 'QC_REJECTED';
+  headerTitle?: ReactNode;
   hideSourceAndPoLink?: boolean;
   showNotificationBadge?: boolean;
+  onRefresh?: () => Promise<void> | void;
+}
+
+function matchesStatusFilter(
+  receipt: GoodsReceipt,
+  statusFilter: InboundGRTableProps['statusFilter'],
+) {
+  if (statusFilter === 'ALL') {
+    return true;
+  }
+
+  if (statusFilter === 'SUPERVISOR_PENDING') {
+    return receipt.processState === 'PENDING_SUPERVISOR_REVIEW';
+  }
+
+  if (statusFilter === 'QC_PENDING') {
+    return receipt.processState === 'QC_PENDING';
+  }
+
+  if (statusFilter === 'QC_REJECTED') {
+    return receipt.processState === 'CORRECTION_REQUIRED';
+  }
+
+  return getInboundHistoryStatus(receipt) === statusFilter;
 }
 
 export function InboundGRTable({
@@ -33,19 +65,20 @@ export function InboundGRTable({
   onViewDetail,
   typeFilter,
   statusFilter,
+  headerTitle,
   hideSourceAndPoLink = false,
   showNotificationBadge = false,
+  onRefresh,
 }: InboundGRTableProps) {
   const actionRef = useRef<ActionType>();
+  const originalReloadRef = useRef<ActionType['reload']>();
 
   const filteredReceipts = useMemo(() => {
     let data = receipts;
     if (typeFilter !== 'ALL') {
       data = data.filter((r) => r.receiptType === typeFilter);
     }
-    if (statusFilter !== 'ALL') {
-      data = data.filter((r) => getInboundHistoryStatus(r) === statusFilter);
-    }
+    data = data.filter((r) => matchesStatusFilter(r, statusFilter));
     return data;
   }, [receipts, typeFilter, statusFilter]);
   const showApprovedGrColumn = filteredReceipts.some((receipt) => getReceiptApprovedGrNumber(receipt));
@@ -84,8 +117,12 @@ export function InboundGRTable({
       key: 'poNumber',
       title: 'PO Reference',
       dataIndex: 'poNumber',
-      renderText: (_: string, r: GoodsReceipt) =>
-        getReceiptPOReferences(r).length > 0 ? summarizePOReferences(r) : undefined,
+      render: (_: string, r: GoodsReceipt) =>
+        getReceiptPOReferences(r).length > 0 ? (
+          summarizePOReferences(r)
+        ) : (
+          <Text style={{ color: '#ff4d4f', fontWeight: 600, fontSize: '110%' }}>No PO</Text>
+        ),
     },
     {
       key: 'receiptType',
@@ -139,23 +176,6 @@ export function InboundGRTable({
       sorter: (a: GoodsReceipt, b: GoodsReceipt) => a.createdDate.localeCompare(b.createdDate),
     },
     {
-      key: 'progress',
-      title: 'Progress',
-      render: (_: any, r: GoodsReceipt) => {
-        const pct = getGoodsReceiptWorkflowProgress(r);
-        return (
-          <Flex vertical gap="small" style={{ width: 100 }}>
-            <Progress
-              percent={pct}
-              strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }}
-              size="small"
-              status="active"
-            />
-          </Flex>
-        );
-      },
-    },
-    {
       key: 'status',
       title: 'Status',
       render: (_: any, r: GoodsReceipt) => {
@@ -170,16 +190,32 @@ export function InboundGRTable({
     },
   ];
 
+  useEffect(() => {
+    if (!actionRef.current || !onRefresh) {
+      return;
+    }
+
+    if (!originalReloadRef.current) {
+      originalReloadRef.current = actionRef.current.reload?.bind(actionRef.current);
+    }
+
+    actionRef.current.reload = async (resetPageIndex?: boolean) => {
+      await onRefresh();
+      return originalReloadRef.current?.(resetPageIndex);
+    };
+  }, [onRefresh]);
+
   return (
     <ProTable<GoodsReceipt>
       actionRef={actionRef}
+      headerTitle={headerTitle}
       columns={columns}
       dataSource={filteredReceipts}
       rowKey={(record) => record.receivingNumber || record.grNumber}
       bordered
       size="small"
       search={false}
-      options={{ density: false, reload: false, setting: false }}
+      options={{ density: false, setting: false }}
       pagination={{ pageSize: 10, showSizeChanger: true }}
       onRow={(record) => ({
         onClick: () => onViewDetail(record),

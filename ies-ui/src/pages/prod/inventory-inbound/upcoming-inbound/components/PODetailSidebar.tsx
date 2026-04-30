@@ -3,6 +3,7 @@ import { Button, Descriptions, Divider, Spin, Tag, Space, Typography } from 'ant
 import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
+import { ExportOutlined } from '@ant-design/icons';
 import { getPurchaseOrderStatusLabel, type PurchaseOrder, type POItem } from '../workflow';
 
 interface PODetailSidebarProps {
@@ -10,6 +11,7 @@ interface PODetailSidebarProps {
   onClose: () => void;
   po: PurchaseOrder | null;
   onCreateGR: (po: PurchaseOrder) => void;
+  onOpenReceiptInNewTab: (receiptId: number) => void;
 }
 
 const poStatusColor: Record<PurchaseOrder['status'], string> = {
@@ -20,7 +22,19 @@ const poStatusColor: Record<PurchaseOrder['status'], string> = {
 
 const { Text } = Typography;
 
-export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSidebarProps) {
+function getReceiptLogStatusColor(statusLabel: string) {
+  if (statusLabel.includes('Rejected')) return 'error';
+  if (statusLabel.includes('Pending')) return 'warning';
+  if (statusLabel.includes('Approved')) return 'success';
+  if (statusLabel.includes('Draft')) return 'default';
+  return 'processing';
+}
+
+function getReceiptItemLabel(name: string, code: string) {
+  return name?.trim() || code?.trim() || 'Item';
+}
+
+export function PODetailSidebar({ open, onClose, po, onCreateGR, onOpenReceiptInNewTab }: PODetailSidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(open);
   const [renderedPO, setRenderedPO] = useState<PurchaseOrder | null>(po);
 
@@ -32,6 +46,11 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
   }, [open, po]);
 
   const currentPO = po || renderedPO;
+  const receiptLogs = currentPO?.receiptLogs || [];
+  const linkedReceiptLogs = receiptLogs.filter((log, index, logs) =>
+    typeof log.receiptId === 'number' &&
+    logs.findIndex((candidate) => candidate.receiptId === log.receiptId) === index,
+  );
 
   if (!currentPO) return null;
 
@@ -75,11 +94,20 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
             setRenderedPO(null);
           }
         },
-        bodyStyle: { paddingInline: 16, paddingTop: 16, paddingBottom: 16 },
+        bodyStyle: {
+          paddingInline: 16,
+          paddingTop: 16,
+          paddingBottom: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        },
       }}
     >
-      <Spin spinning={false}>
-        <ProCard bodyStyle={{ paddingInline: 8, paddingTop: 8, paddingBottom: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 140px)', minHeight: 0 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: 16 }}>
+          <Spin spinning={false}>
+            <ProCard bodyStyle={{ paddingInline: 8, paddingTop: 8, paddingBottom: 8 }}>
           <Descriptions column={2} size="small">
             <Descriptions.Item label="PO Number" style={{ fontWeight: 'bolder' }}>
               {currentPO.poNumber}
@@ -120,6 +148,29 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
             <Descriptions.Item label="Total Qty">
               {currentPO.totalQty.toLocaleString()}
             </Descriptions.Item>
+            <Descriptions.Item label="Linked IR" span={2}>
+              {linkedReceiptLogs.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {linkedReceiptLogs.map((log) => (
+                    <Button
+                      key={`linked-ir-${log.receiptId}`}
+                      type="link"
+                      icon={<ExportOutlined />}
+                      style={{ paddingInline: 0, justifyContent: 'flex-start', width: 'fit-content' }}
+                      onClick={() => {
+                        if (typeof log.receiptId === 'number') {
+                          onOpenReceiptInNewTab(log.receiptId);
+                        }
+                      }}
+                    >
+                      {log.receivingNumber}
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <Text type="secondary">No linked inbound receiving yet</Text>
+              )}
+            </Descriptions.Item>
           </Descriptions>
 
           <Divider />
@@ -135,16 +186,101 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR }: PODetailSideb
           />
 
           <Divider />
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              type="primary"
-              onClick={() => onCreateGR(currentPO)}
-            >
-              Create Inbound Receiving
-            </Button>
+          <div style={{ marginBottom: 12 }}>
+            <Text strong>Inbound Updates</Text>
           </div>
-        </ProCard>
-      </Spin>
+          {receiptLogs.length > 0 ? (
+            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              {receiptLogs.map((log) => (
+                <ProCard
+                  key={log.receivingNumber}
+                  bordered
+                  bodyStyle={{ padding: 12 }}
+                  style={{ background: '#fafafa' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <Space wrap size={[8, 8]}>
+                      <Text strong>{log.receivingNumber}</Text>
+                      <Tag color={getReceiptLogStatusColor(log.statusLabel)}>{log.statusLabel}</Tag>
+                    </Space>
+                    <Text type="secondary">
+                      {log.receivedBy ? `Received by ${log.receivedBy}` : 'Warehouse received'}
+                      {log.receivedAt ? ` • ${log.receivedAt}` : ''}
+                    </Text>
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    <Text>Total received: {log.totalReceivedQty.toLocaleString()} qty</Text>
+                  </div>
+                  <div style={{ marginTop: 10 }}>
+                    <Text strong>Received items</Text>
+                    <div style={{ marginTop: 6 }}>
+                      <Space size={[6, 6]} wrap>
+                        {log.receivedItems.map((item) => (
+                          <Tag key={`received-${log.receivingNumber}-${item.code}-${item.qty}`} color="processing">
+                            {getReceiptItemLabel(item.name, item.code)} x{item.qty}
+                          </Tag>
+                        ))}
+                      </Space>
+                    </div>
+                  </div>
+                  {log.approvedItems.length > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <Text strong>Approved to supervisor</Text>
+                      <div style={{ marginTop: 6 }}>
+                        <Space size={[6, 6]} wrap>
+                          {log.approvedItems.map((item) => (
+                            <Tag key={`approved-${log.receivingNumber}-${item.code}-${item.qty}`} color="success">
+                              {getReceiptItemLabel(item.name, item.code)} x{item.qty}
+                            </Tag>
+                          ))}
+                        </Space>
+                      </div>
+                    </div>
+                  )}
+                  {log.rejectedItems.length > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <Text strong>Returned / rejected</Text>
+                      <div style={{ marginTop: 6 }}>
+                        <Space size={[6, 6]} wrap>
+                          {log.rejectedItems.map((item) => (
+                            <Tag key={`rejected-${log.receivingNumber}-${item.code}-${item.qty}`} color="error">
+                              {getReceiptItemLabel(item.name, item.code)} x{item.qty}
+                            </Tag>
+                          ))}
+                        </Space>
+                      </div>
+                    </div>
+                  )}
+                </ProCard>
+              ))}
+            </Space>
+          ) : (
+            <Text type="secondary">No inbound activity has been recorded for this PO yet.</Text>
+          )}
+
+            </ProCard>
+          </Spin>
+        </div>
+        <div
+          style={{
+            flexShrink: 0,
+            minHeight: 88,
+            padding: '12px 0 24px',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'flex-start',
+            background: '#fff',
+            borderTop: '1px solid #f0f0f0',
+          }}
+        >
+          <Button
+            type="primary"
+            onClick={() => onCreateGR(currentPO)}
+          >
+            Create Inbound Receiving
+          </Button>
+        </div>
+      </div>
     </DrawerForm>
   );
 }

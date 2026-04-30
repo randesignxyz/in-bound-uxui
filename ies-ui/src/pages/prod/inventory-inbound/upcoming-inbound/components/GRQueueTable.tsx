@@ -1,10 +1,9 @@
-import { useRef, type ReactNode } from 'react';
-import { Flex, Progress, Tag } from 'antd';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Badge, Tag, Typography } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
 import type { GoodsReceipt, LegacyGRStatus } from '../workflow';
 import {
-  getGoodsReceiptWorkflowProgress,
   getQcQueueStatus,
   getQcQueueStatusColor,
   getReceiptApprovedGrNumber,
@@ -14,12 +13,16 @@ import {
   summarizeSuppliers,
 } from '../workflow';
 
+const { Text } = Typography;
+
 interface GRQueueTableProps {
   receipts: GoodsReceipt[];
   onViewDetail: (receipt: GoodsReceipt) => void;
   headerTitle?: ReactNode;
   toolbarExtra?: ReactNode;
   statusMode?: 'legacy' | 'qc';
+  onRefresh?: () => Promise<void> | void;
+  shouldShowNotificationBadge?: (receipt: GoodsReceipt) => boolean;
 }
 
 const statusColor: Record<LegacyGRStatus, string> = {
@@ -37,8 +40,11 @@ export function GRQueueTable({
   headerTitle,
   toolbarExtra,
   statusMode = 'legacy',
+  onRefresh,
+  shouldShowNotificationBadge,
 }: GRQueueTableProps) {
   const actionRef = useRef<ActionType>();
+  const originalReloadRef = useRef<ActionType['reload']>();
   const toolbarContent = toolbarExtra ? [toolbarExtra] : headerTitle ? [<div key="spacer" style={{ minHeight: 32 }} />] : [];
   const showApprovedGrColumn = receipts.some((receipt) => getReceiptApprovedGrNumber(receipt));
 
@@ -47,9 +53,18 @@ export function GRQueueTable({
       key: 'receivingNumber',
       title: 'IR Number',
       dataIndex: 'receivingNumber',
-      render: (_: any, row: GoodsReceipt) => (
-        <a onClick={() => onViewDetail(row)}>{getReceiptIrNumber(row)}</a>
-      ),
+      render: (_: any, row: GoodsReceipt) => {
+        const shouldShowQcBadge =
+          typeof shouldShowNotificationBadge === 'function'
+            ? shouldShowNotificationBadge(row)
+            : statusMode === 'qc' && row.items.some((item) => !item.qcDecision);
+
+        return (
+          <Badge dot={shouldShowQcBadge} color="#faad14" offset={[4, 2]}>
+            <a onClick={() => onViewDetail(row)}>{getReceiptIrNumber(row)}</a>
+          </Badge>
+        );
+      },
     },
     ...(showApprovedGrColumn
       ? [
@@ -65,8 +80,12 @@ export function GRQueueTable({
       key: 'poNumber',
       title: 'PO Reference',
       dataIndex: 'poNumber',
-      renderText: (_: string, row: GoodsReceipt) =>
-        getReceiptPOReferences(row).length > 0 ? summarizePOReferences(row) : undefined,
+      render: (_: string, row: GoodsReceipt) =>
+        getReceiptPOReferences(row).length > 0 ? (
+          summarizePOReferences(row)
+        ) : (
+          <Text style={{ color: '#ff4d4f', fontWeight: 600, fontSize: '110%' }}>No PO</Text>
+        ),
     },
     {
       key: 'supplier',
@@ -105,23 +124,6 @@ export function GRQueueTable({
       sorter: (a: GoodsReceipt, b: GoodsReceipt) => a.createdDate.localeCompare(b.createdDate),
     },
     {
-      key: 'progress',
-      title: 'Progress',
-      render: (_: any, row: GoodsReceipt) => {
-        const percent = getGoodsReceiptWorkflowProgress(row);
-        return (
-          <Flex vertical gap="small" style={{ width: 100 }}>
-            <Progress
-              percent={percent}
-              strokeColor={{ '0%': '#108ee9', '100%': '#87d068' }}
-              size="small"
-              status="active"
-            />
-          </Flex>
-        );
-      },
-    },
-    {
       key: 'status',
       title: 'Status',
       render: (_: any, row: GoodsReceipt) => {
@@ -142,6 +144,21 @@ export function GRQueueTable({
       },
     },
   ];
+
+  useEffect(() => {
+    if (!actionRef.current || !onRefresh) {
+      return;
+    }
+
+    if (!originalReloadRef.current) {
+      originalReloadRef.current = actionRef.current.reload?.bind(actionRef.current);
+    }
+
+    actionRef.current.reload = async (resetPageIndex?: boolean) => {
+      await onRefresh();
+      return originalReloadRef.current?.(resetPageIndex);
+    };
+  }, [onRefresh]);
 
   return (
     <ProTable<GoodsReceipt>

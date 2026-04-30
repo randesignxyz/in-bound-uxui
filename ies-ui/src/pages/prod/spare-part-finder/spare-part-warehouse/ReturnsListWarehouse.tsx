@@ -35,8 +35,8 @@ export type WarehouseReturnRow = {
 // ─── Status display helpers ───────────────────────────────────────────────────
 
 const STATUS_COLOR: Record<string, string> = {
-  PENDING:    'processing',
-  APPROVED:   'warning',
+  PENDING:    'default',
+  APPROVED:   'default',
   REJECTED:   'error',
   RECEIVING:  'processing',
   COMPLETED:  'success',
@@ -46,7 +46,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING:   'Pending',
-  APPROVED:  'Approved',
+  APPROVED:  'Pending',
   REJECTED:  'Rejected',
   RECEIVING: 'Receiving',
   COMPLETED: 'Completed',
@@ -76,7 +76,11 @@ const formatDate = (iso?: string | null) =>
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ReturnsListWarehouse() {
+interface ReturnsListWarehouseProps {
+  onUpdate?: () => void;
+}
+
+export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseProps = {}) {
   const actionRef = useRef<ActionType>();
   const [selectedReturn, setSelectedReturn] = useState<WarehouseReturnRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -95,6 +99,11 @@ export default function ReturnsListWarehouse() {
     }),
     [],
   );
+
+  const openDrawer = (record: WarehouseReturnRow) => {
+    setSelectedReturn(record);
+    setDetailOpen(true);
+  };
 
   const loadBusinessUnits = useCallback(async () => {
     try {
@@ -253,22 +262,22 @@ export default function ReturnsListWarehouse() {
         );
       },
     },
-    {
-      title: 'Action',
-      key: 'action',
-      align: 'center',
+    // {
+    //   title: 'Action',
+    //   key: 'action',
+    //   align: 'center',
       
-      width: 110,
-      render: (_dom, record) => (
-        <Button
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => { setSelectedReturn(record); setDetailOpen(true); }}
-        >
+    //   width: 110,
+    //   render: (_dom, record) => (
+    //     <Button
+    //       size="small"
+    //       icon={<EyeOutlined />}
+    //       onClick={() => { setSelectedReturn(record); setDetailOpen(true); }}
+    //     >
          
-        </Button>
-      ),
-    },
+    //     </Button>
+    //   ),
+    // },
   ];
 
   return (
@@ -317,7 +326,7 @@ export default function ReturnsListWarehouse() {
           columns={columns}
           rowKey="returnId"
           request={fetchData}
-          tableLayout="fixed"
+          tableLayout="auto"
           size="small"
           bordered
             toolBarRender={() => [
@@ -338,6 +347,19 @@ export default function ReturnsListWarehouse() {
             pageSizeOptions: [10, 20, 50],
             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
           }}
+              onRow={(record) => ({
+                      onClick: (event) => {
+                        const target = event.target;
+                        if (
+                          target instanceof HTMLElement &&
+                          target.closest('a, button, input, textarea, .ant-select, .ant-picker')
+                        ) {
+                          return;
+                        }
+                        openDrawer(record as WarehouseReturnRow);
+                      },
+                      style: { cursor: 'pointer' },
+          })}
         />
       </Card>
 
@@ -345,7 +367,10 @@ export default function ReturnsListWarehouse() {
       <ReturnsListDrawer
         open={detailOpen}
         onClose={() => { setDetailOpen(false); setSelectedReturn(null); }}
-        onSuccess={() => actionRef.current?.reload()}
+        onSuccess={() => {
+          actionRef.current?.reload?.();
+          onUpdate?.();
+        }}
         data={selectedReturn ? {
           no: selectedReturn.returnId,
           request_id: selectedReturn.returnNo,

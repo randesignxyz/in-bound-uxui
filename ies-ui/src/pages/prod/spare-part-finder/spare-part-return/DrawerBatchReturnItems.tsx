@@ -110,7 +110,7 @@ const STATUS_STEP_MAP: Record<ReturnStatus, number> = {
 };
 
 const statusColorMap: Record<ReturnStatus, string> = {
-  Pending: 'processing',
+  Pending: 'default',
   Approved: 'warning',
   Rejected: 'error',
   Receiving: 'processing',
@@ -367,6 +367,9 @@ export default function DrawerBatchReturnItems({
         closeRejectModal();
       }
       onSuccess?.();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('spare-part-return-updated'));
+      }
       onClose();
     } catch (error) {
       console.error(`Failed to ${action.toLowerCase()} return request`, error);
@@ -543,7 +546,7 @@ export default function DrawerBatchReturnItems({
       width="100%"
       open={open}
       onClose={onClose}
-      styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
+      styles={{ body: { padding: '24px' } }}
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button onClick={onClose}>Close</Button>
@@ -551,7 +554,7 @@ export default function DrawerBatchReturnItems({
       }
     >
       {access.canSpfApprover && effectiveStatus === 'Pending' && (
-        <div style={{ marginBottom: 24, textAlign: 'right' }}>
+        <div style={{ marginBottom: 24, textAlign: 'right'}}>
           <Space>
             <Button danger loading={loading} onClick={() => setRejectModalOpen(true)}>
               Reject
@@ -591,11 +594,15 @@ export default function DrawerBatchReturnItems({
           <Descriptions.Item label="Total Items">
             {fetchedData?.total_items ?? data?.total_items ?? 0}
           </Descriptions.Item>
-          <Descriptions.Item label="Return Date">
+          <Descriptions.Item label="Return Date"
+           contentStyle={{fontWeight:400,color: ''}}
+          >
             {formatDateTime(fetchedData?.request_date ?? data?.request_date)}
           </Descriptions.Item>
-          <Descriptions.Item label="Status">
-            <Tag color={statusColorMap[effectiveStatus]} bordered={false}>
+          <Descriptions.Item label="Status" 
+            contentStyle={{fontWeight:400,color: ''}}
+          >
+            <Tag color={statusColorMap[effectiveStatus]} bordered={false} >
               {statusLabelMap[effectiveStatus]}
             </Tag>
           </Descriptions.Item>

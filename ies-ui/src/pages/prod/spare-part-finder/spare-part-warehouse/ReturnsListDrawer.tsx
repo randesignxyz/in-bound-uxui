@@ -101,8 +101,8 @@ const STATUS_STEP_MAP: Record<ReturnStatus | string, number> = {
 };
 
 const statusColorMap: Record<ReturnStatus | string, string> = {
-  Pending: 'processing',
-  Approved: 'warning',
+  Pending: 'default',
+  Approved: 'default',
   Rejected: 'error',
   Receiving: 'processing',
   'In Progress': 'processing',
@@ -112,7 +112,7 @@ const statusColorMap: Record<ReturnStatus | string, string> = {
 
 const statusLabelMap: Record<ReturnStatus | string, string> = {
   Pending: 'Return',
-  Approved: 'Approved',
+  Approved: 'Pending',
   Rejected: 'Rejected',
   Receiving: 'Receiving',
   'In Progress': 'In Progress',
@@ -640,6 +640,9 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       // ─── Refresh Logic ───
       await fetchDetail();        // Refresh drawer internal state
       onSuccess?.();               // Notify parent list to reload
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('spare-part-return-updated'));
+      }
       
       // Clear current batch inputs
       setGoodQtyMap({});
@@ -1023,7 +1026,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       width={'100%'}
       open={open}
       onClose={onClose}
-      styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
+      styles={{ body: { padding: '24px' } }}
       footer={
         shouldShowReceivedButton ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1072,7 +1075,9 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           <Descriptions.Item label="Return Date">
             {formatDateTime(fetchedData?.request_date ?? data?.request_date)}
           </Descriptions.Item>
-          <Descriptions.Item label="Status">
+          <Descriptions.Item label="Status"
+             contentStyle={{ fontWeight: 400, color: '' }}
+          >
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}>{statusLabelMap[effectiveStatus]}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Remarks">{fetchedData?.remarks || '—'}</Descriptions.Item>

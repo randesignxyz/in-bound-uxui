@@ -78,6 +78,10 @@ export type UpdateSparePartDetailPayload = {
   kind?: string;
   categoryId?: number;
   isActive: boolean;
+  warehouseCode?: string;
+  rack?: string;
+  shelve?: string;
+  bin?: string;
 };
         
 type SparePartRequestPageParams = {

@@ -10,7 +10,7 @@ export interface SparePartRequestListSearch {
   category?: string;
   categoryId?: number;
   warehouse?: string;
-  businessUnit?: string;
+  businessUnit?: string | string[];
 }
 
 interface SparePartRequestListApiSearch {
@@ -21,7 +21,7 @@ interface SparePartRequestListApiSearch {
     category: string;
     type: string;
     categoryId?: number;
-    businessUnit?: string;
+    businessUnit?: string | string[];
   };
 }
 
@@ -110,7 +110,7 @@ const SparePartRequestTestAction = {
       },
     },
     pagination: {
-      page: 0,
+      page: params.pagination?.current || 1,
       pageSize: params.pagination?.pageSize,
     },
   }),
@@ -260,8 +260,9 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
     if (params.signal) {
       try {
         requestAction?.start?.();
-        const pageIndex = Math.max(0, ((action as any).pagination?.page || 1) - 1);
-        const pageSize = (action as any).pagination?.pageSize || 20;
+        const current = params.pagination?.current || (action as any).pagination?.page || 1;
+        const pageIndex = Math.max(0, current - 1);
+        const pageSize = params.pagination?.pageSize || (action as any).pagination?.pageSize || 20;
         const res = await request<Paging<SparePartRequestListApiItem>>(
           `${getServiceUrl(action.endpoint)}/name/${action.actionName}/list-paging/page/${pageIndex}/size/${pageSize}`,
           {

@@ -107,39 +107,39 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
     setDetailOpen(true);
   };
 
-  const loadBusinessUnits = useCallback(async () => {
-    try {
-      const sparePartServices = SparePartRequestAPI(requestAction);
-      const response = await sparePartServices.page({
-        criteria: {
-          searchValue: '',
-          category: '',
-          status: 'All',
-          warehouse: '',
-        },
-        pagination: {
-          current: 1,
-          pageSize: 20,
-        },
-      });
+  // const loadBusinessUnits = useCallback(async () => {
+  //   try {
+  //     const sparePartServices = SparePartRequestAPI(requestAction);
+  //     const response = await sparePartServices.page({
+  //       criteria: {
+  //         searchValue: '',
+  //         category: '',
+  //         status: 'All',
+  //         warehouse: '',
+  //       },
+  //       pagination: {
+  //         current: 1,
+  //         pageSize: 20,
+  //       },
+  //     });
 
-      const businessUnits = Array.from(
-        new Set(
-          (response.items || [])
-            .map((item) => item.businessUnit)
-            .filter((item): item is string => Boolean(item && item !== '-')),
-        ),
-      ).sort();
+  //     const businessUnits = Array.from(
+  //       new Set(
+  //         (response.items || [])
+  //           .map((item) => item.businessUnit)
+  //           .filter((item): item is string => Boolean(item && item !== '-')),
+  //       ),
+  //     ).sort();
 
-      setKnownBusinessUnits(businessUnits);
-    } catch (error) {
-      message.error('Failed to load business units.');
-    }
-  }, [requestAction]);
+  //     setKnownBusinessUnits(businessUnits);
+  //   } catch (error) {
+  //     message.error('Failed to load business units.');
+  //   }
+  // }, [requestAction]);
 
-  useEffect(() => {
-    loadBusinessUnits();
-  }, [loadBusinessUnits]);
+  // useEffect(() => {
+  //   loadBusinessUnits();
+  // }, [loadBusinessUnits]);
 
   const exportRequests = useCallback(
     async ({ dateRange, businessUnits }: RequestsWarehouseExportValues) => {
@@ -201,18 +201,14 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
         page, 
         size, 
         dateRangeFilter ? dateRangeFilter[0].toISOString() : undefined, 
-        dateRangeFilter ? dateRangeFilter[1].toISOString() : undefined
+        dateRangeFilter ? dateRangeFilter[1].toISOString() : undefined,
+        statusFilter,
       );
 
     const items: WarehouseReturnRow[] = (res as any)?.items ?? [];
     const total: number = (res as any)?.total ?? items.length;
 
-    // client-side status filter
-    const filtered = statusFilter === 'all'
-      ? items
-      : items.filter((r) => normalizeWarehouseReturnStatus(r.returnStatus) === statusFilter);
-
-    return { data: filtered, success: true, total };
+    return { data: items, success: true, total };
   };
 
   const columns: ProColumns<WarehouseReturnRow>[] = [

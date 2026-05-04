@@ -96,6 +96,7 @@ type ExecResponseDto<T> = {
 type PageIssueRequestsParams = {
   searchValue?: string;
   status?: 'All' | WarehouseDisplayStatus;
+  priority?: string;
   dateRange?: [string, string] | null;
   pagination?: {
     current?: number;
@@ -127,6 +128,7 @@ const SparePartWarehouseAction = {
       advanceSearch: {
         searchValue: params.searchValue || '',
         status: mapIssueStatusFilter(params.status),
+        priority: mapPriorityFilter(params.priority),
         dateRange: params.dateRange,
       },
     },
@@ -191,6 +193,7 @@ const normalizePriority = (value?: string | null): WarehouseRequestRecord['prior
   const normalized = String(value || '').trim().toLowerCase();
   if (normalized === 'urgent') return 'Urgent';
   if (normalized === 'high') return 'High';
+  if (normalized === 'low') return 'Low';
   return 'Normal';
 };
 
@@ -537,6 +540,13 @@ const mapIssueStatusFilter = (value?: 'All' | WarehouseDisplayStatus) => {
     default:
       return undefined;
   }
+};
+
+const mapPriorityFilter = (value?: string) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized || normalized === 'all') return undefined;
+  if (normalized === 'normal' || normalized === 'medium') return 'MEDIUM';
+  return normalized.toUpperCase();
 };
 
 export const SparePartWarehouseService = (requestAction: RequestActions) => ({

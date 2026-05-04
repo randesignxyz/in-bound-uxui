@@ -293,7 +293,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
           category: requestFilters.category || '',
           status: requestFilters.status,
           warehouse: requestFilters.warehouse || '',
-          businessUnit: requestFilters.businessUnits.length === 1 ? requestFilters.businessUnits[0] : '',
+          businessUnit: requestFilters.businessUnits.length > 0 ? requestFilters.businessUnits : [],
         },
         pagination: {
           current: params.current,

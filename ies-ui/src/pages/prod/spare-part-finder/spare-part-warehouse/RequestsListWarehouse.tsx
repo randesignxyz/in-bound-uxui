@@ -6,7 +6,7 @@ import { Button, DatePicker, Input, Select, Space, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SparePartRequestAPI } from '../spare-part-request/service.api';
+import { fetchSparePartBusinessUnits } from '../spare-part-request/service.api';
 import RequestedBatchWareHouse, { type RequestDetailData } from './RequestedBatchWareHouse';
 import { buildSummaryColumns } from './RequestsListWarehouseSummary';
 import {
@@ -35,7 +35,6 @@ export default function RequestsListWarehouse() {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const exportInFlightRef = useRef(false);
-
   const [requestRows, setRequestRows] = useState<WarehouseRequestRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -48,6 +47,7 @@ export default function RequestsListWarehouse() {
       const response = await services.pageRequests({
         searchValue: searchText,
         status: statusFilter,
+        priority: priorityFilter,
         dateRange: dateRangeFilter ? [dateRangeFilter[0].toISOString(), dateRangeFilter[1].toISOString()] : null,
         pagination: {
           current: 0,
@@ -60,31 +60,15 @@ export default function RequestsListWarehouse() {
     } finally {
       setLoading(false);
     }
-  }, [searchText, statusFilter, dateRangeFilter]);
+  }, [searchText, statusFilter, priorityFilter, dateRangeFilter]);
 
   const loadBusinessUnits = useCallback(async () => {
     try {
-      const sparePartServices = SparePartRequestAPI(requestActions);
-      const response = await sparePartServices.page({
-        criteria: {
-          searchValue: '',
-          category: '',
-          status: 'All',
-          warehouse: '',
-        },
-        pagination: {
-          current: 0,
-          pageSize: 20,
-        },
-      });
-
-      const businessUnits = Array.from(
-        new Set(
-          (response.items || [])
-            .map((item) => item.businessUnit)
-            .filter((item): item is string => Boolean(item && item !== '-')),
-        ),
-      ).sort();
+      const response = await fetchSparePartBusinessUnits();
+      const businessUnits = response
+        .map((item) => item.businessUnit)
+        .filter(Boolean)
+        .sort();
       setKnownBusinessUnits(businessUnits);
     } catch (error) {
       message.error('Failed to load business units.');
@@ -240,12 +224,11 @@ export default function RequestsListWarehouse() {
         return (
           matchesKeyword &&
           (statusFilter === 'All' || displayStatus === statusFilter) &&
-          (priorityFilter === 'All' || request.priority === priorityFilter) &&
           matchesDateRange &&
           matchesBusinessUnit
         );
       }),
-    [businessUnitFilters, dateRangeFilter, priorityFilter, requestRows, searchText, statusFilter],
+    [businessUnitFilters, dateRangeFilter, requestRows, searchText, statusFilter],
   );
 
   const summaryColumns = useMemo(
@@ -332,7 +315,7 @@ export default function RequestsListWarehouse() {
                 setDateRangeFilter(dates?.[0] && dates?.[1] ? [dates[0], dates[1]] : null);
               }}
             />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div
                 style={{
                   display: 'flex',
@@ -350,8 +333,8 @@ export default function RequestsListWarehouse() {
                   }}
                 >
                   All
-                </Button>
-                {knownBusinessUnits.map((businessUnit, index) => (
+                </Button> 
+              {knownBusinessUnits.map((businessUnit, index) => (
                   <Button
                     key={businessUnit}
                     type={businessUnitFilters.includes(businessUnit) ? 'primary' : 'default'}
@@ -364,9 +347,9 @@ export default function RequestsListWarehouse() {
                   >
                     {businessUnit}
                   </Button>
-                ))}
+                ))} 
               </div>
-            </div>
+            </div> */}
             <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
               Export Excel
             </Button>

@@ -1,7 +1,7 @@
 import { Paging } from '@/services/API';
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
-import { request } from 'umi';
+import { request } from '@umijs/max';
 import type { SparePartRequestItem, SparePartStockStatus } from './data';
 
 export interface SparePartRequestListSearch { 
@@ -10,6 +10,7 @@ export interface SparePartRequestListSearch {
   category?: string;
   categoryId?: number;
   warehouse?: string;
+  businessUnit?: string;
 }
 
 interface SparePartRequestListApiSearch {
@@ -18,7 +19,9 @@ interface SparePartRequestListApiSearch {
     warehouse: string;
     status: string;
     category: string;
+    type: string;
     categoryId?: number;
+    businessUnit?: string;
   };
 }
 
@@ -99,13 +102,15 @@ const SparePartRequestTestAction = {
       advanceSearch: {
         searchValue: params.criteria?.searchValue || '',
         warehouse: params.criteria?.warehouse || '',
-        status: '',
+        status: params.criteria?.status === 'All' ? '' : (params.criteria?.status || ''),
         category: params.criteria?.category || '',
+        type: '',
         categoryId: params.criteria?.categoryId,
+        businessUnit: params.criteria?.businessUnit || '',
       },
     },
     pagination: {
-      page: params.pagination?.current,
+      page: 0,
       pageSize: params.pagination?.pageSize,
     },
   }),
@@ -216,7 +221,7 @@ export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: s
     status: backendStockStatus || mapStockStatus(stock, reorderLevel),
     warehouse: firstLocation?.warehouseCode || fallbackWarehouse || '',
     stockStatus: firstLocation?.stockStatus || item.stockStatus || undefined,
-    locations: item.locations || [],
+    locations: (item.locations || []) as any,
     tab: 'spare-list',
     createdDate: item.createdDate,
     updatedDate: item.updatedDate,
@@ -239,10 +244,6 @@ const mapPagingResult = (
     mapItem(item, params.criteria?.warehouse),
   );
 
-  if (params.criteria?.status && params.criteria.status !== 'All') {
-    items = items.filter((item: any) => item.status === params.criteria?.status);
-  }
-
   return {
     items,
     total: response?.total ?? items.length,
@@ -259,15 +260,17 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
     if (params.signal) {
       try {
         requestAction?.start?.();
-        response = await request<Paging<SparePartRequestListApiItem>>(
-          `${getServiceUrl(action.endpoint)}/name/${action.actionName}/list-paging/page/${(action.pagination?.page || 1) - 1
-          }/size/${action.pagination?.pageSize || 20}`,
+        const pageIndex = Math.max(0, ((action as any).pagination?.page || 1) - 1);
+        const pageSize = (action as any).pagination?.pageSize || 20;
+        const res = await request<Paging<SparePartRequestListApiItem>>(
+          `${getServiceUrl(action.endpoint)}/name/${action.actionName}/list-paging/page/${pageIndex}/size/${pageSize}`,
           {
             method: 'POST',
             data: action.payload || {},
             signal: params.signal,
           } as any,
         );
+        response = (res as any)?.data ?? res;
         requestAction?.end?.('SUCCESS');
       } catch (error: any) {
         if (params.signal.aborted || error?.name === 'AbortError') {
@@ -347,6 +350,46 @@ export const fetchSparePartCategories = async (): Promise<SparePartCategoryApiIt
     throw new Error('Failed to load spare part categories.');
   }
 
-  const payload = (await response.json().catch(() => [])) as SparePartCategoryApiItem[];
+  const payload = await response.json().catch(() => []);
+  return Array.isArray(payload) ? payload : [];
+};
+
+export const fetchSparePartBusinessUnits = async (): Promise<{ businessUnit: string }[]> => {
+  const token = localStorage.getItem('accessToken');
+  const response = await fetch(`${getServiceUrl('PROD')}/name/get-spare-part-business-units/list`, {
+    method: 'POST',
+    headers: token
+      ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      : { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to load spare part business units.');
+  }
+
+  const payload = await response.json().catch(() => []);
+  return Array.isArray(payload) ? payload : [];
+};
+
+export const fetchSparePartWarehouses = async (
+  businessUnit?: string,
+): Promise<{ warehouseCode: string; warehouseName: string }[]> => {
+  const token = localStorage.getItem('accessToken');
+  const url = businessUnit
+    ? `${getServiceUrl('PROD')}/spare-part-finder/warehouses?businessUnit=${encodeURIComponent(businessUnit)}`
+    : `${getServiceUrl('PROD')}/spare-part-finder/warehouses`;
+  const response = await fetch(
+    url,
+    {
+      method: 'GET',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to load spare part warehouses.');
+  }
+
+  const payload = await response.json().catch(() => []);
   return Array.isArray(payload) ? payload : [];
 };

@@ -8,7 +8,7 @@ import { getUrlReporting } from '@/pages/ReportUrl';
 import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import RequestItemModal from './requestItem';
-import { fetchSparePartCategories, SparePartRequestAPI, uploadFilesToFileService } from './service.api';
+import { fetchSparePartCategories, fetchSparePartBusinessUnits, fetchSparePartWarehouses, SparePartRequestAPI, uploadFilesToFileService } from './service.api';
 import { SparePartRequestService } from './service';
 import SparePartImage from './SparePartImage';
 import SpfDetails from './SpfDetails';
@@ -129,7 +129,24 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     fetchSparePartCategories()
       .then((items) => setCategoryItems(items.filter((item) => item?.id && item?.category_name)))
       .catch(() => undefined);
+      
+    fetchSparePartBusinessUnits()
+      .then((items) => setKnownBusinessUnits(items.map(i => i.businessUnit).filter(Boolean)))
+      .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    const fetchWarehouses = async () => {
+      try {
+        const buToFetch = filters.businessUnits.length === 1 ? filters.businessUnits[0] : '';
+        const items = await fetchSparePartWarehouses(buToFetch || '');
+        setKnownWarehouses(Array.from(new Set(items.map(i => i.warehouseCode).filter(Boolean))));
+      } catch (err) {
+        // do nothing
+      }
+    };
+    fetchWarehouses();
+  }, [filters.businessUnits]);
 
   useEffect(() => {
     if (searchInputValue === searchValue) return;
@@ -185,8 +202,12 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const reloadTable = (resetPage = false) => {
     if (resetPage) {
       actionRef.current?.setPageInfo?.({ current: 1 });
+      setTimeout(() => {
+        actionRef.current?.reload?.();
+      }, 0);
+    } else {
+      actionRef.current?.reload?.();
     }
-    actionRef.current?.reload?.();
   };
 
   const commitSearchValue = (value) => {
@@ -272,6 +293,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
           category: requestFilters.category || '',
           status: requestFilters.status,
           warehouse: requestFilters.warehouse || '',
+          businessUnit: requestFilters.businessUnits.length === 1 ? requestFilters.businessUnits[0] : '',
         },
         pagination: {
           current: params.current,
@@ -307,10 +329,6 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       });
     }
 
-    if (requestFilters.businessUnits.length > 0) {
-      rows = rows.filter((item) => requestFilters.businessUnits.includes(item.businessUnit));
-    }
-
     if (requestSeq !== requestSeqRef.current) {
       return {
         data: currentRowsRef.current,
@@ -330,14 +348,6 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         }
       });
       return next;
-    });
-    setKnownWarehouses((previous) => {
-      const merged = new Set([...previous, ...rows.map((item) => item.warehouse).filter(Boolean)]);
-      return Array.from(merged).sort();
-    });
-    setKnownBusinessUnits((previous) => {
-      const merged = new Set([...previous, ...rows.map((item) => item.businessUnit).filter(Boolean)]);
-      return Array.from(merged).sort();
     });
 
     return {

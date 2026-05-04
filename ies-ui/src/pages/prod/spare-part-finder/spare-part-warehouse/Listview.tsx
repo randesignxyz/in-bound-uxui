@@ -14,15 +14,9 @@ import { SparePartWarehouseReturnAPI } from './service.return';
 const countApprovedAndPartialReturns = async (requestAction: RequestActions): Promise<number> => {
   try {
     const response = await SparePartWarehouseReturnAPI(requestAction)
-      .paga_fetch_spare_parts_return_by_status_approved(1, 1000);
+      .paga_fetch_spare_parts_return_by_status_approved(0, 20);
 
-    const items = (response as any)?.items ?? [];
-    const count = items.filter(
-      (item: any) =>
-        item.returnStatus === 'APPROVED' || item.returnStatus === 'PARTIAL_RETURN'
-    ).length;
-
-    return count;
+    return (response as any)?.total ?? 0;
   } catch (error) {
     console.error('Failed to count returns:', error);
     return 0;
@@ -31,6 +25,7 @@ const countApprovedAndPartialReturns = async (requestAction: RequestActions): Pr
 
 export default function ListView() {
   const [returnCount, setReturnCount] = useState(0);
+  const [activeKey, setActiveKey] = useState('1');
 
   const requestAction: RequestActions = useMemo(
     () => ({
@@ -45,8 +40,10 @@ export default function ListView() {
   }, [requestAction]);
 
   useEffect(() => {
-    refreshCount();
-  }, [refreshCount]);
+    if (activeKey === '3') {
+      refreshCount();
+    }
+  }, [activeKey, refreshCount]);
 
   const routes = [
     {
@@ -63,6 +60,8 @@ export default function ListView() {
     <>
       <BreadCrumbCom separator=">" routes={routes} />
       <Tabs
+        activeKey={activeKey}
+        onChange={setActiveKey}
         items={[
           {
             label: 'Spare Parts',

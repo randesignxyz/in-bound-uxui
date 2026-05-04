@@ -196,7 +196,7 @@ const resolveCategoryName = (category?: SparePartRequestListApiItem['category'])
 const resolveCategoryId = (item: SparePartRequestListApiItem): number | undefined =>
   item.category_id ?? (typeof item.category === 'object' ? item.category?.id ?? undefined : undefined);
 
-export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: string): SparePartRequestItem => {
+export const mapItem = (item: SparePartRequestListApiItem): SparePartRequestItem => {
   const firstLocation = item.locations?.[0];
   const stock = firstLocation?.availableQty ?? item.avalailableStock ?? item.stock ?? 0;
   const reorderLevel = firstLocation?.reorderLevel;
@@ -219,7 +219,7 @@ export const mapItem = (item: SparePartRequestListApiItem, fallbackWarehouse?: s
     businessUnit: item.businessUnit || '-',
     isActive: item.isActive,
     status: backendStockStatus || mapStockStatus(stock, reorderLevel),
-    warehouse: firstLocation?.warehouseCode || fallbackWarehouse || '',
+    warehouse: firstLocation?.warehouseCode || '',
     stockStatus: firstLocation?.stockStatus || item.stockStatus || undefined,
     locations: (item.locations || []) as any,
     tab: 'spare-list',
@@ -241,7 +241,7 @@ const mapPagingResult = (
         : [];
 
   let items: SparePartRequestItem[] = rawItems.map((item: SparePartRequestListApiItem) =>
-    mapItem(item, params.criteria?.warehouse),
+    mapItem(item),
   );
 
   return {

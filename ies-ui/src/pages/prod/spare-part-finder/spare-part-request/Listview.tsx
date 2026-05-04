@@ -17,7 +17,7 @@ export default function ListView() {
       label: 'Prod',
     },
     {
-      path: ProdPaths.sparePartRequestTest,
+      path: ProdPaths.sparePartRequest,
       label: 'Spare Part Request',
     },
   ];

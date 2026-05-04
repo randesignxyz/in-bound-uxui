@@ -85,6 +85,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
   const [selectedReturn, setSelectedReturn] = useState<WarehouseReturnRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [knownBusinessUnits, setKnownBusinessUnits] = useState<string[]>([]);
@@ -117,7 +118,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
         },
         pagination: {
           current: 1,
-          pageSize: 1000,
+          pageSize: 20,
         },
       });
 
@@ -189,13 +190,18 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
   );
 
   const fetchData = async (params: { current?: number; pageSize?: number }) => {
-    const page = params.current ?? 1;
+    const page = params.current ?? 0;
     const size = params.pageSize ?? 20;
     setCurrentPage(page);
     setPageSize(size);
 
     const res = await SparePartWarehouseReturnAPI(requestAction)
-      .paga_fetch_spare_parts_return_by_status_approved(page, size);
+      .paga_fetch_spare_parts_return_by_status_approved(
+        page, 
+        size, 
+        dateRangeFilter ? dateRangeFilter[0].toISOString() : undefined, 
+        dateRangeFilter ? dateRangeFilter[1].toISOString() : undefined
+      );
 
     const items: WarehouseReturnRow[] = (res as any)?.items ?? [];
     const total: number = (res as any)?.total ?? items.length;
@@ -312,7 +318,14 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
               { value: 'COMPLETED', label: 'Completed' },
             ]}
           />
-          <RangePicker style={{ width: 280 }} />
+          <RangePicker 
+            style={{ width: 280 }} 
+            value={dateRangeFilter}
+            onChange={(dates) => {
+              setDateRangeFilter(dates?.[0] && dates?.[1] ? [dates[0], dates[1]] : null);
+              actionRef.current?.reloadAndRest?.();
+            }}
+          />
           <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
             Export Excel
           </Button>

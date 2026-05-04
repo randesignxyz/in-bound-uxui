@@ -40,9 +40,7 @@ export default function ListView() {
   }, [requestAction]);
 
   useEffect(() => {
-    if (activeKey === '3') {
-      refreshCount();
-    }
+    refreshCount();
   }, [activeKey, refreshCount]);
 
   const routes = [

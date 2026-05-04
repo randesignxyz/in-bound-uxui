@@ -96,6 +96,7 @@ type ExecResponseDto<T> = {
 type PageIssueRequestsParams = {
   searchValue?: string;
   status?: 'All' | WarehouseDisplayStatus;
+  dateRange?: [string, string] | null;
   pagination?: {
     current?: number;
     pageSize?: number;
@@ -126,6 +127,7 @@ const SparePartWarehouseAction = {
       advanceSearch: {
         searchValue: params.searchValue || '',
         status: mapIssueStatusFilter(params.status),
+        dateRange: params.dateRange,
       },
     },
     pagination: {

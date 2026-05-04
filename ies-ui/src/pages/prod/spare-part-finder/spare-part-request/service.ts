@@ -897,7 +897,7 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
           toWarehouseCode: row.toWarehouseCode,
           forLine: row.forLine,
           uom: row.uom,
-          item: mapItem(row.item, row.toWarehouseCode),
+          item: mapItem(row.item),
         })) || [];
 
       const failedRows =

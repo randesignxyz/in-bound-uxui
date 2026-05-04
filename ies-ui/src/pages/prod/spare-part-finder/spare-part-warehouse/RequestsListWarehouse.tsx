@@ -47,9 +47,10 @@ export default function RequestsListWarehouse() {
       const response = await services.pageRequests({
         searchValue: searchText,
         status: statusFilter,
+        dateRange: dateRangeFilter ? [dateRangeFilter[0].toISOString(), dateRangeFilter[1].toISOString()] : null,
         pagination: {
-          current: 1,
-          pageSize: 200,
+          current: 0,
+          pageSize: 20,
         },
       });
       setRequestRows(response.items || []);
@@ -58,7 +59,7 @@ export default function RequestsListWarehouse() {
     } finally {
       setLoading(false);
     }
-  }, [searchText, statusFilter]);
+  }, [searchText, statusFilter, dateRangeFilter]);
 
   const loadBusinessUnits = useCallback(async () => {
     try {
@@ -71,8 +72,8 @@ export default function RequestsListWarehouse() {
           warehouse: '',
         },
         pagination: {
-          current: 1,
-          pageSize: 1000,
+          current: 0,
+          pageSize: 20,
         },
       });
 

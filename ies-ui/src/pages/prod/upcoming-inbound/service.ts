@@ -366,12 +366,16 @@ function filterPurchaseOrdersForPageFallback(
   const type = params.criteria?.advanceSearch?.type;
   const status = params.criteria?.advanceSearch?.status;
   const expectedDate = params.criteria?.advanceSearch?.expectedDate;
+  const dateFrom = params.criteria?.advanceSearch?.dateFrom;
+  const dateTo = params.criteria?.advanceSearch?.dateTo;
 
   return orders.filter((order) => {
     if (businessUnit && order.businessUnit !== businessUnit) return false;
     if (type && type !== 'ALL' && order.type !== type) return false;
     if (status && status !== 'ALL' && order.status !== status) return false;
     if (expectedDate && order.expectedDate !== expectedDate) return false;
+    if (dateFrom && order.expectedDate < dateFrom) return false;
+    if (dateTo && order.expectedDate > dateTo) return false;
     if (
       searchValue &&
       !order.poNumber.toUpperCase().includes(searchValue) &&

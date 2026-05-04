@@ -46,7 +46,7 @@ export default [
     component: './prod/inventory-transfer/',
   },
   {
-    path: '/prod/upcoming-inbound/:view/*',
+    path: '/prod/inventory-inbound/:view/*',
     name: 'upcomingInbound',
     hideInMenu: 'true',
     access: 'canAccessUpcomingInboundMenuItem',

@@ -23,6 +23,8 @@ export interface InboundPurchaseOrderSearch {
     type?: string | null;
     status?: string | null;
     expectedDate?: string | null;
+    dateFrom?: string | null;
+    dateTo?: string | null;
   };
 }
 
@@ -42,6 +44,8 @@ export interface InboundGoodsReceiptSearch {
   business_unit?: string | null;
   status?: string | null;
   processState?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
 }
 
 export interface InboundGoodsReceiptCountParams {

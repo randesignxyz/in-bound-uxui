@@ -9,7 +9,7 @@ export const ProdPaths = {
   prod: '/prod',
   transferRequest: '/prod/inventory-transfer-request',
   inventoryTransfer: '/prod/inventory-transfer',
-  upcomingInbound: '/prod/upcoming-inbound',
+  upcomingInbound: '/prod/inventory-inbound',
   sparePartRequest: '/prod/spare-part-request',
   dailyWaterTreatment: '/prod/daily-water-treatment',
   dailyPreWaterTreatment: '/prod/daily-pre-water-treatment',

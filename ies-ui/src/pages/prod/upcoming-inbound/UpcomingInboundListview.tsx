@@ -1,7 +1,9 @@
 import BreadCrumbCom from '@/pages/prod/shared/BreadCrumbCom';
+import { downloadReport } from '@/services/apiGateway';
 import { ProdPaths } from '@/pages/prod';
 import { simpleRequestActions } from '@/services/model';
 import { USE_STATIC_AUTH } from '@/staticAuthConfig';
+import dayjs from 'dayjs';
 import {
   Button,
   Card,
@@ -198,6 +200,25 @@ function isVisibleOperationalReceipt(receipt: GoodsReceipt) {
   return receipt.processState !== 'MERGED_TO_SUPERVISOR_REVIEW';
 }
 
+function getReceiptDateForFilter(receipt: GoodsReceipt): string {
+  return (
+    receipt.actualReceiptDate ||
+    receipt.createdDate?.slice(0, 10) ||
+    receipt.expectedDate ||
+    ''
+  );
+}
+
+function isReceiptInDateRange(receipt: GoodsReceipt, dateRange: [string, string] | null) {
+  if (!dateRange) return true;
+
+  const receiptDate = getReceiptDateForFilter(receipt);
+  if (!receiptDate) return false;
+
+  const [dateFrom, dateTo] = dateRange;
+  return receiptDate >= dateFrom && receiptDate <= dateTo;
+}
+
 function sortPurchaseOrdersByLatestExpectedDate(purchaseOrders: PurchaseOrder[]): PurchaseOrder[] {
   return [...purchaseOrders].sort((left, right) => {
     const leftDate = left.expectedDate?.trim() || '';
@@ -281,7 +302,6 @@ export default function UpcomingInboundListview() {
   const [poSearchValue, setPOSearchValue] = useState('');
   const [poVendorFilter, setPOVendorFilter] = useState<string>('ALL');
   const [poTypeFilter, setPOTypeFilter] = useState<'ALL' | PurchaseOrder['type']>('ALL');
-  const [poDateRangeFilter, setPODateRangeFilter] = useState<[string, string] | null>(null);
   const [queueSearchValue, setQueueSearchValue] = useState('');
   const [queueTypeFilter, setQueueTypeFilter] = useState<'ALL' | GoodsReceipt['receiptType']>('ALL');
   const [queueSourceFilter, setQueueSourceFilter] =
@@ -291,6 +311,7 @@ export default function UpcomingInboundListview() {
   const [historyStatusFilter, setHistoryStatusFilter] = useState<HistoryStatusFilter>('ALL');
   const [dashboardSummaryRange, setDashboardSummaryRange] = useState<DashboardSummaryViewMode>('OVERALL');
   const [dashboardPeriodFilter, setDashboardPeriodFilter] = useState<[string, string] | null>(null);
+  const [isExportingReport, setIsExportingReport] = useState(false);
   const [inboundStats, setInboundStats] = useState<InboundDashboardSummaryApi>({
     expectedToday: 0,
     qcPending: 0,
@@ -370,6 +391,26 @@ export default function UpcomingInboundListview() {
     [purchaseOrders],
   );
 
+  const sharedDateRangeFilter = useMemo<[string, string] | null>(() => {
+    if (dashboardSummaryRange === 'CUSTOM') {
+      return dashboardPeriodFilter;
+    }
+
+    if (dashboardSummaryRange === 'DAILY') {
+      const today = dayjs().format('YYYY-MM-DD');
+      return [today, today];
+    }
+
+    if (dashboardSummaryRange === 'WEEKLY') {
+      return [
+        dayjs().startOf('week').format('YYYY-MM-DD'),
+        dayjs().endOf('week').format('YYYY-MM-DD'),
+      ];
+    }
+
+    return null;
+  }, [dashboardPeriodFilter, dashboardSummaryRange]);
+
   const filteredWarehousePurchaseOrders = useMemo(() => {
     let data = [...purchaseOrders];
 
@@ -394,13 +435,13 @@ export default function UpcomingInboundListview() {
       data = data.filter((po) => po.type === poTypeFilter);
     }
 
-    if (poDateRangeFilter) {
-      const [dateFrom, dateTo] = poDateRangeFilter;
+    if (sharedDateRangeFilter) {
+      const [dateFrom, dateTo] = sharedDateRangeFilter;
       data = data.filter((po) => po.expectedDate >= dateFrom && po.expectedDate <= dateTo);
     }
 
     return data;
-  }, [activeBusinessUnitFilter, poDateRangeFilter, poSearchValue, poTypeFilter, poVendorFilter, purchaseOrders]);
+  }, [activeBusinessUnitFilter, poSearchValue, poTypeFilter, poVendorFilter, purchaseOrders, sharedDateRangeFilter]);
 
   const selectedWarehousePOs = useMemo(
     () =>
@@ -419,12 +460,56 @@ export default function UpcomingInboundListview() {
     businessUnit: activeBusinessUnitFilter || null,
   });
 
+  const buildPurchaseOrderAdvanceSearchCriteria = () => {
+    const [dateFrom, dateTo] = sharedDateRangeFilter || [];
+
+    return {
+      ...buildBusinessUnitCriteria(),
+      dateFrom: dateFrom || null,
+      dateTo: dateTo || null,
+      expectedDate: dateFrom && dateFrom === dateTo ? dateFrom : null,
+    };
+  };
+
   const buildDashboardSummaryParams = (): InboundDashboardSummaryParams => ({
     ...buildBusinessUnitCriteria(),
     range: dashboardSummaryRange === 'CUSTOM' ? null : dashboardSummaryRange,
-    dateFrom: dashboardPeriodFilter?.[0] ?? null,
-    dateTo: dashboardPeriodFilter?.[1] ?? null,
+    dateFrom: sharedDateRangeFilter?.[0] ?? null,
+    dateTo: sharedDateRangeFilter?.[1] ?? null,
   });
+
+  const buildGoodsReceiptCriteria = () => ({
+    ...buildBusinessUnitCriteria(),
+    dateFrom: sharedDateRangeFilter?.[0] ?? null,
+    dateTo: sharedDateRangeFilter?.[1] ?? null,
+  });
+
+  const applyPurchaseOrderResult = (nextPurchaseOrders: PurchaseOrder[]) => {
+    setPurchaseOrders(nextPurchaseOrders);
+    setSelectedPODetail((prev) => {
+      if (!prev) return prev;
+      return (
+        nextPurchaseOrders.find(
+          (po) => po.id === prev.id || getPurchaseOrderRowKey(po) === getPurchaseOrderRowKey(prev),
+        ) || null
+      );
+    });
+    setSelectedPOs((prev) =>
+      prev
+        .map(
+          (selected) =>
+            nextPurchaseOrders.find(
+              (po) => po.id === selected.id || getPurchaseOrderRowKey(po) === getPurchaseOrderRowKey(selected),
+            ) || null,
+        )
+        .filter((po): po is PurchaseOrder => po !== null),
+    );
+    setSelectedWarehousePONumbers((prevSelectedKeys) =>
+      prevSelectedKeys.filter((poKey) =>
+        nextPurchaseOrders.some((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder) === poKey),
+      ),
+    );
+  };
 
   const loadInboundData = async () => {
     if (!isInboundAdmin && inboundVisibleBusinessUnits.length > 0 && !activeBusinessUnitFilter) {
@@ -434,7 +519,7 @@ export default function UpcomingInboundListview() {
     const [poResult, receiptResult, summaryResult] = await Promise.allSettled([
       services.pagePurchaseOrders({
         criteria: {
-          advanceSearch: buildBusinessUnitCriteria(),
+          advanceSearch: buildPurchaseOrderAdvanceSearchCriteria(),
         },
         pagination: {
           current: 1,
@@ -442,7 +527,7 @@ export default function UpcomingInboundListview() {
         },
       }),
       services.pageGoodsReceipts({
-        criteria: buildBusinessUnitCriteria(),
+        criteria: buildGoodsReceiptCriteria(),
         pagination: {
           current: 1,
           pageSize: 200,
@@ -453,30 +538,7 @@ export default function UpcomingInboundListview() {
 
     if (poResult.status === 'fulfilled') {
       const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.value.items);
-      setPurchaseOrders(nextPurchaseOrders);
-      setSelectedPODetail((prev) => {
-        if (!prev) return prev;
-        return (
-          nextPurchaseOrders.find(
-            (po) => po.id === prev.id || getPurchaseOrderRowKey(po) === getPurchaseOrderRowKey(prev),
-          ) || null
-        );
-      });
-      setSelectedPOs((prev) =>
-        prev
-          .map(
-            (selected) =>
-              nextPurchaseOrders.find(
-                (po) => po.id === selected.id || getPurchaseOrderRowKey(po) === getPurchaseOrderRowKey(selected),
-              ) || null,
-          )
-          .filter((po): po is PurchaseOrder => po !== null),
-      );
-      setSelectedWarehousePONumbers((prevSelectedKeys) =>
-        prevSelectedKeys.filter((poKey) =>
-          nextPurchaseOrders.some((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder) === poKey),
-        ),
-      );
+      applyPurchaseOrderResult(nextPurchaseOrders);
     } else {
       message.error(poResult.reason?.message || 'Failed to load purchase orders.');
     }
@@ -485,7 +547,8 @@ export default function UpcomingInboundListview() {
       setReceipts(
         receiptResult.value.items
           .map(normalizeReceiptForUI)
-          .filter(isVisibleOperationalReceipt),
+          .filter(isVisibleOperationalReceipt)
+          .filter((receipt) => isReceiptInDateRange(receipt, sharedDateRangeFilter)),
       );
     } else {
       message.error(receiptResult.reason?.message || 'Failed to load inbound receiving history.');
@@ -495,18 +558,6 @@ export default function UpcomingInboundListview() {
       setInboundStats(summaryResult.value);
     } else {
       message.error(summaryResult.reason?.message || 'Failed to load inbound dashboard summary.');
-    }
-  };
-
-  const loadDashboardSummary = async () => {
-    try {
-      if (dashboardSummaryRange === 'CUSTOM' && !dashboardPeriodFilter) {
-        return;
-      }
-      const summary = await services.getDashboardSummary(buildDashboardSummaryParams());
-      setInboundStats(summary);
-    } catch (error: any) {
-      message.error(error?.message || 'Failed to load inbound dashboard summary.');
     }
   };
 
@@ -538,7 +589,10 @@ export default function UpcomingInboundListview() {
       hasInitializedDashboardSummary.current = true;
       return;
     }
-    void loadDashboardSummary();
+    if (dashboardSummaryRange === 'CUSTOM' && !dashboardPeriodFilter) {
+      return;
+    }
+    void loadInboundData();
   }, [dashboardPeriodFilter, dashboardSummaryRange]);
 
   useEffect(() => {
@@ -551,7 +605,7 @@ export default function UpcomingInboundListview() {
   const syncReceiptInState = (receipt: GoodsReceipt) => {
     const normalized = normalizeReceiptForUI(receipt);
 
-    if (!isVisibleOperationalReceipt(normalized)) {
+    if (!isVisibleOperationalReceipt(normalized) || !isReceiptInDateRange(normalized, sharedDateRangeFilter)) {
       setReceipts((prev) => prev.filter((row) => row.grNumber !== normalized.grNumber));
       setSelectedGR((prev) => (prev?.grNumber === normalized.grNumber ? null : prev));
       return normalized;
@@ -974,7 +1028,6 @@ export default function UpcomingInboundListview() {
     setPOSearchValue('');
     setPOVendorFilter('ALL');
     setPOTypeFilter('ALL');
-    setPODateRangeFilter(null);
     setQueueSearchValue('');
     setQueueTypeFilter('ALL');
     setQueueSourceFilter('ALL');
@@ -1407,8 +1460,30 @@ export default function UpcomingInboundListview() {
     });
   };
 
-  const handleExportReportClick = () => {
-    message.info('Export report is not connected yet.');
+  const handleExportReportClick = async () => {
+    const [dateFrom, dateTo] = sharedDateRangeFilter || [];
+
+    try {
+      setIsExportingReport(true);
+      await downloadReport(requestActions)({
+        fileName: `inventory-inbound-report-${dayjs().format('YYYY-MM-DD')}`,
+        reportName: 'prod-inventory-inbound-report',
+        data: {
+          ...buildBusinessUnitCriteria(),
+          range: dashboardSummaryRange === 'CUSTOM' ? null : dashboardSummaryRange,
+          dateFrom: dateFrom || null,
+          dateTo: dateTo || null,
+          poSearchValue: poSearchValue.trim() || null,
+          vendor: poVendorFilter === 'ALL' ? null : poVendorFilter,
+          type: poTypeFilter === 'ALL' ? null : poTypeFilter,
+        },
+        type: 'EXCEL',
+      });
+    } catch (error) {
+      message.error('Failed to download.');
+    } finally {
+      setIsExportingReport(false);
+    }
   };
 
   useEffect(() => {
@@ -1708,6 +1783,7 @@ export default function UpcomingInboundListview() {
               )}
               <Button
                 icon={<ExportOutlined />}
+                loading={isExportingReport}
                 onClick={handleExportReportClick}
                 style={{ fontWeight: 600 }}
               >
@@ -1877,22 +1953,6 @@ export default function UpcomingInboundListview() {
                       <Radio.Button value="Planned">Planned</Radio.Button>
                       <Radio.Button value="Unplanned">Unplanned</Radio.Button>
                     </Radio.Group>
-                    <DatePicker.RangePicker
-                      allowClear
-                      style={{ width: 260 }}
-                      onChange={(values) => {
-                        if (!values?.[0] || !values?.[1]) {
-                          setPODateRangeFilter(null);
-                          return;
-                        }
-
-                        setPODateRangeFilter([
-                          values[0].format('YYYY-MM-DD'),
-                          values[1].format('YYYY-MM-DD'),
-                        ]);
-                      }}
-                      placeholder={['Start date', 'End date']}
-                    />
                   </Space>
                 ) : activeRole === 'QC' ? (
                   <Space size="large" wrap style={{ justifyContent: 'flex-end', width: '100%' }}>

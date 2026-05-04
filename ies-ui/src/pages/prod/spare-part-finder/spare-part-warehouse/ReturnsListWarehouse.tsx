@@ -13,6 +13,7 @@ import { formatSpfDateTime } from '../shared/dateTime';
 import RequestsWarehouseExportExcel, {
   type RequestsWarehouseExportValues,
 } from './RequestsWarehouseExportExcel';
+import { getUrlReporting } from '@/pages/ReportUrl';
 
 const { RangePicker } = DatePicker;
 
@@ -157,7 +158,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
           type: 'EXCEL',
           data: {
             reportName: 'spare_parts_returns',
-            reportPath: '',
+            reportPath: getUrlReporting('prod'),
             data: [
               {
                 key: 'StartDate',

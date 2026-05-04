@@ -129,7 +129,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     fetchSparePartCategories()
       .then((items) => setCategoryItems(items.filter((item) => item?.id && item?.category_name)))
       .catch(() => undefined);
-      
+
     fetchSparePartBusinessUnits()
       .then((items) => setKnownBusinessUnits(items.map(i => i.businessUnit).filter(Boolean)))
       .catch(() => undefined);
@@ -517,7 +517,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
           type: 'EXCEL',
           data: {
             reportName: 'spare_parts',
-            reportPath: '',
+            reportPath: getUrlReporting('prod'),
             data: [
               {
                 key: 'BusinessUnit',
@@ -632,14 +632,14 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
           {/* hidden — field temporarily removed from backend */}
 
           {/* {canSeeWarehouseLocation && ( */}
-            <Select
-              style={{ width: 140 }}
-              value={filters.warehouse}
-              options={warehouseOptions}
-              onChange={(value) => {
-                applyFiltersAndReload((previous) => ({ ...previous, warehouse: value || '' }));
-              }}
-            />
+          <Select
+            style={{ width: 140 }}
+            value={filters.warehouse}
+            options={warehouseOptions}
+            onChange={(value) => {
+              applyFiltersAndReload((previous) => ({ ...previous, warehouse: value || '' }));
+            }}
+          />
           {/* )} */}
 
           <Select
@@ -651,7 +651,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             }}
           />
 
-          
+
 
           {canSeeStatusFilter ? (
             <Select
@@ -704,11 +704,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
           rowSelection={
             canSelectRows
               ? {
-                  selectedRowKeys,
-                  onChange: (keys, rows) => {
-                    syncSelection((keys || []).map((key) => String(key)), rows || []);
-                  },
-                }
+                selectedRowKeys,
+                onChange: (keys, rows) => {
+                  syncSelection((keys || []).map((key) => String(key)), rows || []);
+                },
+              }
               : undefined
           }
           rowClassName={(record) =>
@@ -787,32 +787,32 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             {
               title: 'Warehouse',
               dataIndex: 'warehouse',
-                render: (v) => v || '—',
+              render: (v) => v || '—',
             },
             ...(canSeeWarehouseLocation
               ? [
-                  
-                  {
-                    title: 'Level',
-                    render: (_, record) => record.locations?.[0]?.level || '—',
-                  },
-                  {
-                    title: 'Shelve',
-                    render: (_, record) => record.locations?.[0]?.shelve || '—',
-                  },
-                  {
-                    title: 'Bin',
-                    render: (_, record) => record.locations?.[0]?.bin || '—',
-                  },
-                  // {
-                  //   title: 'Level',
-                  //   dataIndex: 'level',
-                  //   width: 120,
-                  //   render: (v) => v || '—',
-                  // },
-                ]
+
+                {
+                  title: 'Level',
+                  render: (_, record) => record.locations?.[0]?.level || '—',
+                },
+                {
+                  title: 'Shelve',
+                  render: (_, record) => record.locations?.[0]?.shelve || '—',
+                },
+                {
+                  title: 'Bin',
+                  render: (_, record) => record.locations?.[0]?.bin || '—',
+                },
+                // {
+                //   title: 'Level',
+                //   dataIndex: 'level',
+                //   width: 120,
+                //   render: (v) => v || '—',
+                // },
+              ]
               : []),
-            
+
             {
               title: 'Stock',
               dataIndex: 'stock',
@@ -827,7 +827,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
                 return record.stock;
               },
             },
-            
+
             {
               title: 'Status',
               dataIndex: 'status',
@@ -838,21 +838,21 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
                 return <Tag color="error">No Stock</Tag>;
               },
             },
-            ...(access.canSpfWarehouseStaff || access.canAdmin ?[
+            ...(access.canSpfWarehouseStaff || access.canAdmin ? [
               {
-              dataIndex: 'edit',
-              width: 40,
-              render: (_, record) =>(
-                <a
-                  style={{ color: '#1890ff', fontSize: 16, cursor: 'pointer' }}
-                  onClick={() => {
-                    openDetails(record);
-                  }}>
-                  Edit
-                </a>
-              )
-            },
-            ]:[])
+                dataIndex: 'edit',
+                width: 40,
+                render: (_, record) => (
+                  <a
+                    style={{ color: '#1890ff', fontSize: 16, cursor: 'pointer' }}
+                    onClick={() => {
+                      openDetails(record);
+                    }}>
+                    Edit
+                  </a>
+                )
+              },
+            ] : [])
           ]}
           request={requestData}
         />
@@ -909,7 +909,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         open={exportModalOpen}
         loading={exportLoading}
         businessUnitOptions={knownBusinessUnits}
-          showDateRange={false}
+        showDateRange={false}
         onCancel={() => setExportModalOpen(false)}
         onSave={exportRequests}
       />
@@ -921,7 +921,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         error={detailsError}
         onClose={closeDetails}
         onRequestParts={detailsItem ? handleRequestPartsFromDetails : undefined}
-        onInventoryLog={() => {}}
+        onInventoryLog={() => { }}
         EditImage={undefined}
         canManageImages={canManageImages}
         onUploadImages={canManageImages ? handleUploadProductImages : undefined}

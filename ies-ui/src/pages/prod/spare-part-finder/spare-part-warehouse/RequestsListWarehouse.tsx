@@ -19,6 +19,7 @@ import RequestsWarehouseExportExcel, {
   type RequestsWarehouseExportValues,
 } from './RequestsWarehouseExportExcel';
 import { SparePartWarehouseService } from './service';
+import { getUrlReporting } from '@/pages/ReportUrl';
 
 export default function RequestsListWarehouse() {
   const { RangePicker } = DatePicker;
@@ -187,7 +188,7 @@ export default function RequestsListWarehouse() {
           type: 'EXCEL',
           data: {
             reportName: 'spare_parts_requests',
-            reportPath: '',
+            reportPath: getUrlReporting('prod'),
             data: [
               {
                 key: 'StartDate',

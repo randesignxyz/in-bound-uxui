@@ -3,7 +3,6 @@ import { ProTable } from '@ant-design/pro-components';
 import { Button, DatePicker, Input, Select, Space, Typography, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { simpleRequestActions } from '@/services/model';
 import { buildSummaryColumns } from './RequestsListWarehouseSummary';
 import {
   deriveWarehouseDisplayStatus,
@@ -13,10 +12,10 @@ import {
 } from './requestsWarehouse.shared';
 import RequestedBatchWareHouse, { type RequestDetailData } from './RequestedBatchWareHouse';
 import { SparePartWarehouseService } from './service';
+import { emitWarehouseBadgeRefresh } from '../shared/badgeEvents';
 
 export default function RequestsListWarehouse() {
-  const requestActions = simpleRequestActions();
-  const services = SparePartWarehouseService(requestActions);
+  const services = useMemo(() => SparePartWarehouseService({}), []);
   const [searchInput, setSearchInput] = useState('');
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | WarehouseDisplayStatus>('All');
@@ -46,7 +45,7 @@ export default function RequestsListWarehouse() {
     } finally {
       setLoading(false);
     }
-  }, [searchText, statusFilter]);
+  }, [searchText, services, statusFilter]);
 
   useEffect(() => {
     loadRequests();
@@ -98,6 +97,7 @@ export default function RequestsListWarehouse() {
     try {
       const response = await services.acceptRequest(record.id);
       applyResponseUpdate(response);
+      emitWarehouseBadgeRefresh();
       message.success('Request accepted successfully.');
     } catch (error) {
       message.error('Failed to accept request.');
@@ -256,6 +256,7 @@ export default function RequestsListWarehouse() {
         onIssueRequest={async (payload) => {
           const response = await services.issueRequest(payload);
           applyResponseUpdate(response);
+          emitWarehouseBadgeRefresh();
         }}
         onSaveDraft={async (payload) => {
           const response = await services.saveDraft(payload);
@@ -276,6 +277,7 @@ export default function RequestsListWarehouse() {
         onAcceptRequest={async (id) => {
           const response = await services.acceptRequest(id);
           applyResponseUpdate(response);
+          emitWarehouseBadgeRefresh();
         }}
       />
     </>

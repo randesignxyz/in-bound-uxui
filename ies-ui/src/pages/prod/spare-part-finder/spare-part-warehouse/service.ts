@@ -115,6 +115,12 @@ type DeleteDraftPayload = { id: number };
 type AcceptIssuePayload = { id: number };
 type GeneratePickupQrPayload = { id: number; fulfillmentId?: string };
 type ConfirmPickupPayload = { id: number; fulfillmentId?: string };
+type IssueDashboardDto = {
+  pendingCount: number;
+  readyCount: number;
+  partialCount: number;
+  completedCount: number;
+};
 
 const SparePartWarehouseAction = {
   pageRequests: (params: PageIssueRequestsParams): ServiceApiType<any> => ({
@@ -174,6 +180,12 @@ const SparePartWarehouseAction = {
     actionName: 'generate-spare-part-pickup-qr',
     endpoint: 'PROD',
     payload,
+  }),
+  getDashboard: (): ServiceApiType<Record<string, never>> => ({
+    type: 'FETCH_QUERY',
+    actionName: 'get-spare-part-issue-dashboard',
+    endpoint: 'PROD',
+    payload: {},
   }),
 };
 
@@ -538,6 +550,11 @@ const mapIssueStatusFilter = (value?: 'All' | WarehouseDisplayStatus) => {
 };
 
 export const SparePartWarehouseService = (requestAction: RequestActions) => ({
+  getDashboard: async (): Promise<IssueDashboardDto> => {
+    return (await singleRequest<IssueDashboardDto>(
+      SparePartWarehouseAction.getDashboard(),
+    )(requestAction)) as IssueDashboardDto;
+  },
   pageRequests: async (params: PageIssueRequestsParams): Promise<Paging<WarehouseRequestRecord>> => {
     const response = (await singleRequest<IssueRequestDto>(
       SparePartWarehouseAction.pageRequests(params),

@@ -3,7 +3,7 @@ import { downloadReport } from '@/services/apiGateway';
 import { ProdPaths } from '@/pages/prod';
 import { simpleRequestActions } from '@/services/model';
 import { USE_STATIC_AUTH } from '@/staticAuthConfig';
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import {
   Button,
   Card,
@@ -16,6 +16,8 @@ import {
   Input,
   Radio,
   DatePicker,
+  Form,
+  Modal,
   Select,
   Space,
   Tag,
@@ -91,6 +93,13 @@ type QcStatusOptionWithBadge = {
   badgeCount?: number;
 };
 type DashboardSummaryViewMode = InboundDashboardSummaryRange | 'CUSTOM';
+type InboundExportReportTarget = 'PO_LIST' | 'IR_RECEIVING';
+type InboundExportPeriod = 'DAILY' | 'WEEKLY' | 'CUSTOM';
+type InboundExportFormValues = {
+  reportTarget: InboundExportReportTarget;
+  period: InboundExportPeriod;
+  dateRange?: [Dayjs, Dayjs];
+};
 type DashboardStatCard = {
   title: string;
   value: number;
@@ -138,6 +147,115 @@ const qcStatusOptions: Array<{ label: string; value: QcQueueStatusFilter }> = [
   { label: 'Complete', value: 'Complete' },
   { label: 'All', value: 'All' },
 ];
+
+function getInboundExportDateRange(period: InboundExportPeriod): [Dayjs, Dayjs] {
+  const today = dayjs();
+
+  if (period === 'WEEKLY') {
+    return [today.startOf('week'), today.endOf('week')];
+  }
+
+  return [today, today];
+}
+
+function InboundExportReportModal({
+  open,
+  loading,
+  onCancel,
+  onExport,
+}: {
+  open: boolean;
+  loading: boolean;
+  onCancel: () => void;
+  onExport: (values: Required<InboundExportFormValues>) => Promise<void>;
+}) {
+  const [form] = Form.useForm<InboundExportFormValues>();
+  const period = Form.useWatch('period', form);
+
+  useEffect(() => {
+    if (!open) return;
+
+    form.setFieldsValue({
+      reportTarget: 'PO_LIST',
+      period: 'DAILY',
+      dateRange: getInboundExportDateRange('DAILY'),
+    });
+  }, [form, open]);
+
+  return (
+    <Modal
+      title="Export Report"
+      open={open}
+      width={520}
+      onCancel={onCancel}
+      confirmLoading={loading}
+      footer={[
+        <Button key="cancel" onClick={onCancel}>
+          Cancel
+        </Button>,
+        <Button
+          key="export"
+          type="primary"
+          loading={loading}
+          icon={<ExportOutlined />}
+          onClick={async () => {
+            const values = await form.validateFields();
+            const dateRange = values.dateRange || getInboundExportDateRange(values.period);
+
+            await onExport({
+              reportTarget: values.reportTarget,
+              period: values.period,
+              dateRange,
+            });
+          }}
+        >
+          Export
+        </Button>,
+      ]}
+    >
+      <Form form={form} layout="vertical">
+        <Form.Item name="reportTarget" label="Report Type" rules={[{ required: true }]}>
+          <Radio.Group
+            optionType="button"
+            buttonStyle="solid"
+            options={[
+              { label: 'PO List', value: 'PO_LIST' },
+              { label: 'IR / Receiving', value: 'IR_RECEIVING' },
+            ]}
+          />
+        </Form.Item>
+
+        <Form.Item name="period" label="Export Period" rules={[{ required: true }]}>
+          <Radio.Group
+            optionType="button"
+            buttonStyle="solid"
+            onChange={(event) => {
+              const nextPeriod = event.target.value as InboundExportPeriod;
+              form.setFieldValue('dateRange', getInboundExportDateRange(nextPeriod));
+            }}
+            options={[
+              { label: 'Daily', value: 'DAILY' },
+              { label: 'Weekly', value: 'WEEKLY' },
+              { label: 'Date Range', value: 'CUSTOM' },
+            ]}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="dateRange"
+          rules={[{ required: true, message: 'Please select a date range.' }]}
+        >
+          <DatePicker.RangePicker
+            allowClear={false}
+            disabled={period !== 'CUSTOM'}
+            style={{ width: '100%' }}
+            format="YYYY-MM-DD"
+          />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+}
 
 const inboundWorkspaceMotionStyles = `
   @keyframes inboundWorkspaceTabEnter {
@@ -312,6 +430,7 @@ export default function UpcomingInboundListview() {
   const [dashboardSummaryRange, setDashboardSummaryRange] = useState<DashboardSummaryViewMode>('OVERALL');
   const [dashboardPeriodFilter, setDashboardPeriodFilter] = useState<[string, string] | null>(null);
   const [isExportingReport, setIsExportingReport] = useState(false);
+  const [isExportReportModalOpen, setIsExportReportModalOpen] = useState(false);
   const [inboundStats, setInboundStats] = useState<InboundDashboardSummaryApi>({
     expectedToday: 0,
     qcPending: 0,
@@ -1460,25 +1579,58 @@ export default function UpcomingInboundListview() {
     });
   };
 
-  const handleExportReportClick = async () => {
-    const [dateFrom, dateTo] = sharedDateRangeFilter || [];
+  const handleExportReport = async (values: Required<InboundExportFormValues>) => {
+    const [dateFromValue, dateToValue] = values.dateRange;
+    const dateFrom = dateFromValue.format('YYYY-MM-DD');
+    const dateTo = dateToValue.format('YYYY-MM-DD');
+    const isPoReport = values.reportTarget === 'PO_LIST';
 
     try {
       setIsExportingReport(true);
       await downloadReport(requestActions)({
-        fileName: `inventory-inbound-report-${dayjs().format('YYYY-MM-DD')}`,
+        fileName: `inventory-inbound-${isPoReport ? 'po-list' : 'ir-receiving'}-${dateFrom}-to-${dateTo}`,
         reportName: 'prod-inventory-inbound-report',
         data: {
           ...buildBusinessUnitCriteria(),
-          range: dashboardSummaryRange === 'CUSTOM' ? null : dashboardSummaryRange,
-          dateFrom: dateFrom || null,
-          dateTo: dateTo || null,
-          poSearchValue: poSearchValue.trim() || null,
-          vendor: poVendorFilter === 'ALL' ? null : poVendorFilter,
-          type: poTypeFilter === 'ALL' ? null : poTypeFilter,
+          reportTarget: values.reportTarget,
+          period: values.period,
+          dateFrom,
+          dateTo,
+          filters: isPoReport
+            ? {
+                searchValue: poSearchValue.trim() || null,
+                vendor: poVendorFilter === 'ALL' ? null : poVendorFilter,
+                type: poTypeFilter === 'ALL' ? null : poTypeFilter,
+              }
+            : {
+                role: activeRole,
+                view: effectiveInboundView,
+                searchValue: queueSearchValue.trim() || null,
+                type:
+                  effectiveInboundView === 'history'
+                    ? historyTypeFilter === 'ALL'
+                      ? null
+                      : historyTypeFilter
+                    : queueTypeFilter === 'ALL'
+                      ? null
+                      : queueTypeFilter,
+                status:
+                  activeRole === 'QC'
+                    ? qcStatusFilter === 'All'
+                      ? null
+                      : qcStatusFilter
+                    : historyStatusFilter === 'ALL'
+                      ? null
+                      : historyStatusFilter,
+                source:
+                  activeRole === 'WAREHOUSE_SUPERVISOR' && queueSourceFilter !== 'ALL'
+                    ? queueSourceFilter
+                    : null,
+              },
         },
         type: 'EXCEL',
       });
+      setIsExportReportModalOpen(false);
     } catch (error) {
       message.error('Failed to download.');
     } finally {
@@ -1784,7 +1936,7 @@ export default function UpcomingInboundListview() {
               <Button
                 icon={<ExportOutlined />}
                 loading={isExportingReport}
-                onClick={handleExportReportClick}
+                onClick={() => setIsExportReportModalOpen(true)}
                 style={{ fontWeight: 600 }}
               >
                 Export Report
@@ -2221,6 +2373,13 @@ export default function UpcomingInboundListview() {
         </div>
       </div>
       )}
+
+      <InboundExportReportModal
+        open={!workspaceContent && isExportReportModalOpen}
+        loading={isExportingReport}
+        onCancel={() => setIsExportReportModalOpen(false)}
+        onExport={handleExportReport}
+      />
 
       {/* ── Modals & Sidebars ── */}
       {!workspaceContent && (

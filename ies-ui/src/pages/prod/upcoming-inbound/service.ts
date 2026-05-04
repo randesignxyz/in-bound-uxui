@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Paging } from '@/services/API';
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
@@ -15,9 +16,13 @@ import {
   InboundPurchaseOrderSearch,
   InboundSaveActivityInput,
   InboundSaveGoodsReceiptInput,
+  InboundSupplierMasterApi,
+  InboundSupplierMasterListParams,
   InboundSubmitQcReviewInput,
   InboundSubmitSupervisorReviewInput,
   InboundSuccessPayloadResponse,
+  InboundUomMasterApi,
+  InboundUomMasterListParams,
   UpcomingInboundGoodsReceipt,
   UpcomingInboundPurchaseOrder,
 } from './data';
@@ -90,6 +95,22 @@ const UpcomingInboundAction = {
     type: 'LIST_QUERY',
     endpoint: 'PROD',
     actionName: 'inbound-get-count-purchase-order',
+    payload: params,
+  }),
+
+  listSuppliers: (
+    params: InboundSupplierMasterListParams,
+  ): ServiceApiType<InboundSupplierMasterListParams> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-list-suppliers',
+    payload: params,
+  }),
+
+  listUoms: (params: InboundUomMasterListParams): ServiceApiType<InboundUomMasterListParams> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-list-uoms',
     payload: params,
   }),
 
@@ -242,6 +263,22 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
       return mapInboundPurchaseOrders(response);
     },
 
+    listSuppliers: async (
+      params: InboundSupplierMasterListParams = {},
+    ): Promise<InboundSupplierMasterApi[]> => {
+      const response = (await singleRequest<InboundSupplierMasterApi>(
+        UpcomingInboundAction.listSuppliers(params),
+      )(requestAction)) as InboundSupplierMasterApi[];
+      return extractArrayResponse(response);
+    },
+
+    listUoms: async (params: InboundUomMasterListParams = {}): Promise<InboundUomMasterApi[]> => {
+      const response = (await singleRequest<InboundUomMasterApi>(
+        UpcomingInboundAction.listUoms(params),
+      )(requestAction)) as InboundUomMasterApi[];
+      return extractArrayResponse(response);
+    },
+
     pageGoodsReceipts: async (
       params: InboundGoodsReceiptTableParams,
     ): Promise<Paging<UpcomingInboundGoodsReceipt>> => {
@@ -324,7 +361,7 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
 };
 
 function mapPaging<IN, OU>(paging: Paging<IN>, mapper: (value: IN) => OU): Paging<OU> {
-  const items = extractPagingItems(paging);
+  const items = extractPagingItems<IN>(paging);
   return {
     ...paging,
     items: items.map(mapper),
@@ -354,6 +391,10 @@ function extractArrayResponse<IN>(response: IN[] | any): IN[] {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.items)) return response.items;
   if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.content)) return response.content;
+  if (Array.isArray(response?.data?.items)) return response.data.items;
+  if (Array.isArray(response?.data?.content)) return response.data.content;
+  if (Array.isArray(response?.data?.data)) return response.data.data;
   return [];
 }
 

@@ -7,7 +7,6 @@ const { Text, Title } = Typography;
 export interface SupervisorApprovalSuccessData {
   approvedBy: string;
   approvedDate: string;
-  grNumber: string;
   approvedGrNumber?: string;
   receivingNumber?: string;
   note?: string;
@@ -60,17 +59,16 @@ export function SupervisorApprovalSuccessModal({
           Approval Successful
         </Title>
         <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
-          Inbound receiving {data.receivingNumber || data.grNumber} has been approved
-          {data.approvedGrNumber ? ` as ${data.approvedGrNumber}` : ''} and is ready to post to SAP.
+          Inbound receiving {data.receivingNumber || '-'} has been approved and is ready to post to SAP.
         </Text>
       </div>
 
       <Descriptions bordered size="small" column={2}>
         <Descriptions.Item label="IR Number">
-          {data.receivingNumber || data.grNumber}
+          {data.receivingNumber || '-'}
         </Descriptions.Item>
-        <Descriptions.Item label="GR Number">
-          {data.approvedGrNumber || data.grNumber}
+        <Descriptions.Item label="SAP GR Number">
+          {data.approvedGrNumber || <Text type="secondary">Waiting SAP GR</Text>}
         </Descriptions.Item>
         <Descriptions.Item label="PO Reference">{poReferenceSummary}</Descriptions.Item>
         <Descriptions.Item label="Supplier">{supplierSummary}</Descriptions.Item>

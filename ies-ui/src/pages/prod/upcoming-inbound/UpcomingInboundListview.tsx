@@ -62,6 +62,8 @@ import type {
   InboundDashboardSummaryParams,
   InboundDashboardSummaryRange,
   InboundSaveGoodsReceiptInput,
+  InboundSupplierMasterApi,
+  InboundUomMasterApi,
   UpcomingInboundGoodsReceipt as GoodsReceipt,
   UpcomingInboundPurchaseOrder as PurchaseOrder,
 } from './data';
@@ -117,6 +119,7 @@ const historyStatusOptions: Array<{ label: string; value: HistoryStatusFilter }>
   { label: 'All', value: 'ALL' },
   { label: 'Draft', value: 'Draft' },
   { label: 'Pending', value: 'Pending' },
+  { label: 'Ready to Post SAP', value: 'Ready to Post SAP' },
   { label: 'Complete', value: 'Complete' },
   { label: 'Correction Required', value: 'Correction Required' },
   { label: 'Rejected', value: 'Rejected' },
@@ -126,6 +129,7 @@ const warehouseHistoryStatusOptions: Array<{ label: string; value: HistoryStatus
   { label: 'All Status', value: 'ALL' },
   { label: 'Draft', value: 'Draft' },
   { label: 'Pending', value: 'Pending' },
+  { label: 'Ready to Post SAP', value: 'Ready to Post SAP' },
   { label: 'Complete', value: 'Complete' },
   { label: 'Correction Required', value: 'Correction Required' },
   { label: 'Rejected', value: 'Rejected' },
@@ -134,6 +138,7 @@ const warehouseHistoryStatusOptions: Array<{ label: string; value: HistoryStatus
 const supervisorHistoryStatusOptions: Array<{ label: string; value: HistoryStatusFilter }> = [
   { label: 'All Status', value: 'ALL' },
   { label: 'Pending Approval', value: 'SUPERVISOR_PENDING' },
+  { label: 'Ready to Post SAP', value: 'Ready to Post SAP' },
   { label: 'QC Pending', value: 'QC_PENDING' },
   { label: 'QC Rejected', value: 'QC_REJECTED' },
   { label: 'Complete', value: 'Complete' },
@@ -236,7 +241,7 @@ function InboundExportReportModal({
             options={[
               { label: 'Daily', value: 'DAILY' },
               { label: 'Weekly', value: 'WEEKLY' },
-              { label: 'Date Range', value: 'CUSTOM' },
+              { label: 'Pick a Date Range', value: 'CUSTOM' },
             ]}
           />
         </Form.Item>
@@ -415,6 +420,8 @@ export default function UpcomingInboundListview() {
     inboundVisibleBusinessUnits[0],
   );
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [supplierMasterOptions, setSupplierMasterOptions] = useState<InboundSupplierMasterApi[]>([]);
+  const [uomMasterOptions, setUomMasterOptions] = useState<InboundUomMasterApi[]>([]);
 
   // Shared PO filters
   const [poSearchValue, setPOSearchValue] = useState('');
@@ -499,6 +506,8 @@ export default function UpcomingInboundListview() {
     isRoleSimulationEnabled || inboundRoleOptions.includes(simulationRole)
       ? simulationRole
       : inboundRoleOptions[0] || 'WAREHOUSE_STAFF';
+  const effectiveInboundView: InboundViewMode =
+    activeRole === 'WAREHOUSE_STAFF' ? inboundView : 'operations';
 
   const routes = [
     { path: ProdPaths.prod, label: 'Prod' },
@@ -509,6 +518,47 @@ export default function UpcomingInboundListview() {
     () => getPurchaseOrderVendorOptions(purchaseOrders),
     [purchaseOrders],
   );
+
+  const supplierOptionsForTempReceipt = useMemo<InboundSupplierMasterApi[]>(() => {
+    if (supplierMasterOptions.length > 0) return supplierMasterOptions;
+
+    const supplierNames = Array.from(
+      new Set(
+        purchaseOrders
+          .filter((po) => !activeBusinessUnitFilter || po.businessUnit === activeBusinessUnitFilter)
+          .map((po) => po.supplier?.trim())
+          .filter((supplier): supplier is string => Boolean(supplier)),
+      ),
+    );
+
+    return supplierNames.map((supplierName, index) => ({
+      id: index,
+      business_unit: activeBusinessUnitFilter || '',
+      supplier_code: supplierName,
+      supplier_name: supplierName,
+      status: 'Active',
+    }));
+  }, [activeBusinessUnitFilter, purchaseOrders, supplierMasterOptions]);
+
+  const uomOptionsForTempReceipt = useMemo<InboundUomMasterApi[]>(() => {
+    if (uomMasterOptions.length > 0) return uomMasterOptions;
+
+    const uomCodes = Array.from(
+      new Set(
+        purchaseOrders
+          .flatMap((po) => po.items || [])
+          .map((item) => item.uom?.trim())
+          .filter((uom): uom is string => Boolean(uom)),
+      ),
+    );
+
+    return uomCodes.map((uomCode, index) => ({
+      id: index,
+      uom_code: uomCode,
+      uom_name: uomCode,
+      status: 'Active',
+    }));
+  }, [purchaseOrders, uomMasterOptions]);
 
   const sharedDateRangeFilter = useMemo<[string, string] | null>(() => {
     if (dashboardSummaryRange === 'CUSTOM') {
@@ -635,7 +685,7 @@ export default function UpcomingInboundListview() {
       return;
     }
 
-    const [poResult, receiptResult, summaryResult] = await Promise.allSettled([
+    const [poResult, receiptResult, summaryResult, supplierResult, uomResult] = await Promise.allSettled([
       services.pagePurchaseOrders({
         criteria: {
           advanceSearch: buildPurchaseOrderAdvanceSearchCriteria(),
@@ -653,6 +703,11 @@ export default function UpcomingInboundListview() {
         },
       }),
       services.getDashboardSummary(buildDashboardSummaryParams()),
+      services.listSuppliers({
+        businessUnit: activeBusinessUnitFilter ?? null,
+        status: 'Active',
+      }),
+      services.listUoms({ status: 'Active' }),
     ]);
 
     if (poResult.status === 'fulfilled') {
@@ -677,6 +732,18 @@ export default function UpcomingInboundListview() {
       setInboundStats(summaryResult.value);
     } else {
       message.error(summaryResult.reason?.message || 'Failed to load inbound dashboard summary.');
+    }
+
+    if (supplierResult.status === 'fulfilled') {
+      setSupplierMasterOptions(supplierResult.value);
+    } else {
+      message.warning('Supplier master data did not load. Using PO supplier fallback.');
+    }
+
+    if (uomResult.status === 'fulfilled') {
+      setUomMasterOptions(uomResult.value);
+    } else {
+      message.warning('UOM master data did not load. Using PO UOM fallback.');
     }
   };
 
@@ -1505,7 +1572,6 @@ export default function UpcomingInboundListview() {
         setSupervisorApprovalSuccess({
           approvedBy: updated.approvedBy || 'warehouse.supervisor',
           approvedDate: updated.approvedDate || '',
-          grNumber: updated.approvedGrNumber || updated.grNumber,
           approvedGrNumber: updated.approvedGrNumber || undefined,
           receivingNumber: updated.receivingNumber || updated.grNumber,
           note: payload.note?.trim(),
@@ -1747,8 +1813,6 @@ export default function UpcomingInboundListview() {
 
   const shouldShowRoleSelector = isRoleSimulationEnabled || inboundRoleOptions.length > 1;
   const shouldShowInboundTabs = activeRole === 'WAREHOUSE_STAFF';
-  const effectiveInboundView: InboundViewMode =
-    activeRole === 'WAREHOUSE_STAFF' ? inboundView : 'operations';
   const dashboardSummaryTitle =
     activeRole === 'WAREHOUSE_STAFF'
       ? 'Upcoming Inbound Dashboard'
@@ -1833,6 +1897,8 @@ export default function UpcomingInboundListview() {
           initialReceipt={warehouseCorrectionReceipt}
           correctionMode
           availableBusinessUnits={tempReceiptBusinessUnits}
+          supplierOptions={supplierOptionsForTempReceipt}
+          uomOptions={uomOptionsForTempReceipt}
         />
       ) : (
         <GRCreationModal
@@ -1863,6 +1929,8 @@ export default function UpcomingInboundListview() {
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmitGR}
         availableBusinessUnits={tempReceiptBusinessUnits}
+        supplierOptions={supplierOptionsForTempReceipt}
+        uomOptions={uomOptionsForTempReceipt}
       />
     )) ||
     (linkPOReceipt && (

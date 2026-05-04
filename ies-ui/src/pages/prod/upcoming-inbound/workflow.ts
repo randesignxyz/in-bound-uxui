@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 export type InboundProcessState =
   | 'RECEIVED_CHECKING'
   | 'MISMATCH_EXCEPTION'
@@ -19,6 +20,7 @@ export type LegacyGRStatus =
   | 'Draft'
   | 'Pending Approval'
   | 'Approved'
+  | 'Ready To Post SAP'
   | 'Posted'
   | 'Merged'
   | 'Correction Required';
@@ -26,6 +28,7 @@ export type LegacyGRStatus =
 export type InboundHistoryStatus =
   | 'Draft'
   | 'Pending'
+  | 'Ready to Post SAP'
   | 'Complete'
   | 'Correction Required'
   | 'Rejected';
@@ -594,6 +597,7 @@ export function getReceiptDisplayStatus(receipt: GoodsReceipt) {
     case 'MERGED_TO_SUPERVISOR_REVIEW':
       return 'Pending Supervisor Review';
     case 'SUPERVISOR_APPROVED':
+      return 'Ready to Post SAP';
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -625,6 +629,7 @@ export function getReceiptDisplayStatusColor(displayStatus: string) {
       return 'orange';
     case 'QC Pending':
     case 'Pending Supervisor Review':
+    case 'Ready to Post SAP':
       return 'gold';
     case 'QC Passed':
       return 'blue';
@@ -651,6 +656,7 @@ export function getInboundHistoryStatus(receipt: GoodsReceipt): InboundHistorySt
     case 'PENDING_SUPERVISOR_REVIEW':
       return 'Pending';
     case 'SUPERVISOR_APPROVED':
+      return 'Ready to Post SAP';
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -730,7 +736,7 @@ export function mapProcessStateToLegacyStatus(state: InboundProcessState): Legac
     case 'PENDING_SUPERVISOR_REVIEW':
       return 'Pending Approval';
     case 'SUPERVISOR_APPROVED':
-      return 'Approved';
+      return 'Ready To Post SAP';
     case 'MERGED_TO_SUPERVISOR_REVIEW':
       return 'Merged';
     case 'TRANSFERRED_TO_PM_RM_WH':
@@ -840,7 +846,7 @@ export const officialStateLabel: Record<InboundProcessState, string> = {
   PENDING_SUPERVISOR_REVIEW: 'Pending Supervisor Review',
   CORRECTION_REQUIRED: 'Correction Required',
   MERGED_TO_SUPERVISOR_REVIEW: 'Merged To Supervisor Review',
-  SUPERVISOR_APPROVED: 'Supervisor Approved',
+  SUPERVISOR_APPROVED: 'Ready to Post SAP',
   TRANSFERRED_TO_PM_RM_WH: 'Supervisor Approved',
   FIN_SUBMITTED: 'Supervisor Approved',
   DAILY_CLOSED: 'Supervisor Approved',

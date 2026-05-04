@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import dayjs from 'dayjs';
 import type {
   InboundDashboardSummaryApi,
@@ -69,6 +70,7 @@ const LEGACY_STATUS_VALUES: LegacyGRStatus[] = [
   'Draft',
   'Pending Approval',
   'Approved',
+  'Ready To Post SAP',
   'Posted',
   'Merged',
   'Correction Required',
@@ -115,13 +117,17 @@ export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInb
   const recordTypeLabel = readString(api, 'recordTypeLabel', 'record_type_label');
   const fallbackStepTitle = workflowLabel || recordTypeLabel || mapProcessStateToLegacyStatus(processState);
   const qcResult = normalizeQcResult(readString(api, 'qcResult', 'qc_result'), processState);
+  const approvedGrNumber =
+    processState === 'SUPERVISOR_APPROVED'
+      ? undefined
+      : readValue<string | null>(api, 'approvedGrNumber', 'approved_gr_number') ?? undefined;
 
   return {
     id: readValue<number | null>(api, 'id') ?? undefined,
     grNumber: readString(api, 'grNumber', 'gr_number'),
     receivingNumber: readString(api, 'receivingNumber', 'receiving_number'),
     businessUnit: readString(api, 'businessUnit', 'business_unit'),
-    approvedGrNumber: readValue<string | null>(api, 'approvedGrNumber', 'approved_gr_number') ?? undefined,
+    approvedGrNumber,
     previousReceivingNumber:
       readValue<string | null>(api, 'previousReceivingNumber', 'previous_receiving_number') ?? undefined,
     previousApprovedGrNumber:
@@ -494,12 +500,12 @@ function readValue<T = unknown>(source: unknown, ...keys: string[]): T | undefin
 
 function readString(source: unknown, ...keys: string[]): string {
   const value = readValue<unknown>(source, ...keys);
-  return value == null ? '' : String(value);
+  return value === null || value === undefined ? '' : String(value);
 }
 
 function readNumber(source: unknown, ...keys: string[]): number | undefined {
   const value = readValue<unknown>(source, ...keys);
-  if (value == null || value === '') return undefined;
+  if (value === null || value === undefined || value === '') return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 }

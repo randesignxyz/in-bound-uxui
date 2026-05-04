@@ -29,6 +29,7 @@ const statusColor: Record<LegacyGRStatus, string> = {
   Draft: 'default',
   'Pending Approval': 'gold',
   Approved: 'green',
+  'Ready To Post SAP': 'blue',
   Posted: 'blue',
   Merged: 'cyan',
   'Correction Required': 'red',
@@ -80,7 +81,7 @@ export function GRQueueTable({
       key: 'poNumber',
       title: 'PO Reference',
       dataIndex: 'poNumber',
-      render: (_: string, row: GoodsReceipt) =>
+      render: (_: ReactNode, row: GoodsReceipt) =>
         getReceiptPOReferences(row).length > 0 ? (
           summarizePOReferences(row)
         ) : (

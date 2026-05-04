@@ -27,7 +27,7 @@ import {
   hasReceiptDiscrepancy,
 } from '../workflow';
 import type { GRItem } from '../workflow';
-import type { UpcomingInboundGoodsReceipt } from '../data';
+import type { InboundSupplierMasterApi, InboundUomMasterApi, UpcomingInboundGoodsReceipt } from '../data';
 import {
   applyUploadedSupportingDocs,
   getSupportingUploadFilePreview,
@@ -50,6 +50,8 @@ interface TempGRCreationModalProps {
   initialReceipt?: UpcomingInboundGoodsReceipt | null;
   correctionMode?: boolean;
   availableBusinessUnits?: string[];
+  supplierOptions?: InboundSupplierMasterApi[];
+  uomOptions?: InboundUomMasterApi[];
 }
 
 const receiverWarehouseName = 'warehouse.staff01';
@@ -86,6 +88,8 @@ export function TempGRCreationModal({
   initialReceipt,
   correctionMode = false,
   availableBusinessUnits = [],
+  supplierOptions = [],
+  uomOptions = [],
 }: TempGRCreationModalProps) {
   const [postingDate, setPostingDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [actualReceiptDate, setActualReceiptDate] = useState(dayjs().format('YYYY-MM-DD'));
@@ -130,6 +134,26 @@ export function TempGRCreationModal({
     setUploadedFiles([]);
     setErrors({});
   }, [availableBusinessUnits, initialReceipt, open]);
+
+  const visibleSupplierOptions = useMemo(
+    () =>
+      supplierOptions
+        .filter((option) => !businessUnit || !option.business_unit || option.business_unit === businessUnit)
+        .map((option) => ({
+          label: `${option.supplier_name} (${option.supplier_code})`,
+          value: option.supplier_name,
+        })),
+    [businessUnit, supplierOptions],
+  );
+
+  const visibleUomOptions = useMemo(
+    () =>
+      uomOptions.map((option) => ({
+        label: `${option.uom_code} - ${option.uom_name}`,
+        value: option.uom_code,
+      })),
+    [uomOptions],
+  );
 
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     setItems((prev) =>
@@ -403,11 +427,15 @@ export function TempGRCreationModal({
         key: 'uom',
         width: 96,
         render: (_, record) => (
-          <Input
-            value={record.uom}
-            onChange={(event) => updateItem(record.index, 'uom', event.target.value.toUpperCase())}
+          <Select
+            showSearch
+            value={record.uom || undefined}
+            onChange={(value) => updateItem(record.index, 'uom', value)}
             status={errors[`uom-${record.index}`] ? 'error' : undefined}
             placeholder="UoM"
+            options={visibleUomOptions}
+            optionFilterProp="label"
+            notFoundContent="No UOM master data"
           />
         ),
       },
@@ -475,7 +503,7 @@ export function TempGRCreationModal({
         ),
       },
     ],
-    [errors, items.length, updateItem],
+    [errors, items.length, updateItem, visibleUomOptions],
   );
 
   return (
@@ -525,10 +553,14 @@ export function TempGRCreationModal({
                   validateStatus={errors.supplier ? 'error' : undefined}
                   help={errors.supplier ? 'Required' : undefined}
                 >
-                  <Input
-                    value={supplier}
-                    onChange={(event) => setSupplier(event.target.value)}
+                  <Select
+                    showSearch
+                    value={supplier || undefined}
+                    onChange={setSupplier}
                     placeholder="Supplier name"
+                    options={visibleSupplierOptions}
+                    optionFilterProp="label"
+                    notFoundContent="No supplier master data"
                   />
                 </Form.Item>
               </Col>

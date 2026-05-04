@@ -34,6 +34,33 @@ export interface InboundPurchaseOrderCountParams {
   status?: string | null;
 }
 
+export interface InboundSupplierMasterListParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
+  searchValue?: string | null;
+  status?: string | null;
+}
+
+export interface InboundUomMasterListParams {
+  searchValue?: string | null;
+  status?: string | null;
+}
+
+export interface InboundSupplierMasterApi {
+  id?: number | null;
+  business_unit: string;
+  supplier_code: string;
+  supplier_name: string;
+  status: string;
+}
+
+export interface InboundUomMasterApi {
+  id?: number | null;
+  uom_code: string;
+  uom_name: string;
+  status: string;
+}
+
 export interface InboundGoodsReceiptSearch {
   searchValue?: string;
   sort?: {

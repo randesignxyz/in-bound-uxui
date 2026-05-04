@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 const { RangePicker } = DatePicker;
 
 type ExportPeriod = 'week' | 'month' | 'year' | 'custom';
-type BusinessUnitMode = 'all' | 'select';
 
 export type RequestsWarehouseExportValues = {
   dateRange?: [Dayjs, Dayjs];
@@ -25,7 +24,6 @@ type Props = {
 type FormValues = {
   period: ExportPeriod;
   dateRange?: [Dayjs, Dayjs];
-  businessUnitMode: BusinessUnitMode;
   businessUnits?: string[];
 };
 
@@ -54,7 +52,6 @@ export default function RequestsWarehouseExportExcel({
 }: Props) {
   const [form] = Form.useForm<FormValues>();
   const period = Form.useWatch('period', form);
-  const businessUnitMode = Form.useWatch('businessUnitMode', form);
 
   useEffect(() => {
     if (!open) return;
@@ -62,8 +59,7 @@ export default function RequestsWarehouseExportExcel({
     form.setFieldsValue({
       period: showDateRange ? 'week' : undefined,
       dateRange: showDateRange ? getDateRangeByPeriod('week') : undefined,
-      businessUnitMode: 'all',
-      businessUnits: [],
+      businessUnits: ['All'],
     });
   }, [form, open, showDateRange]);
 
@@ -88,9 +84,10 @@ export default function RequestsWarehouseExportExcel({
               ? values.dateRange || getDateRangeByPeriod(values.period)
               : undefined;
 
+            const selectedBU = values.businessUnits || [];
             await onSave({
               dateRange,
-              businessUnits: values.businessUnitMode === 'all' ? [] : values.businessUnits || [],
+              businessUnits: selectedBU.includes('All') || selectedBU.length === 0 ? [] : selectedBU,
             });
           }}
         >
@@ -132,36 +129,27 @@ export default function RequestsWarehouseExportExcel({
           </>
         ) : null}
 
-        <Form.Item name="businessUnitMode" label="Business Unit" rules={[{ required: true }]}>
-          <Radio.Group
-            optionType="button"
-            buttonStyle="solid"
-            onChange={(event) => {
-              if ((event.target.value as BusinessUnitMode) === 'all') {
-                form.setFieldValue('businessUnits', []);
+        <Form.Item name="businessUnits" label="Business Unit">
+          <Select
+            mode="multiple"
+            allowClear
+            showSearch
+            placeholder="All Business Units"
+            onChange={(val: string[]) => {
+              const prev = form.getFieldValue('businessUnits') || [];
+              const justAddedAll = !prev.includes('All') && val.includes('All');
+              if (justAddedAll || val.length === 0) {
+                form.setFieldValue('businessUnits', ['All']);
+              } else if (prev.includes('All') && val.length > 1) {
+                form.setFieldValue('businessUnits', val.filter((v) => v !== 'All'));
               }
             }}
             options={[
-              { label: 'All', value: 'all' },
-              { label: 'Select Business Unit', value: 'select' },
+              { label: 'All', value: 'All' },
+              ...businessUnitOptions.map((item) => ({ label: item, value: item }))
             ]}
           />
         </Form.Item>
-
-        {businessUnitMode === 'select' ? (
-          <Form.Item
-            name="businessUnits"
-            rules={[{ required: true, message: 'Please select at least one business unit.' }]}
-          >
-            <Select
-              mode="multiple"
-              allowClear
-              showSearch
-              placeholder="Select business unit"
-              options={businessUnitOptions.map((item) => ({ label: item, value: item }))}
-            />
-          </Form.Item>
-        ) : null}
       </Form>
     </Modal>
   );

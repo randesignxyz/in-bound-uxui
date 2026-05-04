@@ -164,8 +164,8 @@ export default function MyRequestListview({ onResubmitRequest }: MyRequestListvi
         },
       },
       pagination: {
-        current: pagination.current,
-        pageSize: pagination.pageSize,
+        current: pagination.current ?? 0,
+        pageSize: pagination.pageSize ?? 20,
       },
     });
 

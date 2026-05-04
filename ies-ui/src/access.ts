@@ -647,11 +647,6 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         OUTBOUND_TRANSFER_ROLES.some((it) => it === item),
       ) || hasInboundRole || false,
 
-    canAccessInventoryInboundHub:
-      currentUser?.authorities.some((item) =>
-        OUTBOUND_TRANSFER_ROLES.some((it) => it === item),
-      ) || hasInboundRole || false,
-
     canAccessInventoryTranferRequestMenuItem:
       currentUser?.authorities.some((item) =>
         OUTBOUND_TRANSFER_ROLES.some((it) => it === item),

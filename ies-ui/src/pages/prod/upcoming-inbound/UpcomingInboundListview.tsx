@@ -362,7 +362,6 @@ export default function UpcomingInboundListview() {
 
   const routes = [
     { path: ProdPaths.prod, label: 'Prod' },
-    { path: `${ProdPaths.inventoryInbound}/list`, label: 'Inventory Inbound' },
     { path: '', label: 'Upcoming Inbound' },
   ];
 
@@ -1516,7 +1515,8 @@ export default function UpcomingInboundListview() {
     label: simulationRoleLabel[role],
     value: role,
   }));
-  const shouldShowBusinessUnitSelector = !isInboundAdmin && inboundVisibleBusinessUnits.length > 1;
+  const shouldShowBusinessUnitControl = !isInboundAdmin && inboundVisibleBusinessUnits.length > 0;
+  const canSelectBusinessUnit = inboundVisibleBusinessUnits.length > 1;
 
   const shouldShowRoleSelector = isRoleSimulationEnabled || inboundRoleOptions.length > 1;
   const shouldShowInboundTabs = activeRole === 'WAREHOUSE_STAFF';
@@ -1524,7 +1524,7 @@ export default function UpcomingInboundListview() {
     activeRole === 'WAREHOUSE_STAFF' ? inboundView : 'operations';
   const dashboardSummaryTitle =
     activeRole === 'WAREHOUSE_STAFF'
-      ? 'Inbound Upcoming Dashboard'
+      ? 'Upcoming Inbound Dashboard'
       : 'Inbound Receiving Dashboard';
   const operationsTabLabel =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Inbound Receiving' : 'Inbound Upcoming';
@@ -1685,14 +1685,16 @@ export default function UpcomingInboundListview() {
           </Col>
           <Col>
             <Space size={12} wrap>
-              {shouldShowBusinessUnitSelector && (
+              {shouldShowBusinessUnitControl && (
                 <Space size={8}>
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     Business Unit
                   </Text>
                   <Select
                     value={activeBusinessUnit}
+                    open={canSelectBusinessUnit ? undefined : false}
                     onChange={(value) => {
+                      if (!canSelectBusinessUnit) return;
                       setActiveBusinessUnit(value);
                       resetWorkspaceFilters();
                     }}
@@ -1703,11 +1705,6 @@ export default function UpcomingInboundListview() {
                     }))}
                   />
                 </Space>
-              )}
-              {!shouldShowBusinessUnitSelector && activeBusinessUnitFilter && (
-                <Tag color="geekblue" style={{ marginRight: 0 }}>
-                  BU: {activeBusinessUnitFilter}
-                </Tag>
               )}
               <Button
                 icon={<ExportOutlined />}
@@ -1919,14 +1916,11 @@ export default function UpcomingInboundListview() {
                       onChange={(event) => setQcStatusFilter(event.target.value)}
                     >
                       {qcStatusOptionsWithBadge.map((option) => (
-                        <Badge
-                          key={option.value}
-                          count={option.badgeCount ?? 0}
-                          size="small"
-                          offset={[-6, 6]}
-                        >
-                          <Radio.Button value={option.value}>{option.label}</Radio.Button>
-                        </Badge>
+                        <Radio.Button key={option.value} value={option.value}>
+                          <Badge count={option.badgeCount ?? 0} size="small" offset={[8, -6]}>
+                            {option.label}
+                          </Badge>
+                        </Radio.Button>
                       ))}
                     </Radio.Group>
                   </Space>

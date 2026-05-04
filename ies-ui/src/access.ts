@@ -40,6 +40,25 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     return list.includes(actionUpper);
   };
 
+  const hasAuthority = (authority: string) => roles.some((item) => item === authority);
+  const hasAuthorityPrefix = (prefix: string) =>
+    roles.some((item) => typeof item === 'string' && item.startsWith(prefix));
+
+  const hasSpfRequesterRole =
+    hasAuthority('ROLE_ADMIN') ||
+    hasAuthority('ROLE_PROD_SPF_REQUESTER') ||
+    hasAuthorityPrefix('ROLE_PROD_SPF_REQUESTER_');
+
+  const hasSpfApproverRole =
+    hasAuthority('ROLE_ADMIN') ||
+    hasAuthority('ROLE_PROD_SPF_APPROVER') ||
+    hasAuthorityPrefix('ROLE_PROD_SPF_APPROVER_');
+
+  const hasSpfWarehouseRole =
+    hasAuthority('ROLE_ADMIN') ||
+    hasAuthority('ROLE_PROD_SPF_WAREHOUSE_STAFF') ||
+    hasAuthorityPrefix('ROLE_PROD_SPF_WAREHOUSE_STAFF_');
+
   // ============  END ===============
 
   return {
@@ -80,27 +99,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some(
         (item) => item === 'ROLE_ADMIN',
       ) || false,
-    canSpfRequester:
-      currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_PROD_SPF_REQUESTER'].some((it) => it === item),
-      ) || false,
-    canSpfApprover:
-      currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_PROD_SPF_APPROVER'].some((it) => it === item),
-      ) || false,
-    canSpfWarehouseStaff:
-      currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_PROD_SPF_WAREHOUSE_STAFF'].some((it) => it === item),
-      ) || false,
+    canSpfRequester: hasSpfRequesterRole || false,
+    canSpfApprover: hasSpfApproverRole || false,
+    canSpfWarehouseStaff: hasSpfWarehouseRole || false,
     canAccessSparePartFinder:
-      currentUser?.authorities.some((item) =>
-        [
-          'ROLE_ADMIN',
-          'ROLE_PROD_SPF_REQUESTER',
-          'ROLE_PROD_SPF_APPROVER',
-          'ROLE_PROD_SPF_WAREHOUSE_STAFF',
-        ].some((it) => it === item),
-      ) || false,
+      hasSpfRequesterRole || hasSpfApproverRole || hasSpfWarehouseRole || false,
 
     canConfirmDeliveryExpense:
       currentUser?.authorities.some((item) =>
@@ -599,11 +602,12 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_PROD_OMM_ADMIN',
           'ROLE_PROD_WARE_ADMIN',
           'ROLE_PROD_WTP_ADMIN',
-          'ROLE_PROD_SPF_REQUESTER',
-          'ROLE_PROD_SPF_APPROVER',
-          'ROLE_PROD_SPF_WAREHOUSE_STAFF',
         ].some((it) => it === item),
-      ) || false,
+      ) ||
+      hasSpfRequesterRole ||
+      hasSpfApproverRole ||
+      hasSpfWarehouseRole ||
+      false,
 
     canAccessInventoryTranferRequestMenuItem:
       currentUser?.authorities.some((item) =>

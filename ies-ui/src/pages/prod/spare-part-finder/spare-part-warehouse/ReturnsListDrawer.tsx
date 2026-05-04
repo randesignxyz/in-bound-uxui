@@ -20,6 +20,7 @@ import {
   message,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import SparePartImage from '../spare-part-request/SparePartImage';
 import type {
   RequestDetailActivityItem,
@@ -123,7 +124,7 @@ const statusLabelMap: Record<ReturnStatus | string, string> = {
 
 const formatDateTime = (date?: string) => {
   if (!date) return '—';
-  return formatSpfDateTime(date);
+  return dayjs(date).format('YYYY-MMM-DD hh:mm A');
 };
 
 /**
@@ -1186,7 +1187,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                       <Typography.Text type="secondary">{activity.description}</Typography.Text>
                     </div>
                     {activity.date && (
-                      <Typography.Text type="secondary">{activity.date}</Typography.Text>
+                      <Typography.Text type="secondary">{formatDateTime(activity.date)}</Typography.Text>
                     )}
                   </div>
 

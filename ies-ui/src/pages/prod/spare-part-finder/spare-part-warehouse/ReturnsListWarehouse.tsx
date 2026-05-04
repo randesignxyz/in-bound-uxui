@@ -236,7 +236,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
       title: 'Return Date',
       dataIndex: 'returnDate',
       key: 'returnDate',
-      render: (_dom, record) => formatSpfDateTime(record.returnDate),
+      render: (_dom, record) => record.returnDate ? dayjs(record.returnDate).format('YYYY-MMM-DD hh:mm A') : ' ',
     },
     {
       title: 'Requested By',

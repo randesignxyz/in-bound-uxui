@@ -60,13 +60,24 @@ export interface GRScenarioMeta {
 }
 
 export interface POItem {
+  lineNumber?: number;
+  lineStatus?: string;
+  expectedDate?: string;
   code: string;
   name: string;
   poQty: number;
   receivedQty: number;
   remainingQty: number;
   uom: string;
+  warehouseCode?: string;
   supplier: string;
+}
+
+export interface POPrLink {
+  prNumber: string;
+  prDocEntry?: string;
+  prDocNum?: string;
+  prUuid?: string;
 }
 
 export interface POReceiptLogItem {
@@ -90,6 +101,8 @@ export interface POReceiptLog {
 export interface PurchaseOrder {
   businessUnit?: string;
   poNumber: string;
+  sapDocEntry?: number;
+  sapDocNum?: string;
   supplier: string;
   expectedDate: string;
   expectedTime: string;
@@ -99,6 +112,8 @@ export interface PurchaseOrder {
   totalQty: number;
   type: 'Planned' | 'Unplanned';
   status: 'Expected' | 'Partial' | 'Fully Received';
+  docStatus?: string;
+  prLinks?: POPrLink[];
   receiptLogs?: POReceiptLog[];
 }
 
@@ -150,9 +165,11 @@ export type GoodsReceiptSourceType = 'PLANNED' | 'UNPLANNED_WITH_PO' | 'TEMP_NO_
 export type POLinkStatus = 'NOT_REQUIRED' | 'WAITING_PO' | 'LINKED';
 
 export interface GRItem {
+  poLineNumber?: number;
   code: string;
   name: string;
   poNumber: string;
+  expectedDate?: string;
   supplier: string;
   poQty: number;
   receiveQty: number;
@@ -162,6 +179,7 @@ export interface GRItem {
   batchNumber: string;
   barcode: string;
   deliveryNoteNumber?: string;
+  isDeferred?: boolean;
   isMissing?: boolean;
   missingRemark?: string;
   qcDecision?: QcDecision;
@@ -385,7 +403,7 @@ export function getReceiptApprovedGrNumber(
 }
 
 export function hasReceiptDiscrepancy(items: GRItem[]) {
-  return items.some((item) => item.isMissing || item.receiveQty < item.poQty);
+  return items.some((item) => !item.isDeferred && (item.isMissing || item.receiveQty < item.poQty));
 }
 
 function normalizeReceiptItemPoNumber(
@@ -407,6 +425,10 @@ export function buildReceiptExceptionReason(items: GRItem[]) {
         return [
           `${item.code}: missing item${item.missingRemark?.trim() ? ` - ${item.missingRemark.trim()}` : ''}`,
         ];
+      }
+
+      if (item.isDeferred) {
+        return [];
       }
 
       if (item.receiveQty < item.poQty) {

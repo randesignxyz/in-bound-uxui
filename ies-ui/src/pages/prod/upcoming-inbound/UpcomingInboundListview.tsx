@@ -65,6 +65,7 @@ import type {
   InboundSaveGoodsReceiptInput,
   InboundSupplierMasterApi,
   InboundUomMasterApi,
+  InboundWarehouseMasterApi,
   UpcomingInboundGoodsReceipt as GoodsReceipt,
   UpcomingInboundPurchaseOrder as PurchaseOrder,
 } from './data';
@@ -466,6 +467,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [supplierMasterOptions, setSupplierMasterOptions] = useState<InboundSupplierMasterApi[]>([]);
   const [uomMasterOptions, setUomMasterOptions] = useState<InboundUomMasterApi[]>([]);
+  const [warehouseMasterOptions, setWarehouseMasterOptions] = useState<InboundWarehouseMasterApi[]>([]);
 
   // Shared PO filters
   const [poSearchValue, setPOSearchValue] = useState('');
@@ -759,30 +761,35 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       return;
     }
 
-    const [poResult, receiptResult, summaryResult, supplierResult, uomResult] = await Promise.allSettled([
-      services.pagePurchaseOrders({
-        criteria: {
-          advanceSearch: buildPurchaseOrderAdvanceSearchCriteria(),
-        },
-        pagination: {
-          current: 1,
-          pageSize: 200,
-        },
-      }),
-      services.pageGoodsReceipts({
-        criteria: buildGoodsReceiptCriteria(),
-        pagination: {
-          current: 1,
-          pageSize: 200,
-        },
-      }),
-      services.getDashboardSummary(buildDashboardSummaryParams()),
-      services.listSuppliers({
-        businessUnit: activeBusinessUnitFilter ?? null,
-        status: 'Active',
-      }),
-      services.listUoms({}),
-    ]);
+    const [poResult, receiptResult, summaryResult, supplierResult, uomResult, warehouseResult] =
+      await Promise.allSettled([
+        services.pagePurchaseOrders({
+          criteria: {
+            advanceSearch: buildPurchaseOrderAdvanceSearchCriteria(),
+          },
+          pagination: {
+            current: 1,
+            pageSize: 200,
+          },
+        }),
+        services.pageGoodsReceipts({
+          criteria: buildGoodsReceiptCriteria(),
+          pagination: {
+            current: 1,
+            pageSize: 200,
+          },
+        }),
+        services.getDashboardSummary(buildDashboardSummaryParams()),
+        services.listSuppliers({
+          businessUnit: activeBusinessUnitFilter ?? null,
+          status: 'Active',
+        }),
+        services.listUoms({}),
+        services.listWarehouses({
+          businessUnit: null,
+          status: 'Active',
+        }),
+      ]);
 
     if (poResult.status === 'fulfilled') {
       const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.value.items);
@@ -818,6 +825,12 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       setUomMasterOptions(uomResult.value);
     } else {
       message.warning('UOM master data did not load. Using PO UOM fallback.');
+    }
+
+    if (warehouseResult.status === 'fulfilled') {
+      setWarehouseMasterOptions(warehouseResult.value);
+    } else {
+      message.warning('Warehouse master data did not load. Using PO warehouse fallback.');
     }
   };
 
@@ -1312,6 +1325,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
         expectedDate: reference?.expectedDate || receipt.expectedDate || '',
         expectedTime: reference?.expectedTime || receipt.expectedTime || '',
         items: items.map((item) => ({
+          lineNumber: item.poLineNumber,
           code: item.code,
           name: item.name,
           poQty: item.poQty,
@@ -1518,7 +1532,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       pending_po_reason: data.pendingPOReason || undefined,
       linked_po_number: data.linkedPoNumber || undefined,
       received_by_user: data.receiverWarehouseName || undefined,
-      on_hold_warehouse_code: 'ON-HOLD',
+      on_hold_warehouse_code: data.receiverWarehouseName || undefined,
       posting_date: data.postingDate,
       actual_receipt_date: data.actualReceiptDate,
       delivery_note_number: data.deliveryNoteNumber || '',
@@ -1532,6 +1546,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       })),
       items: (data.items || []).map((item: GRItem) => ({
         poNumber: item.poNumber || undefined,
+        poLineNumber: item.poLineNumber || undefined,
         supplier: item.supplier || undefined,
         code: item.code,
         name: item.name,
@@ -2018,6 +2033,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
           availableBusinessUnits={tempReceiptBusinessUnits}
           supplierOptions={supplierOptionsForTempReceipt}
           uomOptions={uomOptionsForTempReceipt}
+          warehouseOptions={warehouseMasterOptions}
         />
       ) : (
         <GRCreationModal
@@ -2028,6 +2044,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
           onSubmit={handleSubmitGR}
           initialReceipt={warehouseCorrectionReceipt}
           correctionMode
+          warehouseOptions={warehouseMasterOptions}
         />
       ))) ||
     (isGRCreationOpen && selectedPOs.length > 0 && (
@@ -2042,6 +2059,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
         purchaseOrders={selectedPOs}
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmitGR}
+        warehouseOptions={warehouseMasterOptions}
       />
     )) ||
     (isTempGRCreationOpen && (
@@ -2058,6 +2076,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
         availableBusinessUnits={tempReceiptBusinessUnits}
         supplierOptions={supplierOptionsForTempReceipt}
         uomOptions={uomOptionsForTempReceipt}
+        warehouseOptions={warehouseMasterOptions}
       />
     )) ||
     (linkPOReceipt && (
@@ -2586,6 +2605,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
             po={selectedPODetail}
             onCreateGR={(po) => void handleCreateGR([po])}
             onOpenReceiptInNewTab={handleOpenReceiptInNewTab}
+            warehouseOptions={warehouseMasterOptions}
           />
 
           <GRDetailSidebar

@@ -27,7 +27,12 @@ import {
   hasReceiptDiscrepancy,
 } from '../workflow';
 import type { GRItem } from '../workflow';
-import type { InboundSupplierMasterApi, InboundUomMasterApi, UpcomingInboundGoodsReceipt } from '../data';
+import type {
+  InboundSupplierMasterApi,
+  InboundUomMasterApi,
+  InboundWarehouseMasterApi,
+  UpcomingInboundGoodsReceipt,
+} from '../data';
 import {
   applyUploadedSupportingDocs,
   getSupportingUploadFilePreview,
@@ -52,9 +57,8 @@ interface TempGRCreationModalProps {
   availableBusinessUnits?: string[];
   supplierOptions?: InboundSupplierMasterApi[];
   uomOptions?: InboundUomMasterApi[];
+  warehouseOptions?: InboundWarehouseMasterApi[];
 }
-
-const receiverWarehouseName = 'warehouse.staff01';
 
 function buildEmptyItem(): GRItem {
   return {
@@ -100,10 +104,12 @@ export function TempGRCreationModal({
   availableBusinessUnits = [],
   supplierOptions = [],
   uomOptions = [],
+  warehouseOptions = [],
 }: TempGRCreationModalProps) {
   const [postingDate, setPostingDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [actualReceiptDate, setActualReceiptDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [supplier, setSupplier] = useState('');
+  const [selectedWarehouseCode, setSelectedWarehouseCode] = useState('');
   const [businessUnit, setBusinessUnit] = useState('');
   const [deliveryNoteNumber, setDeliveryNoteNumber] = useState('');
   const [items, setItems] = useState<GRItem[]>([buildEmptyItem()]);
@@ -122,6 +128,7 @@ export function TempGRCreationModal({
       setPostingDate(initialReceipt.postingDate || dayjs().format('YYYY-MM-DD'));
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
       setBusinessUnit(initialReceipt.businessUnit || availableBusinessUnits[0] || '');
+      setSelectedWarehouseCode(initialReceipt.receiverWarehouseName || '');
       setSupplier(initialReceipt.supplier || '');
       setDeliveryNoteNumber(initialReceipt.deliveryNoteNumber || '');
       setItems(
@@ -138,6 +145,7 @@ export function TempGRCreationModal({
     setPostingDate(dayjs().format('YYYY-MM-DD'));
     setActualReceiptDate(dayjs().format('YYYY-MM-DD'));
     setBusinessUnit(availableBusinessUnits.length === 1 ? availableBusinessUnits[0] : '');
+    setSelectedWarehouseCode('');
     setSupplier('');
     setDeliveryNoteNumber('');
     setItems([buildEmptyItem()]);
@@ -164,6 +172,29 @@ export function TempGRCreationModal({
       })),
     [uomOptions],
   );
+
+  const visibleWarehouseOptions = useMemo(
+    () =>
+      warehouseOptions
+        .filter((option) => {
+          const optionBusinessUnit = option.business_unit?.trim().toUpperCase();
+          const selectedBusinessUnit = businessUnit.trim().toUpperCase();
+          return !selectedBusinessUnit || !optionBusinessUnit || optionBusinessUnit === selectedBusinessUnit;
+        })
+        .map((option) => ({
+          label:
+            option.warehouse_name && option.warehouse_name !== option.warehouse_code
+              ? `${option.warehouse_code} - ${option.warehouse_name}`
+              : option.warehouse_code,
+          value: option.warehouse_code,
+        })),
+    [businessUnit, warehouseOptions],
+  );
+
+  useEffect(() => {
+    if (!open || selectedWarehouseCode || visibleWarehouseOptions.length !== 1) return;
+    setSelectedWarehouseCode(visibleWarehouseOptions[0].value);
+  }, [open, selectedWarehouseCode, visibleWarehouseOptions]);
 
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     setItems((prev) =>
@@ -220,6 +251,7 @@ export function TempGRCreationModal({
     const nextErrors: Record<string, boolean> = {};
     if (!supplier.trim()) nextErrors.supplier = true;
     if (availableBusinessUnits.length > 1 && !businessUnit.trim()) nextErrors.businessUnit = true;
+    if (!selectedWarehouseCode.trim()) nextErrors.warehouseCode = true;
     if (!deliveryNoteNumber.trim()) nextErrors.deliveryNote = true;
 
     const itemCodes = new Set<string>();
@@ -286,7 +318,7 @@ export function TempGRCreationModal({
       postingDate,
       actualReceiptDate,
       deliveryNoteNumber,
-      receiverWarehouseName,
+      receiverWarehouseName: selectedWarehouseCode.trim(),
       items: normalizedItems,
       uploadedFiles: supportingDocs,
       specMatch: true,
@@ -552,7 +584,11 @@ export function TempGRCreationModal({
                 >
                   <Select
                     value={businessUnit || undefined}
-                    onChange={setBusinessUnit}
+                    onChange={(value) => {
+                      setBusinessUnit(value);
+                      setSelectedWarehouseCode('');
+                      setErrors((prev) => ({ ...prev, businessUnit: false, warehouseCode: false }));
+                    }}
                     disabled={availableBusinessUnits.length <= 1 || correctionMode}
                     placeholder="Select BU"
                     options={availableBusinessUnits.map((value) => ({ label: value, value }))}
@@ -589,6 +625,27 @@ export function TempGRCreationModal({
             </Row>
 
             <Row gutter={24}>
+              <Col span={8}>
+                <Form.Item
+                  label="Receiver Warehouse"
+                  required
+                  validateStatus={errors.warehouseCode ? 'error' : undefined}
+                  help={errors.warehouseCode ? 'Required' : undefined}
+                >
+                  <Select
+                    showSearch
+                    value={selectedWarehouseCode || undefined}
+                    onChange={(value) => {
+                      setSelectedWarehouseCode(value);
+                      setErrors((prev) => ({ ...prev, warehouseCode: false }));
+                    }}
+                    placeholder="Select warehouse"
+                    options={visibleWarehouseOptions}
+                    optionFilterProp="label"
+                    notFoundContent="No warehouse master data"
+                  />
+                </Form.Item>
+              </Col>
               <Col span={8}>
                 <Form.Item
                   label="Delivery Note Number"

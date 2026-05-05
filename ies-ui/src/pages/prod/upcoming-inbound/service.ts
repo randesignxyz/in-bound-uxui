@@ -25,6 +25,8 @@ import {
   InboundSuccessPayloadResponse,
   InboundUomMasterApi,
   InboundUomMasterListParams,
+  InboundWarehouseMasterApi,
+  InboundWarehouseMasterListParams,
   UpcomingInboundGoodsReceipt,
   UpcomingInboundPurchaseOrder,
 } from './data';
@@ -113,6 +115,15 @@ const UpcomingInboundAction = {
     type: 'LIST_QUERY',
     endpoint: 'PROD',
     actionName: 'inbound-list-uoms',
+    payload: params,
+  }),
+
+  listWarehouses: (
+    params: InboundWarehouseMasterListParams,
+  ): ServiceApiType<InboundWarehouseMasterListParams> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-list-warehouses',
     payload: params,
   }),
 
@@ -301,6 +312,28 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
         .filter((uom) => uom.uom_code);
     },
 
+    listWarehouses: async (
+      params: InboundWarehouseMasterListParams = {},
+    ): Promise<InboundWarehouseMasterApi[]> => {
+      const response = (await singleRequest<InboundWarehouseMasterApi>(
+        UpcomingInboundAction.listWarehouses(params),
+      )(requestAction)) as InboundWarehouseMasterApi[];
+      const warehouses = extractArrayResponse(response)
+        .map(normalizeInboundWarehouseMaster)
+        .filter((warehouse) => warehouse.warehouse_code);
+
+      if (warehouses.length > 0 || !params.status) {
+        return warehouses;
+      }
+
+      const retryResponse = (await singleRequest<InboundWarehouseMasterApi>(
+        UpcomingInboundAction.listWarehouses({ ...params, status: undefined }),
+      )(requestAction)) as InboundWarehouseMasterApi[];
+      return extractArrayResponse(retryResponse)
+        .map(normalizeInboundWarehouseMaster)
+        .filter((warehouse) => warehouse.warehouse_code);
+    },
+
     pageGoodsReceipts: async (
       params: InboundGoodsReceiptTableParams,
     ): Promise<Paging<UpcomingInboundGoodsReceipt>> => {
@@ -433,6 +466,23 @@ function normalizeInboundUomMaster(value: InboundUomMasterApi | any): InboundUom
     id: value?.id ?? null,
     uom_code: value?.uom_code ?? value?.uomCode ?? value?.code ?? '',
     uom_name: value?.uom_name ?? value?.uomName ?? value?.name ?? value?.uom_code ?? value?.uomCode ?? '',
+    status: value?.status ?? 'Active',
+  };
+}
+
+function normalizeInboundWarehouseMaster(value: InboundWarehouseMasterApi | any): InboundWarehouseMasterApi {
+  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
+  const warehouseCode = value?.warehouse_code ?? value?.warehouseCode ?? value?.code ?? '';
+  return {
+    id: value?.id ?? null,
+    business_unit: String(businessUnit).trim().toUpperCase(),
+    warehouse_code: String(warehouseCode).trim(),
+    warehouse_name:
+      value?.warehouse_name ??
+      value?.warehouseName ??
+      value?.name ??
+      warehouseCode ??
+      '',
     status: value?.status ?? 'Active',
   };
 }

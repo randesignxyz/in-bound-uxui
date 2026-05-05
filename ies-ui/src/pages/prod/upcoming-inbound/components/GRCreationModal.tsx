@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
@@ -39,7 +39,7 @@ import {
   hasReceiptDiscrepancy,
 } from '../workflow';
 import type { GRItem, PurchaseOrder } from '../workflow';
-import type { UpcomingInboundGoodsReceipt } from '../data';
+import type { InboundWarehouseMasterApi, UpcomingInboundGoodsReceipt } from '../data';
 import {
   applyUploadedSupportingDocs,
   getSupportingUploadFilePreview,
@@ -64,27 +64,38 @@ interface GRCreationModalProps {
   onSubmit: (data: Record<string, unknown>) => Promise<boolean> | boolean;
   initialReceipt?: UpcomingInboundGoodsReceipt | null;
   correctionMode?: boolean;
+  warehouseOptions?: InboundWarehouseMasterApi[];
 }
 
-const receiverWarehouseName = 'warehouse.staff01';
+function canDeferPoLine(expectedDate?: string) {
+  return Boolean(expectedDate && !dayjs(expectedDate).isBefore(dayjs(), 'day'));
+}
 
 function buildInitialItems(purchaseOrders: PurchaseOrder[]): GRItem[] {
   return purchaseOrders.flatMap((purchaseOrder) =>
-    purchaseOrder.items.map((item) => ({
-      code: item.code,
-      name: item.name,
-      poNumber: purchaseOrder.poNumber,
-      supplier: purchaseOrder.supplier,
-      poQty: item.remainingQty,
-      receiveQty: 0,
-      uom: item.uom,
-      productDate: '',
-      expiryDate: '',
-      batchNumber: '',
-      barcode: '',
-      isMissing: false,
-      missingRemark: '',
-    })),
+    purchaseOrder.items.map((item) => {
+      const expectedDate = item.expectedDate || purchaseOrder.expectedDate;
+      const isFutureLine = Boolean(expectedDate && dayjs(expectedDate).isAfter(dayjs(), 'day'));
+
+      return {
+        poLineNumber: item.lineNumber,
+        code: item.code,
+        name: item.name,
+        poNumber: purchaseOrder.poNumber,
+        expectedDate,
+        supplier: purchaseOrder.supplier,
+        poQty: item.remainingQty,
+        receiveQty: 0,
+        uom: item.uom,
+        productDate: '',
+        expiryDate: '',
+        batchNumber: '',
+        barcode: '',
+        isDeferred: isFutureLine,
+        isMissing: false,
+        missingRemark: '',
+      };
+    }),
   );
 }
 
@@ -95,7 +106,7 @@ function deriveReceiptType(purchaseOrders: PurchaseOrder[]) {
 }
 
 function requiresTraceabilityFields(item: GRItem) {
-  return !item.isMissing && item.receiveQty > 0;
+  return !item.isDeferred && !item.isMissing && item.receiveQty > 0;
 }
 
 function hasInvalidDateOrder(productDate?: string, expiryDate?: string) {
@@ -163,6 +174,7 @@ export function GRCreationModal({
   onSubmit,
   initialReceipt,
   correctionMode = false,
+  warehouseOptions: warehouseMasterOptions = [],
 }: GRCreationModalProps) {
   const selectedPOCount = purchaseOrders.length;
   const selectedPOReferences = [...purchaseOrders]
@@ -180,10 +192,34 @@ export function GRCreationModal({
   const receiptType = deriveReceiptType(purchaseOrders);
   const firstPO = purchaseOrders[0];
   const isMultiPOReceipt = selectedPOCount > 1;
+  const warehouseOptions = useMemo(
+    () =>
+      warehouseMasterOptions
+        .filter((warehouse) => {
+          const warehouseBusinessUnit = warehouse.business_unit?.trim().toUpperCase();
+          const poBusinessUnits = new Set(
+            purchaseOrders
+              .map((purchaseOrder) => purchaseOrder.businessUnit?.trim().toUpperCase())
+              .filter(Boolean),
+          );
+          return poBusinessUnits.size === 0 || !warehouseBusinessUnit || poBusinessUnits.has(warehouseBusinessUnit);
+        })
+        .map((warehouse) => {
+          const code = warehouse.warehouse_code?.trim();
+          const name = warehouse.warehouse_name?.trim();
+          return {
+            label: name && name !== code ? `${code} - ${name}` : code,
+            value: code,
+          };
+        })
+        .filter((option): option is { label: string; value: string } => Boolean(option.value)),
+    [purchaseOrders, warehouseMasterOptions],
+  );
 
   const [postingDate, setPostingDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [actualReceiptDate, setActualReceiptDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [deliveryNoteNumber, setDeliveryNoteNumber] = useState('');
+  const [selectedWarehouseCode, setSelectedWarehouseCode] = useState('');
   const [poDeliveryNotes, setPoDeliveryNotes] = useState<Record<string, string>>({});
   const [items, setItems] = useState<GRItem[]>(() => buildInitialItems(purchaseOrders));
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
@@ -238,22 +274,42 @@ export function GRCreationModal({
     });
   }, []);
 
-  const setReceiptStatus = useCallback((index: number, status: 'Good' | 'Missing') => {
+  const setReceiptStatus = useCallback((index: number, status: 'Good' | 'Missing' | 'NotArrived') => {
     setItems((prev) =>
       prev.map((item, itemIndex) => {
         if (itemIndex !== index) return item;
 
+        if (status === 'NotArrived' && !canDeferPoLine(item.expectedDate)) {
+          return item;
+        }
+
         if (status === 'Good') {
           return {
             ...item,
+            isDeferred: false,
             isMissing: false,
             missingRemark: '',
             receiveQty: item.receiveQty > 0 ? item.receiveQty : item.poQty,
           };
         }
 
+        if (status === 'NotArrived') {
+          return {
+            ...item,
+            isDeferred: true,
+            isMissing: false,
+            receiveQty: 0,
+            productDate: '',
+            expiryDate: '',
+            batchNumber: '',
+            barcode: '',
+            missingRemark: '',
+          };
+        }
+
         return {
           ...item,
+          isDeferred: false,
           isMissing: true,
           receiveQty: 0,
           productDate: '',
@@ -306,6 +362,7 @@ export function GRCreationModal({
   const validate = (): boolean => {
     const nextErrors: Record<string, boolean> = {};
     if (!postingDate) nextErrors.postingDate = true;
+    if (warehouseOptions.length > 0 && !selectedWarehouseCode.trim()) nextErrors.warehouseCode = true;
     if (isMultiPOReceipt) {
       purchaseOrders.forEach((purchaseOrder) => {
         const poNumber = purchaseOrder.poNumber;
@@ -319,7 +376,13 @@ export function GRCreationModal({
     } else if (!deliveryNoteNumber.trim()) {
       nextErrors.deliveryNote = true;
     }
+    if (!items.some((item) => !item.isDeferred)) {
+      nextErrors.receivableItems = true;
+    }
     items.forEach((item, index) => {
+      if (item.isDeferred) {
+        return;
+      }
       if (item.isMissing) {
         if (!item.missingRemark?.trim()) nextErrors[`missingRemark-${index}`] = true;
         return;
@@ -341,6 +404,9 @@ export function GRCreationModal({
     }
 
     setErrors(nextErrors);
+    if (nextErrors.receivableItems) {
+      message.error('Select at least one PO line to receive or mark missing.');
+    }
     return Object.keys(nextErrors).length === 0;
   };
 
@@ -380,8 +446,9 @@ export function GRCreationModal({
     supportingDocs = uploadFilesToSupportingDocs(uploadedFiles, 'WAREHOUSE'),
     poSupportingDocs: Record<string, UploadFile[]> = poUploadedFiles,
   ) => {
-    const hasDiscrepancy = hasReceiptDiscrepancy(items);
-    const exceptionReason = buildReceiptExceptionReason(items);
+    const receivableItems = items.filter((item) => !item.isDeferred);
+    const hasDiscrepancy = hasReceiptDiscrepancy(receivableItems);
+    const exceptionReason = buildReceiptExceptionReason(receivableItems);
     const nextProcessState =
       correctionMode || submissionMode === 'draft'
         ? 'GRPO_DRAFT'
@@ -428,8 +495,8 @@ export function GRCreationModal({
       postingDate,
       actualReceiptDate,
       deliveryNoteNumber: summarizedDeliveryNote,
-      receiverWarehouseName,
-      items,
+      receiverWarehouseName: selectedWarehouseCode.trim(),
+      items: receivableItems,
       uploadedFiles: normalizedSupportingDocs,
       specMatch: true,
       qtyMatch: !hasDiscrepancy,
@@ -597,7 +664,7 @@ export function GRCreationModal({
     let targetRowIndex = 0;
     setItems((prev) =>
       prev.map((item) => {
-        if (item.poNumber !== scanTargetPoNumber || item.isMissing) {
+        if (item.poNumber !== scanTargetPoNumber || item.isMissing || item.isDeferred) {
           return item;
         }
 
@@ -638,6 +705,7 @@ export function GRCreationModal({
       setPostingDate(initialReceipt.postingDate || dayjs().format('YYYY-MM-DD'));
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
       setDeliveryNoteNumber(initialReceipt.deliveryNoteNumber || '');
+      setSelectedWarehouseCode(initialReceipt.receiverWarehouseName || warehouseOptions[0]?.value || '');
       setPoDeliveryNotes(buildInitialPoDeliveryNotes(purchaseOrders, initialReceipt));
       setItems(
         initialReceipt.items.map((item) => ({
@@ -657,6 +725,7 @@ export function GRCreationModal({
     setPostingDate(dayjs().format('YYYY-MM-DD'));
     setActualReceiptDate(dayjs().format('YYYY-MM-DD'));
     setDeliveryNoteNumber('');
+    setSelectedWarehouseCode(warehouseOptions[0]?.value || '');
     setPoDeliveryNotes(buildInitialPoDeliveryNotes(purchaseOrders));
     setItems(buildInitialItems(purchaseOrders));
     setUploadedFiles([]);
@@ -664,7 +733,7 @@ export function GRCreationModal({
     setErrors({});
     setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
     closeScanModal();
-  }, [correctionMode, initialReceipt, open, purchaseOrders]);
+  }, [correctionMode, initialReceipt, open, purchaseOrders, warehouseOptions]);
 
   const groupedItems = purchaseOrders.map((purchaseOrder) => ({
     poNumber: purchaseOrder.poNumber,
@@ -675,13 +744,16 @@ export function GRCreationModal({
     missingCount: items.filter((item) => item.poNumber === purchaseOrder.poNumber && item.isMissing)
       .length,
     shortCount: items.filter(
-      (item) => item.poNumber === purchaseOrder.poNumber && !item.isMissing && item.receiveQty < item.poQty,
+      (item) => item.poNumber === purchaseOrder.poNumber && !item.isDeferred && !item.isMissing && item.receiveQty < item.poQty,
+    ).length,
+    deferredCount: items.filter(
+      (item) => item.poNumber === purchaseOrder.poNumber && item.isDeferred,
     ).length,
     rows: items
       .map((item, index) => ({
         ...item,
         index,
-        key: `${item.poNumber}-${item.code}-${index}`,
+        key: `${item.poNumber}-${item.poLineNumber ?? item.code}-${index}`,
       }))
       .filter((item) => item.poNumber === purchaseOrder.poNumber),
   }));
@@ -690,11 +762,11 @@ export function GRCreationModal({
   const scanTargetGroup =
     groupedItems.find((group) => group.poNumber === scanTargetPoNumber) || null;
   const missingItemsCount = items.filter((item) => item.isMissing).length;
-  const shortItemsCount = items.filter((item) => !item.isMissing && item.receiveQty < item.poQty)
+  const shortItemsCount = items.filter((item) => !item.isDeferred && !item.isMissing && item.receiveQty < item.poQty)
     .length;
   const hasDiscrepancy = missingItemsCount > 0 || shortItemsCount > 0;
   const hasMissingItems = items.some((item) => item.isMissing);
-  const hasAvailableItems = items.some((item) => !item.isMissing);
+  const hasAvailableItems = items.some((item) => !item.isDeferred && !item.isMissing);
 
   const itemColumns: ColumnsType<GRItem & { index: number }> = [
     {
@@ -703,13 +775,15 @@ export function GRCreationModal({
       key: 'code',
       width: 124,
       render: (_, record) => {
-        const shortQty = Math.max(0, record.poQty - record.receiveQty);
+        const shortQty = record.isDeferred ? 0 : Math.max(0, record.poQty - record.receiveQty);
 
         return (
           <div>
             <div style={{ fontWeight: 500 }}>{record.code}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-              {record.isMissing ? (
+              {record.isDeferred ? (
+                <Tag color="default" style={{ marginInlineEnd: 0 }}>Not arrived</Tag>
+              ) : record.isMissing ? (
                 <CloseCircleFilled style={{ color: '#ff4d4f', flex: 'none' }} />
               ) : shortQty > 0 ? (
                 <WarningFilled style={{ color: '#faad14', flex: 'none' }} />
@@ -719,6 +793,13 @@ export function GRCreationModal({
           </div>
         );
       },
+    },
+    {
+      title: 'Expected',
+      dataIndex: 'expectedDate',
+      key: 'expectedDate',
+      width: 112,
+      render: (value: string | undefined) => value || '-',
     },
     {
       title: 'PO Qty',
@@ -734,6 +815,8 @@ export function GRCreationModal({
             <span style={{ display: 'block' }}>{value.toLocaleString()}</span>
             {record.isMissing ? (
               <span style={{ display: 'block', fontSize: 11, color: '#cf1322' }}>Missing item</span>
+            ) : record.isDeferred ? (
+              <span style={{ display: 'block', fontSize: 11, color: '#595959' }}>Not arrived</span>
             ) : shortQty > 0 ? (
               <span style={{ display: 'block', fontSize: 11, color: '#ad6800' }}>Short by {shortQty}</span>
             ) : null}
@@ -753,7 +836,7 @@ export function GRCreationModal({
           onChange={(value) => updateItem(record.index, 'receiveQty', value ?? 0)}
           style={{ width: '100%' }}
           controls
-          disabled={record.isMissing}
+          disabled={record.isMissing || record.isDeferred}
           status={errors[`receiveQty-${record.index}`] ? 'error' : undefined}
         />
       ),
@@ -773,7 +856,7 @@ export function GRCreationModal({
           disabledDate={(current) =>
             Boolean(record.expiryDate) && current.isAfter(dayjs(record.expiryDate), 'day')
           }
-          disabled={record.isMissing}
+          disabled={record.isMissing || record.isDeferred}
           status={errors[`productDate-${record.index}`] ? 'error' : undefined}
         />
       ),
@@ -792,7 +875,7 @@ export function GRCreationModal({
           disabledDate={(current) =>
             Boolean(record.productDate) && current.isBefore(dayjs(record.productDate), 'day')
           }
-          disabled={record.isMissing}
+          disabled={record.isMissing || record.isDeferred}
           status={errors[`expiryDate-${record.index}`] ? 'error' : undefined}
         />
       ),
@@ -805,7 +888,7 @@ export function GRCreationModal({
         <Input
           value={record.batchNumber}
           onChange={(event) => updateItem(record.index, 'batchNumber', event.target.value)}
-          disabled={record.isMissing}
+          disabled={record.isMissing || record.isDeferred}
           status={errors[`batchNumber-${record.index}`] ? 'error' : undefined}
           placeholder="Batch no."
         />
@@ -816,10 +899,12 @@ export function GRCreationModal({
       key: 'receiptStatus',
       width: 150,
       render: (_, record) => {
-        const shortQty = Math.max(0, record.poQty - record.receiveQty);
-        const hasShortQty = !record.isMissing && shortQty > 0;
-        const receiptStatus = record.isMissing ? 'Missing' : 'Good';
+        const shortQty = record.isDeferred ? 0 : Math.max(0, record.poQty - record.receiveQty);
+        const hasShortQty = !record.isDeferred && !record.isMissing && shortQty > 0;
+        const deferAllowed = canDeferPoLine(record.expectedDate);
+        const receiptStatus = record.isDeferred && deferAllowed ? 'NotArrived' : record.isMissing ? 'Missing' : 'Good';
         const isMissingStatus = receiptStatus === 'Missing';
+        const isDeferredStatus = receiptStatus === 'NotArrived';
 
         return (
           <Space direction="vertical" size={6} style={{ width: '100%' }}>
@@ -828,16 +913,17 @@ export function GRCreationModal({
                 width: '100%',
                 padding: 2,
                 borderRadius: 8,
-                backgroundColor: isMissingStatus ? '#fff1f0' : hasShortQty ? '#fffbe6' : '#f6ffed',
+                backgroundColor: isDeferredStatus ? '#f5f5f5' : isMissingStatus ? '#fff1f0' : hasShortQty ? '#fffbe6' : '#f6ffed',
               }}
             >
               <Select
                 value={receiptStatus}
                 style={{ width: '100%' }}
-                onChange={(value: 'Good' | 'Missing') => setReceiptStatus(record.index, value)}
+                onChange={(value: 'Good' | 'Missing' | 'NotArrived') => setReceiptStatus(record.index, value)}
                 options={[
                   { value: 'Good', label: 'Good' },
                   { value: 'Missing', label: 'Missing' },
+                  ...(deferAllowed ? [{ value: 'NotArrived' as const, label: 'Not Arrived' }] : []),
                 ]}
               />
             </div>
@@ -852,7 +938,7 @@ export function GRCreationModal({
       render: (_, record) => (
         <Input.TextArea
           autoSize={{ minRows: 1, maxRows: 3 }}
-          placeholder={record.isMissing ? 'Add remark' : 'Remark not required for Good status'}
+          placeholder={record.isMissing ? 'Add remark' : 'Remark not required'}
           value={record.missingRemark}
           onChange={(event) => updateItem(record.index, 'missingRemark', event.target.value)}
           disabled={!record.isMissing}
@@ -936,9 +1022,54 @@ export function GRCreationModal({
               />
             </div>
 
+          {isMultiPOReceipt && (
+            <Form layout="vertical" style={{ marginBottom: 6 }}>
+              <Row gutter={24}>
+                <Col span={6}>
+                  <Form.Item
+                    label="Receiver Warehouse"
+                    required
+                    validateStatus={errors.warehouseCode ? 'error' : undefined}
+                    help={errors.warehouseCode ? 'Required' : undefined}
+                  >
+                    <Select
+                      placeholder="Select warehouse"
+                      value={selectedWarehouseCode || undefined}
+                      options={warehouseOptions}
+                      onChange={(value) => {
+                        setSelectedWarehouseCode(value);
+                        setErrors((prev) => ({ ...prev, warehouseCode: false }));
+                      }}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
+          )}
+
           {!isMultiPOReceipt && (
             <Form layout="vertical" style={{ marginBottom: 6 }}>
               <Row gutter={24}>
+                <Col span={6}>
+                  <Form.Item
+                    label="Receiver Warehouse"
+                    required
+                    validateStatus={errors.warehouseCode ? 'error' : undefined}
+                    help={errors.warehouseCode ? 'Required' : undefined}
+                  >
+                    <Select
+                      placeholder="Select warehouse"
+                      value={selectedWarehouseCode || undefined}
+                      options={warehouseOptions}
+                      onChange={(value) => {
+                        setSelectedWarehouseCode(value);
+                        setErrors((prev) => ({ ...prev, warehouseCode: false }));
+                      }}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
                 <Col span={6}>
                   <Form.Item
                     label="Delivery Note Number"
@@ -958,7 +1089,7 @@ export function GRCreationModal({
                     />
                   </Form.Item>
                 </Col>
-                <Col span={18}>
+                <Col span={12}>
                   <Form.Item
                     label="Documents"
                     validateStatus={errors.supportingDocs ? 'error' : undefined}
@@ -1076,6 +1207,11 @@ export function GRCreationModal({
                       {group.shortCount > 0 && (
                         <Tag bordered={false} color="warning" style={{ paddingInline: 10 }}>
                           {group.shortCount} short
+                        </Tag>
+                      )}
+                      {group.deferredCount > 0 && (
+                        <Tag bordered={false} color="default" style={{ paddingInline: 10 }}>
+                          {group.deferredCount} not arrived
                         </Tag>
                       )}
                       <Button

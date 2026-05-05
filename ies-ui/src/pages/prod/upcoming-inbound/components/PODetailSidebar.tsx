@@ -4,7 +4,8 @@ import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
 import { ExportOutlined } from '@ant-design/icons';
-import { getPurchaseOrderStatusLabel, type PurchaseOrder, type POItem } from '../workflow';
+import dayjs from 'dayjs';
+import type { PurchaseOrder, POItem } from '../workflow';
 import type { InboundWarehouseMasterApi } from '../data';
 
 interface PODetailSidebarProps {
@@ -15,12 +16,6 @@ interface PODetailSidebarProps {
   onOpenReceiptInNewTab: (receiptId: number) => void;
   warehouseOptions?: InboundWarehouseMasterApi[];
 }
-
-const poStatusColor: Record<PurchaseOrder['status'], string> = {
-  Expected: 'gold',
-  Partial: 'blue',
-  'Fully Received': 'success',
-};
 
 const { Text } = Typography;
 const prProcessPathPrefix = '/external/data-form/requisition_request_process/';
@@ -35,6 +30,12 @@ function getReceiptLogStatusColor(statusLabel: string) {
 
 function getReceiptItemLabel(name: string, code: string) {
   return name?.trim() || code?.trim() || 'Item';
+}
+
+function isAgingPOItem(item: POItem, poExpectedDate?: string) {
+  const expectedDate = item.expectedDate || poExpectedDate;
+  if (!expectedDate || item.remainingQty <= 0) return false;
+  return dayjs(expectedDate).isValid() && dayjs(expectedDate).isBefore(dayjs(), 'day');
 }
 
 export function PODetailSidebar({
@@ -81,8 +82,33 @@ export function PODetailSidebar({
   const itemColumns: ProColumns<POItem>[] = [
     { title: 'No', render: (_: any, _r: POItem, index: number) => index + 1, width: 50 },
     { title: 'Item Code', dataIndex: 'code' },
-    { title: 'Item Name', dataIndex: 'name' },
-    { title: 'Expected', dataIndex: 'expectedDate', width: 104, render: (_: any, r: POItem) => r.expectedDate || currentPO.expectedDate || '-' },
+    {
+      title: 'Item Name',
+      dataIndex: 'name',
+      render: (_: any, r: POItem) => (
+        <Space size={6} wrap>
+          <span>{r.name}</span>
+          {isAgingPOItem(r, currentPO.expectedDate) && (
+            <Tag color="error" bordered={false}>
+              Aging
+            </Tag>
+          )}
+        </Space>
+      ),
+    },
+    {
+      title: 'Expected',
+      dataIndex: 'expectedDate',
+      width: 112,
+      render: (_: any, r: POItem) => {
+        const expectedDate = r.expectedDate || currentPO.expectedDate || '-';
+        return (
+          <Space size={4} direction="vertical">
+            <span>{expectedDate}</span>
+          </Space>
+        );
+      },
+    },
     { title: 'PO Qty', dataIndex: 'poQty', valueType: 'digit' },
     { title: 'Received', dataIndex: 'receivedQty', valueType: 'digit' },
     {
@@ -108,6 +134,14 @@ export function PODetailSidebar({
       width={880}
       drawerProps={{
         destroyOnClose: false,
+        extra: (
+          <Button
+            type="primary"
+            onClick={() => onCreateGR(currentPO)}
+          >
+            Create Inbound Receiving
+          </Button>
+        ),
         afterOpenChange: (visible) => {
           if (!visible) {
             onClose();
@@ -137,11 +171,6 @@ export function PODetailSidebar({
             </Descriptions.Item>
             <Descriptions.Item label="Type">
               <Tag color={currentPO.type === 'Planned' ? 'green' : 'orange'}>{currentPO.type}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Status">
-              <Tag color={poStatusColor[currentPO.status]}>
-                {getPurchaseOrderStatusLabel(currentPO.status)}
-              </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="SAP PO Status">
               <Tag color={currentPO.docStatus?.toLowerCase() === 'closed' ? 'success' : 'processing'}>
@@ -189,7 +218,7 @@ export function PODetailSidebar({
                 <Text type="secondary">No linked PR from SAP</Text>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label={`Delivery Notes For ${currentPO.poNumber}`} span={2}>
+            <Descriptions.Item label="Delivery Note" span={2}>
               {deliveryNotes.length > 0 ? (
                 <Space size={[8, 8]} wrap>
                   {deliveryNotes.map((deliveryNote) => (
@@ -199,7 +228,7 @@ export function PODetailSidebar({
                   ))}
                 </Space>
               ) : (
-                <Text type="secondary">No approved delivery note yet</Text>
+                <Text type="secondary">-</Text>
               )}
             </Descriptions.Item>
             <Descriptions.Item label="Total Items">
@@ -208,7 +237,7 @@ export function PODetailSidebar({
             <Descriptions.Item label="Total Qty">
               {currentPO.totalQty.toLocaleString()}
             </Descriptions.Item>
-            <Descriptions.Item label="Linked IR" span={2}>
+            <Descriptions.Item label="Link IR" span={2}>
               {linkedReceiptLogs.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {linkedReceiptLogs.map((log) => (
@@ -228,7 +257,7 @@ export function PODetailSidebar({
                   ))}
                 </div>
               ) : (
-                <Text type="secondary">No linked inbound receiving yet</Text>
+                <Text type="secondary">-</Text>
               )}
             </Descriptions.Item>
           </Descriptions>
@@ -320,25 +349,6 @@ export function PODetailSidebar({
 
             </ProCard>
           </Spin>
-        </div>
-        <div
-          style={{
-            flexShrink: 0,
-            minHeight: 88,
-            padding: '12px 0 24px',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'flex-start',
-            background: '#fff',
-            borderTop: '1px solid #f0f0f0',
-          }}
-        >
-          <Button
-            type="primary"
-            onClick={() => onCreateGR(currentPO)}
-          >
-            Create Inbound Receiving
-          </Button>
         </div>
       </div>
     </DrawerForm>

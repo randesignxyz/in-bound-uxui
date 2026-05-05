@@ -41,6 +41,7 @@ import {
   getReceiptApprovedGrNumber,
   getReceiptIrNumber,
   getReceiptPOReferences,
+  getReceiptSapStatus,
   groupReceiptItemsByPO,
   summarizePOReferences,
   summarizeSuppliers,
@@ -275,7 +276,7 @@ export function GRDetailSidebar({
       ? 'QC Reviewed By'
       : 'Approved By';
   const reviewerDateLabel = reviewerLabel === 'QC Reviewed By' ? 'QC Reviewed Date' : 'Approved Date';
-  const displayedStatus = getReceiptDisplayStatus(receipt);
+  const displayedStatus = getReceiptSapStatus(receipt) || getReceiptDisplayStatus(receipt);
   const approvedGrNumber = getReceiptApprovedGrNumber(receipt);
   const poReferenceValue =
     getReceiptPOReferences(receipt).length > 0 ? (

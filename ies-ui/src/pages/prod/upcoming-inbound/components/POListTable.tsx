@@ -2,7 +2,7 @@ import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
 import { Flex, Progress, Tag, Tooltip } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import type { ActionType, ProColumns } from '@ant-design/pro-table';
-import { getPurchaseOrderStatusLabel, type PurchaseOrder } from '../workflow';
+import type { PurchaseOrder } from '../workflow';
 
 interface POListTableProps {
   purchaseOrders: PurchaseOrder[];
@@ -128,25 +128,6 @@ export function POListTable({
           </Flex>
         );
       },
-    },
-    {
-      key: 'status',
-      title: 'Status',
-      width: 150,
-      render: (_: any, r: PurchaseOrder) =>
-        r.status === 'Fully Received' ? (
-          <Tag color="green" bordered={false}>
-            {getPurchaseOrderStatusLabel(r.status)}
-          </Tag>
-        ) : r.status === 'Partial' ? (
-          <Tag color="blue" bordered={false}>
-            {getPurchaseOrderStatusLabel(r.status)}
-          </Tag>
-        ) : (
-          <Tag color="gold" bordered={false}>
-            {getPurchaseOrderStatusLabel(r.status)}
-          </Tag>
-      ),
     },
   ];
   const interactiveColumns = columns.map((column) => ({

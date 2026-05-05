@@ -87,6 +87,7 @@ export type UpdateSparePartDetailPayload = {
   warehouseCode?: string;
   rack?: string;
   shelve?: string;
+  level?: string;
   bin?: string;
 };
         

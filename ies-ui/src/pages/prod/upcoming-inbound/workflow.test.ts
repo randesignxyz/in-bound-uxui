@@ -113,7 +113,6 @@ function createPurchaseOrder(overrides: Partial<PurchaseOrder> = {}): PurchaseOr
     totalItems: 0,
     totalQty: 0,
     type: 'Planned',
-    status: 'Expected',
     ...overrides,
   };
 }

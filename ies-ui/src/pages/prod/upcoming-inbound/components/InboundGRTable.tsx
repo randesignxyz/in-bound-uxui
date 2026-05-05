@@ -11,8 +11,10 @@ import {
   getGoodsReceiptSourceColor,
   getPOLinkStatusColor,
   getReceiptApprovedGrNumber,
+  getReceiptDisplayStatusColor,
   getReceiptIrNumber,
   getReceiptPOReferences,
+  getReceiptSapStatus,
   goodsReceiptSourceLabel,
   poLinkStatusLabel,
   summarizePOReferences,
@@ -180,10 +182,13 @@ export function InboundGRTable({
       title: 'Status',
       render: (_: any, r: GoodsReceipt) => {
         const historyStatus = getInboundHistoryStatus(r);
+        const sapStatus = getReceiptSapStatus(r);
+        const displayStatus = sapStatus || historyStatus;
+        const color = sapStatus ? getReceiptDisplayStatusColor(sapStatus) : getInboundHistoryStatusColor(historyStatus);
 
         return (
-          <Tag color={getInboundHistoryStatusColor(historyStatus)} bordered={false}>
-            {historyStatus}
+          <Tag color={color} bordered={false}>
+            {displayStatus}
           </Tag>
         );
       },

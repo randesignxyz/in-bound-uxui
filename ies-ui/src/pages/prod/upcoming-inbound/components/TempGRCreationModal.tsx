@@ -174,20 +174,20 @@ export function TempGRCreationModal({
   );
 
   const visibleWarehouseOptions = useMemo(
-    () =>
-      warehouseOptions
-        .filter((option) => {
+    () => {
+      const filteredOptions = warehouseOptions.filter((option) => {
           const optionBusinessUnit = option.business_unit?.trim().toUpperCase();
           const selectedBusinessUnit = businessUnit.trim().toUpperCase();
           return !selectedBusinessUnit || !optionBusinessUnit || optionBusinessUnit === selectedBusinessUnit;
-        })
+        });
+      const sourceOptions = filteredOptions.length > 0 ? filteredOptions : warehouseOptions;
+
+      return sourceOptions
         .map((option) => ({
-          label:
-            option.warehouse_name && option.warehouse_name !== option.warehouse_code
-              ? `${option.warehouse_code} - ${option.warehouse_name}`
-              : option.warehouse_code,
+          label: option.warehouse_code,
           value: option.warehouse_code,
-        })),
+        }));
+    },
     [businessUnit, warehouseOptions],
   );
 

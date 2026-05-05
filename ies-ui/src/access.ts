@@ -636,11 +636,12 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         [
           ...OUTBOUND_TRANSFER_ROLES,
           'ROLE_PROD_WTP_ADMIN',
-          'ROLE_PROD_SPF_REQUESTER',
-          'ROLE_PROD_SPF_APPROVER',
-          'ROLE_PROD_SPF_WAREHOUSE_STAFF',
         ].some((it) => it === item),
-      ) || hasInboundRole || false,
+      ) || hasInboundRole
+        || hasSpfRequesterRole
+        || hasSpfApproverRole
+        || hasSpfWarehouseRole
+        || false,
 
     canAccessUpcomingInboundMenuItem:
       currentUser?.authorities.some((item) =>

@@ -92,6 +92,34 @@ export interface InboundDashboardSummaryParams {
   dateTo?: string | null;
 }
 
+export type InboundExportReportKey =
+  | 'PO_LIST'
+  | 'WAREHOUSE_IR_RECEIVING'
+  | 'QC_REVIEW'
+  | 'SUPERVISOR_APPROVAL'
+  | 'RECEIVING_STATUS_SUMMARY';
+
+export interface InboundExportReportParams {
+  reportKey: InboundExportReportKey;
+  businessUnit?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  searchValue?: string | null;
+}
+
+export interface InboundReportParamData {
+  key: string;
+  type?: 'int' | 'double' | 'float' | 'string' | 'boolean' | 'date' | 'dateTime';
+  value?: any;
+}
+
+export interface InboundGenericReportApi {
+  reportName: string;
+  reportPath: string;
+  fileName: string;
+  data: InboundReportParamData[];
+}
+
 export interface InboundPoItemApi {
   code: string;
   name: string;

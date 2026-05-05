@@ -5,6 +5,8 @@ import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGat
 import {
   InboundDashboardSummaryApi,
   InboundDashboardSummaryParams,
+  InboundExportReportParams,
+  InboundGenericReportApi,
   InboundGoodsReceiptApi,
   InboundGoodsReceiptCountParams,
   InboundGoodsReceiptSearch,
@@ -149,6 +151,15 @@ const UpcomingInboundAction = {
     type: 'FETCH_QUERY',
     endpoint: 'PROD',
     actionName: 'inbound-dashboard-summary',
+    payload: params,
+  }),
+
+  buildExportReport: (
+    params: InboundExportReportParams,
+  ): ServiceApiType<InboundExportReportParams> => ({
+    type: 'FETCH_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-build-export-report',
     payload: params,
   }),
 
@@ -302,6 +313,14 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
         UpcomingInboundAction.getDashboardSummary(params),
       )(requestAction)) as InboundDashboardSummaryApi;
       return mapInboundDashboardSummary(response);
+    },
+
+    buildExportReport: async (
+      params: InboundExportReportParams,
+    ): Promise<InboundGenericReportApi> => {
+      return (await singleRequest<InboundGenericReportApi>(
+        UpcomingInboundAction.buildExportReport(params),
+      )(requestAction)) as InboundGenericReportApi;
     },
 
     saveGoodsReceipt: async (

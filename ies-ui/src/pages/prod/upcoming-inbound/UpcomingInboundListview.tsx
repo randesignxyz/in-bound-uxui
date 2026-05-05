@@ -1,5 +1,5 @@
 import BreadCrumbCom from '@/pages/prod/shared/BreadCrumbCom';
-import { downloadReport } from '@/services/apiGateway';
+import { downloadGenericReport } from '@/services/apiGateway';
 import { ProdPaths } from '@/pages/prod';
 import { simpleRequestActions } from '@/services/model';
 import { USE_STATIC_AUTH } from '@/staticAuthConfig';
@@ -61,6 +61,7 @@ import type {
   InboundDashboardSummaryApi,
   InboundDashboardSummaryParams,
   InboundDashboardSummaryRange,
+  InboundExportReportKey,
   InboundSaveGoodsReceiptInput,
   InboundSupplierMasterApi,
   InboundUomMasterApi,
@@ -95,12 +96,15 @@ type QcStatusOptionWithBadge = {
   badgeCount?: number;
 };
 type DashboardSummaryViewMode = InboundDashboardSummaryRange | 'CUSTOM';
-type InboundExportReportTarget = 'PO_LIST' | 'IR_RECEIVING';
 type InboundExportPeriod = 'DAILY' | 'WEEKLY' | 'CUSTOM';
 type InboundExportFormValues = {
-  reportTarget: InboundExportReportTarget;
+  reportTarget: InboundExportReportKey;
   period: InboundExportPeriod;
   dateRange?: [Dayjs, Dayjs];
+};
+type InboundReportOption = {
+  label: string;
+  value: InboundExportReportKey;
 };
 type DashboardStatCard = {
   title: string;
@@ -153,6 +157,26 @@ const qcStatusOptions: Array<{ label: string; value: QcQueueStatusFilter }> = [
   { label: 'All', value: 'All' },
 ];
 
+const inboundReportOptionsByRole: Record<InboundWorkspaceRole, InboundReportOption[]> = {
+  WAREHOUSE_STAFF: [
+    { label: 'PO List', value: 'PO_LIST' },
+    { label: 'IR / Receiving', value: 'WAREHOUSE_IR_RECEIVING' },
+  ],
+  QC: [{ label: 'QC Review', value: 'QC_REVIEW' }],
+  WAREHOUSE_SUPERVISOR: [
+    { label: 'Supervisor Approval', value: 'SUPERVISOR_APPROVAL' },
+    { label: 'Status Summary', value: 'RECEIVING_STATUS_SUMMARY' },
+  ],
+};
+
+const allInboundReportOptions: InboundReportOption[] = Array.from(
+  new Map(
+    Object.values(inboundReportOptionsByRole)
+      .flat()
+      .map((option) => [option.value, option]),
+  ).values(),
+);
+
 function getInboundExportDateRange(period: InboundExportPeriod): [Dayjs, Dayjs] {
   const today = dayjs();
 
@@ -166,11 +190,13 @@ function getInboundExportDateRange(period: InboundExportPeriod): [Dayjs, Dayjs] 
 function InboundExportReportModal({
   open,
   loading,
+  reportOptions,
   onCancel,
   onExport,
 }: {
   open: boolean;
   loading: boolean;
+  reportOptions: InboundReportOption[];
   onCancel: () => void;
   onExport: (values: Required<InboundExportFormValues>) => Promise<void>;
 }) {
@@ -181,11 +207,11 @@ function InboundExportReportModal({
     if (!open) return;
 
     form.setFieldsValue({
-      reportTarget: 'PO_LIST',
+      reportTarget: reportOptions[0]?.value || 'PO_LIST',
       period: 'DAILY',
       dateRange: getInboundExportDateRange('DAILY'),
     });
-  }, [form, open]);
+  }, [form, open, reportOptions]);
 
   return (
     <Modal
@@ -223,10 +249,7 @@ function InboundExportReportModal({
           <Radio.Group
             optionType="button"
             buttonStyle="solid"
-            options={[
-              { label: 'PO List', value: 'PO_LIST' },
-              { label: 'IR / Receiving', value: 'IR_RECEIVING' },
-            ]}
+            options={reportOptions}
           />
         </Form.Item>
 
@@ -1650,49 +1673,24 @@ export default function UpcomingInboundListview() {
     const dateFrom = dateFromValue.format('YYYY-MM-DD');
     const dateTo = dateToValue.format('YYYY-MM-DD');
     const isPoReport = values.reportTarget === 'PO_LIST';
+    const searchValue = isPoReport ? poSearchValue : queueSearchValue;
 
     try {
       setIsExportingReport(true);
-      await downloadReport(requestActions)({
-        fileName: `inventory-inbound-${isPoReport ? 'po-list' : 'ir-receiving'}-${dateFrom}-to-${dateTo}`,
-        reportName: 'prod-inventory-inbound-report',
+      const report = await services.buildExportReport({
+        reportKey: values.reportTarget,
+        businessUnit: activeBusinessUnitFilter || null,
+        dateFrom,
+        dateTo,
+        searchValue: searchValue.trim() || null,
+      });
+
+      await downloadGenericReport(requestActions)({
+        fileName: report.fileName,
         data: {
-          ...buildBusinessUnitCriteria(),
-          reportTarget: values.reportTarget,
-          period: values.period,
-          dateFrom,
-          dateTo,
-          filters: isPoReport
-            ? {
-                searchValue: poSearchValue.trim() || null,
-                vendor: poVendorFilter === 'ALL' ? null : poVendorFilter,
-                type: poTypeFilter === 'ALL' ? null : poTypeFilter,
-              }
-            : {
-                role: activeRole,
-                view: effectiveInboundView,
-                searchValue: queueSearchValue.trim() || null,
-                type:
-                  effectiveInboundView === 'history'
-                    ? historyTypeFilter === 'ALL'
-                      ? null
-                      : historyTypeFilter
-                    : queueTypeFilter === 'ALL'
-                      ? null
-                      : queueTypeFilter,
-                status:
-                  activeRole === 'QC'
-                    ? qcStatusFilter === 'All'
-                      ? null
-                      : qcStatusFilter
-                    : historyStatusFilter === 'ALL'
-                      ? null
-                      : historyStatusFilter,
-                source:
-                  activeRole === 'WAREHOUSE_SUPERVISOR' && queueSourceFilter !== 'ALL'
-                    ? queueSourceFilter
-                    : null,
-              },
+          reportName: report.reportName,
+          reportPath: report.reportPath,
+          data: report.data,
         },
         type: 'EXCEL',
       });
@@ -1849,6 +1847,10 @@ export default function UpcomingInboundListview() {
     { label: operationsTabLabel, value: 'operations', icon: <AppstoreOutlined /> },
     { label: historyTabLabel, value: 'history', icon: <BarsOutlined /> },
   ];
+  const inboundReportOptions = useMemo(
+    () => (isInboundAdmin ? allInboundReportOptions : inboundReportOptionsByRole[activeRole]),
+    [activeRole, isInboundAdmin],
+  );
   const historyReceipts = useMemo(() => {
     if (activeRole !== 'WAREHOUSE_SUPERVISOR') {
       return receipts;
@@ -2445,6 +2447,7 @@ export default function UpcomingInboundListview() {
       <InboundExportReportModal
         open={!workspaceContent && isExportReportModalOpen}
         loading={isExportingReport}
+        reportOptions={inboundReportOptions}
         onCancel={() => setIsExportReportModalOpen(false)}
         onExport={handleExportReport}
       />

@@ -12,6 +12,7 @@ import {
 } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import type { SparePartRequestItem } from './data';
+import { fetchProductionLines, fetchSparePartWarehouses } from './service.api';
 import SparePartImage from './SparePartImage';
 import ValidationPopup from './validatePopup';
 
@@ -27,6 +28,16 @@ interface RequestRowItem {
   forLine: string;
 }
 
+interface WarehouseOption {
+  warehouseCode: string;
+  warehouseName?: string;
+}
+
+interface LineOption {
+  value: string;
+  label: string;
+}
+
 interface RequestItemModalProps {
   open: boolean;
   selectedItems: SparePartRequestItem[];
@@ -38,6 +49,7 @@ interface RequestItemModalProps {
     forLine: string;
     uom: string;
     }[];
+  initialWarehousesByBusinessUnit?: Record<string, WarehouseOption[]>;
   initialRemark?: string;
   initialPriority?: PriorityLevel;
   onCancel: () => void;
@@ -100,10 +112,17 @@ const getItemUomOptions = (item: SparePartRequestItem) => {
   return normalizeUomOptions(item.uom);
 };
 
+const normalizeBusinessUnit = (value?: string | null) =>
+  String(value || '').trim().toUpperCase();
+
+const getRequestItemKey = (item: SparePartRequestItem) =>
+  `${item.productId || item.id || ''}::${item.warehouse || item.locations?.[0]?.warehouseCode || ''}`;
+
 const RequestItemModal: React.FC<RequestItemModalProps> = ({
   open,
   selectedItems,
   initialRows,
+  initialWarehousesByBusinessUnit,
   initialRemark,
   initialPriority,
   onCancel,
@@ -116,7 +135,20 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   const [priority, setPriority] = useState<PriorityLevel>('normal');
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [submitPopupOpen, setSubmitPopupOpen] = useState(false);
+  const [warehousesByBusinessUnit, setWarehousesByBusinessUnit] = useState<Record<string, WarehouseOption[]>>({});
+  const [loadingWarehouseUnits, setLoadingWarehouseUnits] = useState<Record<string, boolean>>({});
+  const [lineOptions, setLineOptions] = useState<LineOption[]>([]);
+  const [lineOptionsLoading, setLineOptionsLoading] = useState(false);
   const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (!open || !initialWarehousesByBusinessUnit) return;
+
+    setWarehousesByBusinessUnit((previous) => ({
+      ...previous,
+      ...initialWarehousesByBusinessUnit,
+    }));
+  }, [initialWarehousesByBusinessUnit, open]);
 
   useEffect(() => {
     if (!open) {
@@ -125,16 +157,17 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     }
 
     setRows((previous) => {
-      const previousByProductId = new Map(
-        previous.map((row) => [String(row.item.productId), row]),
+      const previousByItemKey = new Map(
+        previous.map((row) => [getRequestItemKey(row.item), row]),
       );
-      const initialRowsByProductId = new Map(
-        (initialRows || []).map((row) => [String(row.item.productId), row]),
+      const initialRowsByItemKey = new Map(
+        (initialRows || []).map((row) => [getRequestItemKey(row.item), row]),
       );
 
       return selectedItems.map((item, idx) => {
-        const previousRow = previousByProductId.get(String(item.productId));
-        const initialRow = initialRowsByProductId.get(String(item.productId));
+        const itemKey = getRequestItemKey(item);
+        const previousRow = previousByItemKey.get(itemKey);
+        const initialRow = initialRowsByItemKey.get(itemKey);
         const uomOptions = getItemUomOptions(item);
 
         if (previousRow) {
@@ -152,8 +185,8 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           quantity: initialRow?.quantity ?? 1,
           purpose: initialRow?.purpose || '',
           uom: initialRow?.uom || uomOptions[0] || '',
-          toWarehouseCode: initialRow?.toWarehouseCode || item.warehouse || 'WH1',
-          forLine: initialRow?.forLine || 'Line1',
+          toWarehouseCode: initialRow?.toWarehouseCode || '',
+          forLine: initialRow?.forLine || '',
         };
       });
     });
@@ -168,6 +201,128 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     setRemark(initialRemark || '');
     setPriority(initialPriority || 'normal');
   }, [initialPriority, initialRemark, open]);
+
+  useEffect(() => {
+    if (!open || lineOptions.length > 0) return;
+
+    let cancelled = false;
+    setLineOptionsLoading(true);
+    fetchProductionLines()
+      .then((lines) => {
+        if (cancelled) return;
+        setLineOptions(
+          lines
+            .map((line) => ({
+              value: line.lineCode,
+              label: line.lineCode,
+            }))
+            .filter((line) => line.value),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLineOptions([]);
+          message.error('Failed to load production lines.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLineOptionsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lineOptions.length, open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const businessUnits = Array.from(
+      new Set(
+        [...selectedItems, ...rows.map((row) => row.item)]
+          .map((item) => normalizeBusinessUnit(item.businessUnit))
+          .filter((businessUnit) => businessUnit && businessUnit !== '-'),
+      ),
+    );
+    const missingBusinessUnits = businessUnits.filter(
+      (businessUnit) =>
+        (initialWarehousesByBusinessUnit?.[businessUnit] || warehousesByBusinessUnit[businessUnit]) === undefined &&
+        !loadingWarehouseUnits[businessUnit],
+    );
+
+    if (missingBusinessUnits.length === 0) return;
+
+    setLoadingWarehouseUnits((previous) => ({
+      ...previous,
+      ...Object.fromEntries(missingBusinessUnits.map((businessUnit) => [businessUnit, true])),
+    }));
+
+    let cancelled = false;
+    missingBusinessUnits.forEach((businessUnit) => {
+      fetchSparePartWarehouses(businessUnit)
+        .then((warehouses) => {
+          if (cancelled) return;
+          setWarehousesByBusinessUnit((previous) => ({
+            ...previous,
+            [businessUnit]: warehouses,
+          }));
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setWarehousesByBusinessUnit((previous) => ({
+            ...previous,
+            [businessUnit]: [],
+          }));
+          message.error(`Failed to load ${businessUnit} warehouses.`);
+        })
+        .finally(() => {
+          if (cancelled) return;
+          setLoadingWarehouseUnits((previous) => ({
+            ...previous,
+            [businessUnit]: false,
+          }));
+        });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialWarehousesByBusinessUnit, loadingWarehouseUnits, open, rows, selectedItems, warehousesByBusinessUnit]);
+
+  useEffect(() => {
+    if (!open || rows.length === 0) return;
+
+    setRows((previous) =>
+      previous.map((row) => {
+        const businessUnit = normalizeBusinessUnit(row.item.businessUnit);
+        const warehouseOptions = warehousesByBusinessUnit[businessUnit];
+
+        if (!warehouseOptions || warehouseOptions.length === 0) {
+          return row;
+        }
+
+        const currentWarehouseAllowed = warehouseOptions.some(
+          (warehouse) => warehouse.warehouseCode === row.toWarehouseCode,
+        );
+        const nextWarehouseCode = currentWarehouseAllowed
+          ? row.toWarehouseCode
+          : warehouseOptions[0].warehouseCode;
+        const nextLine = row.forLine || lineOptions[0]?.value || '';
+
+        if (nextWarehouseCode === row.toWarehouseCode && nextLine === row.forLine) {
+          return row;
+        }
+
+        return {
+          ...row,
+          toWarehouseCode: nextWarehouseCode,
+          forLine: nextLine,
+        };
+      }),
+    );
+  }, [lineOptions, open, rows.length, warehousesByBusinessUnit]);
 
   const handleQuantityChange = (key: number, value: number) => {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, quantity: value } : r)));
@@ -304,38 +459,43 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
      {
      title: 'To Warehouse',
      dataIndex: ['item', 'toWarehouse'],
-     width: '4%',
-     render: (_text: string, record: RequestRowItem) => (
-      <Select
-      style={{ width: '100%' }}
-        value={record.toWarehouseCode}
-        onChange={(value) => updateRow(record.key, { toWarehouseCode: value })}
-        options={
-          [
-            { value: 'WH1', label: 'WH 1' },
-            { value: 'WH2', label: 'WH 2' },
-            { value: 'WH3', label: 'WH 3' },
-          ]
-        }
-      />
-     )
+     width: 220,
+     render: (_text: string, record: RequestRowItem) => {
+      const businessUnit = normalizeBusinessUnit(record.item.businessUnit);
+      const warehouseOptions = warehousesByBusinessUnit[businessUnit] || initialWarehousesByBusinessUnit?.[businessUnit] || [];
+      const loading = warehouseOptions.length === 0 && Boolean(loadingWarehouseUnits[businessUnit]);
+
+      return (
+        <Select
+          showSearch
+          placeholder="Select warehouse"
+          optionFilterProp="label"
+          style={{ width: '100%' }}
+          loading={loading}
+          value={record.toWarehouseCode || undefined}
+          onChange={(value) => updateRow(record.key, { toWarehouseCode: value })}
+          options={warehouseOptions.map((warehouse) => ({
+            value: warehouse.warehouseCode,
+            label: warehouse.warehouseCode,
+          }))}
+        />
+      );
+     }
      },
      {
      title: 'For Line',
      dataIndex: ['item', 'productLine'],
-     width: '10%',
+     width: 220,
      render: (_text: string, record: RequestRowItem) => (
       <Select
-      style={{ width: '100%' }}
-        value={record.forLine}
+        showSearch
+        placeholder="Select line"
+        optionFilterProp="label"
+        style={{ width: '100%' }}
+        loading={lineOptionsLoading}
+        value={record.forLine || undefined}
         onChange={(value) => updateRow(record.key, { forLine: value })}
-        options={
-          [
-            { value: 'Line1', label: 'Line 1' },
-            { value: 'Line2', label: 'Line 2' },
-            { value: 'Line3', label: 'Line 3' },
-          ]
-        }
+        options={lineOptions}
       />
      )
     },

@@ -26,6 +26,11 @@ const normalizeResubmitPriority = (value) => {
   return normalized === 'urgent' || normalized === 'high' ? normalized : 'normal';
 };
 
+const getSparePartRowKey = (record) =>
+  `${record?.id ?? ''}-${record?.productId || ''}-${normalizeBusinessUnit(record?.businessUnit) || 'no-bu'}-${record?.warehouse || record?.locations?.[0]?.warehouseCode || 'no-warehouse'}`;
+
+const normalizeBusinessUnit = (value) => String(value || '').trim().toUpperCase();
+
 const buildResubmitItem = (line, index) => ({
   id: Number(line.requestLineId || index + 1),
   image: line.image,
@@ -86,6 +91,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestItems, setRequestItems] = useState([]);
   const [requestInitialRows, setRequestInitialRows] = useState([]);
+  const [requestWarehousesByBusinessUnit, setRequestWarehousesByBusinessUnit] = useState({});
   const [requestInitialRemark, setRequestInitialRemark] = useState('');
   const [requestInitialPriority, setRequestInitialPriority] = useState('normal');
   const [importingFile, setImportingFile] = useState(false);
@@ -138,15 +144,30 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   useEffect(() => {
     const fetchWarehouses = async () => {
       try {
-        const buToFetch = filters.businessUnits.length === 1 ? filters.businessUnits[0] : '';
-        const items = await fetchSparePartWarehouses(buToFetch || '');
-        setKnownWarehouses(Array.from(new Set(items.map(i => i.warehouseCode).filter(Boolean))));
+        const selectedBusinessUnits = filters.businessUnits.filter(Boolean);
+        const responses =
+          selectedBusinessUnits.length === 0
+            ? [await fetchSparePartWarehouses('')]
+            : await Promise.all(
+                selectedBusinessUnits.map(async (businessUnit) => {
+                  const warehouses = await fetchSparePartWarehouses(businessUnit);
+                  return warehouses.length > 0 ? warehouses : fetchSparePartWarehouses('');
+                }),
+              );
+        const warehouseCodes = Array.from(
+          new Set(responses.flat().map((item) => item.warehouseCode).filter(Boolean)),
+        );
+
+        setKnownWarehouses(warehouseCodes);
+        if (filters.warehouse && !warehouseCodes.includes(filters.warehouse)) {
+          applyFiltersAndReload((previous) => ({ ...previous, warehouse: '' }));
+        }
       } catch (err) {
-        // do nothing
+        setKnownWarehouses([]);
       }
     };
     fetchWarehouses();
-  }, [filters.businessUnits]);
+  }, [filters.businessUnits, filters.warehouse]);
 
   useEffect(() => {
     if (searchInputValue === searchValue) return;
@@ -182,12 +203,12 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
     const items = resubmitDraft.items.map((line, index) => buildResubmitItem(line, index));
     const initialRows = resubmitDraft.items.map((line, index) => buildResubmitRow(line, items[index]));
-    const selectedKeys = items.map((item) => String(item.id));
+    const selectedKeys = items.map(getSparePartRowKey);
 
     setSelectedRowKeys(selectedKeys);
     setSelectedItemsById(
       items.reduce((acc, item) => {
-        acc[String(item.id)] = item;
+        acc[getSparePartRowKey(item)] = item;
         return acc;
       }, {}),
     );
@@ -244,8 +265,9 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       });
 
       (rows || []).forEach((r) => {
-        if (r?.id !== null && r?.id !== undefined) {
-          next[String(r.id)] = r;
+        const rowKey = getSparePartRowKey(r);
+        if (rowKey) {
+          next[rowKey] = r;
         }
       });
 
@@ -254,7 +276,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   };
 
   const handleToggleRowSelection = (record) => {
-    const key = String(record?.id ?? '');
+    const key = getSparePartRowKey(record);
     if (!key) return;
 
     const nextKeys = selectedRowKeys.includes(key)
@@ -263,6 +285,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
     syncSelection(nextKeys, [record]);
   };
+
+  const selectedRequestItems = () =>
+    selectedRowKeys
+      .map((key) => selectedItemsById[String(key)] || currentRowsRef.current.find((row) => getSparePartRowKey(row) === String(key)))
+      .filter(Boolean);
 
   const updateBusinessUnitFilters = (nextBusinessUnits) => {
     applyFiltersAndReload((previous) => ({ ...previous, businessUnits: nextBusinessUnits }));
@@ -343,8 +370,9 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       if (!selectedRowKeys?.length) return previous;
       const next = { ...previous };
       rows.forEach((row) => {
-        if (selectedRowKeys.includes(String(row.id))) {
-          next[String(row.id)] = row;
+        const rowKey = getSparePartRowKey(row);
+        if (selectedRowKeys.includes(rowKey)) {
+          next[rowKey] = row;
         }
       });
       return next;
@@ -360,8 +388,8 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     };
   };
 
-  const openRequestModal = () => {
-    const items = selectedRowKeys.map((key) => selectedItemsById[String(key)]).filter(Boolean);
+  const openRequestModal = async () => {
+    const items = selectedRequestItems();
     if (items.length === 0) {
       message.warning('Please select at least one item.');
       return;
@@ -375,9 +403,34 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     setRequestInitialRows((previous) => {
       if (!previous.length) return previous;
 
-      const selectedIds = new Set(items.map((item) => String(item.id)));
-      return previous.every((row) => selectedIds.has(String(row.item.id))) ? previous : [];
+      const selectedIds = new Set(items.map(getSparePartRowKey));
+      return previous.every((row) => selectedIds.has(getSparePartRowKey(row.item))) ? previous : [];
     });
+
+    const businessUnits = Array.from(
+      new Set(
+        items
+          .map((item) => normalizeBusinessUnit(item.businessUnit))
+          .filter((businessUnit) => businessUnit && businessUnit !== '-'),
+      ),
+    );
+
+    if (businessUnits.length > 0) {
+      try {
+        const warehouseEntries = await Promise.all(
+          businessUnits.map(async (businessUnit) => [
+            businessUnit,
+            await fetchSparePartWarehouses(businessUnit),
+          ]),
+        );
+        setRequestWarehousesByBusinessUnit(Object.fromEntries(warehouseEntries));
+      } catch (error) {
+        message.error('Failed to load destination warehouses.');
+      }
+    } else {
+      setRequestWarehousesByBusinessUnit({});
+    }
+
     setRequestItems(items);
     setRequestModalOpen(true);
   };
@@ -438,7 +491,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       }
 
       const importedItems = result.successfulRows.map((row) => row.item);
-      const importedKeys = importedItems.map((item) => String(item.id));
+      const importedKeys = importedItems.map(getSparePartRowKey);
 
       syncSelection(importedKeys, importedItems);
       setRequestInitialRows(result.successfulRows);
@@ -473,7 +526,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     }
 
     try {
-      const detail = await services.detail({ id: item.id, productId: item.productId });
+      const detail = await services.detail({
+        id: item.id,
+        productId: item.productId,
+        warehouseCode: item.warehouse || item.locations?.[0]?.warehouseCode,
+      });
       if (detailRequestRef.current !== requestId) return;
       setDetailsItem(detail || null);
     } catch (error) {
@@ -566,7 +623,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     );
     setSelectedItemsById((previous) => ({
       ...previous,
-      [String(updatedDetail.id)]: updatedDetail,
+      [getSparePartRowKey(updatedDetail)]: updatedDetail,
     }));
     reloadTable(false);
   };
@@ -690,7 +747,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         <ProTable
           actionRef={actionRef}
           size="small"
-          rowKey={(record) => String(record.id)}
+          rowKey={getSparePartRowKey}
           tableLayout="auto"
           search={false}
           options={false}
@@ -704,6 +761,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
           rowSelection={
             canSelectRows
               ? {
+                preserveSelectedRowKeys: true,
                 selectedRowKeys,
                 onChange: (keys, rows) => {
                   syncSelection((keys || []).map((key) => String(key)), rows || []);
@@ -712,7 +770,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
               : undefined
           }
           rowClassName={(record) =>
-            canSelectRows && selectedRowKeys.includes(String(record.id)) ? 'ant-table-row-selected' : ''
+            canSelectRows && selectedRowKeys.includes(getSparePartRowKey(record)) ? 'ant-table-row-selected' : ''
           }
           onRow={(record) => ({
             onClick: (event) => {
@@ -736,8 +794,8 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
                 </Button>
               )}
               {(access.canSpfRequester || access.canSpfApprover) && (
-                <Button type="primary" disabled={selectedRowKeys.length === 0} onClick={openRequestModal}>
-                  Request{selectedRowKeys.length ? ` (${selectedRowKeys.length})` : ''}
+                <Button type="primary" disabled={selectedRequestItems().length === 0} onClick={openRequestModal}>
+                  Request{selectedRequestItems().length ? ` (${selectedRequestItems().length})` : ''}
                 </Button>
               )}
             </Space>,
@@ -787,28 +845,27 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             {
               title: 'Warehouse',
               dataIndex: 'warehouse',
-              render: (v) => v || '—',
+              render: (value) => value || '-',
             },
             ...(canSeeWarehouseLocation
               ? [
 
                 {
                   title: 'Level',
-                  render: (_, record) => record.locations?.[0]?.level || '—',
+                  render: (_, record) => record.locations?.[0]?.level || '-',
                 },
                 {
                   title: 'Shelve',
-                  render: (_, record) => record.locations?.[0]?.shelve || '—',
+                  render: (_, record) => record.locations?.[0]?.shelve || '-',
                 },
                 {
                   title: 'Bin',
-                  render: (_, record) => record.locations?.[0]?.bin || '—',
+                  render: (_, record) => record.locations?.[0]?.bin || '-',
                 },
                 // {
                 //   title: 'Level',
                 //   dataIndex: 'level',
                 //   width: 120,
-                //   render: (v) => v || '—',
                 // },
               ]
               : []),
@@ -862,10 +919,12 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         open={requestModalOpen}
         selectedItems={requestItems}
         initialRows={requestInitialRows}
+        initialWarehousesByBusinessUnit={requestWarehousesByBusinessUnit}
         onViewProduct={openDetails}
         onCancel={() => {
           setRequestModalOpen(false);
           setRequestInitialRows([]);
+          setRequestWarehousesByBusinessUnit({});
           setRequestInitialRemark('');
           setRequestInitialPriority('normal');
         }}
@@ -882,6 +941,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             setSelectedRowKeys([]);
             setSelectedItemsById({});
             setRequestInitialRows([]);
+            setRequestWarehousesByBusinessUnit({});
             setRequestInitialRemark('');
             setRequestInitialPriority('normal');
             reloadTable(true);

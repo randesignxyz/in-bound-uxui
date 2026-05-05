@@ -40,6 +40,7 @@ export interface SparePartRequestListApiItem {
   category_id?: number | null;
   category?: { id?: number | null; category_name?: string | null } | string | null;
   stock: number;
+  availableQty?: number;
   avalailableStock?: number;
   imageId?: string[];
   isActive: boolean;
@@ -71,6 +72,7 @@ interface Location {
 type SparePartDetailParams = {
   id?: number;
   productId?: string;
+  warehouseCode?: string;
 };
 
 export type UpdateSparePartDetailPayload = {
@@ -82,6 +84,10 @@ export type UpdateSparePartDetailPayload = {
   kind?: string;
   categoryId?: number;
   isActive: boolean;
+  warehouseCode?: string;
+  rack?: string;
+  shelve?: string;
+  bin?: string;
 };
         
 type SparePartRequestPageParams = {
@@ -121,6 +127,7 @@ const SparePartRequestTestAction = {
     payload: {
       id: params.id,
       productId: params.productId,
+      warehouseCode: params.warehouseCode,
     },
   }),
   updateImages: (payload: { productId: string; images: string[] }): ServiceApiType<{ productId: string; images: string[] }> => ({
@@ -197,8 +204,10 @@ const resolveCategoryId = (item: SparePartRequestListApiItem): number | undefine
   item.category_id ?? (typeof item.category === 'object' ? item.category?.id ?? undefined : undefined);
 
 export const mapItem = (item: SparePartRequestListApiItem): SparePartRequestItem => {
-  const firstLocation = item.locations?.[0];
-  const stock = firstLocation?.availableQty ?? item.avalailableStock ?? item.stock ?? 0;
+  const locations = Array.isArray(item.locations) ? item.locations : [];
+  const firstLocation =
+    locations.find((location) => Number(location?.availableQty ?? 0) > 0) || locations[0];
+  const stock = item.avalailableStock ?? item.stock ?? item.availableQty ?? firstLocation?.availableQty ?? 0;
   const reorderLevel = firstLocation?.reorderLevel;
   const backendStockStatus = mapBackendStockStatus(firstLocation?.stockStatus ?? item.stockStatus);
   const uomOptions = normalizeUomOptions(item.uom);
@@ -221,7 +230,7 @@ export const mapItem = (item: SparePartRequestListApiItem): SparePartRequestItem
     status: backendStockStatus || mapStockStatus(stock, reorderLevel),
     warehouse: firstLocation?.warehouseCode || '',
     stockStatus: firstLocation?.stockStatus || item.stockStatus || undefined,
-    locations: (item.locations || []) as any,
+    locations: locations as any,
     tab: 'spare-list',
     createdDate: item.createdDate,
     updatedDate: item.updatedDate,
@@ -389,6 +398,23 @@ export const fetchSparePartWarehouses = async (
 
   if (!response.ok) {
     throw new Error('Failed to load spare part warehouses.');
+  }
+
+  const payload = await response.json().catch(() => []);
+  return Array.isArray(payload) ? payload : [];
+};
+
+export const fetchProductionLines = async (): Promise<{ id: number; lineCode: string; lineName: string }[]> => {
+  const token = localStorage.getItem('accessToken');
+  const response = await fetch(`${getServiceUrl('PROD')}/name/get-production-lines/list`, {
+    method: 'POST',
+    headers: token
+      ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      : { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to load production lines.');
   }
 
   const payload = await response.json().catch(() => []);

@@ -431,6 +431,7 @@ export default function RequestsListWarehouse() {
         onIssueRequest={async (payload) => {
           const response = await services.issueRequest(payload);
           applyResponseUpdate(response);
+          await reloadRequests();
         }}
         onSaveDraft={async (payload) => {
           const response = await services.saveDraft(payload);

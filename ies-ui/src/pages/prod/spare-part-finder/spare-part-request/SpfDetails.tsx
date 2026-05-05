@@ -39,6 +39,10 @@ interface DrawerViewItemProps {
     kind?: string;
     categoryId?: number;
     isActive: boolean;
+    warehouseCode?: string;
+    rack?: string;
+    shelve?: string;
+    bin?: string;
   }) => Promise<void>;
   categoryOptions?: { label: string; value: number }[];
 }
@@ -88,7 +92,7 @@ export default function SpfDetails({
   const canManageDetails = canManageImages;
   const imageIds: string[] = Array.isArray(data?.imageId) ? data.imageId.filter(Boolean) : [];
   const locations: DetailLocation[] = Array.isArray(data?.locations) ? data.locations : [];
-  const firstLocation = locations[0];
+  const firstLocation = locations.find((location) => Number(location?.availableQty ?? 0) > 0) || locations[0];
   const firstImageId = imageIds[0];
   const [selectedImageId, setSelectedImageId] = useState<string | undefined>(firstImageId);
   const [imageTransitioning, setImageTransitioning] = useState(false);
@@ -110,14 +114,16 @@ export default function SpfDetails({
     if (!editOpen || !data) return;
 
     form.setFieldsValue({
-      partName: data.partName || '',
       description: data.description || '',
-      uom: Array.isArray(data.uomOptions) && data.uomOptions.length > 0 ? data.uomOptions : data.uom ? [data.uom] : [],
       kind: data.kind || 'consumable',
       categoryId: data.categoryId,
       isActive: data.isActive ?? true,
+      warehouseCode: firstLocation?.warehouseCode || data.warehouse || '',
+      rack: firstLocation?.rack || '',
+      shelve: firstLocation?.shelve || '',
+      bin: firstLocation?.bin || '',
     });
-  }, [data, editOpen, form]);
+  }, [data, editOpen, firstLocation?.bin, firstLocation?.rack, firstLocation?.shelve, firstLocation?.warehouseCode, form]);
 
   const mainImageId = useMemo(
     () => selectedImageId || firstImageId,
@@ -156,12 +162,24 @@ export default function SpfDetails({
       await onUpdateDetail({
         id: data.id,
         productId: data.productId,
-        partName: String(values.partName || '').trim(),
+        partName: String(data.partName || '').trim(),
         description: String(values.description || '').trim() || undefined,
-        uom: (values.uom || []).map((item: string) => String(item || '').trim()).filter(Boolean),
+        uom:
+          (Array.isArray(data.uomOptions) && data.uomOptions.length > 0
+            ? data.uomOptions
+            : data.uom
+              ? [data.uom]
+              : []
+          )
+            .map((item: string) => String(item || '').trim())
+            .filter(Boolean),
         kind: values.kind,
         categoryId: values.categoryId,
         isActive: Boolean(values.isActive),
+        warehouseCode: String(values.warehouseCode || '').trim() || undefined,
+        rack: String(values.rack || '').trim() || undefined,
+        shelve: String(values.shelve || '').trim() || undefined,
+        bin: String(values.bin || '').trim() || undefined,
       });
       message.success('Product details updated');
       setEditOpen(false);
@@ -720,12 +738,11 @@ export default function SpfDetails({
         destroyOnClose
       >
         <Form form={form} layout="vertical">
-          <Form.Item
-            name="partName"
-            label="Part Name"
-            rules={[{ required: true, message: 'Part name is required' }]}
-          >
-            <Input maxLength={255} />
+          <Form.Item label="Part Name">
+            <Text type="secondary">{data?.partName || '-'}</Text>
+          </Form.Item>
+          <Form.Item label="UOM">
+            <Text type="secondary">{displayUom}</Text>
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={4} maxLength={1000} />
@@ -738,16 +755,32 @@ export default function SpfDetails({
             <Select options={categoryOptions} placeholder="Select category" showSearch optionFilterProp="label" />
           </Form.Item>
           <Form.Item
-            name="uom"
-            label="UOM"
-            rules={[{ required: true, message: 'At least one UOM is required' }]}
+            name="warehouseCode"
+            label="Warehouse"
+            rules={[{ required: true, message: 'Warehouse is required' }]}
           >
-            <Select
-              mode="tags"
-              tokenSeparators={[',']}
-              placeholder="Add one or more UOM values"
-              open={false}
-            />
+            <Input maxLength={80} />
+          </Form.Item>
+          <Form.Item
+            name="rack"
+            label="Rack"
+            rules={[{ required: true, message: 'Rack is required' }]}
+          >
+            <Input maxLength={80} />
+          </Form.Item>
+          <Form.Item
+            name="shelve"
+            label="Shelve"
+            rules={[{ required: true, message: 'Shelve is required' }]}
+          >
+            <Input maxLength={80} />
+          </Form.Item>
+          <Form.Item
+            name="bin"
+            label="Bin"
+            rules={[{ required: true, message: 'Bin is required' }]}
+          >
+            <Input maxLength={80} />
           </Form.Item>
           <Form.Item name="kind" label="Kind" rules={[{ required: true, message: 'Kind is required' }]}>
             <Select

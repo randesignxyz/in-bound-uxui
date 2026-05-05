@@ -1150,10 +1150,9 @@ export default function RequestedBatchWareHouse({
         <Space>
           <Button
             loading={pickupQrLoading && pickupQrShipmentId === shipment.id}
-            disabled={isQrGenerated}
             onClick={() => handleGeneratePickupQr(shipment)}
           >
-            Generate QR
+            {isQrGenerated ? 'Re-generate QR' : 'Generate QR'}
           </Button>
           <Button
             type="primary"
@@ -1482,6 +1481,8 @@ export default function RequestedBatchWareHouse({
         open={pickupQrModalOpen}
         centered
         footer={null}
+        maskClosable={false}
+        keyboard={false}
         onCancel={() => {
           setPickupQrModalOpen(false);
           setPickupQrShipmentId(null);

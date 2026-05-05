@@ -44,6 +44,7 @@ export default function ListView() {
             key: '2',
             children: (
               <MyRequestListview
+                isActive={activeTabKey === '2'}
                 onResubmitRequest={(detail) => {
                   setResubmitDraft(detail);
                   setActiveTabKey('1');

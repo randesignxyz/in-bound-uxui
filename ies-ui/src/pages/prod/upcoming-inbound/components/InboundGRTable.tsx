@@ -117,7 +117,7 @@ export function InboundGRTable({
       key: 'poNumber',
       title: 'PO Reference',
       dataIndex: 'poNumber',
-      render: (_: string, r: GoodsReceipt) =>
+      render: (_: ReactNode, r: GoodsReceipt) =>
         getReceiptPOReferences(r).length > 0 ? (
           summarizePOReferences(r)
         ) : (

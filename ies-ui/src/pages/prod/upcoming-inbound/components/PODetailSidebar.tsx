@@ -5,6 +5,7 @@ import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
 import { ExportOutlined } from '@ant-design/icons';
 import { getPurchaseOrderStatusLabel, type PurchaseOrder, type POItem } from '../workflow';
+import type { InboundWarehouseMasterApi } from '../data';
 
 interface PODetailSidebarProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface PODetailSidebarProps {
   po: PurchaseOrder | null;
   onCreateGR: (po: PurchaseOrder) => void;
   onOpenReceiptInNewTab: (receiptId: number) => void;
+  warehouseOptions?: InboundWarehouseMasterApi[];
 }
 
 const poStatusColor: Record<PurchaseOrder['status'], string> = {
@@ -21,6 +23,7 @@ const poStatusColor: Record<PurchaseOrder['status'], string> = {
 };
 
 const { Text } = Typography;
+const prProcessPathPrefix = '/external/data-form/requisition_request_process/';
 
 function getReceiptLogStatusColor(statusLabel: string) {
   if (statusLabel.includes('Rejected')) return 'error';
@@ -34,7 +37,14 @@ function getReceiptItemLabel(name: string, code: string) {
   return name?.trim() || code?.trim() || 'Item';
 }
 
-export function PODetailSidebar({ open, onClose, po, onCreateGR, onOpenReceiptInNewTab }: PODetailSidebarProps) {
+export function PODetailSidebar({
+  open,
+  onClose,
+  po,
+  onCreateGR,
+  onOpenReceiptInNewTab,
+  warehouseOptions = [],
+}: PODetailSidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(open);
   const [renderedPO, setRenderedPO] = useState<PurchaseOrder | null>(po);
 
@@ -58,11 +68,21 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR, onOpenReceiptIn
     ?.split(',')
     .map((value) => value.trim())
     .filter(Boolean) || [];
+  const prLinks = currentPO.prLinks || [];
+  const poBusinessUnit = currentPO.businessUnit?.trim().toUpperCase();
+  const receiverWarehouses = warehouseOptions
+    .filter((warehouse) => {
+      const warehouseBusinessUnit = warehouse.business_unit?.trim().toUpperCase();
+      return !poBusinessUnit || !warehouseBusinessUnit || warehouseBusinessUnit === poBusinessUnit;
+    })
+    .map((warehouse) => warehouse.warehouse_code?.trim())
+    .filter((warehouseCode): warehouseCode is string => Boolean(warehouseCode));
 
   const itemColumns: ProColumns<POItem>[] = [
     { title: 'No', render: (_: any, _r: POItem, index: number) => index + 1, width: 50 },
     { title: 'Item Code', dataIndex: 'code' },
     { title: 'Item Name', dataIndex: 'name' },
+    { title: 'Expected', dataIndex: 'expectedDate', width: 104, render: (_: any, r: POItem) => r.expectedDate || currentPO.expectedDate || '-' },
     { title: 'PO Qty', dataIndex: 'poQty', valueType: 'digit' },
     { title: 'Received', dataIndex: 'receivedQty', valueType: 'digit' },
     {
@@ -85,7 +105,7 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR, onOpenReceiptIn
       open={drawerOpen}
       onOpenChange={(visible: boolean) => setDrawerOpen(visible)}
       submitter={false}
-      width={720}
+      width={880}
       drawerProps={{
         destroyOnClose: false,
         afterOpenChange: (visible) => {
@@ -123,11 +143,51 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR, onOpenReceiptIn
                 {getPurchaseOrderStatusLabel(currentPO.status)}
               </Tag>
             </Descriptions.Item>
+            <Descriptions.Item label="SAP PO Status">
+              <Tag color={currentPO.docStatus?.toLowerCase() === 'closed' ? 'success' : 'processing'}>
+                {currentPO.docStatus || 'Open'}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Receiver Warehouse">
+              {receiverWarehouses.length > 0 ? (
+                <Space size={[6, 6]} wrap>
+                  {receiverWarehouses.map((warehouseCode) => (
+                    <Tag key={warehouseCode} bordered={false}>
+                      {warehouseCode}
+                    </Tag>
+                  ))}
+                </Space>
+              ) : (
+                <Text type="secondary">Selected when creating IR</Text>
+              )}
+            </Descriptions.Item>
             <Descriptions.Item label="Expected Date">
               {currentPO.expectedDate || 'Unplanned'}
             </Descriptions.Item>
             <Descriptions.Item label="Expected Time">
               {currentPO.expectedTime || '—'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Linked PR" span={2}>
+              {prLinks.length > 0 ? (
+                <Space size={[8, 8]} wrap>
+                  {prLinks.map((link) => {
+                    const prHref = link.prUuid ? `${prProcessPathPrefix}${link.prUuid}` : undefined;
+                    return (
+                      <Tag key={link.prNumber} color="cyan" bordered={false}>
+                        {prHref ? (
+                          <a href={prHref} target="_blank" rel="noreferrer">
+                            {link.prNumber}
+                          </a>
+                        ) : (
+                          link.prNumber
+                        )}
+                      </Tag>
+                    );
+                  })}
+                </Space>
+              ) : (
+                <Text type="secondary">No linked PR from SAP</Text>
+              )}
             </Descriptions.Item>
             <Descriptions.Item label={`Delivery Notes For ${currentPO.poNumber}`} span={2}>
               {deliveryNotes.length > 0 ? (
@@ -178,7 +238,7 @@ export function PODetailSidebar({ open, onClose, po, onCreateGR, onOpenReceiptIn
             headerTitle="PO Items"
             size="small"
             search={false}
-            rowKey="code"
+            rowKey={(item) => `${item.lineNumber ?? item.code}-${item.code}`}
             dataSource={currentPO.items}
             options={{ density: false, fullScreen: false, reload: false, setting: false }}
             pagination={false}

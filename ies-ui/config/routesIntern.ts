@@ -47,18 +47,10 @@ export default [
   },
   {
     path: '/prod/inventory-inbound/:view/*',
-    name: 'inventoryInbound',
-    hideInMenu: 'true',
-    access: 'canAccessInventoryInboundHub',
-    component: './prod/inventory-inbound/',
-  },
-
-  {
-    path: '/prod/inventory-inbound/upcoming-inbound/:view/*',
     name: 'upcomingInbound',
     hideInMenu: 'true',
     access: 'canAccessUpcomingInboundMenuItem',
-    component: './prod/inventory-inbound/upcoming-inbound/',
+    component: './prod/upcoming-inbound/',
   },
 
   {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 export type InboundProcessState =
   | 'RECEIVED_CHECKING'
   | 'MISMATCH_EXCEPTION'
@@ -19,6 +20,7 @@ export type LegacyGRStatus =
   | 'Draft'
   | 'Pending Approval'
   | 'Approved'
+  | 'Ready To Post SAP'
   | 'Posted'
   | 'Merged'
   | 'Correction Required';
@@ -26,6 +28,7 @@ export type LegacyGRStatus =
 export type InboundHistoryStatus =
   | 'Draft'
   | 'Pending'
+  | 'Ready to Post SAP'
   | 'Complete'
   | 'Correction Required'
   | 'Rejected';
@@ -57,13 +60,24 @@ export interface GRScenarioMeta {
 }
 
 export interface POItem {
+  lineNumber?: number;
+  lineStatus?: string;
+  expectedDate?: string;
   code: string;
   name: string;
   poQty: number;
   receivedQty: number;
   remainingQty: number;
   uom: string;
+  warehouseCode?: string;
   supplier: string;
+}
+
+export interface POPrLink {
+  prNumber: string;
+  prDocEntry?: string;
+  prDocNum?: string;
+  prUuid?: string;
 }
 
 export interface POReceiptLogItem {
@@ -87,6 +101,8 @@ export interface POReceiptLog {
 export interface PurchaseOrder {
   businessUnit?: string;
   poNumber: string;
+  sapDocEntry?: number;
+  sapDocNum?: string;
   supplier: string;
   expectedDate: string;
   expectedTime: string;
@@ -96,6 +112,8 @@ export interface PurchaseOrder {
   totalQty: number;
   type: 'Planned' | 'Unplanned';
   status: 'Expected' | 'Partial' | 'Fully Received';
+  docStatus?: string;
+  prLinks?: POPrLink[];
   receiptLogs?: POReceiptLog[];
 }
 
@@ -147,9 +165,11 @@ export type GoodsReceiptSourceType = 'PLANNED' | 'UNPLANNED_WITH_PO' | 'TEMP_NO_
 export type POLinkStatus = 'NOT_REQUIRED' | 'WAITING_PO' | 'LINKED';
 
 export interface GRItem {
+  poLineNumber?: number;
   code: string;
   name: string;
   poNumber: string;
+  expectedDate?: string;
   supplier: string;
   poQty: number;
   receiveQty: number;
@@ -159,6 +179,7 @@ export interface GRItem {
   batchNumber: string;
   barcode: string;
   deliveryNoteNumber?: string;
+  isDeferred?: boolean;
   isMissing?: boolean;
   missingRemark?: string;
   qcDecision?: QcDecision;
@@ -382,7 +403,7 @@ export function getReceiptApprovedGrNumber(
 }
 
 export function hasReceiptDiscrepancy(items: GRItem[]) {
-  return items.some((item) => item.isMissing || item.receiveQty < item.poQty);
+  return items.some((item) => !item.isDeferred && (item.isMissing || item.receiveQty < item.poQty));
 }
 
 function normalizeReceiptItemPoNumber(
@@ -404,6 +425,10 @@ export function buildReceiptExceptionReason(items: GRItem[]) {
         return [
           `${item.code}: missing item${item.missingRemark?.trim() ? ` - ${item.missingRemark.trim()}` : ''}`,
         ];
+      }
+
+      if (item.isDeferred) {
+        return [];
       }
 
       if (item.receiveQty < item.poQty) {
@@ -594,6 +619,7 @@ export function getReceiptDisplayStatus(receipt: GoodsReceipt) {
     case 'MERGED_TO_SUPERVISOR_REVIEW':
       return 'Pending Supervisor Review';
     case 'SUPERVISOR_APPROVED':
+      return 'Ready to Post SAP';
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -625,6 +651,7 @@ export function getReceiptDisplayStatusColor(displayStatus: string) {
       return 'orange';
     case 'QC Pending':
     case 'Pending Supervisor Review':
+    case 'Ready to Post SAP':
       return 'gold';
     case 'QC Passed':
       return 'blue';
@@ -651,6 +678,7 @@ export function getInboundHistoryStatus(receipt: GoodsReceipt): InboundHistorySt
     case 'PENDING_SUPERVISOR_REVIEW':
       return 'Pending';
     case 'SUPERVISOR_APPROVED':
+      return 'Ready to Post SAP';
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -730,7 +758,7 @@ export function mapProcessStateToLegacyStatus(state: InboundProcessState): Legac
     case 'PENDING_SUPERVISOR_REVIEW':
       return 'Pending Approval';
     case 'SUPERVISOR_APPROVED':
-      return 'Approved';
+      return 'Ready To Post SAP';
     case 'MERGED_TO_SUPERVISOR_REVIEW':
       return 'Merged';
     case 'TRANSFERRED_TO_PM_RM_WH':
@@ -840,7 +868,7 @@ export const officialStateLabel: Record<InboundProcessState, string> = {
   PENDING_SUPERVISOR_REVIEW: 'Pending Supervisor Review',
   CORRECTION_REQUIRED: 'Correction Required',
   MERGED_TO_SUPERVISOR_REVIEW: 'Merged To Supervisor Review',
-  SUPERVISOR_APPROVED: 'Supervisor Approved',
+  SUPERVISOR_APPROVED: 'Ready to Post SAP',
   TRANSFERRED_TO_PM_RM_WH: 'Supervisor Approved',
   FIN_SUBMITTED: 'Supervisor Approved',
   DAILY_CLOSED: 'Supervisor Approved',

@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Paging } from '@/services/API';
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
 import {
   InboundDashboardSummaryApi,
   InboundDashboardSummaryParams,
+  InboundExportReportParams,
+  InboundGenericReportApi,
   InboundGoodsReceiptApi,
   InboundGoodsReceiptCountParams,
   InboundGoodsReceiptSearch,
@@ -15,9 +18,15 @@ import {
   InboundPurchaseOrderSearch,
   InboundSaveActivityInput,
   InboundSaveGoodsReceiptInput,
+  InboundSupplierMasterApi,
+  InboundSupplierMasterListParams,
   InboundSubmitQcReviewInput,
   InboundSubmitSupervisorReviewInput,
   InboundSuccessPayloadResponse,
+  InboundUomMasterApi,
+  InboundUomMasterListParams,
+  InboundWarehouseMasterApi,
+  InboundWarehouseMasterListParams,
   UpcomingInboundGoodsReceipt,
   UpcomingInboundPurchaseOrder,
 } from './data';
@@ -93,6 +102,31 @@ const UpcomingInboundAction = {
     payload: params,
   }),
 
+  listSuppliers: (
+    params: InboundSupplierMasterListParams,
+  ): ServiceApiType<InboundSupplierMasterListParams> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-list-suppliers',
+    payload: params,
+  }),
+
+  listUoms: (params: InboundUomMasterListParams): ServiceApiType<InboundUomMasterListParams> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-list-uoms',
+    payload: params,
+  }),
+
+  listWarehouses: (
+    params: InboundWarehouseMasterListParams,
+  ): ServiceApiType<InboundWarehouseMasterListParams> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-list-warehouses',
+    payload: params,
+  }),
+
   pageGoodsReceipts: (
     params: InboundGoodsReceiptTableParams,
   ): ServiceApiType<InboundGoodsReceiptSearch> => ({
@@ -128,6 +162,15 @@ const UpcomingInboundAction = {
     type: 'FETCH_QUERY',
     endpoint: 'PROD',
     actionName: 'inbound-dashboard-summary',
+    payload: params,
+  }),
+
+  buildExportReport: (
+    params: InboundExportReportParams,
+  ): ServiceApiType<InboundExportReportParams> => ({
+    type: 'FETCH_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-build-export-report',
     payload: params,
   }),
 
@@ -242,6 +285,55 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
       return mapInboundPurchaseOrders(response);
     },
 
+    listSuppliers: async (
+      params: InboundSupplierMasterListParams = {},
+    ): Promise<InboundSupplierMasterApi[]> => {
+      const response = (await singleRequest<InboundSupplierMasterApi>(
+        UpcomingInboundAction.listSuppliers(params),
+      )(requestAction)) as InboundSupplierMasterApi[];
+      return extractArrayResponse(response);
+    },
+
+    listUoms: async (params: InboundUomMasterListParams = {}): Promise<InboundUomMasterApi[]> => {
+      const response = (await singleRequest<InboundUomMasterApi>(
+        UpcomingInboundAction.listUoms(params),
+      )(requestAction)) as InboundUomMasterApi[];
+      const uoms = extractArrayResponse(response).map(normalizeInboundUomMaster).filter((uom) => uom.uom_code);
+
+      if (uoms.length > 0 || !params.status) {
+        return uoms;
+      }
+
+      const retryResponse = (await singleRequest<InboundUomMasterApi>(
+        UpcomingInboundAction.listUoms({ ...params, status: undefined }),
+      )(requestAction)) as InboundUomMasterApi[];
+      return extractArrayResponse(retryResponse)
+        .map(normalizeInboundUomMaster)
+        .filter((uom) => uom.uom_code);
+    },
+
+    listWarehouses: async (
+      params: InboundWarehouseMasterListParams = {},
+    ): Promise<InboundWarehouseMasterApi[]> => {
+      const response = (await singleRequest<InboundWarehouseMasterApi>(
+        UpcomingInboundAction.listWarehouses(params),
+      )(requestAction)) as InboundWarehouseMasterApi[];
+      const warehouses = extractArrayResponse(response)
+        .map(normalizeInboundWarehouseMaster)
+        .filter((warehouse) => warehouse.warehouse_code);
+
+      if (warehouses.length > 0 || !params.status) {
+        return warehouses;
+      }
+
+      const retryResponse = (await singleRequest<InboundWarehouseMasterApi>(
+        UpcomingInboundAction.listWarehouses({ ...params, status: undefined }),
+      )(requestAction)) as InboundWarehouseMasterApi[];
+      return extractArrayResponse(retryResponse)
+        .map(normalizeInboundWarehouseMaster)
+        .filter((warehouse) => warehouse.warehouse_code);
+    },
+
     pageGoodsReceipts: async (
       params: InboundGoodsReceiptTableParams,
     ): Promise<Paging<UpcomingInboundGoodsReceipt>> => {
@@ -265,6 +357,14 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
         UpcomingInboundAction.getDashboardSummary(params),
       )(requestAction)) as InboundDashboardSummaryApi;
       return mapInboundDashboardSummary(response);
+    },
+
+    buildExportReport: async (
+      params: InboundExportReportParams,
+    ): Promise<InboundGenericReportApi> => {
+      return (await singleRequest<InboundGenericReportApi>(
+        UpcomingInboundAction.buildExportReport(params),
+      )(requestAction)) as InboundGenericReportApi;
     },
 
     saveGoodsReceipt: async (
@@ -324,7 +424,7 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
 };
 
 function mapPaging<IN, OU>(paging: Paging<IN>, mapper: (value: IN) => OU): Paging<OU> {
-  const items = extractPagingItems(paging);
+  const items = extractPagingItems<IN>(paging);
   return {
     ...paging,
     items: items.map(mapper),
@@ -354,7 +454,37 @@ function extractArrayResponse<IN>(response: IN[] | any): IN[] {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response?.items)) return response.items;
   if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.content)) return response.content;
+  if (Array.isArray(response?.data?.items)) return response.data.items;
+  if (Array.isArray(response?.data?.content)) return response.data.content;
+  if (Array.isArray(response?.data?.data)) return response.data.data;
   return [];
+}
+
+function normalizeInboundUomMaster(value: InboundUomMasterApi | any): InboundUomMasterApi {
+  return {
+    id: value?.id ?? null,
+    uom_code: value?.uom_code ?? value?.uomCode ?? value?.code ?? '',
+    uom_name: value?.uom_name ?? value?.uomName ?? value?.name ?? value?.uom_code ?? value?.uomCode ?? '',
+    status: value?.status ?? 'Active',
+  };
+}
+
+function normalizeInboundWarehouseMaster(value: InboundWarehouseMasterApi | any): InboundWarehouseMasterApi {
+  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
+  const warehouseCode = value?.warehouse_code ?? value?.warehouseCode ?? value?.code ?? '';
+  return {
+    id: value?.id ?? null,
+    business_unit: String(businessUnit).trim().toUpperCase(),
+    warehouse_code: String(warehouseCode).trim(),
+    warehouse_name:
+      value?.warehouse_name ??
+      value?.warehouseName ??
+      value?.name ??
+      warehouseCode ??
+      '',
+    status: value?.status ?? 'Active',
+  };
 }
 
 function filterPurchaseOrdersForPageFallback(
@@ -366,12 +496,16 @@ function filterPurchaseOrdersForPageFallback(
   const type = params.criteria?.advanceSearch?.type;
   const status = params.criteria?.advanceSearch?.status;
   const expectedDate = params.criteria?.advanceSearch?.expectedDate;
+  const dateFrom = params.criteria?.advanceSearch?.dateFrom;
+  const dateTo = params.criteria?.advanceSearch?.dateTo;
 
   return orders.filter((order) => {
     if (businessUnit && order.businessUnit !== businessUnit) return false;
     if (type && type !== 'ALL' && order.type !== type) return false;
     if (status && status !== 'ALL' && order.status !== status) return false;
     if (expectedDate && order.expectedDate !== expectedDate) return false;
+    if (dateFrom && order.expectedDate < dateFrom) return false;
+    if (dateTo && order.expectedDate > dateTo) return false;
     if (
       searchValue &&
       !order.poNumber.toUpperCase().includes(searchValue) &&

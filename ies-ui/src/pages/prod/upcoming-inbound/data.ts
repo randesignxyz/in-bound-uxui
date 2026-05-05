@@ -23,6 +23,8 @@ export interface InboundPurchaseOrderSearch {
     type?: string | null;
     status?: string | null;
     expectedDate?: string | null;
+    dateFrom?: string | null;
+    dateTo?: string | null;
   };
 }
 
@@ -30,6 +32,48 @@ export interface InboundPurchaseOrderCountParams {
   businessUnit?: string | null;
   business_unit?: string | null;
   status?: string | null;
+}
+
+export interface InboundSupplierMasterListParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
+  searchValue?: string | null;
+  status?: string | null;
+}
+
+export interface InboundUomMasterListParams {
+  searchValue?: string | null;
+  status?: string | null;
+}
+
+export interface InboundWarehouseMasterListParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
+  searchValue?: string | null;
+  status?: string | null;
+}
+
+export interface InboundSupplierMasterApi {
+  id?: number | null;
+  business_unit: string;
+  supplier_code: string;
+  supplier_name: string;
+  status: string;
+}
+
+export interface InboundUomMasterApi {
+  id?: number | null;
+  uom_code: string;
+  uom_name: string;
+  status: string;
+}
+
+export interface InboundWarehouseMasterApi {
+  id?: number | null;
+  business_unit: string;
+  warehouse_code: string;
+  warehouse_name: string;
+  status: string;
 }
 
 export interface InboundGoodsReceiptSearch {
@@ -42,6 +86,8 @@ export interface InboundGoodsReceiptSearch {
   business_unit?: string | null;
   status?: string | null;
   processState?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
 }
 
 export interface InboundGoodsReceiptCountParams {
@@ -61,14 +107,53 @@ export interface InboundDashboardSummaryParams {
   dateTo?: string | null;
 }
 
+export type InboundExportReportKey =
+  | 'PO_LIST'
+  | 'WAREHOUSE_IR_RECEIVING'
+  | 'QC_REVIEW'
+  | 'SUPERVISOR_APPROVAL'
+  | 'RECEIVING_STATUS_SUMMARY';
+
+export interface InboundExportReportParams {
+  reportKey: InboundExportReportKey;
+  businessUnit?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  searchValue?: string | null;
+}
+
+export interface InboundReportParamData {
+  key: string;
+  type?: 'int' | 'double' | 'float' | 'string' | 'boolean' | 'date' | 'dateTime';
+  value?: any;
+}
+
+export interface InboundGenericReportApi {
+  reportName: string;
+  reportPath: string;
+  fileName: string;
+  data: InboundReportParamData[];
+}
+
 export interface InboundPoItemApi {
+  lineNumber?: number | null;
+  lineStatus?: string | null;
+  expectedDate?: string | null;
   code: string;
   name: string;
   poQty: number;
   receivedQty: number;
   remainingQty: number;
   uom: string;
+  warehouseCode?: string | null;
   supplier: string;
+}
+
+export interface InboundPoPrLinkApi {
+  pr_number: string;
+  pr_doc_entry?: string | null;
+  pr_doc_num?: string | null;
+  pr_uuid?: string | null;
 }
 
 export interface InboundPoReceiptLogItemApi {
@@ -93,6 +178,8 @@ export interface InboundPurchaseOrderApi {
   id?: number | null;
   business_unit: string;
   po_number: string;
+  sap_doc_entry?: number | null;
+  sap_doc_num?: string | null;
   supplier: string;
   expected_date: string;
   expected_time: string;
@@ -102,6 +189,8 @@ export interface InboundPurchaseOrderApi {
   total_qty: number;
   type: string;
   status: string;
+  doc_status?: string | null;
+  pr_links?: InboundPoPrLinkApi[];
   receipt_logs?: InboundPoReceiptLogApi[];
 }
 
@@ -116,6 +205,7 @@ export interface InboundGrPoReferenceApi {
 
 export interface InboundGrItemApi {
   poNumber?: string | null;
+  poLineNumber?: number | null;
   supplier?: string | null;
   code: string;
   name: string;
@@ -251,6 +341,7 @@ export interface InboundSuccessPayloadResponse<T> {
 
 export interface InboundSaveGoodsReceiptItemInput {
   poNumber?: string | null;
+  poLineNumber?: number | null;
   supplier?: string | null;
   code: string;
   name: string;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import dayjs from 'dayjs';
 import type {
   InboundDashboardSummaryApi,
@@ -69,6 +70,7 @@ const LEGACY_STATUS_VALUES: LegacyGRStatus[] = [
   'Draft',
   'Pending Approval',
   'Approved',
+  'Ready To Post SAP',
   'Posted',
   'Merged',
   'Correction Required',
@@ -76,12 +78,15 @@ const LEGACY_STATUS_VALUES: LegacyGRStatus[] = [
 
 export function mapInboundPurchaseOrder(api: InboundPurchaseOrderApi): UpcomingInboundPurchaseOrder {
   const items = readArray<InboundPoItemApi>(api, 'items');
+  const prLinks = readArray<any>(api, 'prLinks', 'pr_links');
   const receiptLogs = readArray<any>(api, 'receiptLogs', 'receipt_logs');
 
   return {
     id: readValue<number | null>(api, 'id') ?? undefined,
     businessUnit: readString(api, 'businessUnit', 'business_unit'),
     poNumber: readString(api, 'poNumber', 'po_number'),
+    sapDocEntry: readNumber(api, 'sapDocEntry', 'sap_doc_entry') ?? undefined,
+    sapDocNum: readValue<string | null>(api, 'sapDocNum', 'sap_doc_num') ?? undefined,
     supplier: readString(api, 'supplier'),
     expectedDate: readString(api, 'expectedDate', 'expected_date'),
     expectedTime: readString(api, 'expectedTime', 'expected_time'),
@@ -93,6 +98,8 @@ export function mapInboundPurchaseOrder(api: InboundPurchaseOrderApi): UpcomingI
       items.reduce((sum, item) => sum + (readNumber(item, 'poQty', 'po_qty') ?? 0), 0),
     type: normalizeEnum(readString(api, 'type'), PO_TYPE_VALUES, 'Planned'),
     status: normalizeEnum(readString(api, 'status'), PO_STATUS_VALUES, 'Expected'),
+    docStatus: readValue<string | null>(api, 'docStatus', 'doc_status') ?? undefined,
+    prLinks: prLinks.map(mapInboundPoPrLink).filter((link) => link.prNumber),
     receiptLogs: receiptLogs.map(mapInboundPoReceiptLog),
   };
 }
@@ -115,13 +122,17 @@ export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInb
   const recordTypeLabel = readString(api, 'recordTypeLabel', 'record_type_label');
   const fallbackStepTitle = workflowLabel || recordTypeLabel || mapProcessStateToLegacyStatus(processState);
   const qcResult = normalizeQcResult(readString(api, 'qcResult', 'qc_result'), processState);
+  const approvedGrNumber =
+    processState === 'SUPERVISOR_APPROVED'
+      ? undefined
+      : readValue<string | null>(api, 'approvedGrNumber', 'approved_gr_number') ?? undefined;
 
   return {
     id: readValue<number | null>(api, 'id') ?? undefined,
     grNumber: readString(api, 'grNumber', 'gr_number'),
     receivingNumber: readString(api, 'receivingNumber', 'receiving_number'),
     businessUnit: readString(api, 'businessUnit', 'business_unit'),
-    approvedGrNumber: readValue<string | null>(api, 'approvedGrNumber', 'approved_gr_number') ?? undefined,
+    approvedGrNumber,
     previousReceivingNumber:
       readValue<string | null>(api, 'previousReceivingNumber', 'previous_receiving_number') ?? undefined,
     previousApprovedGrNumber:
@@ -230,13 +241,26 @@ export function mapInboundDashboardSummary(summary: InboundDashboardSummaryApi):
 
 function mapInboundPurchaseOrderItem(item: InboundPoItemApi): UpcomingInboundPurchaseOrder['items'][number] {
   return {
+    lineNumber: readNumber(item, 'lineNumber', 'line_number') ?? undefined,
+    lineStatus: readValue<string | null>(item, 'lineStatus', 'line_status') ?? undefined,
+    expectedDate: readValue<string | null>(item, 'expectedDate', 'expected_date') ?? undefined,
     code: readString(item, 'code'),
     name: readString(item, 'name'),
     poQty: readNumber(item, 'poQty', 'po_qty') ?? 0,
     receivedQty: readNumber(item, 'receivedQty', 'received_qty') ?? 0,
     remainingQty: readNumber(item, 'remainingQty', 'remaining_qty') ?? 0,
     uom: readString(item, 'uom'),
+    warehouseCode: readValue<string | null>(item, 'warehouseCode', 'warehouse_code') ?? undefined,
     supplier: readString(item, 'supplier'),
+  };
+}
+
+function mapInboundPoPrLink(link: any): NonNullable<UpcomingInboundPurchaseOrder['prLinks']>[number] {
+  return {
+    prNumber: readString(link, 'prNumber', 'pr_number'),
+    prDocEntry: readValue<string | null>(link, 'prDocEntry', 'pr_doc_entry') ?? undefined,
+    prDocNum: readValue<string | null>(link, 'prDocNum', 'pr_doc_num') ?? undefined,
+    prUuid: readValue<string | null>(link, 'prUuid', 'pr_uuid') ?? undefined,
   };
 }
 
@@ -266,6 +290,7 @@ function mapInboundPoReceiptLog(log: any): NonNullable<UpcomingInboundPurchaseOr
 
 function mapInboundGoodsReceiptItem(item: InboundGrItemApi): UpcomingInboundGoodsReceiptItem {
   return {
+    poLineNumber: readNumber(item, 'poLineNumber', 'po_line_number') ?? undefined,
     code: readString(item, 'code'),
     name: readString(item, 'name'),
     poNumber: readValue<string | null>(item, 'poNumber', 'po_number') ?? '',
@@ -494,12 +519,12 @@ function readValue<T = unknown>(source: unknown, ...keys: string[]): T | undefin
 
 function readString(source: unknown, ...keys: string[]): string {
   const value = readValue<unknown>(source, ...keys);
-  return value == null ? '' : String(value);
+  return value === null || value === undefined ? '' : String(value);
 }
 
 function readNumber(source: unknown, ...keys: string[]): number | undefined {
   const value = readValue<unknown>(source, ...keys);
-  if (value == null || value === '') return undefined;
+  if (value === null || value === undefined || value === '') return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 }

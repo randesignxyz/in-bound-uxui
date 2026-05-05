@@ -1,7 +1,6 @@
 import { ActionType, ProTable } from '@ant-design/pro-components';
 import { EyeOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
-import { useNavigate } from '@umijs/max';
 import { Button, Card, DatePicker, Input, Select, Space, Tag, Tooltip } from 'antd';
 import { useRef, useState } from 'react';
 import { RequestActions } from '@/services/apiGateway';
@@ -13,6 +12,11 @@ import type {
   TableViewSearchReturnsParam,
 } from './data';
 import { SparePartReturnAPI } from './service';
+import { WarehouseReturnRow } from '../spare-part-warehouse/ReturnsListWarehouse';
+
+interface MyRequestsToReturnProps {
+  onUpdated?: () => void;
+}
 
 const mapStatusToApiValue = (status: string) => {
   if (status === 'Approved') return 'APPROVED';
@@ -50,7 +54,7 @@ const buildAdvanceSearch = (
   return baseSearch;
 };
 
-export default function MyRequestsToReturn() {
+export default function MyRequestsToReturn({ onUpdated }: MyRequestsToReturnProps) {
   const actionRef = useRef<ActionType>();
   const [statusFilter, setStatusFilter] = useState<string>('Status');
   const [searchValue, setSearchValue] = useState('');
@@ -63,14 +67,13 @@ export default function MyRequestsToReturn() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState<RequestDetailData | null>(null);
   const [detailReturnId, setDetailReturnId] = useState<number | null>(null);
-  const navigate = useNavigate();
 
   const requestAction: RequestActions = {
     start: (serviceName) => console.log(`Loading: ${serviceName}`),
     end: (status, reason) => console.log(status, reason),
   };
 
-  const onDetailHandler = (record: MyRequestToReturnItem) => {
+  const openDrawer = (record: MyRequestToReturnItem) => {
     const data: RequestDetailData = {
       no: record.id,
       request_id: record.return_id,
@@ -84,6 +87,12 @@ export default function MyRequestsToReturn() {
     setDetailData(data);
     setDetailReturnId(record.id);
     setDetailOpen(true);
+  };
+
+  const notifyReturnUpdated = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('spare-part-return-updated'));
+    }
   };
 
   const fetchReturnPages = async (params: { current?: number; pageSize?: number }) => {
@@ -171,6 +180,19 @@ export default function MyRequestsToReturn() {
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50],
           }}
+          onRow={(record) => ({
+                                onClick: (event) => {
+                                  const target = event.target;
+                                  if (
+                                    target instanceof HTMLElement &&
+                                    target.closest('a, button, input, textarea, .ant-select, .ant-picker')
+                                  ) {
+                                    return;
+                                  }
+                                  openDrawer(record as MyRequestToReturnItem);
+                                },
+                                style: { cursor: 'pointer' },
+                    })}
           request={fetchReturnPages}
           toolBarRender={() => [
             <Space key="toolbar" size="small">
@@ -203,7 +225,7 @@ export default function MyRequestsToReturn() {
                       icon={<EyeOutlined style={{ color: '#999' }} />}
                       type="text"
                       size="small"
-                      onClick={() => onDetailHandler(record)}
+                      onClick={() => openDrawer(record)}
                     />
                   </Tooltip>
                 </Space>
@@ -238,7 +260,7 @@ export default function MyRequestsToReturn() {
               dataIndex: 'status',
               render: (status) =>
                 status === 'Pending' ? (
-                  <Tag color="processing" bordered={false}>
+                  <Tag color="default" bordered={false}>
                     Pending
                   </Tag>
                 ) : status === 'Rejected' ? (
@@ -278,6 +300,8 @@ export default function MyRequestsToReturn() {
         returnId={detailReturnId}
         onSuccess={() => {
           actionRef.current?.reloadAndRest?.();
+          onUpdated?.();
+          notifyReturnUpdated();
         }}
         onClose={() => {
           setDetailOpen(false);

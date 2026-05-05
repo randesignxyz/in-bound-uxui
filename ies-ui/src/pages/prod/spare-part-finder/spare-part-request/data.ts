@@ -48,14 +48,17 @@ export interface SparePartRequestItem {
   productId: string;
   partName: string;
   description?: string;
+  kind?: string;
   categoryId?: number;
   category: string;
   uom?: string;
   uomOptions?: string[];
   stock: number;
   businessUnit: string;
+  isActive?: boolean;
   status: SparePartStockStatus;
   warehouse: string;
+  stockStatus?: string;
   locations?: {
     warehouseCode: string;
     warehouseName?: string;
@@ -67,6 +70,7 @@ export interface SparePartRequestItem {
     reservedQty?: number;
     availableQty: number;
     reorderLevel: number;
+    stockStatus?: string;
     sapStock?: number | null;
     lastSyncedAt?: string;
   }[];

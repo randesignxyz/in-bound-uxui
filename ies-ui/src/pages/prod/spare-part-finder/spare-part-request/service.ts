@@ -194,6 +194,11 @@ type RejectRequestPayload = {
   id: number;
   remark?: string;
 };
+type ApprovalDashboardDto = {
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+};
 
 const SparePartRequestAction = {
   pageMyRequests: (
@@ -256,6 +261,12 @@ const SparePartRequestAction = {
     actionName: 'reject-spare-part-request',
     endpoint: 'PROD',
     payload,
+  }),
+  getApprovalDashboard: (): ServiceApiType<Record<string, never>> => ({
+    type: 'FETCH_QUERY',
+    actionName: 'get-spare-part-approval-dashboard',
+    endpoint: 'PROD',
+    payload: {},
   }),
   confirmPickup: (id: number): ServiceApiType<any> => ({
     type: 'EXEC',
@@ -820,6 +831,11 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
 };
 
 export const SparePartRequestService = (requestAction: RequestActions) => ({
+  getApprovalDashboard: async (): Promise<ApprovalDashboardDto> => {
+    return (await singleRequest<ApprovalDashboardDto>(
+      SparePartRequestAction.getApprovalDashboard(),
+    )(requestAction)) as ApprovalDashboardDto;
+  },
   pageMyRequests: async (
     params: TableViewSearchParams<MyRequestSearch>,
   ): Promise<Paging<MyRequestItem>> => {
@@ -897,7 +913,7 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
           toWarehouseCode: row.toWarehouseCode,
           forLine: row.forLine,
           uom: row.uom,
-          item: mapItem(row.item, row.toWarehouseCode),
+          item: mapItem(row.item),
         })) || [];
 
       const failedRows =

@@ -548,21 +548,24 @@ export default function RequestedBatchWareHouse({
     const detail = selectedProductDetail;
     if (!detail) return undefined;
     return {
-      image: detail.image,
-      imageId: detail.imageId,
-      locations: detail.locations,
-      spare_part_name: detail.partName,
-      part_number: detail.productId,
+      id: detail.id,
+      productId: detail.productId,
+      partName: detail.partName,
       description: detail.description,
-      stock_quantity: detail.stock,
-      receiving_from_warehouse: detail.warehouse,
-      company: detail.company,
+      stock: detail.stock,
+      warehouse: detail.warehouse || '',
       category: detail.category,
+      businessUnit: detail.businessUnit || '',
       uom: detail.uom,
-      business_unit: detail.businessUnit,
-      requested_date: detail.createdDate,
-      updated_date: detail.updatedDate,
-    };
+      uomOptions: detail.uom ? [detail.uom] : [],
+      status: detail.status || 'available',
+      isActive: detail.isActive ?? true,
+      image: detail.image,
+      imageId: detail.imageId ? (Array.isArray(detail.imageId) ? detail.imageId : [detail.imageId]) : [],
+      locations: detail.locations || [],
+      createdDate: detail.createdDate,
+      updatedDate: detail.updatedDate,
+    } as any;
   }, [selectedProductDetail]);
 
   const openProductDetails = async (record: RequestDetailLineItem) => {
@@ -1147,10 +1150,9 @@ export default function RequestedBatchWareHouse({
         <Space>
           <Button
             loading={pickupQrLoading && pickupQrShipmentId === shipment.id}
-            disabled={isQrGenerated}
             onClick={() => handleGeneratePickupQr(shipment)}
           >
-            Generate QR
+            {isQrGenerated ? 'Re-generate QR' : 'Generate QR'}
           </Button>
           <Button
             type="primary"
@@ -1479,6 +1481,8 @@ export default function RequestedBatchWareHouse({
         open={pickupQrModalOpen}
         centered
         footer={null}
+        maskClosable={false}
+        keyboard={false}
         onCancel={() => {
           setPickupQrModalOpen(false);
           setPickupQrShipmentId(null);

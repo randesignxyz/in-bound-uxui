@@ -1,45 +1,87 @@
 
-import { Tabs } from 'antd';
+import { Badge, Tabs } from 'antd';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { RequestActions } from '@/services/apiGateway';
 import { ProdPaths } from '../..';
 // @ts-ignore
 import SparePartList from '../spare-part-request/SparePartList';
 import RequestsListWarehouse from './RequestsListWarehouse';
 import ReturnsListWarehouse from './ReturnsListWarehouse';
 import BreadCrumbCom from '@/pages/fleet/components/BreadCrumbCom';
+import { SparePartWarehouseReturnAPI } from './service.return';
+
+// Count returns with APPROVED or PARTIAL_RETURN status
+const countApprovedAndPartialReturns = async (requestAction: RequestActions): Promise<number> => {
+  try {
+    const response = await SparePartWarehouseReturnAPI(requestAction)
+      .paga_fetch_spare_parts_return_by_status_approved(0, 20);
+
+    return (response as any)?.total ?? 0;
+  } catch (error) {
+    console.error('Failed to count returns:', error);
+    return 0;
+  }
+};
+
 export default function ListView() {
-    const routes =[
-        {
-           path: '/prod',
-           label: 'Prod',
-        },
-        { 
-           path: ProdPaths.sparePartRequest,
-           label: 'Spare Parts',
-        }
-    ]
+  const [returnCount, setReturnCount] = useState(0);
+  const [activeKey, setActiveKey] = useState('1');
+
+  const requestAction: RequestActions = useMemo(
+    () => ({
+      start: (name) => console.log(`Loading: ${name}`),
+      end: (status) => console.log(status),
+    }),
+    [],
+  );
+
+  const refreshCount = useCallback(() => {
+    countApprovedAndPartialReturns(requestAction).then(setReturnCount);
+  }, [requestAction]);
+
+  useEffect(() => {
+    refreshCount();
+  }, [activeKey, refreshCount]);
+
+  const routes = [
+    {
+      path: '/prod',
+      label: 'Prod',
+    },
+    {
+      path: ProdPaths.sparePartRequest,
+      label: 'Spare Parts',
+    },
+  ];
 
   return (
-  <>
-    <BreadCrumbCom separator=">" routes={routes} />
-    <Tabs
-    items={[
-        {
+    <>
+      <BreadCrumbCom separator=">" routes={routes} />
+      <Tabs
+        activeKey={activeKey}
+        onChange={setActiveKey}
+        items={[
+          {
             label: 'Spare Parts',
             key: '1',
-            children: <SparePartList/>
-        },
-        {
+            children: <SparePartList />,
+          },
+          {
             label: 'Requests List',
             key: '2',
-            children: <RequestsListWarehouse/>,
-        },
-        {
-            label: 'Return List',
+            children: <RequestsListWarehouse />,
+          },
+          {
+            label: (
+              <Badge count={returnCount} color="red" offset={[12, 0]}>
+                Return List
+              </Badge>
+            ),
             key: '3',
-            children: <ReturnsListWarehouse/>,
-        }
-    ]}
-    />
-  </>
+            children: <ReturnsListWarehouse onUpdate={refreshCount} />,
+          },
+        ]}
+      />
+    </>
   );
 }

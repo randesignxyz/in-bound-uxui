@@ -96,6 +96,8 @@ type ExecResponseDto<T> = {
 type PageIssueRequestsParams = {
   searchValue?: string;
   status?: 'All' | WarehouseDisplayStatus;
+  priority?: string;
+  dateRange?: [string, string] | null;
   pagination?: {
     current?: number;
     pageSize?: number;
@@ -115,6 +117,12 @@ type DeleteDraftPayload = { id: number };
 type AcceptIssuePayload = { id: number };
 type GeneratePickupQrPayload = { id: number; fulfillmentId?: string };
 type ConfirmPickupPayload = { id: number; fulfillmentId?: string };
+type IssueDashboardDto = {
+  pendingCount: number;
+  readyCount: number;
+  partialCount: number;
+  completedCount: number;
+};
 
 const SparePartWarehouseAction = {
   pageRequests: (params: PageIssueRequestsParams): ServiceApiType<any> => ({
@@ -126,6 +134,8 @@ const SparePartWarehouseAction = {
       advanceSearch: {
         searchValue: params.searchValue || '',
         status: mapIssueStatusFilter(params.status),
+        priority: mapPriorityFilter(params.priority),
+        dateRange: params.dateRange,
       },
     },
     pagination: {
@@ -175,6 +185,12 @@ const SparePartWarehouseAction = {
     endpoint: 'PROD',
     payload,
   }),
+  getDashboard: (): ServiceApiType<Record<string, never>> => ({
+    type: 'FETCH_QUERY',
+    actionName: 'get-spare-part-issue-dashboard',
+    endpoint: 'PROD',
+    payload: {},
+  }),
 };
 
 const unwrapExecPayload = <T,>(payload?: T | ExecResponseDto<T> | null): T | undefined => {
@@ -189,6 +205,7 @@ const normalizePriority = (value?: string | null): WarehouseRequestRecord['prior
   const normalized = String(value || '').trim().toLowerCase();
   if (normalized === 'urgent') return 'Urgent';
   if (normalized === 'high') return 'High';
+  if (normalized === 'low') return 'Low';
   return 'Normal';
 };
 
@@ -537,7 +554,19 @@ const mapIssueStatusFilter = (value?: 'All' | WarehouseDisplayStatus) => {
   }
 };
 
+const mapPriorityFilter = (value?: string) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized || normalized === 'all') return undefined;
+  if (normalized === 'normal' || normalized === 'medium') return 'MEDIUM';
+  return normalized.toUpperCase();
+};
+
 export const SparePartWarehouseService = (requestAction: RequestActions) => ({
+  getDashboard: async (): Promise<IssueDashboardDto> => {
+    return (await singleRequest<IssueDashboardDto>(
+      SparePartWarehouseAction.getDashboard(),
+    )(requestAction)) as IssueDashboardDto;
+  },
   pageRequests: async (params: PageIssueRequestsParams): Promise<Paging<WarehouseRequestRecord>> => {
     const response = (await singleRequest<IssueRequestDto>(
       SparePartWarehouseAction.pageRequests(params),

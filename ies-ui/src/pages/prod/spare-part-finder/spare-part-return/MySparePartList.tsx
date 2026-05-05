@@ -106,6 +106,12 @@ export default function MySparePartList() {
     }
   };
 
+  const notifyReturnUpdated = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('spare-part-return-updated'));
+    }
+  };
+
   const handleModalSubmit = async (payload: {
     remark: string;
     items: SparePartReturnListItem[];
@@ -188,6 +194,7 @@ export default function MySparePartList() {
       setSelectedItems([]);
       setSelectedRowKeys([]);
       actionRef.current?.reloadAndRest?.();
+      notifyReturnUpdated();
     } catch (error) {
       console.error('Failed to submit return request:', error);
       const errorMessage =
@@ -228,7 +235,7 @@ export default function MySparePartList() {
           />
 
           {/* Desktop: Radio Group */}
-          <div className="radio-group-desktop">
+          {/* <div className="radio-group-desktop">
           <Select
             mode="multiple"
             allowClear
@@ -241,10 +248,10 @@ export default function MySparePartList() {
               value: opt.value,
             }))}
           />
-        </div>
+        </div> */}
 
           {/* Mobile: Dropdown */}
-          <div className="radio-group-mobile">
+          {/* <div className="radio-group-mobile">
             <Dropdown
               menu={{
                 items: radioOptions.map((opt) => ({
@@ -267,7 +274,7 @@ export default function MySparePartList() {
                 {selectedWarehouseLabel} <MoreOutlined />
               </Button>
             </Dropdown>
-          </div>
+          </div> */}
 
           <Select
             value={selectedCategory}

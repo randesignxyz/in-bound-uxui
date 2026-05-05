@@ -15,13 +15,20 @@ export interface WarehouseConfirmReturnItem {
 
 const SparePartReturnAction = {
     paga_fetch_spare_parts_return_by_status_approved: (
-        page: number = 1,
-        pageSize: number = 20
+        page: number = 0,
+        pageSize: number = 20,
+        returnDateFrom?: string,
+        returnDateTo?: string,
+        status?: string,
     ): ServiceApiType<any> => ({
         type: "PAGING_QUERY",
         actionName: "fetch-spare-parts-return-by-status-approved",
         endpoint: "PROD",
-        payload: {},
+        payload: {
+            returnDateFrom,
+            returnDateTo,
+            status: mapReturnStatusFilter(status),
+        },
         pagination: { page, pageSize },
     }),
     warehouse_confirm_return: (
@@ -67,11 +74,14 @@ const SparePartReturnAction = {
 const SparePartWarehouseReturnAPI = (requestAction: RequestActions) => {
     return {
         paga_fetch_spare_parts_return_by_status_approved: async (
-            page: number = 1,
-            pageSize: number = 20
+            page: number = 0,
+            pageSize: number = 20,
+            returnDateFrom?: string,
+            returnDateTo?: string,
+            status?: string,
         ): Promise<Paging<any>> => {
             const res = await singleRequest<any>(
-                SparePartReturnAction.paga_fetch_spare_parts_return_by_status_approved(page, pageSize)
+                SparePartReturnAction.paga_fetch_spare_parts_return_by_status_approved(page, pageSize, returnDateFrom, returnDateTo, status)
             )(requestAction);
             return res as Paging<any>;
         },
@@ -104,6 +114,13 @@ const SparePartWarehouseReturnAPI = (requestAction: RequestActions) => {
             return res;
         },
     };
+};
+
+const mapReturnStatusFilter = (status?: string) => {
+    const normalized = String(status || '').trim().toUpperCase();
+    if (!normalized || normalized === 'ALL') return undefined;
+    if (normalized === 'COMPLETED') return 'COMPLETE';
+    return normalized;
 };
 
 export { SparePartWarehouseReturnAPI };

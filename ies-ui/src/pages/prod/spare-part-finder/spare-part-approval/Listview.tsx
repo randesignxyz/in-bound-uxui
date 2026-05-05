@@ -7,11 +7,13 @@ import MyRequestsToReturn from '../spare-part-return/MyRequestsToReturn';
 import { useAccess } from '@umijs/max';
 import { RequestActions } from '@/services/apiGateway';
 import { SparePartReturnAPI } from '../spare-part-return/service';
+import { SparePartRequestService } from '../spare-part-request/service';
 // import MyRequestsToReturn from '../spare-part-return/MyRequestsToReturn';
 
 export default function ListView() {
         const access = useAccess();
         const [contPendingReturns, setContPendingReturns] = useState(0);
+        const [pendingRequestCount, setPendingRequestCount] = useState(0);
 
         const requestAction: RequestActions = useMemo(
             () => ({
@@ -20,6 +22,8 @@ export default function ListView() {
             }),
             [],
         );
+
+        const services = useMemo(() => SparePartRequestService(requestAction), [requestAction]);
 
         const refreshPendingReturns = useCallback(async () => {
             try {

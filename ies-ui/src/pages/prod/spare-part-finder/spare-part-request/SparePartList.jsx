@@ -710,7 +710,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
 
 
-          {canSeeStatusFilter ? (
+          {/* {canSeeStatusFilter ? ( */}
             <Select
               style={{ width: 140 }}
               value={filters.status}
@@ -719,7 +719,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
                 applyFiltersAndReload((previous) => ({ ...previous, status: value }));
               }}
             />
-          ) : null}
+          {/* ) : null} */}
 
           <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
             Export Excel

@@ -137,6 +137,9 @@ export interface InboundPoItemApi {
   lineNumber?: number | null;
   lineStatus?: string | null;
   expectedDate?: string | null;
+  isAging?: boolean | null;
+  aging?: boolean | null;
+  is_aging?: boolean | null;
   code: string;
   name: string;
   poQty: number;
@@ -331,6 +334,7 @@ export interface InboundDashboardSummaryApi {
   exceptions: number;
   returnedForCorrection: number;
   awaitingPOLink: number;
+  agingPoItems: number;
   totalGRs: number;
   totalIrGrs: number;
 }
@@ -412,7 +416,9 @@ export interface InboundGoodsReceiptStatusChangeInput {
 
 export interface InboundLinkPoInput {
   id: number;
-  poNumber: string;
+  docNum?: string | null;
+  sapDocNum?: string | null;
+  poNumber?: string | null;
   note?: string | null;
 }
 

@@ -231,6 +231,7 @@ export function mapInboundDashboardSummary(summary: InboundDashboardSummaryApi):
     exceptions: summary.exceptions,
     returnedForCorrection: summary.returnedForCorrection,
     awaitingPOLink: summary.awaitingPOLink,
+    agingPoItems: readNumber(summary, 'agingPoItems', 'aging_po_items') ?? 0,
     totalGRs: summary.totalGRs,
     totalIrGrs: summary.totalIrGrs ?? summary.totalGRs,
   };
@@ -241,6 +242,7 @@ function mapInboundPurchaseOrderItem(item: InboundPoItemApi): UpcomingInboundPur
     lineNumber: readNumber(item, 'lineNumber', 'line_number') ?? undefined,
     lineStatus: readValue<string | null>(item, 'lineStatus', 'line_status') ?? undefined,
     expectedDate: readValue<string | null>(item, 'expectedDate', 'expected_date') ?? undefined,
+    isAging: readValue<boolean | null>(item, 'isAging', 'is_aging', 'aging') ?? false,
     code: readString(item, 'code'),
     name: readString(item, 'name'),
     poQty: readNumber(item, 'poQty', 'po_qty') ?? 0,

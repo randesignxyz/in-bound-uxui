@@ -27,9 +27,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ),
     ).sort();
 
-  const inboundWarehouseBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_OUTBOUND_WAREHOUSE_STAFF_');
-  const inboundQcBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_OUTBOUND_QC_');
-  const inboundSupervisorBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_OUTBOUND_SUPERVISOR_');
+  const inboundWarehouseBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_WAREHOUSE_STAFF_');
+  const inboundQcBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_QC_');
+  const inboundSupervisorBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_SUPERVISOR_');
   const inboundVisibleBusinessUnits = Array.from(
     new Set([
       ...inboundWarehouseBusinessUnits,

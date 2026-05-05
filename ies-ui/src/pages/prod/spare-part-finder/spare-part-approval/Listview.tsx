@@ -24,13 +24,18 @@ export default function ListView() {
     ]
 
     const loadPendingRequestCount = useCallback(async () => {
+      if (!access.canSpfApprover) {
+        setPendingRequestCount(0);
+        return;
+      }
+
       try {
         const dashboard = await services.getApprovalDashboard();
         setPendingRequestCount(Number(dashboard.pendingCount || 0));
       } catch {
         setPendingRequestCount(0);
       }
-    }, [services]);
+    }, [access.canSpfApprover, services]);
 
     useEffect(() => {
       loadPendingRequestCount();
@@ -56,6 +61,16 @@ export default function ListView() {
       };
     }, [loadPendingRequestCount]);
 
+    useEffect(() => {
+      const timer = window.setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          loadPendingRequestCount();
+        }
+      }, 30000);
+
+      return () => window.clearInterval(timer);
+    }, [loadPendingRequestCount]);
+
   return (
   <>
     <BreadCrumbCom separator=">" routes={routes} />
@@ -68,7 +83,7 @@ export default function ListView() {
                 </Badge>
             ),
             key: '1',
-            children: <MyRequestListview />,
+            children: <MyRequestListview scope="approval" onDataChanged={loadPendingRequestCount} />,
         },
             ...(access.canSpfApprover ?[
                 {

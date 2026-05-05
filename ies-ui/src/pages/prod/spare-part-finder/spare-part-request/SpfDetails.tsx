@@ -42,6 +42,7 @@ interface DrawerViewItemProps {
     warehouseCode?: string;
     rack?: string;
     shelve?: string;
+    level?: string;
     bin?: string;
   }) => Promise<void>;
   categoryOptions?: { label: string; value: number }[];
@@ -114,6 +115,7 @@ export default function SpfDetails({
     if (!editOpen || !data) return;
 
     form.setFieldsValue({
+      businessUnit: data.businessUnit || '-',
       description: data.description || '',
       kind: data.kind || 'consumable',
       categoryId: data.categoryId,
@@ -121,9 +123,10 @@ export default function SpfDetails({
       warehouseCode: firstLocation?.warehouseCode || data.warehouse || '',
       rack: firstLocation?.rack || '',
       shelve: firstLocation?.shelve || '',
+      level: firstLocation?.level || '',
       bin: firstLocation?.bin || '',
     });
-  }, [data, editOpen, firstLocation?.bin, firstLocation?.rack, firstLocation?.shelve, firstLocation?.warehouseCode, form]);
+  }, [data, editOpen, firstLocation?.bin, firstLocation?.level, firstLocation?.rack, firstLocation?.shelve, firstLocation?.warehouseCode, form]);
 
   const mainImageId = useMemo(
     () => selectedImageId || firstImageId,
@@ -179,6 +182,7 @@ export default function SpfDetails({
         warehouseCode: String(values.warehouseCode || '').trim() || undefined,
         rack: String(values.rack || '').trim() || undefined,
         shelve: String(values.shelve || '').trim() || undefined,
+        level: String(values.level || '').trim() || undefined,
         bin: String(values.bin || '').trim() || undefined,
       });
       message.success('Product details updated');
@@ -506,8 +510,8 @@ export default function SpfDetails({
                 </div>
               </div>
 
-              <Row gutter={24} style={{ textAlign: 'center' }}>
-                <Col span={6}>
+              <Row gutter={16} style={{ textAlign: 'center' }}>
+                <Col span={5}>
                   <Text
                     style={{
                       fontSize: 11,
@@ -523,7 +527,7 @@ export default function SpfDetails({
                     {displayWarehouse}
                   </Text>
                 </Col>
-                <Col span={6}>
+                <Col span={5}>
                   <Text
                     style={{
                       fontSize: 11,
@@ -539,7 +543,23 @@ export default function SpfDetails({
                     {firstLocation?.rack || '-'}
                   </Text>
                 </Col>
-                <Col span={6} style={{ borderLeft: '1px solid #e8e8e8', borderRight: '1px solid #e8e8e8' }}>
+                <Col span={4} style={{ borderLeft: '1px solid #e8e8e8' }}>
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: '#8c8c8c',
+                      textTransform: 'uppercase',
+                      display: 'block',
+                      marginBottom: 4,
+                    }}
+                  >
+                    Level
+                  </Text>
+                  <Text strong style={{ fontSize: 16 }}>
+                    {firstLocation?.level || '-'}
+                  </Text>
+                </Col>
+                <Col span={5} style={{ borderLeft: '1px solid #e8e8e8', borderRight: '1px solid #e8e8e8' }}>
                   <Text
                     style={{
                       fontSize: 11,
@@ -555,7 +575,7 @@ export default function SpfDetails({
                     {firstLocation?.shelve || '-'}
                   </Text>
                 </Col>
-                <Col span={6}>
+                <Col span={5}>
                   <Text
                     style={{
                       fontSize: 11,
@@ -621,6 +641,17 @@ export default function SpfDetails({
                   borderBottom: '1px solid #f0f0f0',
                 }}
               >
+                <Text style={{ color: '#8c8c8c' }}>Business Unit</Text>
+                <Text>{data?.businessUnit || '-'}</Text>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '16px 20px',
+                  borderBottom: '1px solid #f0f0f0',
+                }}
+              >
                 <Text style={{ color: '#8c8c8c' }}>Kind</Text>
                 <Text>{data?.kind || '-'}</Text>
               </div>
@@ -653,17 +684,7 @@ export default function SpfDetails({
               }}
               bodyStyle={{ padding: 0 }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '16px 20px',
-                  borderBottom: '1px solid #f0f0f0',
-                }}
-              >
-                <Text style={{ color: '#8c8c8c' }}>Business Unit</Text>
-                <Text>{data?.businessUnit || '-'}</Text>
-              </div>
+              
               <div
                 style={{
                   display: 'flex',
@@ -744,6 +765,9 @@ export default function SpfDetails({
           <Form.Item label="UOM">
             <Text type="secondary">{displayUom}</Text>
           </Form.Item>
+          <Form.Item label="Business Unit">
+            <Text type="secondary">{data?.businessUnit || '-'}</Text>
+          </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={4} maxLength={1000} />
           </Form.Item>
@@ -761,10 +785,18 @@ export default function SpfDetails({
           >
             <Input maxLength={80} />
           </Form.Item>
+          
           <Form.Item
             name="rack"
             label="Rack"
             rules={[{ required: true, message: 'Rack is required' }]}
+          >
+            <Input maxLength={80} />
+          </Form.Item>
+          <Form.Item
+            name="level"
+            label="Level"
+            rules={[{ required: true, message: 'Level is required' }]}
           >
             <Input maxLength={80} />
           </Form.Item>

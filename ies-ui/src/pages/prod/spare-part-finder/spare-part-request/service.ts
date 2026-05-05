@@ -203,12 +203,14 @@ type ApprovalDashboardDto = {
 const SparePartRequestAction = {
   pageMyRequests: (
     params: TableViewSearchParams<MyRequestSearch>,
+    scope: 'my' | 'approval' = 'my',
   ): ServiceApiType<{
     searchValue?: string;
     advanceSearch?: {
       priority?: string;
       status?: string;
       dateRange?: [string, string];
+      type?: string;
     };
   }> => ({
     type: 'PAGING_QUERY',
@@ -220,6 +222,7 @@ const SparePartRequestAction = {
         priority: mapRequestPriorityFilter(params.criteria?.advanceSearch?.priority),
         status: mapRequestStatusFilter(params.criteria?.advanceSearch?.status),
         dateRange: params.criteria?.advanceSearch?.dateRange,
+        type: scope === 'approval' ? 'approval' : undefined,
       },
     },
     pagination: {
@@ -838,9 +841,10 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
   },
   pageMyRequests: async (
     params: TableViewSearchParams<MyRequestSearch>,
+    scope: 'my' | 'approval' = 'my',
   ): Promise<Paging<MyRequestItem>> => {
     const response = (await singleRequest<MyRequestDto>(
-      SparePartRequestAction.pageMyRequests(params),
+      SparePartRequestAction.pageMyRequests(params, scope),
     )(requestAction)) as Paging<MyRequestDto>;
 
     return {

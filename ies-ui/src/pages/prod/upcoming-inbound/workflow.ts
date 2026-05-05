@@ -63,6 +63,7 @@ export interface POItem {
   lineNumber?: number;
   lineStatus?: string;
   expectedDate?: string;
+  isAging?: boolean;
   code: string;
   name: string;
   poQty: number;
@@ -387,9 +388,9 @@ export function getReceiptIrNumber(
 }
 
 export function getReceiptApprovedGrNumber(
-  receipt: Pick<GoodsReceipt, 'approvedGrNumber' | 'sapGrNumber'>,
+  receipt: Pick<GoodsReceipt, 'approvedGrNumber' | 'sapDocNum' | 'sapGrNumber'>,
 ) {
-  return receipt.sapGrNumber?.trim() || receipt.approvedGrNumber?.trim() || undefined;
+  return receipt.sapDocNum?.trim() || receipt.sapGrNumber?.trim() || receipt.approvedGrNumber?.trim() || undefined;
 }
 
 export function getReceiptSapStatus(receipt: Pick<GoodsReceipt, 'sapGrStatus' | 'processState'>) {

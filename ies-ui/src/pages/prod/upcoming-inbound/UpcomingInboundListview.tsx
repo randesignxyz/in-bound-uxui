@@ -479,6 +479,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     exceptions: 0,
     returnedForCorrection: 0,
     awaitingPOLink: 0,
+    agingPoItems: 0,
     totalGRs: 0,
     totalIrGrs: 0,
   });
@@ -657,19 +658,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     () => getCombinedPurchaseOrderVendor(selectedWarehousePOs),
     [selectedWarehousePOs],
   );
-  const agingPoItemCount = useMemo(
-    () =>
-      purchaseOrders.reduce((count, purchaseOrder) => {
-        const poExpectedDate = purchaseOrder.expectedDate;
-        const agingItems = (purchaseOrder.items || []).filter((item) => {
-          const expectedDate = item.expectedDate || poExpectedDate;
-          if (!expectedDate || item.remainingQty <= 0) return false;
-          return dayjs(expectedDate).isValid() && dayjs(expectedDate).isBefore(dayjs(), 'day');
-        });
-        return count + agingItems.length;
-      }, 0),
-    [purchaseOrders],
-  );
+  const agingPoItemCount = inboundStats.agingPoItems;
 
   const buildBusinessUnitCriteria = () => ({
     businessUnit: activeBusinessUnitFilter || null,
@@ -1104,6 +1093,8 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
         (receipt) =>
           receipt.grNumber.toUpperCase().includes(term) ||
           getReceiptIrNumber(receipt).toUpperCase().includes(term) ||
+          (receipt.sapDocNum?.toUpperCase().includes(term) ?? false) ||
+          (receipt.sapGrNumber?.toUpperCase().includes(term) ?? false) ||
           (getReceiptApprovedGrNumber(receipt)?.toUpperCase().includes(term) ?? false) ||
           receipt.poNumber.toUpperCase().includes(term) ||
           getReceiptPOReferences(receipt).some((reference) =>
@@ -1742,7 +1733,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     try {
       const response = await services.linkPoToTempReceipt({
         id: receipt.id,
-        poNumber: purchaseOrder.poNumber,
+        docNum: purchaseOrder.sapDocNum || purchaseOrder.poNumber,
       });
       syncReceiptInState(response.data);
       setLinkPOReceipt(null);

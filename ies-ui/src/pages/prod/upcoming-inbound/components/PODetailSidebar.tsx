@@ -33,6 +33,7 @@ function getReceiptItemLabel(name: string, code: string) {
 }
 
 function isAgingPOItem(item: POItem, poExpectedDate?: string) {
+  if (typeof item.isAging === 'boolean') return item.isAging;
   const expectedDate = item.expectedDate || poExpectedDate;
   if (!expectedDate || item.remainingQty <= 0) return false;
   return dayjs(expectedDate).isValid() && dayjs(expectedDate).isBefore(dayjs(), 'day');

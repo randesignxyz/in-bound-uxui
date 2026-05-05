@@ -52,6 +52,10 @@ function validateLink(receipt: GoodsReceipt, purchaseOrder: PurchaseOrder) {
   return '';
 }
 
+function getPurchaseOrderDocNum(purchaseOrder: PurchaseOrder) {
+  return purchaseOrder.sapDocNum?.trim() || purchaseOrder.poNumber;
+}
+
 export function LinkPOModal({
   open,
   receipt,
@@ -110,13 +114,13 @@ export function LinkPOModal({
     const normalizedSearch = searchTerm.trim().toUpperCase();
     const found = purchaseOrders.find(
       (purchaseOrder) =>
-        purchaseOrder.poNumber.toUpperCase() === normalizedSearch &&
+        getPurchaseOrderDocNum(purchaseOrder).toUpperCase() === normalizedSearch &&
         (!receipt.businessUnit || purchaseOrder.businessUnit === receipt.businessUnit),
     );
 
     if (!found) {
       setSearchResult(null);
-      setSearchError('PO not found in SAP list.');
+      setSearchError('SAP PO doc_num not found in SAP list.');
       return;
     }
 
@@ -179,7 +183,7 @@ export function LinkPOModal({
                 <Input
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Enter SAP PO number"
+                  placeholder="Enter SAP PO doc_num"
                   prefix={<SearchOutlined />}
                   onPressEnter={handleSearch}
                 />
@@ -197,6 +201,7 @@ export function LinkPOModal({
               <>
                 <Card size="small" title="PO Match Summary">
                   <Descriptions column={2} size="small">
+                    <Descriptions.Item label="SAP PO Doc No">{getPurchaseOrderDocNum(searchResult)}</Descriptions.Item>
                     <Descriptions.Item label="PO Number">{searchResult.poNumber}</Descriptions.Item>
                     <Descriptions.Item label="Supplier">{searchResult.supplier}</Descriptions.Item>
                     <Descriptions.Item label="Type">

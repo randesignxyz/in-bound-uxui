@@ -290,183 +290,70 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
     listSuppliers: async (
       params: InboundSupplierMasterListParams = {},
     ): Promise<InboundSupplierMasterApi[]> => {
-      const requestDirectSuppliers = async (payload: InboundSupplierMasterListParams) => {
-        const response = await request<InboundSupplierMasterApi[]>(
-          `${PROD_API}/inbound/master-data/suppliers`,
-          {
-            method: 'POST',
-            data: payload,
-          },
-        );
-        return extractArrayResponse(response)
-          .map(normalizeInboundSupplierMaster)
-          .filter((supplier) => supplier.supplier_code || supplier.supplier_name);
-      };
-      const requestSuppliers = async (payload: InboundSupplierMasterListParams) => {
-        const response = (await singleRequest<InboundSupplierMasterApi>(
-          UpcomingInboundAction.listSuppliers(payload),
-        )(requestAction)) as InboundSupplierMasterApi[];
-        return extractArrayResponse(response)
-          .map(normalizeInboundSupplierMaster)
-          .filter((supplier) => supplier.supplier_code || supplier.supplier_name);
-      };
-      const attempts: InboundSupplierMasterListParams[] = [
-        params,
-        { ...params, status: undefined },
-        { business_unit: params.businessUnit ?? params.business_unit ?? null, status: params.status },
-        { business_unit: params.businessUnit ?? params.business_unit ?? null, status: undefined },
-      ];
+      const response = await request<InboundSupplierMasterApi[]>(
+        `${PROD_API}/inbound/master-data/suppliers`,
+        {
+          method: 'POST',
+          data: params,
+        },
+      );
       const suppliersByKey = new Map<string, InboundSupplierMasterApi>();
-      let lastError: unknown;
+      extractArrayResponse(response)
+        .map(normalizeInboundSupplierMaster)
+        .filter((supplier) => supplier.supplier_code || supplier.supplier_name)
+        .forEach((supplier) => {
+          const key = `${supplier.business_unit || 'ALL'}::${supplier.supplier_code || supplier.supplier_name}`;
+          suppliersByKey.set(key, supplier);
+        });
 
-      for (const payload of attempts) {
-        try {
-          const suppliers = await requestDirectSuppliers(payload);
-          suppliers.forEach((supplier) => {
-            const key = `${supplier.business_unit || 'ALL'}::${supplier.supplier_code || supplier.supplier_name}`;
-            suppliersByKey.set(key, supplier);
-          });
-        } catch (error) {
-          lastError = error;
-        }
-
-        try {
-          const suppliers = await requestSuppliers(payload);
-          suppliers.forEach((supplier) => {
-            const key = `${supplier.business_unit || 'ALL'}::${supplier.supplier_code || supplier.supplier_name}`;
-            suppliersByKey.set(key, supplier);
-          });
-        } catch (error) {
-          lastError = error;
-        }
-      }
-
-      if (suppliersByKey.size > 0) {
-        return Array.from(suppliersByKey.values()).sort((left, right) => {
+      return Array.from(suppliersByKey.values()).sort((left, right) => {
           const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
           return businessUnitCompare || left.supplier_name.localeCompare(right.supplier_name);
-        });
-      }
-
-      if (lastError) throw lastError;
-      return [];
+      });
     },
 
     listUoms: async (params: InboundUomMasterListParams = {}): Promise<InboundUomMasterApi[]> => {
-      const requestDirectUoms = async (payload: InboundUomMasterListParams) => {
-        const response = await request<InboundUomMasterApi[]>(
-          `${PROD_API}/inbound/master-data/uoms`,
-          {
-            method: 'POST',
-            data: payload,
-          },
-        );
-        return extractArrayResponse(response).map(normalizeInboundUomMaster).filter((uom) => uom.uom_code);
-      };
-      const requestUoms = async (payload: InboundUomMasterListParams) => {
-        const response = (await singleRequest<InboundUomMasterApi>(
-          UpcomingInboundAction.listUoms(payload),
-        )(requestAction)) as InboundUomMasterApi[];
-        return extractArrayResponse(response).map(normalizeInboundUomMaster).filter((uom) => uom.uom_code);
-      };
-      const attempts: InboundUomMasterListParams[] = [params, { ...params, status: undefined }];
+      const response = await request<InboundUomMasterApi[]>(
+        `${PROD_API}/inbound/master-data/uoms`,
+        {
+          method: 'POST',
+          data: params,
+        },
+      );
       const uomsByCode = new Map<string, InboundUomMasterApi>();
-      let lastError: unknown;
+      extractArrayResponse(response)
+        .map(normalizeInboundUomMaster)
+        .filter((uom) => uom.uom_code)
+        .forEach((uom) => uomsByCode.set(uom.uom_code.toUpperCase(), uom));
 
-      for (const payload of attempts) {
-        try {
-          const uoms = await requestDirectUoms(payload);
-          uoms.forEach((uom) => uomsByCode.set(uom.uom_code.toUpperCase(), uom));
-        } catch (error) {
-          lastError = error;
-        }
-
-        try {
-          const uoms = await requestUoms(payload);
-          uoms.forEach((uom) => uomsByCode.set(uom.uom_code.toUpperCase(), uom));
-        } catch (error) {
-          lastError = error;
-        }
-      }
-
-      if (uomsByCode.size > 0) {
-        return Array.from(uomsByCode.values()).sort((left, right) =>
-          left.uom_code.localeCompare(right.uom_code),
-        );
-      }
-
-      if (lastError) throw lastError;
-      return [];
+      return Array.from(uomsByCode.values()).sort((left, right) =>
+        left.uom_code.localeCompare(right.uom_code),
+      );
     },
 
     listWarehouses: async (
       params: InboundWarehouseMasterListParams = {},
     ): Promise<InboundWarehouseMasterApi[]> => {
-      const requestWarehouses = async (payload: InboundWarehouseMasterListParams) => {
-        const response = (await singleRequest<InboundWarehouseMasterApi>(
-          UpcomingInboundAction.listWarehouses(payload),
-        )(requestAction)) as InboundWarehouseMasterApi[];
-        return extractArrayResponse(response)
-          .map(normalizeInboundWarehouseMaster)
-          .filter((warehouse) => warehouse.warehouse_code);
-      };
-      const requestDirectWarehouses = async (payload: InboundWarehouseMasterListParams) => {
-        const response = await request<InboundWarehouseMasterApi[]>(
-          `${PROD_API}/inbound/master-data/warehouses`,
-          {
-            method: 'POST',
-            data: payload,
-          },
-        );
-        return extractArrayResponse(response)
-          .map(normalizeInboundWarehouseMaster)
-          .filter((warehouse) => warehouse.warehouse_code);
-      };
-
-      const attempts: InboundWarehouseMasterListParams[] = [
-        params,
-        { ...params, status: undefined },
-        { business_unit: params.businessUnit ?? params.business_unit ?? null, status: params.status },
-        { business_unit: params.businessUnit ?? params.business_unit ?? null, status: undefined },
-        { businessUnit: null, status: params.status },
-        { businessUnit: null, status: undefined },
-        { business_unit: null, status: params.status },
-        { business_unit: null, status: undefined },
-      ];
+      const response = await request<InboundWarehouseMasterApi[]>(
+        `${PROD_API}/inbound/master-data/warehouses`,
+        {
+          method: 'POST',
+          data: params,
+        },
+      );
       const warehousesByKey = new Map<string, InboundWarehouseMasterApi>();
-      let lastError: unknown;
+      extractArrayResponse(response)
+        .map(normalizeInboundWarehouseMaster)
+        .filter((warehouse) => warehouse.warehouse_code)
+        .forEach((warehouse) => {
+          const key = `${warehouse.business_unit || 'ALL'}::${warehouse.warehouse_code}`;
+          warehousesByKey.set(key, warehouse);
+        });
 
-      for (const payload of attempts) {
-        try {
-          const warehouses = await requestDirectWarehouses(payload);
-          warehouses.forEach((warehouse) => {
-            const key = `${warehouse.business_unit || 'ALL'}::${warehouse.warehouse_code}`;
-            warehousesByKey.set(key, warehouse);
-          });
-        } catch (error) {
-          lastError = error;
-        }
-
-        try {
-          const warehouses = await requestWarehouses(payload);
-          warehouses.forEach((warehouse) => {
-            const key = `${warehouse.business_unit || 'ALL'}::${warehouse.warehouse_code}`;
-            warehousesByKey.set(key, warehouse);
-          });
-        } catch (error) {
-          lastError = error;
-        }
-      }
-
-      if (warehousesByKey.size > 0) {
-        return Array.from(warehousesByKey.values()).sort((left, right) => {
+      return Array.from(warehousesByKey.values()).sort((left, right) => {
           const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
           return businessUnitCompare || left.warehouse_code.localeCompare(right.warehouse_code);
-        });
-      }
-
-      if (lastError) throw lastError;
-      return [];
+      });
     },
 
     pageGoodsReceipts: async (

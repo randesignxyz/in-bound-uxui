@@ -1,8 +1,8 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import ProForm, { ProFormTextArea } from '@ant-design/pro-form';
-import { Card, message } from 'antd';
+import { Card } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 interface Props extends FormModalProps {
   id: string;

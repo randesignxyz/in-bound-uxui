@@ -1580,13 +1580,7 @@ export default [
     access: 'canAccessSparePartFinder',
     component: './prod/spare-part-finder/spare-part-request/',
   },
-  {
-    path: '/prod/spare-part-request-test/:view/*',
-    name: 'sparePartRequestTest',
-    hideInMenu: 'true',
-    access: 'canAccessSparePartFinder',
-    component: './prod/spare-part-finder/spare-part-request-test',
-  },
+
   {
     path: '/prod/spare-part-warehouse/:view/*',
     name: 'sparePartWarehouse',

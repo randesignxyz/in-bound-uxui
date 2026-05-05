@@ -1,11 +1,13 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
-import { ProFormDateRangePicker, ProFormDateTimeRangePicker, ProFormSelect } from '@ant-design/pro-components';
+import { ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
 import ProForm from '@ant-design/pro-form';
 import { Card, Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 import { TransferRequestServiceAPI } from './inventory-transfer-request/service';
 import { simpleRequestActions } from '@/services/model';
+import type { Paging } from '@/services/API';
+import type { ProductionLine } from './inventory-transfer-request/data';
 
 interface Props extends FormModalProps {
   // id: string;
@@ -74,8 +76,11 @@ export default ({ loading, onSave,type, ...props }: Props) => {
                 label="Line"
                 mode="multiple"
                 request={async () => {
-                  const line = await TransferRequestServiceAPI(requestActions).get_line()
-                  return line.map((obj) => ({
+                  const lineResponse = await TransferRequestServiceAPI(requestActions).get_line()
+                  const line = Array.isArray(lineResponse)
+                    ? lineResponse
+                    : (lineResponse as Paging<ProductionLine>)?.items || [];
+                  return line.map((obj: ProductionLine) => ({
                     value: obj.prdname,
                     label: obj.prdname
                   }))
@@ -133,7 +138,7 @@ export default ({ loading, onSave,type, ...props }: Props) => {
             </Col>
             <Col span={11}>
               <ProFormSelect
-                options={type == 'request' ? request : type == 'transfer' ? transfer : []}
+                options={type === 'request' ? request : type === 'transfer' ? transfer : []}
                 name="state"
                 label="Status"
                 mode="multiple"

@@ -20,6 +20,7 @@ import {
   message,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import SparePartImage from '../spare-part-request/SparePartImage';
 import type {
   RequestDetailActivityItem,
@@ -72,6 +73,7 @@ interface ReturnItem {
   goodQty?: number;
   damagedQty?: number;
   itemRemark?: string;
+  forLine?: string; // Not from API, but useful to show in table for warehouse staff to identify which line to receive against
   images?: string[];  // file IDs
 }
 
@@ -100,8 +102,8 @@ const STATUS_STEP_MAP: Record<ReturnStatus | string, number> = {
 };
 
 const statusColorMap: Record<ReturnStatus | string, string> = {
-  Pending: 'processing',
-  Approved: 'warning',
+  Pending: 'default',
+  Approved: 'default',
   Rejected: 'error',
   Receiving: 'processing',
   'In Progress': 'processing',
@@ -111,7 +113,7 @@ const statusColorMap: Record<ReturnStatus | string, string> = {
 
 const statusLabelMap: Record<ReturnStatus | string, string> = {
   Pending: 'Return',
-  Approved: 'Approved',
+  Approved: 'Pending',
   Rejected: 'Rejected',
   Receiving: 'Receiving',
   'In Progress': 'In Progress',
@@ -122,7 +124,7 @@ const statusLabelMap: Record<ReturnStatus | string, string> = {
 
 const formatDateTime = (date?: string) => {
   if (!date) return '—';
-  return formatSpfDateTime(date);
+  return dayjs(date).format('YYYY-MMM-DD hh:mm A');
 };
 
 /**
@@ -263,6 +265,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           uom: i.uom,
           usedQty: i.used_quantity ?? 0,
           qtyToReturn: i.quantity_to_return ?? 0,
+          forLine: i.forLine,
           // Receipt fields from completed returns
           receivedQty: i.received_qty,
           goodQty: i.good_qty,
@@ -358,6 +361,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             damaged_qty: i.damaged_qty,
             remark: i.remark,
             images: i.images,
+            forLine: i.forLine,
           })),
           activities: (item.activities ?? []).map((a: any) => ({
             label: a.label,
@@ -637,6 +641,9 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       // ─── Refresh Logic ───
       await fetchDetail();        // Refresh drawer internal state
       onSuccess?.();               // Notify parent list to reload
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('spare-part-return-updated'));
+      }
       
       // Clear current batch inputs
       setGoodQtyMap({});
@@ -763,6 +770,15 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
               );
             },
             width: 100,
+          },
+          {
+            title: 'Line',
+            key: 'forLine',
+            render: (_: any, record: ReturnItem) => (
+            <span style={{ fontWeight: 600, color: '#1890ff' }}>
+              {record.forLine ?? '-'}
+            </span>
+          ),
           },
           {
             title: 'Damaged',
@@ -1011,7 +1027,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       width={'100%'}
       open={open}
       onClose={onClose}
-      styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
+      styles={{ body: { padding: '24px' } }}
       footer={
         shouldShowReceivedButton ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1060,7 +1076,9 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           <Descriptions.Item label="Return Date">
             {formatDateTime(fetchedData?.request_date ?? data?.request_date)}
           </Descriptions.Item>
-          <Descriptions.Item label="Status">
+          <Descriptions.Item label="Status"
+             contentStyle={{ fontWeight: 400, color: '' }}
+          >
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}>{statusLabelMap[effectiveStatus]}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Remarks">{fetchedData?.remarks || '—'}</Descriptions.Item>
@@ -1169,7 +1187,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                       <Typography.Text type="secondary">{activity.description}</Typography.Text>
                     </div>
                     {activity.date && (
-                      <Typography.Text type="secondary">{activity.date}</Typography.Text>
+                      <Typography.Text type="secondary">{formatDateTime(activity.date)}</Typography.Text>
                     )}
                   </div>
 
@@ -1200,6 +1218,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                           },
                           { title: 'From Warehouse', dataIndex: 'fromWarehouse' },
                           { title: 'To Warehouse', dataIndex: 'toWarehouse' },
+                          // {title: 'Line', dataIndex: 'forLine' },
                           { title: 'Business Unit', dataIndex: 'business_unit' },
                         ]}
                       />

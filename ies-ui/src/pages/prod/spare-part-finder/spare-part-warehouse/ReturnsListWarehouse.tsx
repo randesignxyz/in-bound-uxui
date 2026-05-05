@@ -1,13 +1,19 @@
-import { EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+import { EyeOutlined, FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProColumns, ProTable } from '@ant-design/pro-components';
-import { Button, Card, DatePicker, Input, Select, Tag, Typography } from 'antd';
+import { Button, Card, DatePicker, Input, Select, Tag, Typography, message } from 'antd';
 import { Space } from 'antd/lib';
-import { useRef, useState } from 'react';
-import { RequestActions } from '@/services/apiGateway';
+import dayjs from 'dayjs';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { downloadGenericReport, RequestActions } from '@/services/apiGateway';
+import { SparePartRequestAPI } from '../spare-part-request/service.api';
 import { SparePartWarehouseReturnAPI } from './service.return';
 import type { RequestDetailData, ReturnStatus } from '../spare-part-return/data';
 import ReturnsListDrawer from './ReturnsListDrawer';
 import { formatSpfDateTime } from '../shared/dateTime';
+import RequestsWarehouseExportExcel, {
+  type RequestsWarehouseExportValues,
+} from './RequestsWarehouseExportExcel';
+import { getUrlReporting } from '@/pages/ReportUrl';
 
 const { RangePicker } = DatePicker;
 
@@ -30,8 +36,8 @@ export type WarehouseReturnRow = {
 // ─── Status display helpers ───────────────────────────────────────────────────
 
 const STATUS_COLOR: Record<string, string> = {
-  PENDING:    'processing',
-  APPROVED:   'warning',
+  PENDING:    'default',
+  APPROVED:   'default',
   REJECTED:   'error',
   RECEIVING:  'processing',
   COMPLETED:  'success',
@@ -41,7 +47,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING:   'Pending',
-  APPROVED:  'Approved',
+  APPROVED:  'Pending',
   REJECTED:  'Rejected',
   RECEIVING: 'Receiving',
   COMPLETED: 'Completed',
@@ -71,37 +77,138 @@ const formatDate = (iso?: string | null) =>
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ReturnsListWarehouse() {
+interface ReturnsListWarehouseProps {
+  onUpdate?: () => void;
+}
+
+export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseProps = {}) {
   const actionRef = useRef<ActionType>();
   const [selectedReturn, setSelectedReturn] = useState<WarehouseReturnRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [knownBusinessUnits, setKnownBusinessUnits] = useState<string[]>([]);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const exportInFlightRef = useRef(false);
 
-  const requestAction: RequestActions = {
-    start: (name) => console.log(`Loading: ${name}`),
-    end: (status) => console.log(status),
+  const requestAction: RequestActions = useMemo(
+    () => ({
+      start: (name) => console.log(`Loading: ${name}`),
+      end: (status) => console.log(status),
+    }),
+    [],
+  );
+
+  const openDrawer = (record: WarehouseReturnRow) => {
+    setSelectedReturn(record);
+    setDetailOpen(true);
   };
 
+  // const loadBusinessUnits = useCallback(async () => {
+  //   try {
+  //     const sparePartServices = SparePartRequestAPI(requestAction);
+  //     const response = await sparePartServices.page({
+  //       criteria: {
+  //         searchValue: '',
+  //         category: '',
+  //         status: 'All',
+  //         warehouse: '',
+  //       },
+  //       pagination: {
+  //         current: 1,
+  //         pageSize: 20,
+  //       },
+  //     });
+
+  //     const businessUnits = Array.from(
+  //       new Set(
+  //         (response.items || [])
+  //           .map((item) => item.businessUnit)
+  //           .filter((item): item is string => Boolean(item && item !== '-')),
+  //       ),
+  //     ).sort();
+
+  //     setKnownBusinessUnits(businessUnits);
+  //   } catch (error) {
+  //     message.error('Failed to load business units.');
+  //   }
+  // }, [requestAction]);
+
+  // useEffect(() => {
+  //   loadBusinessUnits();
+  // }, [loadBusinessUnits]);
+
+  const exportRequests = useCallback(
+    async ({ dateRange, businessUnits }: RequestsWarehouseExportValues) => {
+      if (exportInFlightRef.current) return;
+
+      if (!dateRange?.[0] || !dateRange?.[1]) {
+        message.error('Please select a date range.');
+        return;
+      }
+
+      exportInFlightRef.current = true;
+      setExportLoading(true);
+      try {
+        await downloadGenericReport(requestAction)({
+          fileName: `spare-part-returns-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
+          type: 'EXCEL',
+          data: {
+            reportName: 'spare_parts_returns',
+            reportPath: getUrlReporting('prod'),
+            data: [
+              {
+                key: 'StartDate',
+                value: dateRange[0].startOf('day').toISOString(),
+                type: 'dateTime',
+                
+              },
+              {
+                key: 'EndDate',
+                value: dateRange[1].endOf('day').toISOString(),
+                type: 'dateTime',
+              },
+              {
+                key: 'BusinessUnit',
+                value: businessUnits.length > 0 ? businessUnits.join(',') : 'All',
+                type: 'string',
+              },
+            ],
+          },
+        });
+        setExportModalOpen(false);
+      } catch (error) {
+        message.error('Failed to export Excel.');
+      } finally {
+        exportInFlightRef.current = false;
+        setExportLoading(false);
+      }
+    },
+    [requestAction],
+  );
+
   const fetchData = async (params: { current?: number; pageSize?: number }) => {
-    const page = params.current ?? 1;
+    const page = params.current ?? 0;
     const size = params.pageSize ?? 20;
     setCurrentPage(page);
     setPageSize(size);
 
     const res = await SparePartWarehouseReturnAPI(requestAction)
-      .paga_fetch_spare_parts_return_by_status_approved(page, size);
+      .paga_fetch_spare_parts_return_by_status_approved(
+        page, 
+        size, 
+        dateRangeFilter ? dateRangeFilter[0].toISOString() : undefined, 
+        dateRangeFilter ? dateRangeFilter[1].toISOString() : undefined,
+        statusFilter,
+      );
 
     const items: WarehouseReturnRow[] = (res as any)?.items ?? [];
     const total: number = (res as any)?.total ?? items.length;
 
-    // client-side status filter
-    const filtered = statusFilter === 'all'
-      ? items
-      : items.filter((r) => normalizeWarehouseReturnStatus(r.returnStatus) === statusFilter);
-
-    return { data: filtered, success: true, total };
+    return { data: items, success: true, total };
   };
 
   const columns: ProColumns<WarehouseReturnRow>[] = [
@@ -126,7 +233,7 @@ export default function ReturnsListWarehouse() {
       title: 'Return Date',
       dataIndex: 'returnDate',
       key: 'returnDate',
-      render: (_dom, record) => formatSpfDateTime(record.returnDate),
+      render: (_dom, record) => record.returnDate ? dayjs(record.returnDate).format('YYYY-MMM-DD hh:mm A') : ' ',
     },
     {
       title: 'Requested By',
@@ -158,22 +265,22 @@ export default function ReturnsListWarehouse() {
         );
       },
     },
-    {
-      title: 'Action',
-      key: 'action',
-      align: 'center',
+    // {
+    //   title: 'Action',
+    //   key: 'action',
+    //   align: 'center',
       
-      width: 110,
-      render: (_dom, record) => (
-        <Button
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => { setSelectedReturn(record); setDetailOpen(true); }}
-        >
+    //   width: 110,
+    //   render: (_dom, record) => (
+    //     <Button
+    //       size="small"
+    //       icon={<EyeOutlined />}
+    //       onClick={() => { setSelectedReturn(record); setDetailOpen(true); }}
+    //     >
          
-        </Button>
-      ),
-    },
+    //     </Button>
+    //   ),
+    // },
   ];
 
   return (
@@ -208,7 +315,17 @@ export default function ReturnsListWarehouse() {
               { value: 'COMPLETED', label: 'Completed' },
             ]}
           />
-          <RangePicker style={{ width: 280 }} />
+          <RangePicker 
+            style={{ width: 280 }} 
+            value={dateRangeFilter}
+            onChange={(dates) => {
+              setDateRangeFilter(dates?.[0] && dates?.[1] ? [dates[0], dates[1]] : null);
+              actionRef.current?.reloadAndRest?.();
+            }}
+          />
+          <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
+            Export Excel
+          </Button>
         </Space>
       </div>
 
@@ -219,7 +336,7 @@ export default function ReturnsListWarehouse() {
           columns={columns}
           rowKey="returnId"
           request={fetchData}
-          tableLayout="fixed"
+          tableLayout="auto"
           size="small"
           bordered
             toolBarRender={() => [
@@ -240,6 +357,19 @@ export default function ReturnsListWarehouse() {
             pageSizeOptions: [10, 20, 50],
             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
           }}
+              onRow={(record) => ({
+                      onClick: (event) => {
+                        const target = event.target;
+                        if (
+                          target instanceof HTMLElement &&
+                          target.closest('a, button, input, textarea, .ant-select, .ant-picker')
+                        ) {
+                          return;
+                        }
+                        openDrawer(record as WarehouseReturnRow);
+                      },
+                      style: { cursor: 'pointer' },
+          })}
         />
       </Card>
 
@@ -247,7 +377,10 @@ export default function ReturnsListWarehouse() {
       <ReturnsListDrawer
         open={detailOpen}
         onClose={() => { setDetailOpen(false); setSelectedReturn(null); }}
-        onSuccess={() => actionRef.current?.reload()}
+        onSuccess={() => {
+          actionRef.current?.reload?.();
+          onUpdate?.();
+        }}
         data={selectedReturn ? {
           no: selectedReturn.returnId,
           request_id: selectedReturn.returnNo,
@@ -259,6 +392,14 @@ export default function ReturnsListWarehouse() {
           activities: [],
         } : null}
         returnId={selectedReturn?.returnId}
+      />
+      <RequestsWarehouseExportExcel
+        open={exportModalOpen}
+        loading={exportLoading}
+        businessUnitOptions={knownBusinessUnits}
+        reportName="return_by_date_range(default_today_7dayts)_promt_by_BU"
+        onCancel={() => setExportModalOpen(false)}
+        onSave={exportRequests}
       />
     </>
   );

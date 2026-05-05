@@ -1596,7 +1596,7 @@ export default function RequestedBatchDrawer({
         
       </Drawer>
 
-      <SpfDetails
+      {/* <SpfDetails
         open={open && spfOpen}
         data={spfData}
         loading={spfLoading}
@@ -1608,7 +1608,7 @@ export default function RequestedBatchDrawer({
           setSpfLoading(false);
           setSpfError(null);
         }}
-      />
+      /> */}
 
       <ValidationPopup
         open={actionPopup === 'approve'}

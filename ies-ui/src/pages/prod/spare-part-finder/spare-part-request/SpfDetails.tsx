@@ -93,7 +93,7 @@ export default function SpfDetails({
   const canManageDetails = canManageImages;
   const imageIds: string[] = Array.isArray(data?.imageId) ? data.imageId.filter(Boolean) : [];
   const locations: DetailLocation[] = Array.isArray(data?.locations) ? data.locations : [];
-  const firstLocation = locations[0];
+  const firstLocation = locations.find((location) => Number(location?.availableQty ?? 0) > 0) || locations[0];
   const firstImageId = imageIds[0];
   const [selectedImageId, setSelectedImageId] = useState<string | undefined>(firstImageId);
   const [imageTransitioning, setImageTransitioning] = useState(false);

@@ -204,9 +204,9 @@ export function LinkPOModal({
                         {searchResult.type}
                       </Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label="Status">
-                      <Tag color={searchResult.status === 'Fully Received' ? 'green' : 'blue'}>
-                        {searchResult.status}
+                    <Descriptions.Item label="SAP PO Status">
+                      <Tag color={searchResult.docStatus?.toLowerCase() === 'closed' ? 'green' : 'blue'}>
+                        {searchResult.docStatus || 'Open'}
                       </Tag>
                     </Descriptions.Item>
                   </Descriptions>

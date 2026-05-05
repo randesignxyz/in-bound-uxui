@@ -52,6 +52,7 @@ import {
   getReceiptApprovedGrNumber,
   getReceiptIrNumber,
   getReceiptPOReferences,
+  getReceiptSapStatus,
   getExceptionQueueReceipts,
   poLinkStatusLabel,
   summarizePOReferences,
@@ -157,21 +158,6 @@ const qcStatusOptions: Array<{ label: string; value: QcQueueStatusFilter }> = [
   { label: 'Rejected', value: 'Rejected' },
   { label: 'Complete', value: 'Complete' },
   { label: 'All', value: 'All' },
-];
-
-const inboundDefaultUomOptions: InboundUomMasterApi[] = [
-  { id: 1, uom_code: 'BAG', uom_name: 'Bag', status: 'Active' },
-  { id: 2, uom_code: 'BOX', uom_name: 'Box', status: 'Active' },
-  { id: 3, uom_code: 'CTN', uom_name: 'Carton', status: 'Active' },
-  { id: 4, uom_code: 'EA', uom_name: 'Each', status: 'Active' },
-  { id: 5, uom_code: 'G', uom_name: 'Gram', status: 'Active' },
-  { id: 6, uom_code: 'KG', uom_name: 'Kilogram', status: 'Active' },
-  { id: 7, uom_code: 'L', uom_name: 'Liter', status: 'Active' },
-  { id: 8, uom_code: 'ML', uom_name: 'Milliliter', status: 'Active' },
-  { id: 9, uom_code: 'PALLET', uom_name: 'Pallet', status: 'Active' },
-  { id: 10, uom_code: 'PCS', uom_name: 'Pieces', status: 'Active' },
-  { id: 11, uom_code: 'ROLL', uom_name: 'Roll', status: 'Active' },
-  { id: 12, uom_code: 'TANK', uom_name: 'Tank', status: 'Active' },
 ];
 
 const inboundReportOptionsByRole: Record<InboundWorkspaceRole, InboundReportOption[]> = {
@@ -546,10 +532,23 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     (hasActiveBusinessUnit
       ? inboundSupervisorBusinessUnits.includes(activeBusinessUnitFilter!)
       : inboundSupervisorBusinessUnits.length > 0);
+  const warehouseMasterBusinessUnits = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          warehouseMasterOptions
+            .map((warehouse) => warehouse.business_unit?.trim())
+            .filter((businessUnit): businessUnit is string => Boolean(businessUnit)),
+        ),
+      ).sort(),
+    [warehouseMasterOptions],
+  );
   const tempReceiptBusinessUnits =
     activeBusinessUnitFilter && canUseWarehouseRole
       ? [activeBusinessUnitFilter]
-      : inboundWarehouseBusinessUnits;
+      : isInboundAdmin
+        ? warehouseMasterBusinessUnits
+        : inboundWarehouseBusinessUnits;
 
   const inboundRoleOptions = useMemo(() => {
     const roles: InboundWorkspaceRole[] = [];
@@ -587,54 +586,12 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   );
 
   const supplierOptionsForTempReceipt = useMemo<InboundSupplierMasterApi[]>(() => {
-    if (supplierMasterOptions.length > 0) return supplierMasterOptions;
-
-    const supplierNames = Array.from(
-      new Set(
-        purchaseOrders
-          .filter((po) => !activeBusinessUnitFilter || po.businessUnit === activeBusinessUnitFilter)
-          .map((po) => po.supplier?.trim())
-          .filter((supplier): supplier is string => Boolean(supplier)),
-      ),
-    );
-
-    return supplierNames.map((supplierName, index) => ({
-      id: index,
-      business_unit: activeBusinessUnitFilter || '',
-      supplier_code: supplierName,
-      supplier_name: supplierName,
-      status: 'Active',
-    }));
-  }, [activeBusinessUnitFilter, purchaseOrders, supplierMasterOptions]);
+    return supplierMasterOptions;
+  }, [supplierMasterOptions]);
 
   const uomOptionsForTempReceipt = useMemo<InboundUomMasterApi[]>(() => {
-    const uomByCode = new Map<string, InboundUomMasterApi>();
-
-    [...inboundDefaultUomOptions, ...uomMasterOptions].forEach((uom) => {
-      const code = uom.uom_code?.trim();
-      if (!code) return;
-      uomByCode.set(code.toUpperCase(), { ...uom, uom_code: code });
-    });
-
-    purchaseOrders
-      .flatMap((po) => po.items || [])
-      .map((item) => item.uom?.trim())
-      .filter((uom): uom is string => Boolean(uom))
-      .forEach((uomCode, index) => {
-        const normalizedCode = uomCode.toUpperCase();
-        if (uomByCode.has(normalizedCode)) return;
-        uomByCode.set(normalizedCode, {
-          id: 1000 + index,
-          uom_code: uomCode,
-          uom_name: uomCode,
-          status: 'Active',
-        });
-      });
-
-    return Array.from(uomByCode.values()).sort((left, right) =>
-      left.uom_code.localeCompare(right.uom_code),
-    );
-  }, [purchaseOrders, uomMasterOptions]);
+    return uomMasterOptions;
+  }, [uomMasterOptions]);
 
   const sharedDateRangeFilter = useMemo<[string, string] | null>(() => {
     if (dashboardSummaryRange === 'CUSTOM') {
@@ -786,7 +743,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
         }),
         services.listUoms({}),
         services.listWarehouses({
-          businessUnit: null,
+          businessUnit: activeBusinessUnitFilter ?? null,
           status: 'Active',
         }),
       ]);
@@ -830,7 +787,8 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     if (warehouseResult.status === 'fulfilled') {
       setWarehouseMasterOptions(warehouseResult.value);
     } else {
-      message.warning('Warehouse master data did not load. Using PO warehouse fallback.');
+      setWarehouseMasterOptions([]);
+      message.warning('Warehouse master data did not load.');
     }
   };
 
@@ -1317,7 +1275,6 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     return Array.from(groupedItems.entries()).map(([poNumber, items]) => {
       const reference = referenceLookup.get(poNumber);
       const totalQty = items.reduce((sum, item) => sum + item.poQty, 0);
-      const receivedQty = items.reduce((sum, item) => sum + item.receiveQty, 0);
 
       return {
         poNumber,
@@ -1337,12 +1294,6 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
         totalItems: items.length,
         totalQty,
         type: receipt.receiptType,
-        status:
-          receivedQty <= 0
-            ? 'Expected'
-            : receivedQty < totalQty
-              ? 'Partial'
-              : 'Fully Received',
       };
     });
   };
@@ -2514,7 +2465,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
                       style={{ borderColor: '#ffa39e' }}
                     >
                       {exceptionQueue.map((gr) => {
-                        const displayStatus = getReceiptDisplayStatus(gr);
+                        const displayStatus = getReceiptSapStatus(gr) || getReceiptDisplayStatus(gr);
 
                         return (
                           <div

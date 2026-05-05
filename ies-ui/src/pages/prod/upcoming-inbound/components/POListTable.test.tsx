@@ -28,7 +28,6 @@ function createPurchaseOrder(overrides: Partial<PurchaseOrder> = {}): PurchaseOr
     totalItems: items.length,
     totalQty: items.reduce((sum, item) => sum + item.poQty, 0),
     type: 'Planned',
-    status: 'Expected',
     ...overrides,
   };
 }

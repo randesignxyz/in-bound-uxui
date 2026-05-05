@@ -193,9 +193,8 @@ export function GRCreationModal({
   const firstPO = purchaseOrders[0];
   const isMultiPOReceipt = selectedPOCount > 1;
   const warehouseOptions = useMemo(
-    () =>
-      warehouseMasterOptions
-        .filter((warehouse) => {
+    () => {
+      const filteredWarehouses = warehouseMasterOptions.filter((warehouse) => {
           const warehouseBusinessUnit = warehouse.business_unit?.trim().toUpperCase();
           const poBusinessUnits = new Set(
             purchaseOrders
@@ -203,16 +202,19 @@ export function GRCreationModal({
               .filter(Boolean),
           );
           return poBusinessUnits.size === 0 || !warehouseBusinessUnit || poBusinessUnits.has(warehouseBusinessUnit);
-        })
+        });
+      const sourceWarehouses = filteredWarehouses.length > 0 ? filteredWarehouses : warehouseMasterOptions;
+
+      return sourceWarehouses
         .map((warehouse) => {
           const code = warehouse.warehouse_code?.trim();
-          const name = warehouse.warehouse_name?.trim();
           return {
-            label: name && name !== code ? `${code} - ${name}` : code,
+            label: code,
             value: code,
           };
         })
-        .filter((option): option is { label: string; value: string } => Boolean(option.value)),
+        .filter((option): option is { label: string; value: string } => Boolean(option.value));
+    },
     [purchaseOrders, warehouseMasterOptions],
   );
 

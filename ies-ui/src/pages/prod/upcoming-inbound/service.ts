@@ -2,6 +2,8 @@
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Paging } from '@/services/API';
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
+import { PROD_API } from '@/services/ApiUrl';
+import { request } from 'umi';
 import {
   InboundDashboardSummaryApi,
   InboundDashboardSummaryParams,
@@ -288,50 +290,183 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
     listSuppliers: async (
       params: InboundSupplierMasterListParams = {},
     ): Promise<InboundSupplierMasterApi[]> => {
-      const response = (await singleRequest<InboundSupplierMasterApi>(
-        UpcomingInboundAction.listSuppliers(params),
-      )(requestAction)) as InboundSupplierMasterApi[];
-      return extractArrayResponse(response);
+      const requestDirectSuppliers = async (payload: InboundSupplierMasterListParams) => {
+        const response = await request<InboundSupplierMasterApi[]>(
+          `${PROD_API}/inbound/master-data/suppliers`,
+          {
+            method: 'POST',
+            data: payload,
+          },
+        );
+        return extractArrayResponse(response)
+          .map(normalizeInboundSupplierMaster)
+          .filter((supplier) => supplier.supplier_code || supplier.supplier_name);
+      };
+      const requestSuppliers = async (payload: InboundSupplierMasterListParams) => {
+        const response = (await singleRequest<InboundSupplierMasterApi>(
+          UpcomingInboundAction.listSuppliers(payload),
+        )(requestAction)) as InboundSupplierMasterApi[];
+        return extractArrayResponse(response)
+          .map(normalizeInboundSupplierMaster)
+          .filter((supplier) => supplier.supplier_code || supplier.supplier_name);
+      };
+      const attempts: InboundSupplierMasterListParams[] = [
+        params,
+        { ...params, status: undefined },
+        { business_unit: params.businessUnit ?? params.business_unit ?? null, status: params.status },
+        { business_unit: params.businessUnit ?? params.business_unit ?? null, status: undefined },
+      ];
+      const suppliersByKey = new Map<string, InboundSupplierMasterApi>();
+      let lastError: unknown;
+
+      for (const payload of attempts) {
+        try {
+          const suppliers = await requestDirectSuppliers(payload);
+          suppliers.forEach((supplier) => {
+            const key = `${supplier.business_unit || 'ALL'}::${supplier.supplier_code || supplier.supplier_name}`;
+            suppliersByKey.set(key, supplier);
+          });
+        } catch (error) {
+          lastError = error;
+        }
+
+        try {
+          const suppliers = await requestSuppliers(payload);
+          suppliers.forEach((supplier) => {
+            const key = `${supplier.business_unit || 'ALL'}::${supplier.supplier_code || supplier.supplier_name}`;
+            suppliersByKey.set(key, supplier);
+          });
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (suppliersByKey.size > 0) {
+        return Array.from(suppliersByKey.values()).sort((left, right) => {
+          const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
+          return businessUnitCompare || left.supplier_name.localeCompare(right.supplier_name);
+        });
+      }
+
+      if (lastError) throw lastError;
+      return [];
     },
 
     listUoms: async (params: InboundUomMasterListParams = {}): Promise<InboundUomMasterApi[]> => {
-      const response = (await singleRequest<InboundUomMasterApi>(
-        UpcomingInboundAction.listUoms(params),
-      )(requestAction)) as InboundUomMasterApi[];
-      const uoms = extractArrayResponse(response).map(normalizeInboundUomMaster).filter((uom) => uom.uom_code);
+      const requestDirectUoms = async (payload: InboundUomMasterListParams) => {
+        const response = await request<InboundUomMasterApi[]>(
+          `${PROD_API}/inbound/master-data/uoms`,
+          {
+            method: 'POST',
+            data: payload,
+          },
+        );
+        return extractArrayResponse(response).map(normalizeInboundUomMaster).filter((uom) => uom.uom_code);
+      };
+      const requestUoms = async (payload: InboundUomMasterListParams) => {
+        const response = (await singleRequest<InboundUomMasterApi>(
+          UpcomingInboundAction.listUoms(payload),
+        )(requestAction)) as InboundUomMasterApi[];
+        return extractArrayResponse(response).map(normalizeInboundUomMaster).filter((uom) => uom.uom_code);
+      };
+      const attempts: InboundUomMasterListParams[] = [params, { ...params, status: undefined }];
+      const uomsByCode = new Map<string, InboundUomMasterApi>();
+      let lastError: unknown;
 
-      if (uoms.length > 0 || !params.status) {
-        return uoms;
+      for (const payload of attempts) {
+        try {
+          const uoms = await requestDirectUoms(payload);
+          uoms.forEach((uom) => uomsByCode.set(uom.uom_code.toUpperCase(), uom));
+        } catch (error) {
+          lastError = error;
+        }
+
+        try {
+          const uoms = await requestUoms(payload);
+          uoms.forEach((uom) => uomsByCode.set(uom.uom_code.toUpperCase(), uom));
+        } catch (error) {
+          lastError = error;
+        }
       }
 
-      const retryResponse = (await singleRequest<InboundUomMasterApi>(
-        UpcomingInboundAction.listUoms({ ...params, status: undefined }),
-      )(requestAction)) as InboundUomMasterApi[];
-      return extractArrayResponse(retryResponse)
-        .map(normalizeInboundUomMaster)
-        .filter((uom) => uom.uom_code);
+      if (uomsByCode.size > 0) {
+        return Array.from(uomsByCode.values()).sort((left, right) =>
+          left.uom_code.localeCompare(right.uom_code),
+        );
+      }
+
+      if (lastError) throw lastError;
+      return [];
     },
 
     listWarehouses: async (
       params: InboundWarehouseMasterListParams = {},
     ): Promise<InboundWarehouseMasterApi[]> => {
-      const response = (await singleRequest<InboundWarehouseMasterApi>(
-        UpcomingInboundAction.listWarehouses(params),
-      )(requestAction)) as InboundWarehouseMasterApi[];
-      const warehouses = extractArrayResponse(response)
-        .map(normalizeInboundWarehouseMaster)
-        .filter((warehouse) => warehouse.warehouse_code);
+      const requestWarehouses = async (payload: InboundWarehouseMasterListParams) => {
+        const response = (await singleRequest<InboundWarehouseMasterApi>(
+          UpcomingInboundAction.listWarehouses(payload),
+        )(requestAction)) as InboundWarehouseMasterApi[];
+        return extractArrayResponse(response)
+          .map(normalizeInboundWarehouseMaster)
+          .filter((warehouse) => warehouse.warehouse_code);
+      };
+      const requestDirectWarehouses = async (payload: InboundWarehouseMasterListParams) => {
+        const response = await request<InboundWarehouseMasterApi[]>(
+          `${PROD_API}/inbound/master-data/warehouses`,
+          {
+            method: 'POST',
+            data: payload,
+          },
+        );
+        return extractArrayResponse(response)
+          .map(normalizeInboundWarehouseMaster)
+          .filter((warehouse) => warehouse.warehouse_code);
+      };
 
-      if (warehouses.length > 0 || !params.status) {
-        return warehouses;
+      const attempts: InboundWarehouseMasterListParams[] = [
+        params,
+        { ...params, status: undefined },
+        { business_unit: params.businessUnit ?? params.business_unit ?? null, status: params.status },
+        { business_unit: params.businessUnit ?? params.business_unit ?? null, status: undefined },
+        { businessUnit: null, status: params.status },
+        { businessUnit: null, status: undefined },
+        { business_unit: null, status: params.status },
+        { business_unit: null, status: undefined },
+      ];
+      const warehousesByKey = new Map<string, InboundWarehouseMasterApi>();
+      let lastError: unknown;
+
+      for (const payload of attempts) {
+        try {
+          const warehouses = await requestDirectWarehouses(payload);
+          warehouses.forEach((warehouse) => {
+            const key = `${warehouse.business_unit || 'ALL'}::${warehouse.warehouse_code}`;
+            warehousesByKey.set(key, warehouse);
+          });
+        } catch (error) {
+          lastError = error;
+        }
+
+        try {
+          const warehouses = await requestWarehouses(payload);
+          warehouses.forEach((warehouse) => {
+            const key = `${warehouse.business_unit || 'ALL'}::${warehouse.warehouse_code}`;
+            warehousesByKey.set(key, warehouse);
+          });
+        } catch (error) {
+          lastError = error;
+        }
       }
 
-      const retryResponse = (await singleRequest<InboundWarehouseMasterApi>(
-        UpcomingInboundAction.listWarehouses({ ...params, status: undefined }),
-      )(requestAction)) as InboundWarehouseMasterApi[];
-      return extractArrayResponse(retryResponse)
-        .map(normalizeInboundWarehouseMaster)
-        .filter((warehouse) => warehouse.warehouse_code);
+      if (warehousesByKey.size > 0) {
+        return Array.from(warehousesByKey.values()).sort((left, right) => {
+          const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
+          return businessUnitCompare || left.warehouse_code.localeCompare(right.warehouse_code);
+        });
+      }
+
+      if (lastError) throw lastError;
+      return [];
     },
 
     pageGoodsReceipts: async (
@@ -455,9 +590,19 @@ function extractArrayResponse<IN>(response: IN[] | any): IN[] {
   if (Array.isArray(response?.items)) return response.items;
   if (Array.isArray(response?.data)) return response.data;
   if (Array.isArray(response?.content)) return response.content;
+  if (Array.isArray(response?.result)) return response.result;
+  if (Array.isArray(response?.records)) return response.records;
+  if (Array.isArray(response?.rows)) return response.rows;
+  if (Array.isArray(response?.list)) return response.list;
+  if (Array.isArray(response?.payload)) return response.payload;
   if (Array.isArray(response?.data?.items)) return response.data.items;
   if (Array.isArray(response?.data?.content)) return response.data.content;
   if (Array.isArray(response?.data?.data)) return response.data.data;
+  if (Array.isArray(response?.data?.result)) return response.data.result;
+  if (Array.isArray(response?.data?.records)) return response.data.records;
+  if (Array.isArray(response?.data?.rows)) return response.data.rows;
+  if (Array.isArray(response?.data?.list)) return response.data.list;
+  if (Array.isArray(response?.data?.payload)) return response.data.payload;
   return [];
 }
 
@@ -466,6 +611,20 @@ function normalizeInboundUomMaster(value: InboundUomMasterApi | any): InboundUom
     id: value?.id ?? null,
     uom_code: value?.uom_code ?? value?.uomCode ?? value?.code ?? '',
     uom_name: value?.uom_name ?? value?.uomName ?? value?.name ?? value?.uom_code ?? value?.uomCode ?? '',
+    status: value?.status ?? 'Active',
+  };
+}
+
+function normalizeInboundSupplierMaster(value: InboundSupplierMasterApi | any): InboundSupplierMasterApi {
+  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
+  const supplierCode = value?.supplier_code ?? value?.supplierCode ?? value?.code ?? '';
+  const supplierName = value?.supplier_name ?? value?.supplierName ?? value?.name ?? supplierCode ?? '';
+
+  return {
+    id: value?.id ?? null,
+    business_unit: String(businessUnit).trim().toUpperCase(),
+    supplier_code: String(supplierCode).trim(),
+    supplier_name: String(supplierName).trim(),
     status: value?.status ?? 'Active',
   };
 }
@@ -494,7 +653,6 @@ function filterPurchaseOrdersForPageFallback(
   const businessUnit = params.criteria?.advanceSearch?.businessUnit || params.criteria?.advanceSearch?.business_unit;
   const searchValue = params.criteria?.searchValue?.trim().toUpperCase();
   const type = params.criteria?.advanceSearch?.type;
-  const status = params.criteria?.advanceSearch?.status;
   const expectedDate = params.criteria?.advanceSearch?.expectedDate;
   const dateFrom = params.criteria?.advanceSearch?.dateFrom;
   const dateTo = params.criteria?.advanceSearch?.dateTo;
@@ -502,7 +660,6 @@ function filterPurchaseOrdersForPageFallback(
   return orders.filter((order) => {
     if (businessUnit && order.businessUnit !== businessUnit) return false;
     if (type && type !== 'ALL' && order.type !== type) return false;
-    if (status && status !== 'ALL' && order.status !== status) return false;
     if (expectedDate && order.expectedDate !== expectedDate) return false;
     if (dateFrom && order.expectedDate < dateFrom) return false;
     if (dateTo && order.expectedDate > dateTo) return false;

@@ -7,8 +7,10 @@ import {
   getQcQueueStatus,
   getQcQueueStatusColor,
   getReceiptApprovedGrNumber,
+  getReceiptDisplayStatusColor,
   getReceiptIrNumber,
   getReceiptPOReferences,
+  getReceiptSapStatus,
   summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
@@ -128,6 +130,15 @@ export function GRQueueTable({
       key: 'status',
       title: 'Status',
       render: (_: any, row: GoodsReceipt) => {
+        const sapStatus = getReceiptSapStatus(row);
+        if (sapStatus) {
+          return (
+            <Tag color={getReceiptDisplayStatusColor(sapStatus)} bordered={false}>
+              {sapStatus}
+            </Tag>
+          );
+        }
+
         if (statusMode === 'qc') {
           const qcStatus = getQcQueueStatus(row);
           return (

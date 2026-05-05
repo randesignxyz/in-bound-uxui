@@ -657,6 +657,19 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     () => getCombinedPurchaseOrderVendor(selectedWarehousePOs),
     [selectedWarehousePOs],
   );
+  const agingPoItemCount = useMemo(
+    () =>
+      purchaseOrders.reduce((count, purchaseOrder) => {
+        const poExpectedDate = purchaseOrder.expectedDate;
+        const agingItems = (purchaseOrder.items || []).filter((item) => {
+          const expectedDate = item.expectedDate || poExpectedDate;
+          if (!expectedDate || item.remainingQty <= 0) return false;
+          return dayjs(expectedDate).isValid() && dayjs(expectedDate).isBefore(dayjs(), 'day');
+        });
+        return count + agingItems.length;
+      }, 0),
+    [purchaseOrders],
+  );
 
   const buildBusinessUnitCriteria = () => ({
     businessUnit: activeBusinessUnitFilter || null,
@@ -890,6 +903,12 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
             prefix: <ClockCircleOutlined />,
           },
           {
+            title: 'Aging PO Items',
+            value: agingPoItemCount,
+            color: '#cf1322',
+            prefix: <WarningOutlined />,
+          },
+          {
             title: 'Exception Queue',
             value: inboundStats.exceptions,
             color: '#ff4d4f',
@@ -902,17 +921,23 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
             prefix: <ClockCircleOutlined />,
           },
           {
-            title: 'Total GRs',
-            value: inboundStats.totalGRs,
+            title: 'Total IR',
+            value: inboundStats.totalIrGrs,
           },
         ]
       : activeRole === 'QC'
         ? [
             {
-              title: 'Total IR/GR',
+              title: 'Total IR',
               value: inboundStats.totalIrGrs,
               color: '#1890ff',
               prefix: <InboxOutlined />,
+            },
+            {
+              title: 'Aging PO Items',
+              value: agingPoItemCount,
+              color: '#cf1322',
+              prefix: <WarningOutlined />,
             },
             {
               title: 'Pending Review',
@@ -941,10 +966,16 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
           ]
         : [
             {
-              title: 'Total GR',
-              value: inboundStats.totalGRs,
+              title: 'Total IR',
+              value: inboundStats.totalIrGrs,
               color: '#1890ff',
               prefix: <InboxOutlined />,
+            },
+            {
+              title: 'Aging PO Items',
+              value: agingPoItemCount,
+              color: '#cf1322',
+              prefix: <WarningOutlined />,
             },
             {
               title: 'Pending Review',

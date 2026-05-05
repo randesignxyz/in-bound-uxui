@@ -31,7 +31,7 @@ import {
   ClockCircleOutlined,
   ExportOutlined,
 } from '@ant-design/icons';
-import { useAccess } from '@umijs/max';
+import { history, useAccess, useLocation } from '@umijs/max';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type GRItem,
@@ -86,6 +86,7 @@ import {
 const { Text } = Typography;
 
 type InboundViewMode = 'operations' | 'history';
+type InboundRouteView = 'list' | 'create' | 'receive-without-po';
 type InboundWorkspaceRole = 'WAREHOUSE_STAFF' | 'QC' | 'WAREHOUSE_SUPERVISOR';
 type SupervisorHistoryStatusFilter = 'SUPERVISOR_PENDING' | 'QC_PENDING' | 'QC_REJECTED';
 type HistoryStatusFilter = 'ALL' | InboundHistoryStatus | SupervisorHistoryStatusFilter;
@@ -155,6 +156,21 @@ const qcStatusOptions: Array<{ label: string; value: QcQueueStatusFilter }> = [
   { label: 'Rejected', value: 'Rejected' },
   { label: 'Complete', value: 'Complete' },
   { label: 'All', value: 'All' },
+];
+
+const inboundDefaultUomOptions: InboundUomMasterApi[] = [
+  { id: 1, uom_code: 'BAG', uom_name: 'Bag', status: 'Active' },
+  { id: 2, uom_code: 'BOX', uom_name: 'Box', status: 'Active' },
+  { id: 3, uom_code: 'CTN', uom_name: 'Carton', status: 'Active' },
+  { id: 4, uom_code: 'EA', uom_name: 'Each', status: 'Active' },
+  { id: 5, uom_code: 'G', uom_name: 'Gram', status: 'Active' },
+  { id: 6, uom_code: 'KG', uom_name: 'Kilogram', status: 'Active' },
+  { id: 7, uom_code: 'L', uom_name: 'Liter', status: 'Active' },
+  { id: 8, uom_code: 'ML', uom_name: 'Milliliter', status: 'Active' },
+  { id: 9, uom_code: 'PALLET', uom_name: 'Pallet', status: 'Active' },
+  { id: 10, uom_code: 'PCS', uom_name: 'Pieces', status: 'Active' },
+  { id: 11, uom_code: 'ROLL', uom_name: 'Roll', status: 'Active' },
+  { id: 12, uom_code: 'TANK', uom_name: 'Tank', status: 'Active' },
 ];
 
 const inboundReportOptionsByRole: Record<InboundWorkspaceRole, InboundReportOption[]> = {
@@ -420,8 +436,13 @@ function getSupervisorSortPriority(receipt: GoodsReceipt): number {
   return 3;
 }
 
-export default function UpcomingInboundListview() {
+type UpcomingInboundListviewProps = {
+  routeView?: InboundRouteView;
+};
+
+export default function UpcomingInboundListview({ routeView = 'list' }: UpcomingInboundListviewProps) {
   const access = useAccess();
+  const location = useLocation();
   const isInboundAdmin = Boolean(access?.inboundVisibleBusinessUnits?.includes?.('*'));
   const inboundVisibleBusinessUnits: string[] = isInboundAdmin
     ? []
@@ -486,6 +507,18 @@ export default function UpcomingInboundListview() {
       `${purchaseOrder.businessUnit || 'UNSPECIFIED'}::${purchaseOrder.poNumber}`,
     [],
   );
+  const parsePurchaseOrderRowKey = useCallback((key: string) => {
+    const separatorIndex = key.indexOf('::');
+    if (separatorIndex < 0) {
+      return { businessUnit: '', poNumber: key };
+    }
+
+    const businessUnit = key.slice(0, separatorIndex);
+    return {
+      businessUnit: businessUnit === 'UNSPECIFIED' ? '' : businessUnit,
+      poNumber: key.slice(separatorIndex + 2),
+    };
+  }, []);
   const [isGRCreationOpen, setIsGRCreationOpen] = useState(false);
   const [isTempGRCreationOpen, setIsTempGRCreationOpen] = useState(false);
   const [selectedPODetail, setSelectedPODetail] = useState<PurchaseOrder | null>(null);
@@ -536,6 +569,15 @@ export default function UpcomingInboundListview() {
     { path: ProdPaths.prod, label: 'Prod' },
     { path: '', label: 'Upcoming Inbound' },
   ];
+  const isCreateInboundRoute = routeView === 'create';
+  const isReceiveWithoutPoRoute = routeView === 'receive-without-po';
+  const closeInboundEntryRoute = useCallback(() => {
+    history.push(`${ProdPaths.upcomingInbound}/list`);
+  }, []);
+  const routePurchaseOrderKeys = useMemo(
+    () => new URLSearchParams(location.search).getAll('poKey'),
+    [location.search],
+  );
 
   const warehouseVendorOptions = useMemo(
     () => getPurchaseOrderVendorOptions(purchaseOrders),
@@ -564,23 +606,32 @@ export default function UpcomingInboundListview() {
   }, [activeBusinessUnitFilter, purchaseOrders, supplierMasterOptions]);
 
   const uomOptionsForTempReceipt = useMemo<InboundUomMasterApi[]>(() => {
-    if (uomMasterOptions.length > 0) return uomMasterOptions;
+    const uomByCode = new Map<string, InboundUomMasterApi>();
 
-    const uomCodes = Array.from(
-      new Set(
-        purchaseOrders
-          .flatMap((po) => po.items || [])
-          .map((item) => item.uom?.trim())
-          .filter((uom): uom is string => Boolean(uom)),
-      ),
+    [...inboundDefaultUomOptions, ...uomMasterOptions].forEach((uom) => {
+      const code = uom.uom_code?.trim();
+      if (!code) return;
+      uomByCode.set(code.toUpperCase(), { ...uom, uom_code: code });
+    });
+
+    purchaseOrders
+      .flatMap((po) => po.items || [])
+      .map((item) => item.uom?.trim())
+      .filter((uom): uom is string => Boolean(uom))
+      .forEach((uomCode, index) => {
+        const normalizedCode = uomCode.toUpperCase();
+        if (uomByCode.has(normalizedCode)) return;
+        uomByCode.set(normalizedCode, {
+          id: 1000 + index,
+          uom_code: uomCode,
+          uom_name: uomCode,
+          status: 'Active',
+        });
+      });
+
+    return Array.from(uomByCode.values()).sort((left, right) =>
+      left.uom_code.localeCompare(right.uom_code),
     );
-
-    return uomCodes.map((uomCode, index) => ({
-      id: index,
-      uom_code: uomCode,
-      uom_name: uomCode,
-      status: 'Active',
-    }));
   }, [purchaseOrders, uomMasterOptions]);
 
   const sharedDateRangeFilter = useMemo<[string, string] | null>(() => {
@@ -730,7 +781,7 @@ export default function UpcomingInboundListview() {
         businessUnit: activeBusinessUnitFilter ?? null,
         status: 'Active',
       }),
-      services.listUoms({ status: 'Active' }),
+      services.listUoms({}),
     ]);
 
     if (poResult.status === 'fulfilled') {
@@ -783,15 +834,17 @@ export default function UpcomingInboundListview() {
   }, [activeBusinessUnit, inboundVisibleBusinessUnitsKey, isInboundAdmin]);
 
   useEffect(() => {
-    setSelectedPOs([]);
-    setSelectedWarehousePONumbers([]);
-    setSelectedPODetail(null);
-    setSelectedGR(null);
-    setWarehouseCorrectionReceipt(null);
-    setLinkPOReceipt(null);
-    setSupervisorApprovalSuccess(null);
+    if (!isCreateInboundRoute && !isReceiveWithoutPoRoute) {
+      setSelectedPOs([]);
+      setSelectedWarehousePONumbers([]);
+      setSelectedPODetail(null);
+      setSelectedGR(null);
+      setWarehouseCorrectionReceipt(null);
+      setLinkPOReceipt(null);
+      setSupervisorApprovalSuccess(null);
+    }
     void loadInboundData();
-  }, [activeBusinessUnit]);
+  }, [activeBusinessUnit, isCreateInboundRoute, isReceiveWithoutPoRoute]);
 
   useEffect(() => {
     if (!hasInitializedDashboardSummary.current) {
@@ -1128,26 +1181,90 @@ export default function UpcomingInboundListview() {
       return;
     }
 
-    setSelectedPODetail(null);
-
-    try {
-      const hydratedPurchaseOrders = await Promise.all(purchaseOrders.map(hydratePurchaseOrder));
-      if (!canCombinePurchaseOrders(hydratedPurchaseOrders)) {
-        message.error('Selected purchase orders no longer share the same business unit and vendor. Please reselect them.');
-        return;
-      }
-      setSelectedPOs(
-        [...hydratedPurchaseOrders].sort((left, right) => left.poNumber.localeCompare(right.poNumber)),
-      );
-      setIsGRCreationOpen(true);
-    } catch (error: any) {
-      message.error(error?.message || 'Failed to load purchase order detail.');
-    }
+    const params = new URLSearchParams();
+    purchaseOrders.forEach((purchaseOrder) => {
+      params.append('poKey', getPurchaseOrderRowKey(purchaseOrder));
+    });
+    history.push(`${ProdPaths.upcomingInbound}/create?${params.toString()}`);
   };
 
   const handleCreateSelectedGR = async () => {
+    if (!selectedWarehousePOs.length) return;
+    if (!canCombinePurchaseOrders(selectedWarehousePOs)) {
+      message.error('You can only combine purchase orders from the same business unit and vendor into one IR/GR.');
+      return;
+    }
+
     await handleCreateGR(selectedWarehousePOs);
   };
+
+  useEffect(() => {
+    if (!isCreateInboundRoute) {
+      setIsGRCreationOpen(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const openCreateRoute = async () => {
+      if (routePurchaseOrderKeys.length === 0) {
+        message.warning('Please select purchase orders before creating inbound receiving.');
+        closeInboundEntryRoute();
+        return;
+      }
+
+      try {
+        const purchaseOrdersFromRoute = await Promise.all(
+          routePurchaseOrderKeys.map((key) => {
+            const { businessUnit, poNumber } = parsePurchaseOrderRowKey(key);
+            return services.detailPurchaseOrderByKey({
+              po_number: poNumber,
+              business_unit: businessUnit,
+            });
+          }),
+        );
+
+        if (isCancelled) return;
+
+        if (!canCombinePurchaseOrders(purchaseOrdersFromRoute)) {
+          message.error('Selected purchase orders no longer share the same business unit and vendor. Please reselect them.');
+          closeInboundEntryRoute();
+          return;
+        }
+
+        setSelectedPODetail(null);
+        setSelectedPOs(
+          [...purchaseOrdersFromRoute].sort((left, right) => left.poNumber.localeCompare(right.poNumber)),
+        );
+        setIsGRCreationOpen(true);
+      } catch (error: any) {
+        if (isCancelled) return;
+        message.error(error?.message || 'Failed to load purchase order detail.');
+        closeInboundEntryRoute();
+      }
+    };
+
+    void openCreateRoute();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [closeInboundEntryRoute, isCreateInboundRoute, location.search, parsePurchaseOrderRowKey]);
+
+  useEffect(() => {
+    if (!isReceiveWithoutPoRoute) {
+      setIsTempGRCreationOpen(false);
+      return;
+    }
+
+    if (!canUseWarehouseRole) {
+      message.error('You do not have warehouse permission for the selected business unit.');
+      closeInboundEntryRoute();
+      return;
+    }
+
+    setIsTempGRCreationOpen(true);
+  }, [canUseWarehouseRole, closeInboundEntryRoute, isReceiveWithoutPoRoute]);
 
   const handleWarehousePOSelectionChange = (nextSelectedRowKeys: string[]) => {
     const nextSelectedPOs = filteredWarehousePurchaseOrders.filter((purchaseOrder) =>
@@ -1167,7 +1284,7 @@ export default function UpcomingInboundListview() {
       message.error('You do not have warehouse permission for the selected business unit.');
       return;
     }
-    setIsTempGRCreationOpen(true);
+    history.push(`${ProdPaths.upcomingInbound}/receive-without-po`);
   };
 
   const buildCorrectionPurchaseOrders = (receipt: GoodsReceipt): PurchaseOrder[] => {
@@ -1916,7 +2033,12 @@ export default function UpcomingInboundListview() {
     (isGRCreationOpen && selectedPOs.length > 0 && (
       <GRCreationModal
         open={true}
-        onClose={() => setIsGRCreationOpen(false)}
+        onClose={() => {
+          setIsGRCreationOpen(false);
+          if (isCreateInboundRoute) {
+            closeInboundEntryRoute();
+          }
+        }}
         purchaseOrders={selectedPOs}
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmitGR}
@@ -1927,6 +2049,9 @@ export default function UpcomingInboundListview() {
         open={true}
         onClose={() => {
           setIsTempGRCreationOpen(false);
+          if (isReceiveWithoutPoRoute) {
+            closeInboundEntryRoute();
+          }
         }}
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmitGR}

@@ -287,7 +287,18 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
       const response = (await singleRequest<InboundUomMasterApi>(
         UpcomingInboundAction.listUoms(params),
       )(requestAction)) as InboundUomMasterApi[];
-      return extractArrayResponse(response);
+      const uoms = extractArrayResponse(response).map(normalizeInboundUomMaster).filter((uom) => uom.uom_code);
+
+      if (uoms.length > 0 || !params.status) {
+        return uoms;
+      }
+
+      const retryResponse = (await singleRequest<InboundUomMasterApi>(
+        UpcomingInboundAction.listUoms({ ...params, status: undefined }),
+      )(requestAction)) as InboundUomMasterApi[];
+      return extractArrayResponse(retryResponse)
+        .map(normalizeInboundUomMaster)
+        .filter((uom) => uom.uom_code);
     },
 
     pageGoodsReceipts: async (
@@ -415,6 +426,15 @@ function extractArrayResponse<IN>(response: IN[] | any): IN[] {
   if (Array.isArray(response?.data?.content)) return response.data.content;
   if (Array.isArray(response?.data?.data)) return response.data.data;
   return [];
+}
+
+function normalizeInboundUomMaster(value: InboundUomMasterApi | any): InboundUomMasterApi {
+  return {
+    id: value?.id ?? null,
+    uom_code: value?.uom_code ?? value?.uomCode ?? value?.code ?? '',
+    uom_name: value?.uom_name ?? value?.uomName ?? value?.name ?? value?.uom_code ?? value?.uomCode ?? '',
+    status: value?.status ?? 'Active',
+  };
 }
 
 function filterPurchaseOrdersForPageFallback(

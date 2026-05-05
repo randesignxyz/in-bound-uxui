@@ -6,8 +6,9 @@ export default () => {
   return (
     <CrudWrapper baseURL={ProdPaths.upcomingInbound}>
       {(view) => {
-        if (view === 'list') {
-          return <UpcomingInboundListview />;
+        const inboundView = view as 'list' | 'create' | 'receive-without-po';
+        if (inboundView === 'list' || inboundView === 'create' || inboundView === 'receive-without-po') {
+          return <UpcomingInboundListview routeView={inboundView} />;
         }
         throw new Error('Not supported');
       }}

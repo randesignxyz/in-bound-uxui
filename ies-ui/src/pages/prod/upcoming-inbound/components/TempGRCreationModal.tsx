@@ -80,6 +80,16 @@ function hasInvalidDateOrder(productDate?: string, expiryDate?: string) {
   return dayjs(productDate).isAfter(dayjs(expiryDate), 'day');
 }
 
+function getUomOptionLabel(option: InboundUomMasterApi) {
+  const code = option.uom_code?.trim() || '';
+  const name = option.uom_name?.trim() || '';
+
+  if (!code) return name;
+  if (!name || code.toUpperCase() === name.toUpperCase()) return code;
+
+  return `${code} - ${name}`;
+}
+
 export function TempGRCreationModal({
   open,
   onClose,
@@ -149,7 +159,7 @@ export function TempGRCreationModal({
   const visibleUomOptions = useMemo(
     () =>
       uomOptions.map((option) => ({
-        label: `${option.uom_code} - ${option.uom_name}`,
+        label: getUomOptionLabel(option),
         value: option.uom_code,
       })),
     [uomOptions],
@@ -425,7 +435,7 @@ export function TempGRCreationModal({
       {
         title: 'UoM',
         key: 'uom',
-        width: 96,
+        width: 140,
         render: (_, record) => (
           <Select
             showSearch
@@ -436,6 +446,9 @@ export function TempGRCreationModal({
             options={visibleUomOptions}
             optionFilterProp="label"
             notFoundContent="No UOM master data"
+            popupMatchSelectWidth={220}
+            listHeight={360}
+            style={{ width: '100%' }}
           />
         ),
       },

@@ -154,10 +154,12 @@ export interface DrawerBatchReturnItemsProps {
   onChange?: (updated: any) => void;
   onIssueRequest?: (payload: {
     id: number;
+    warehouseCode?: string;
     lines: Array<{ requestLineId: number; issueQty: number }>;
   }) => Promise<void>;
   onSaveDraft?: (payload: {
     id: number;
+    warehouseCode?: string;
     lines: Array<{ requestLineId: number; issueQty: number }>;
   }) => Promise<void>;
   onDeleteDraft?: (id: number) => Promise<void>;
@@ -172,6 +174,21 @@ const clampInt = (v: unknown) => {
   const n = Number(v);
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.floor(n));
+};
+
+const resolveSourceWarehouseCode = (items: RequestDetailLineItem[], itemDetailMap: Record<string, any>) => {
+  const sourceWarehouses = new Set(
+    items
+      .map((item) => {
+        const detail = itemDetailMap[item.productId];
+        const locations = Array.isArray(detail?.locations) ? detail.locations : [];
+        const locationWithStock = locations.find((location: any) => Number(location?.availableQty ?? 0) > 0);
+        return String(locationWithStock?.warehouseCode || detail?.warehouse || '').trim();
+      })
+      .filter(Boolean),
+  );
+
+  return sourceWarehouses.size === 1 ? Array.from(sourceWarehouses)[0] : undefined;
 };
 
 const getActivityRank = (label?: string): number => {
@@ -888,7 +905,11 @@ export default function RequestedBatchWareHouse({
       return;
     }
 
-    onSaveDraft({ id: data.id, lines })
+    onSaveDraft({
+      id: data.id,
+      warehouseCode: resolveSourceWarehouseCode(workingItems, itemDetailMap),
+      lines,
+    })
       .then(() => {
         setDraftByProductId(nextDraft);
         setSendingByProductId((prev) => {
@@ -981,7 +1002,11 @@ export default function RequestedBatchWareHouse({
         message.warning('No valid request lines were found to issue.');
         return;
       }
-      onIssueRequest({ id: data.id, lines })
+      onIssueRequest({
+        id: data.id,
+        warehouseCode: resolveSourceWarehouseCode(workingItems, itemDetailMap),
+        lines,
+      })
         .then(() => {
           setDraftByProductId({});
           setSendingByProductId((prev) => {

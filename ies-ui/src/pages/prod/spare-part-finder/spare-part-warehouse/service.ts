@@ -106,6 +106,7 @@ type PageIssueRequestsParams = {
 
 type IssueRequestPayload = {
   id: number;
+  warehouseCode?: string;
   lines: Array<{
     requestLineId: number;
     issueQty: number;

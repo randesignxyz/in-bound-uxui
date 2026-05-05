@@ -109,7 +109,7 @@ const SparePartRequestTestAction = {
       advanceSearch: {
         searchValue: params.criteria?.searchValue || '',
         warehouse: params.criteria?.warehouse || '',
-        status: params.criteria?.status === 'All' ? '' : (params.criteria?.status || ''),
+        status: params.criteria?.status || 'All',
         category: params.criteria?.category || '',
         type: '',
         categoryId: params.criteria?.categoryId,

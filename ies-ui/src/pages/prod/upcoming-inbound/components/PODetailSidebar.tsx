@@ -4,7 +4,7 @@ import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
 import { ExportOutlined } from '@ant-design/icons';
-import { getPurchaseOrderStatusLabel, type PurchaseOrder, type POItem } from '../workflow';
+import type { PurchaseOrder, POItem } from '../workflow';
 import type { InboundWarehouseMasterApi } from '../data';
 
 interface PODetailSidebarProps {
@@ -15,12 +15,6 @@ interface PODetailSidebarProps {
   onOpenReceiptInNewTab: (receiptId: number) => void;
   warehouseOptions?: InboundWarehouseMasterApi[];
 }
-
-const poStatusColor: Record<PurchaseOrder['status'], string> = {
-  Expected: 'gold',
-  Partial: 'blue',
-  'Fully Received': 'success',
-};
 
 const { Text } = Typography;
 const prProcessPathPrefix = '/external/data-form/requisition_request_process/';
@@ -137,11 +131,6 @@ export function PODetailSidebar({
             </Descriptions.Item>
             <Descriptions.Item label="Type">
               <Tag color={currentPO.type === 'Planned' ? 'green' : 'orange'}>{currentPO.type}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Status">
-              <Tag color={poStatusColor[currentPO.status]}>
-                {getPurchaseOrderStatusLabel(currentPO.status)}
-              </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="SAP PO Status">
               <Tag color={currentPO.docStatus?.toLowerCase() === 'closed' ? 'success' : 'processing'}>

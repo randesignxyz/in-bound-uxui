@@ -46,12 +46,6 @@ const PROCESS_STATE_VALUES: UpcomingInboundProcessState[] = [
   'MONTHLY_SUMMARY_READY',
 ];
 
-const PO_STATUS_VALUES: UpcomingInboundPurchaseOrder['status'][] = [
-  'Expected',
-  'Partial',
-  'Fully Received',
-];
-
 const PO_TYPE_VALUES: UpcomingInboundPurchaseOrder['type'][] = ['Planned', 'Unplanned'];
 
 const RECEIPT_TYPE_VALUES: UpcomingInboundGoodsReceipt['receiptType'][] = ['Planned', 'Unplanned'];
@@ -97,7 +91,6 @@ export function mapInboundPurchaseOrder(api: InboundPurchaseOrderApi): UpcomingI
       readNumber(api, 'totalQty', 'total_qty') ??
       items.reduce((sum, item) => sum + (readNumber(item, 'poQty', 'po_qty') ?? 0), 0),
     type: normalizeEnum(readString(api, 'type'), PO_TYPE_VALUES, 'Planned'),
-    status: normalizeEnum(readString(api, 'status'), PO_STATUS_VALUES, 'Expected'),
     docStatus: readValue<string | null>(api, 'docStatus', 'doc_status') ?? undefined,
     prLinks: prLinks.map(mapInboundPoPrLink).filter((link) => link.prNumber),
     receiptLogs: receiptLogs.map(mapInboundPoReceiptLog),
@@ -133,6 +126,10 @@ export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInb
     receivingNumber: readString(api, 'receivingNumber', 'receiving_number'),
     businessUnit: readString(api, 'businessUnit', 'business_unit'),
     approvedGrNumber,
+    sapDocEntry: readNumber(api, 'sapDocEntry', 'sap_doc_entry') ?? undefined,
+    sapDocNum: readValue<string | null>(api, 'sapDocNum', 'sap_doc_num', 'sap_doc_no') ?? undefined,
+    sapGrNumber: readValue<string | null>(api, 'sapGrNumber', 'sap_gr_number') ?? undefined,
+    sapGrStatus: readValue<string | null>(api, 'sapGrStatus', 'sap_gr_status') ?? undefined,
     previousReceivingNumber:
       readValue<string | null>(api, 'previousReceivingNumber', 'previous_receiving_number') ?? undefined,
     previousApprovedGrNumber:

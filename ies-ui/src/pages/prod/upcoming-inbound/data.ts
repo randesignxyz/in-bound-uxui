@@ -21,7 +21,6 @@ export interface InboundPurchaseOrderSearch {
     businessUnit?: string | null;
     business_unit?: string | null;
     type?: string | null;
-    status?: string | null;
     expectedDate?: string | null;
     dateFrom?: string | null;
     dateTo?: string | null;
@@ -31,7 +30,6 @@ export interface InboundPurchaseOrderSearch {
 export interface InboundPurchaseOrderCountParams {
   businessUnit?: string | null;
   business_unit?: string | null;
-  status?: string | null;
 }
 
 export interface InboundSupplierMasterListParams {
@@ -188,7 +186,6 @@ export interface InboundPurchaseOrderApi {
   total_items: number;
   total_qty: number;
   type: string;
-  status: string;
   doc_status?: string | null;
   pr_links?: InboundPoPrLinkApi[];
   receipt_logs?: InboundPoReceiptLogApi[];
@@ -270,6 +267,10 @@ export interface InboundGoodsReceiptApi {
   receivingNumber: string;
   businessUnit: string;
   approvedGrNumber?: string | null;
+  sapDocEntry?: number | null;
+  sapDocNum?: string | null;
+  sapGrNumber?: string | null;
+  sapGrStatus?: string | null;
   previousReceivingNumber?: string | null;
   previousApprovedGrNumber?: string | null;
   poNumber?: string | null;

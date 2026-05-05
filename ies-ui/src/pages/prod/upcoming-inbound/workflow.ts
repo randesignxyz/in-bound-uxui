@@ -111,23 +111,9 @@ export interface PurchaseOrder {
   totalItems: number;
   totalQty: number;
   type: 'Planned' | 'Unplanned';
-  status: 'Expected' | 'Partial' | 'Fully Received';
   docStatus?: string;
   prLinks?: POPrLink[];
   receiptLogs?: POReceiptLog[];
-}
-
-export function getPurchaseOrderStatusLabel(status: PurchaseOrder['status']): string {
-  switch (status) {
-    case 'Expected':
-      return 'Ready to Receive';
-    case 'Partial':
-      return 'Receiving in Progress';
-    case 'Fully Received':
-      return 'Fully Received';
-    default:
-      return status;
-  }
 }
 
 export function getCombinedPurchaseOrderVendor(purchaseOrders: PurchaseOrder[]) {
@@ -237,6 +223,10 @@ export interface GoodsReceipt {
   receivingNumber?: string;
   businessUnit?: string;
   approvedGrNumber?: string;
+  sapDocEntry?: number;
+  sapDocNum?: string;
+  sapGrNumber?: string;
+  sapGrStatus?: string;
   previousReceivingNumber?: string;
   previousApprovedGrNumber?: string;
   poNumber: string;
@@ -397,9 +387,18 @@ export function getReceiptIrNumber(
 }
 
 export function getReceiptApprovedGrNumber(
-  receipt: Pick<GoodsReceipt, 'approvedGrNumber'>,
+  receipt: Pick<GoodsReceipt, 'approvedGrNumber' | 'sapGrNumber'>,
 ) {
-  return receipt.approvedGrNumber?.trim() || undefined;
+  return receipt.sapGrNumber?.trim() || receipt.approvedGrNumber?.trim() || undefined;
+}
+
+export function getReceiptSapStatus(receipt: Pick<GoodsReceipt, 'sapGrStatus' | 'processState'>) {
+  const sapStatus = receipt.sapGrStatus?.trim();
+  if (sapStatus) {
+    return sapStatus;
+  }
+
+  return receipt.processState === 'SUPERVISOR_APPROVED' ? 'Pending SAP' : undefined;
 }
 
 export function hasReceiptDiscrepancy(items: GRItem[]) {
@@ -652,10 +651,17 @@ export function getReceiptDisplayStatusColor(displayStatus: string) {
     case 'QC Pending':
     case 'Pending Supervisor Review':
     case 'Ready to Post SAP':
+    case 'Pending SAP':
       return 'gold';
     case 'QC Passed':
       return 'blue';
     case 'Supervisor Approved':
+    case 'Open':
+    case 'OPEN':
+      return 'processing';
+    case 'Close':
+    case 'Closed':
+    case 'CLOSED':
       return 'green';
     case 'QC Rejected':
     case 'Supervisor Rejected':

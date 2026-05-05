@@ -686,7 +686,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             </div>
           </div>
 
-          {/* hidden — field temporarily removed from backend */}
+          {/* hidden ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â field temporarily removed from backend */}
 
           {/* {canSeeWarehouseLocation && ( */}
           <Select
@@ -710,7 +710,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
 
 
-          {canSeeStatusFilter ? (
+          {/* {canSeeStatusFilter ? ( */}
             <Select
               style={{ width: 140 }}
               value={filters.status}
@@ -719,7 +719,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
                 applyFiltersAndReload((previous) => ({ ...previous, status: value }));
               }}
             />
-          ) : null}
+          {/* ) : null} */}
 
           <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
             Export Excel
@@ -845,29 +845,34 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             {
               title: 'Warehouse',
               dataIndex: 'warehouse',
-              render: (value) => value || '-',
+                render: (v) => v || '-',
             },
             ...(canSeeWarehouseLocation
               ? [
-
-                {
-                  title: 'Level',
-                  render: (_, record) => record.locations?.[0]?.level || '-',
-                },
-                {
-                  title: 'Shelve',
-                  render: (_, record) => record.locations?.[0]?.shelve || '-',
-                },
-                {
-                  title: 'Bin',
-                  render: (_, record) => record.locations?.[0]?.bin || '-',
-                },
-                // {
-                //   title: 'Level',
-                //   dataIndex: 'level',
-                //   width: 120,
-                // },
-              ]
+                  
+                  {
+                    title: 'Rack',
+                    render: (_, record) => record.locations?.[0]?.rack || '-',
+                  },
+                  {
+                    title: 'Level',
+                    render: (_, record) => record.locations?.[0]?.level || '-',
+                  },
+                  {
+                    title: 'Shelve',
+                    render: (_, record) => record.locations?.[0]?.shelve || '-',
+                  },
+                  {
+                    title: 'Bin',
+                    render: (_, record) => record.locations?.[0]?.bin || '-',
+                  },
+                  // {
+                  //   title: 'Level',
+                  //   dataIndex: 'level',
+                  //   width: 120,
+                  //   render: (v) => v || '-',
+                  // },
+                ]
               : []),
 
             {

@@ -7,7 +7,7 @@ import type { SortOrder } from 'antd/es/table/interface';
 import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import { formatSpfDateTime } from '../../shared/dateTime';
 import type { MyRequestItem, RequestPriority, RequestStatus } from '../data';
@@ -77,6 +77,9 @@ const statusLabelMap: Record<RequestStatus, string> = {
 
 interface MyRequestListviewProps {
   onResubmitRequest?: (detail: RequestDetailData) => void;
+  onDataChanged?: () => void;
+  isActive?: boolean;
+  scope?: 'my' | 'approval';
 }
 
 const clampNonNegativeInt = (value: unknown): number => {
@@ -109,11 +112,18 @@ const deriveDisplayReceived = (
   return 0;
 };
 
-export default function MyRequestListview({ onResubmitRequest }: MyRequestListviewProps) {
+export default function MyRequestListview({
+  onResubmitRequest,
+  onDataChanged,
+  isActive = false,
+  scope = 'my',
+}: MyRequestListviewProps) {
   const access = useAccess();
   const actionRef = useRef<ActionType>();
   const requestActions = simpleRequestActions();
   const services = SparePartRequestService(requestActions);
+  const hasAccess =
+    scope === 'approval' ? access.canSpfApprover : access.canSpfRequester || access.canSpfApprover;
 
   const [searchInputValue, setSearchInputValue] = useState<string>('');
   const [searchValue, setSearchValue] = useState<string>('');
@@ -138,6 +148,11 @@ export default function MyRequestListview({ onResubmitRequest }: MyRequestListvi
     actionRef.current?.reload?.();
   };
 
+  useEffect(() => {
+    if (!isActive) return;
+    reloadTable();
+  }, [isActive]);
+
   const openDetail = async (record: MyRequestItem) => {
     setSelectedRequest(record);
     setSelectedRequestDetail(buildRequestDetailData(record));
@@ -154,20 +169,23 @@ export default function MyRequestListview({ onResubmitRequest }: MyRequestListvi
     pagination: { current?: number; pageSize?: number },
     _sort?: Record<string, SortOrder>,
   ) => {
-    const response = await services.pageMyRequests({
-      criteria: {
-        searchValue,
-        advanceSearch: {
-          priority: filters.priority,
-          status: filters.status,
-          dateRange: filters.dateRange,
+    const response = await services.pageMyRequests(
+      {
+        criteria: {
+          searchValue,
+          advanceSearch: {
+            priority: filters.priority,
+            status: filters.status,
+            dateRange: filters.dateRange,
+          },
+        },
+        pagination: {
+          current: pagination.current,
+          pageSize: pagination.pageSize,
         },
       },
-      pagination: {
-        current: pagination.current ?? 0,
-        pageSize: pagination.pageSize ?? 20,
-      },
-    });
+      scope,
+    );
 
     return {
       data: response.items || [],
@@ -178,10 +196,10 @@ export default function MyRequestListview({ onResubmitRequest }: MyRequestListvi
 
   return (
     <>
-      {!access.canSpfRequester && !access.canSpfApprover ? (
+      {!hasAccess ? (
         <Card>
           <Typography.Text type="danger">
-            You do not have permission to access My Requests.
+            You do not have permission to access {scope === 'approval' ? 'Request List' : 'My Requests'}.
           </Typography.Text>
         </Card>
       ) : (
@@ -456,6 +474,7 @@ export default function MyRequestListview({ onResubmitRequest }: MyRequestListvi
             setSelectedRequestDetail(await services.getRequestDetail(payload.id));
           }
           reloadTable();
+          onDataChanged?.();
         }}
         onReject={async ({ id, remark }) => {
           await services.rejectRequest({ id, remark });
@@ -468,6 +487,7 @@ export default function MyRequestListview({ onResubmitRequest }: MyRequestListvi
             setSelectedRequestDetail(await services.getRequestDetail(id));
           }
           reloadTable();
+          onDataChanged?.();
         }}
         onConfirmPickup={async (id) => {
           await services.confirmPickup(id);
@@ -475,6 +495,7 @@ export default function MyRequestListview({ onResubmitRequest }: MyRequestListvi
             setSelectedRequestDetail(await services.getRequestDetail(id));
           }
           reloadTable();
+          onDataChanged?.();
         }}
         onResubmitRequest={(detail) => {
           onResubmitRequest?.(detail);

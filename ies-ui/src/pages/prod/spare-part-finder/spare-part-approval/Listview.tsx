@@ -7,11 +7,13 @@ import MyRequestsToReturn from '../spare-part-return/MyRequestsToReturn';
 import { useAccess } from '@umijs/max';
 import { RequestActions } from '@/services/apiGateway';
 import { SparePartReturnAPI } from '../spare-part-return/service';
+import { SparePartRequestService } from '../spare-part-request/service';
 // import MyRequestsToReturn from '../spare-part-return/MyRequestsToReturn';
 
 export default function ListView() {
         const access = useAccess();
         const [contPendingReturns, setContPendingReturns] = useState(0);
+        const [pendingRequestCount, setPendingRequestCount] = useState(0);
 
         const requestAction: RequestActions = useMemo(
             () => ({
@@ -20,6 +22,8 @@ export default function ListView() {
             }),
             [],
         );
+
+        const services = useMemo(() => SparePartRequestService(requestAction), [requestAction]);
 
         const refreshPendingReturns = useCallback(async () => {
             try {
@@ -58,13 +62,18 @@ export default function ListView() {
         ]
 
     const loadPendingRequestCount = useCallback(async () => {
+      if (!access.canSpfApprover) {
+        setPendingRequestCount(0);
+        return;
+      }
+
       try {
         const dashboard = await services.getApprovalDashboard();
         setPendingRequestCount(Number(dashboard.pendingCount || 0));
       } catch {
         setPendingRequestCount(0);
       }
-    }, [services]);
+    }, [access.canSpfApprover, services]);
 
     useEffect(() => {
       loadPendingRequestCount();
@@ -90,6 +99,16 @@ export default function ListView() {
       };
     }, [loadPendingRequestCount]);
 
+    useEffect(() => {
+      const timer = window.setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          loadPendingRequestCount();
+        }
+      }, 30000);
+
+      return () => window.clearInterval(timer);
+    }, [loadPendingRequestCount]);
+
   return (
   <>
     <BreadCrumbCom separator=">" routes={routes} />
@@ -102,7 +121,7 @@ export default function ListView() {
                 </Badge>
             ),
             key: '1',
-            children: <MyRequestListview />,
+            children: <MyRequestListview scope="approval" onDataChanged={loadPendingRequestCount} />,
         },
             ...(access.canSpfApprover ?[
                 {

@@ -15,6 +15,7 @@ import SparePartImage from './SparePartImage';
 import { formatSpfDateTime } from '../shared/dateTime';
 
 const { Title, Text } = Typography;
+const { Dragger } = Upload;
 const LOW_STOCK_THRESHOLD = 5;
 const OUT_OF_STOCK_THRESHOLD = 0;
 
@@ -115,12 +116,10 @@ export default function SpfDetails({
     if (!editOpen || !data) return;
 
     form.setFieldsValue({
-      businessUnit: data.businessUnit || '-',
       description: data.description || '',
       kind: data.kind || 'consumable',
       categoryId: data.categoryId,
       isActive: data.isActive ?? true,
-      warehouseCode: firstLocation?.warehouseCode || data.warehouse || '',
       rack: firstLocation?.rack || '',
       shelve: firstLocation?.shelve || '',
       level: firstLocation?.level || '',
@@ -179,7 +178,7 @@ export default function SpfDetails({
         kind: values.kind,
         categoryId: values.categoryId,
         isActive: Boolean(values.isActive),
-        warehouseCode: String(values.warehouseCode || '').trim() || undefined,
+        warehouseCode: firstLocation?.warehouseCode || data.warehouse || undefined,
         rack: String(values.rack || '').trim() || undefined,
         shelve: String(values.shelve || '').trim() || undefined,
         level: String(values.level || '').trim() || undefined,
@@ -239,6 +238,43 @@ export default function SpfDetails({
       onOk: () => handleDeleteImage(imageId),
     });
   };
+
+  const imageUploadProps: UploadProps = {
+    multiple: true,
+    accept: 'image/*',
+    beforeUpload: handleBeforeUpload,
+    showUploadList: false,
+    disabled: imageUploading,
+  };
+
+  const renderImageUploadDragger = (compact = false) => (
+    <Dragger
+      {...imageUploadProps}
+      style={{
+        width: compact ? 180 : '100%',
+        minHeight: compact ? 72 : 120,
+        padding: compact ? '8px 12px' : '16px 12px',
+        background: '#fff',
+        borderRadius: 8,
+      }}
+    >
+      <p className="ant-upload-drag-icon" style={{ marginBottom: compact ? 8 : 12 }}>
+        <UploadOutlined />
+      </p>
+      <Text strong style={{ display: 'block' }}>
+        Drop image here
+      </Text>
+      <Text type="secondary">or click to upload</Text>
+    </Dragger>
+  );
+
+  const renderImageUploadButton = () => (
+    <Upload {...imageUploadProps}>
+      <Button icon={<UploadOutlined />} loading={imageUploading}>
+        Upload
+      </Button>
+    </Upload>
+  );
 
   return (
     <Drawer
@@ -370,37 +406,24 @@ export default function SpfDetails({
                           minHeight: 72,
                           display: 'flex',
                           alignItems: 'center',
+                          gap: 12,
                         }}
                       >
-                        <Upload
-                          multiple
-                          beforeUpload={handleBeforeUpload}
-                          showUploadList={false}
-                          disabled={imageUploading}
-                        >
-                          <Button icon={<UploadOutlined />} loading={imageUploading}>
-                            Upload
-                          </Button>
-                        </Upload>
+                        {renderImageUploadDragger(true)}
+                        {renderImageUploadButton()}
                       </div>
                     ) : null}
                   </div>
                 )}
                 {imageIds.length === 1 && canManageImages ? (
-                  <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: 12 }}>
-                    <Upload
-                      multiple
-                      beforeUpload={handleBeforeUpload}
-                      showUploadList={false}
-                      disabled={imageUploading}
-                    >
-                      <Button icon={<UploadOutlined />} loading={imageUploading}>
-                        Upload
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12 }}>
+                    {renderImageUploadDragger()}
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+                      {renderImageUploadButton()}
+                      <Button icon={<DeleteOutlined />} loading={deletingImageId === mainImageId} onClick={() => confirmDeleteImage(mainImageId!)}>
+                        Delete
                       </Button>
-                    </Upload>
-                    <Button icon={<DeleteOutlined />} loading={deletingImageId === mainImageId} onClick={() => confirmDeleteImage(mainImageId!)}>
-                      Delete
-                    </Button>
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -413,16 +436,10 @@ export default function SpfDetails({
                   size={280}
                 />
                 {canManageImages ? (
-                  <Upload
-                    multiple
-                    beforeUpload={handleBeforeUpload}
-                    showUploadList={false}
-                    disabled={imageUploading}
-                  >
-                    <Button icon={<UploadOutlined />} loading={imageUploading}>
-                      Upload
-                    </Button>
-                  </Upload>
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+                    {renderImageUploadDragger()}
+                    {renderImageUploadButton()}
+                  </div>
                 ) : null}
               </div>
             )}
@@ -765,6 +782,9 @@ export default function SpfDetails({
           <Form.Item label="UOM">
             <Text type="secondary">{displayUom}</Text>
           </Form.Item>
+          <Form.Item label="Warehouse">
+            <Text type="secondary">{displayWarehouse}</Text>
+          </Form.Item>
           <Form.Item label="Business Unit">
             <Text type="secondary">{data?.businessUnit || '-'}</Text>
           </Form.Item>
@@ -778,14 +798,6 @@ export default function SpfDetails({
           >
             <Select options={categoryOptions} placeholder="Select category" showSearch optionFilterProp="label" />
           </Form.Item>
-          <Form.Item
-            name="warehouseCode"
-            label="Warehouse"
-            rules={[{ required: true, message: 'Warehouse is required' }]}
-          >
-            <Input maxLength={80} />
-          </Form.Item>
-          
           <Form.Item
             name="rack"
             label="Rack"

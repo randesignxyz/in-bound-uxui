@@ -3,7 +3,7 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Paging } from '@/services/API';
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
 import { PROD_API } from '@/services/ApiUrl';
-import { request } from 'umi';
+import { request } from '@umijs/max';
 import {
   InboundDashboardSummaryApi,
   InboundDashboardSummaryParams,
@@ -20,11 +20,11 @@ import {
   InboundPurchaseOrderSearch,
   InboundSaveActivityInput,
   InboundSaveGoodsReceiptInput,
-  InboundSupplierMasterApi,
-  InboundSupplierMasterListParams,
   InboundSubmitQcReviewInput,
   InboundSubmitSupervisorReviewInput,
   InboundSuccessPayloadResponse,
+  InboundSupplierMasterApi,
+  InboundSupplierMasterListParams,
   InboundUomMasterApi,
   InboundUomMasterListParams,
   InboundWarehouseMasterApi,
@@ -142,7 +142,10 @@ const UpcomingInboundAction = {
     type: 'PAGING_QUERY',
     endpoint: 'PROD',
     actionName: 'inbound-fetch-paging-goods-receipt',
-    payload: { ...(params.criteria || {}) },
+    payload: (() => {
+      const { sort: _sort, ...criteria } = params.criteria || {};
+      return criteria;
+    })(),
     pagination: {
       pageSize: params.pagination?.pageSize,
       page: params.pagination?.current,
@@ -183,7 +186,9 @@ const UpcomingInboundAction = {
     payload: params,
   }),
 
-  saveGoodsReceipt: (data: InboundSaveGoodsReceiptInput): ServiceApiType<InboundSaveGoodsReceiptInput> => ({
+  saveGoodsReceipt: (
+    data: InboundSaveGoodsReceiptInput,
+  ): ServiceApiType<InboundSaveGoodsReceiptInput> => ({
     type: 'EXEC',
     endpoint: 'PROD',
     actionName: 'inbound-save-goods-receipt',
@@ -213,7 +218,9 @@ const UpcomingInboundAction = {
     payload: data,
   }),
 
-  submitQcReview: (data: InboundSubmitQcReviewInput): ServiceApiType<InboundSubmitQcReviewInput> => ({
+  submitQcReview: (
+    data: InboundSubmitQcReviewInput,
+  ): ServiceApiType<InboundSubmitQcReviewInput> => ({
     type: 'EXEC',
     endpoint: 'PROD',
     actionName: 'inbound-submit-qc-review',
@@ -244,31 +251,10 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
     pagePurchaseOrders: async (
       params: TableViewSearchParams<InboundPurchaseOrderAdvanceSearch>,
     ): Promise<Paging<UpcomingInboundPurchaseOrder>> => {
-      try {
-        const response = (await singleRequest<InboundPurchaseOrderApi>(
-          UpcomingInboundAction.pagePurchaseOrders(params),
-        )(requestAction)) as Paging<InboundPurchaseOrderApi>;
-        const mapped = mapPaging(response, mapInboundPurchaseOrder);
-        if (mapped.items.length > 0) {
-          return mapped;
-        }
-      } catch (error) {
-        // Some local inbound builds expose only the list endpoint while Postman still succeeds there.
-      }
-
       const response = (await singleRequest<InboundPurchaseOrderApi>(
-        UpcomingInboundAction.listPurchaseOrders(),
-      )(requestAction)) as InboundPurchaseOrderApi[];
-      const orders = mapInboundPurchaseOrders(extractArrayResponse(response));
-      const filteredOrders = filterPurchaseOrdersForPageFallback(orders, params);
-      const current = params.pagination?.current || 1;
-      const pageSize = params.pagination?.pageSize || 20;
-      const start = (current - 1) * pageSize;
-      return {
-        items: filteredOrders.slice(start, start + pageSize),
-        pageSize,
-        total: filteredOrders.length,
-      };
+        UpcomingInboundAction.pagePurchaseOrders(params),
+      )(requestAction)) as Paging<InboundPurchaseOrderApi>;
+      return mapPaging(response, mapInboundPurchaseOrder);
     },
 
     detailPurchaseOrder: async (id: number): Promise<UpcomingInboundPurchaseOrder> => {
@@ -294,7 +280,9 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
       return mapInboundPurchaseOrders(response);
     },
 
-    syncPurchaseOrdersFromSap: async (): Promise<InboundSuccessPayloadResponse<Record<string, unknown>>> => {
+    syncPurchaseOrdersFromSap: async (): Promise<
+      InboundSuccessPayloadResponse<Record<string, unknown>>
+    > => {
       return (await singleRequest<InboundSuccessPayloadResponse<Record<string, unknown>>>(
         UpcomingInboundAction.syncPurchaseOrdersFromSap(),
       )(requestAction)) as InboundSuccessPayloadResponse<Record<string, unknown>>;
@@ -315,13 +303,15 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
         .map(normalizeInboundSupplierMaster)
         .filter((supplier) => supplier.supplier_code || supplier.supplier_name)
         .forEach((supplier) => {
-          const key = `${supplier.business_unit || 'ALL'}::${supplier.supplier_code || supplier.supplier_name}`;
+          const key = `${supplier.business_unit || 'ALL'}::${
+            supplier.supplier_code || supplier.supplier_name
+          }`;
           suppliersByKey.set(key, supplier);
         });
 
       return Array.from(suppliersByKey.values()).sort((left, right) => {
-          const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
-          return businessUnitCompare || left.supplier_name.localeCompare(right.supplier_name);
+        const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
+        return businessUnitCompare || left.supplier_name.localeCompare(right.supplier_name);
       });
     },
 
@@ -364,8 +354,8 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
         });
 
       return Array.from(warehousesByKey.values()).sort((left, right) => {
-          const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
-          return businessUnitCompare || left.warehouse_code.localeCompare(right.warehouse_code);
+        const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
+        return businessUnitCompare || left.warehouse_code.localeCompare(right.warehouse_code);
       });
     },
 
@@ -510,15 +500,19 @@ function normalizeInboundUomMaster(value: InboundUomMasterApi | any): InboundUom
   return {
     id: value?.id ?? null,
     uom_code: value?.uom_code ?? value?.uomCode ?? value?.code ?? '',
-    uom_name: value?.uom_name ?? value?.uomName ?? value?.name ?? value?.uom_code ?? value?.uomCode ?? '',
+    uom_name:
+      value?.uom_name ?? value?.uomName ?? value?.name ?? value?.uom_code ?? value?.uomCode ?? '',
     status: value?.status ?? 'Active',
   };
 }
 
-function normalizeInboundSupplierMaster(value: InboundSupplierMasterApi | any): InboundSupplierMasterApi {
+function normalizeInboundSupplierMaster(
+  value: InboundSupplierMasterApi | any,
+): InboundSupplierMasterApi {
   const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
   const supplierCode = value?.supplier_code ?? value?.supplierCode ?? value?.code ?? '';
-  const supplierName = value?.supplier_name ?? value?.supplierName ?? value?.name ?? supplierCode ?? '';
+  const supplierName =
+    value?.supplier_name ?? value?.supplierName ?? value?.name ?? supplierCode ?? '';
 
   return {
     id: value?.id ?? null,
@@ -529,7 +523,9 @@ function normalizeInboundSupplierMaster(value: InboundSupplierMasterApi | any): 
   };
 }
 
-function normalizeInboundWarehouseMaster(value: InboundWarehouseMasterApi | any): InboundWarehouseMasterApi {
+function normalizeInboundWarehouseMaster(
+  value: InboundWarehouseMasterApi | any,
+): InboundWarehouseMasterApi {
   const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
   const warehouseCode = value?.warehouse_code ?? value?.warehouseCode ?? value?.code ?? '';
   return {
@@ -537,39 +533,7 @@ function normalizeInboundWarehouseMaster(value: InboundWarehouseMasterApi | any)
     business_unit: String(businessUnit).trim().toUpperCase(),
     warehouse_code: String(warehouseCode).trim(),
     warehouse_name:
-      value?.warehouse_name ??
-      value?.warehouseName ??
-      value?.name ??
-      warehouseCode ??
-      '',
+      value?.warehouse_name ?? value?.warehouseName ?? value?.name ?? warehouseCode ?? '',
     status: value?.status ?? 'Active',
   };
-}
-
-function filterPurchaseOrdersForPageFallback(
-  orders: UpcomingInboundPurchaseOrder[],
-  params: TableViewSearchParams<InboundPurchaseOrderAdvanceSearch>,
-): UpcomingInboundPurchaseOrder[] {
-  const businessUnit = params.criteria?.advanceSearch?.businessUnit || params.criteria?.advanceSearch?.business_unit;
-  const searchValue = params.criteria?.searchValue?.trim().toUpperCase();
-  const type = params.criteria?.advanceSearch?.type;
-  const expectedDate = params.criteria?.advanceSearch?.expectedDate;
-  const dateFrom = params.criteria?.advanceSearch?.dateFrom;
-  const dateTo = params.criteria?.advanceSearch?.dateTo;
-
-  return orders.filter((order) => {
-    if (businessUnit && order.businessUnit !== businessUnit) return false;
-    if (type && type !== 'ALL' && order.type !== type) return false;
-    if (expectedDate && order.expectedDate !== expectedDate) return false;
-    if (dateFrom && order.expectedDate < dateFrom) return false;
-    if (dateTo && order.expectedDate > dateTo) return false;
-    if (
-      searchValue &&
-      !order.poNumber.toUpperCase().includes(searchValue) &&
-      !order.supplier.toUpperCase().includes(searchValue)
-    ) {
-      return false;
-    }
-    return true;
-  });
 }

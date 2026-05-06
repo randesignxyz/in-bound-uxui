@@ -570,9 +570,9 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       exportInFlightRef.current = true;
       setExportLoading(true);
       try {
-        await downloadGenericReport(requestActions)?.({
+        const params = {
           fileName: `spare-parts-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
-          type: 'EXCEL',
+          type: 'EXCELOPENXML',
           data: {
             reportName: 'spare_parts',
             reportPath: getUrlReporting('prod'),
@@ -584,10 +584,12 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
               }
             ],
           },
-        });
+        };
+
+        await downloadGenericReport(requestActions)?.(params);
         setExportModalOpen(false);
       } catch (error) {
-        message.error('Failed to export Excel.');
+        message.error('Failed to export XLSX. Please confirm the report service allows SSRS EXCELOPENXML rendering.');
       } finally {
         exportInFlightRef.current = false;
         setExportLoading(false);

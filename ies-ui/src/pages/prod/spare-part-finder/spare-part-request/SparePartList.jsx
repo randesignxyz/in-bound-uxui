@@ -975,12 +975,13 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
       {canExportExcel ? (
         <RequestsWarehouseExportExcel
-          open={exportModalOpen}
-          loading={exportLoading}
-          businessUnitOptions={knownBusinessUnits}
-          showDateRange={false}
-          onCancel={() => setExportModalOpen(false)}
-          onSave={exportRequests}
+        open={exportModalOpen}
+        loading={exportLoading}
+        businessUnitOptions={knownBusinessUnits}
+        defaultBusinessUnits={knownBusinessUnits[0] ? [knownBusinessUnits[0]] : undefined}
+        showDateRange={false}
+        onCancel={() => setExportModalOpen(false)}
+        onSave={exportRequests}
         />
       ) : null}
 

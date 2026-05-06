@@ -15,6 +15,7 @@ type Props = {
   open: boolean;
   loading?: boolean;
   businessUnitOptions: string[];
+  defaultBusinessUnits?: string[];
   reportName: string;
   showDateRange?: boolean;
   onCancel: () => void;
@@ -45,6 +46,7 @@ export default function RequestsWarehouseExportExcel({
   open,
   loading,
   businessUnitOptions,
+  defaultBusinessUnits,
   reportName,
   showDateRange = true,
   onCancel,
@@ -59,9 +61,13 @@ export default function RequestsWarehouseExportExcel({
     form.setFieldsValue({
       period: showDateRange ? 'week' : undefined,
       dateRange: showDateRange ? getDateRangeByPeriod('week') : undefined,
-      businessUnits: ['All'],
+      businessUnits: defaultBusinessUnits?.length
+        ? defaultBusinessUnits
+        : businessUnitOptions[0]
+          ? [businessUnitOptions[0]]
+          : [],
     });
-  }, [form, open, showDateRange]);
+  }, [businessUnitOptions, defaultBusinessUnits, form, open, showDateRange]);
 
   return (
     <Modal
@@ -87,7 +93,7 @@ export default function RequestsWarehouseExportExcel({
             const selectedBU = values.businessUnits || [];
             await onSave({
               dateRange,
-              businessUnits: selectedBU.includes('All') || selectedBU.length === 0 ? [] : selectedBU,
+              businessUnits: selectedBU,
             });
           }}
         >
@@ -135,19 +141,7 @@ export default function RequestsWarehouseExportExcel({
             allowClear
             showSearch
             placeholder="All Business Units"
-            onChange={(val: string[]) => {
-              const prev = form.getFieldValue('businessUnits') || [];
-              const justAddedAll = !prev.includes('All') && val.includes('All');
-              if (justAddedAll || val.length === 0) {
-                form.setFieldValue('businessUnits', ['All']);
-              } else if (prev.includes('All') && val.length > 1) {
-                form.setFieldValue('businessUnits', val.filter((v) => v !== 'All'));
-              }
-            }}
-            options={[
-              { label: 'All', value: 'All' },
-              ...businessUnitOptions.map((item) => ({ label: item, value: item }))
-            ]}
+            options={businessUnitOptions.map((item) => ({ label: item, value: item }))}
           />
         </Form.Item>
       </Form>

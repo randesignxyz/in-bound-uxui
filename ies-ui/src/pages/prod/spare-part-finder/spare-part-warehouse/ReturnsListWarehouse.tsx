@@ -6,7 +6,7 @@ import { Space } from 'antd/lib';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { downloadGenericReport, RequestActions } from '@/services/apiGateway';
-import { SparePartRequestAPI } from '../spare-part-request/service.api';
+import { fetchSparePartBusinessUnits } from '../spare-part-request/service.api';
 import { SparePartWarehouseReturnAPI } from './service.return';
 import type { RequestDetailData, ReturnStatus } from '../spare-part-return/data';
 import ReturnsListDrawer from './ReturnsListDrawer';
@@ -110,39 +110,22 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
     setDetailOpen(true);
   };
 
-  // const loadBusinessUnits = useCallback(async () => {
-  //   try {
-  //     const sparePartServices = SparePartRequestAPI(requestAction);
-  //     const response = await sparePartServices.page({
-  //       criteria: {
-  //         searchValue: '',
-  //         category: '',
-  //         status: 'All',
-  //         warehouse: '',
-  //       },
-  //       pagination: {
-  //         current: 1,
-  //         pageSize: 20,
-  //       },
-  //     });
+  const loadBusinessUnits = useCallback(async () => {
+    try {
+      const response = await fetchSparePartBusinessUnits();
+      const businessUnits = response
+        .map((item) => item.businessUnit)
+        .filter(Boolean)
+        .sort();
+      setKnownBusinessUnits(businessUnits);
+    } catch (error) {
+      message.error('Failed to load business units.');
+    }
+  }, []);
 
-  //     const businessUnits = Array.from(
-  //       new Set(
-  //         (response.items || [])
-  //           .map((item) => item.businessUnit)
-  //           .filter((item): item is string => Boolean(item && item !== '-')),
-  //       ),
-  //     ).sort();
-
-  //     setKnownBusinessUnits(businessUnits);
-  //   } catch (error) {
-  //     message.error('Failed to load business units.');
-  //   }
-  // }, [requestAction]);
-
-  // useEffect(() => {
-  //   loadBusinessUnits();
-  // }, [loadBusinessUnits]);
+  useEffect(() => {
+    loadBusinessUnits();
+  }, [loadBusinessUnits]);
 
   const exportRequests = useCallback(
     async ({ dateRange, businessUnits }: RequestsWarehouseExportValues) => {

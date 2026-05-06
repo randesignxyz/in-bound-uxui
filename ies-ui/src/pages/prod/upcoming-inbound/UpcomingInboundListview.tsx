@@ -409,6 +409,63 @@ function isReceiptInDateRange(receipt: GoodsReceipt, dateRange: [string, string]
   return receiptDate >= dateFrom && receiptDate <= dateTo;
 }
 
+function getHistoryStatusFilter(
+  filter: HistoryStatusFilter,
+  activeRole: InboundWorkspaceRole,
+): string | null {
+  switch (filter) {
+    case 'Draft':
+      return 'Draft';
+    case 'Pending':
+      return 'Pending';
+    case 'Ready to Post SAP':
+      return 'Ready to Post SAP';
+    case 'Complete':
+      return 'Complete';
+    case 'Correction Required':
+    case 'Rejected':
+    case 'QC_REJECTED':
+      return 'Rejected';
+    case 'SUPERVISOR_PENDING':
+      return 'Submitted';
+    case 'QC_PENDING':
+      return 'QC_PENDING';
+    default:
+      return activeRole === 'WAREHOUSE_SUPERVISOR' ? 'SUPERVISOR_QUEUE_ALL' : null;
+  }
+}
+
+function getSupervisorQueueStatusFilter(filter: HistoryStatusFilter): string | null {
+  switch (filter) {
+    case 'SUPERVISOR_PENDING':
+      return 'Submitted';
+    case 'QC_PENDING':
+      return 'QC_PENDING';
+    case 'QC_REJECTED':
+    case 'Rejected':
+      return 'Rejected';
+    case 'Ready to Post SAP':
+      return 'Ready to Post SAP';
+    case 'Complete':
+      return 'Complete';
+    default:
+      return null;
+  }
+}
+
+function getQcStatusFilter(filter: QcQueueStatusFilter): string | null {
+  switch (filter) {
+    case 'All':
+      return null;
+    case 'Correction Required':
+      return 'Rejected';
+    case 'Pending':
+      return 'QC_PENDING';
+    default:
+      return filter;
+  }
+}
+
 function sortPurchaseOrdersByLatestExpectedDate(purchaseOrders: PurchaseOrder[]): PurchaseOrder[] {
   return [...purchaseOrders].sort((left, right) => {
     const leftDate = left.expectedDate?.trim() || '';
@@ -716,6 +773,7 @@ export default function UpcomingInboundListview({
     searchValue?: string;
     receiptType?: string | null;
     receiptSourceGroup?: 'STANDARD' | 'TEMP' | null;
+    status?: string | null;
     processStates?: string[] | null;
   } => {
     const criteria: {
@@ -726,6 +784,7 @@ export default function UpcomingInboundListview({
       searchValue?: string;
       receiptType?: string | null;
       receiptSourceGroup?: 'STANDARD' | 'TEMP' | null;
+      status?: string | null;
       processStates?: string[] | null;
     } = {
       ...buildBusinessUnitCriteria(),
@@ -740,90 +799,19 @@ export default function UpcomingInboundListview({
       }
 
       if (activeRole === 'QC') {
-        criteria.processStates =
-          qcStatusFilter === 'Pending'
-            ? ['QC_PENDING']
-            : qcStatusFilter === 'Submitted'
-            ? ['QC_PASSED', 'PENDING_SUPERVISOR_REVIEW', 'MERGED_TO_SUPERVISOR_REVIEW']
-            : qcStatusFilter === 'Rejected'
-            ? ['MISMATCH_EXCEPTION', 'CORRECTION_REQUIRED']
-            : qcStatusFilter === 'Complete'
-            ? [
-                'SUPERVISOR_APPROVED',
-                'SAP_SYNCED',
-                'TRANSFERRED_TO_PM_RM_WH',
-                'FIN_SUBMITTED',
-                'DAILY_CLOSED',
-                'MONTHLY_SUMMARY_READY',
-              ]
-            : null;
+        criteria.status = getQcStatusFilter(qcStatusFilter);
       }
 
       if (activeRole === 'WAREHOUSE_SUPERVISOR') {
         criteria.receiptSourceGroup = queueSourceFilter === 'ALL' ? null : queueSourceFilter;
-        criteria.processStates =
-          historyStatusFilter === 'SUPERVISOR_PENDING'
-            ? ['PENDING_SUPERVISOR_REVIEW']
-            : historyStatusFilter === 'QC_PENDING'
-            ? ['QC_PENDING']
-            : historyStatusFilter === 'QC_REJECTED'
-            ? ['CORRECTION_REQUIRED', 'MISMATCH_EXCEPTION']
-            : historyStatusFilter === 'Ready to Post SAP'
-            ? ['SUPERVISOR_APPROVED']
-            : historyStatusFilter === 'Complete'
-            ? [
-                'SAP_SYNCED',
-                'TRANSFERRED_TO_PM_RM_WH',
-                'FIN_SUBMITTED',
-                'DAILY_CLOSED',
-                'MONTHLY_SUMMARY_READY',
-              ]
-            : historyStatusFilter === 'Rejected'
-            ? ['CORRECTION_REQUIRED', 'MISMATCH_EXCEPTION']
-            : null;
+        criteria.status = getSupervisorQueueStatusFilter(historyStatusFilter);
       }
 
       return criteria;
     }
 
     criteria.receiptType = historyTypeFilter === 'ALL' ? null : historyTypeFilter;
-    criteria.processStates =
-      historyStatusFilter === 'Draft'
-        ? ['GRPO_DRAFT']
-        : historyStatusFilter === 'Pending'
-        ? ['QC_PENDING', 'QC_PASSED', 'PENDING_SUPERVISOR_REVIEW']
-        : historyStatusFilter === 'Ready to Post SAP'
-        ? ['SUPERVISOR_APPROVED']
-        : historyStatusFilter === 'Complete'
-        ? [
-            'SAP_SYNCED',
-            'TRANSFERRED_TO_PM_RM_WH',
-            'FIN_SUBMITTED',
-            'DAILY_CLOSED',
-            'MONTHLY_SUMMARY_READY',
-          ]
-        : historyStatusFilter === 'Correction Required'
-        ? ['CORRECTION_REQUIRED', 'MISMATCH_EXCEPTION']
-        : historyStatusFilter === 'Rejected'
-        ? ['CORRECTION_REQUIRED', 'MISMATCH_EXCEPTION']
-        : historyStatusFilter === 'SUPERVISOR_PENDING'
-        ? ['PENDING_SUPERVISOR_REVIEW']
-        : historyStatusFilter === 'QC_PENDING'
-        ? ['QC_PENDING']
-        : historyStatusFilter === 'QC_REJECTED'
-        ? ['CORRECTION_REQUIRED', 'MISMATCH_EXCEPTION']
-        : activeRole === 'WAREHOUSE_SUPERVISOR'
-        ? [
-            'SUPERVISOR_APPROVED',
-            'SAP_SYNCED',
-            'TRANSFERRED_TO_PM_RM_WH',
-            'FIN_SUBMITTED',
-            'DAILY_CLOSED',
-            'MONTHLY_SUMMARY_READY',
-            'CORRECTION_REQUIRED',
-            'MISMATCH_EXCEPTION',
-          ]
-        : null;
+    criteria.status = getHistoryStatusFilter(historyStatusFilter, activeRole);
     return criteria;
   };
 

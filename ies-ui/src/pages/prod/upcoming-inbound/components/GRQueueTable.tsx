@@ -1,7 +1,8 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import { Badge, Tag, Typography } from 'antd';
+import type { ProColumns } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
-import type { ActionType, ProColumns } from '@ant-design/pro-table';
+import { Badge, Tag, Typography } from 'antd';
+import type { TablePaginationConfig } from 'antd/es/table';
+import { type ReactNode } from 'react';
 import type { GoodsReceipt, LegacyGRStatus } from '../workflow';
 import {
   getQcQueueStatus,
@@ -23,8 +24,8 @@ interface GRQueueTableProps {
   headerTitle?: ReactNode;
   toolbarExtra?: ReactNode;
   statusMode?: 'legacy' | 'qc';
-  onRefresh?: () => Promise<void> | void;
   shouldShowNotificationBadge?: (receipt: GoodsReceipt) => boolean;
+  pagination?: TablePaginationConfig;
 }
 
 const statusColor: Record<LegacyGRStatus, string> = {
@@ -43,12 +44,14 @@ export function GRQueueTable({
   headerTitle,
   toolbarExtra,
   statusMode = 'legacy',
-  onRefresh,
   shouldShowNotificationBadge,
+  pagination,
 }: GRQueueTableProps) {
-  const actionRef = useRef<ActionType>();
-  const originalReloadRef = useRef<ActionType['reload']>();
-  const toolbarContent = toolbarExtra ? [toolbarExtra] : headerTitle ? [<div key="spacer" style={{ minHeight: 32 }} />] : [];
+  const toolbarContent = toolbarExtra
+    ? [toolbarExtra]
+    : headerTitle
+    ? [<div key="spacer" style={{ minHeight: 32 }} />]
+    : [];
   const showApprovedGrColumn = receipts.some((receipt) => getReceiptApprovedGrNumber(receipt));
 
   const columns: ProColumns<GoodsReceipt>[] = [
@@ -124,7 +127,6 @@ export function GRQueueTable({
       key: 'createdDate',
       title: 'Submitted Date',
       dataIndex: 'createdDate',
-      sorter: (a: GoodsReceipt, b: GoodsReceipt) => a.createdDate.localeCompare(b.createdDate),
     },
     {
       key: 'status',
@@ -142,7 +144,10 @@ export function GRQueueTable({
         if (statusMode === 'qc') {
           const qcStatus = getQcQueueStatus(row);
           return (
-            <Tag color={qcStatus ? getQcQueueStatusColor(qcStatus) : statusColor[row.status]} bordered={false}>
+            <Tag
+              color={qcStatus ? getQcQueueStatusColor(qcStatus) : statusColor[row.status]}
+              bordered={false}
+            >
               {qcStatus || row.status}
             </Tag>
           );
@@ -157,24 +162,8 @@ export function GRQueueTable({
     },
   ];
 
-  useEffect(() => {
-    if (!actionRef.current || !onRefresh) {
-      return;
-    }
-
-    if (!originalReloadRef.current) {
-      originalReloadRef.current = actionRef.current.reload?.bind(actionRef.current);
-    }
-
-    actionRef.current.reload = async (resetPageIndex?: boolean) => {
-      await onRefresh();
-      return originalReloadRef.current?.(resetPageIndex);
-    };
-  }, [onRefresh]);
-
   return (
     <ProTable<GoodsReceipt>
-      actionRef={actionRef}
       headerTitle={headerTitle}
       columns={columns}
       dataSource={receipts}
@@ -182,9 +171,9 @@ export function GRQueueTable({
       bordered
       size="small"
       search={false}
-      options={{ density: false, setting: false }}
+      options={{ density: false, setting: false, reload: false }}
       toolBarRender={() => toolbarContent}
-      pagination={{ pageSize: 10, showSizeChanger: true }}
+      pagination={pagination ?? { pageSize: 10, showSizeChanger: true }}
       onRow={(record) => ({
         onClick: () => onViewDetail(record),
         style: { cursor: 'pointer' },

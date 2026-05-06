@@ -1,65 +1,56 @@
+import { ProdPaths } from '@/pages/prod';
 import BreadCrumbCom from '@/pages/prod/shared/BreadCrumbCom';
 import { downloadGenericReport } from '@/services/apiGateway';
-import { ProdPaths } from '@/pages/prod';
 import { simpleRequestActions } from '@/services/model';
 import { USE_STATIC_AUTH } from '@/staticAuthConfig';
-import dayjs, { type Dayjs } from 'dayjs';
-import {
-  Button,
-  Card,
-  Statistic,
-  Segmented,
-  Row,
-  Col,
-  Typography,
-  Badge,
-  Input,
-  Radio,
-  DatePicker,
-  Form,
-  Modal,
-  Select,
-  Space,
-  Tag,
-  message,
-} from 'antd';
 import {
   AppstoreOutlined,
   BarsOutlined,
-  InboxOutlined,
-  WarningOutlined,
   ClockCircleOutlined,
   ExportOutlined,
+  InboxOutlined,
+  ReloadOutlined,
   SyncOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
+import { ProCard } from '@ant-design/pro-components';
 import { history, useAccess, useLocation } from '@umijs/max';
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  type GRItem,
-  type GoodsReceiptSourceType,
-  type InboundHistoryStatus,
-  type InboundProcessState,
-  type POLinkStatus,
-  type QcQueueStatus,
-  getGoodsReceiptSourceColor,
-  getInboundHistoryStatus,
-  isQcRejectedReceipt,
-  getPurchaseOrderVendorOptions,
-  getQcQueueStatus,
-  canCombinePurchaseOrders,
-  getCombinedPurchaseOrderVendor,
-  getReceiptDisplayStatus,
-  getReceiptDisplayStatusColor,
-  getReceiptApprovedGrNumber,
-  getReceiptIrNumber,
-  getReceiptPOReferences,
-  getReceiptSapStatus,
-  getExceptionQueueReceipts,
-  poLinkStatusLabel,
-  summarizePOReferences,
-  summarizeSuppliers,
-} from './workflow';
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Col,
+  DatePicker,
+  Form,
+  Input,
+  Modal,
+  Radio,
+  Row,
+  Segmented,
+  Select,
+  Space,
+  Statistic,
+  Tag,
+  Typography,
+  message,
+} from 'antd';
+import dayjs, { type Dayjs } from 'dayjs';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { GRCreationModal } from './components/GRCreationModal';
+import { GRDetailSidebar } from './components/GRDetailSidebar';
+import { GRQueueTable } from './components/GRQueueTable';
+import { InboundGRTable } from './components/InboundGRTable';
+import { LinkPOModal } from './components/LinkPOModal';
+import { PODetailSidebar } from './components/PODetailSidebar';
+import { POListTable } from './components/POListTable';
+import {
+  type SupervisorApprovalSuccessData,
+  SupervisorApprovalSuccessModal,
+} from './components/SupervisorApprovalSuccessModal';
+import { TempGRCreationModal } from './components/TempGRCreationModal';
 import type {
+  UpcomingInboundGoodsReceipt as GoodsReceipt,
   InboundDashboardSummaryApi,
   InboundDashboardSummaryParams,
   InboundDashboardSummaryRange,
@@ -68,23 +59,30 @@ import type {
   InboundSupplierMasterApi,
   InboundUomMasterApi,
   InboundWarehouseMasterApi,
-  UpcomingInboundGoodsReceipt as GoodsReceipt,
   UpcomingInboundPurchaseOrder as PurchaseOrder,
 } from './data';
 import { UpcomingInboundServiceAPI } from './service';
-import { ProCard } from '@ant-design/pro-components';
-import { POListTable } from './components/POListTable';
-import { PODetailSidebar } from './components/PODetailSidebar';
-import { GRCreationModal } from './components/GRCreationModal';
-import { GRDetailSidebar } from './components/GRDetailSidebar';
-import { InboundGRTable } from './components/InboundGRTable';
-import { GRQueueTable } from './components/GRQueueTable';
-import { TempGRCreationModal } from './components/TempGRCreationModal';
-import { LinkPOModal } from './components/LinkPOModal';
 import {
-  SupervisorApprovalSuccessModal,
-  type SupervisorApprovalSuccessData,
-} from './components/SupervisorApprovalSuccessModal';
+  type GRItem,
+  type GoodsReceiptSourceType,
+  type InboundHistoryStatus,
+  type InboundProcessState,
+  type POLinkStatus,
+  type QcQueueStatus,
+  canCombinePurchaseOrders,
+  getCombinedPurchaseOrderVendor,
+  getGoodsReceiptSourceColor,
+  getInboundHistoryStatus,
+  getQcQueueStatus,
+  getReceiptDisplayStatus,
+  getReceiptDisplayStatusColor,
+  getReceiptPOReferences,
+  getReceiptSapStatus,
+  isQcRejectedReceipt,
+  poLinkStatusLabel,
+  summarizePOReferences,
+  summarizeSuppliers,
+} from './workflow';
 
 const { Text } = Typography;
 
@@ -105,7 +103,14 @@ type InboundExportFormValues = {
   reportTarget: InboundExportReportKey;
   period: InboundExportPeriod;
   dateRange?: [Dayjs, Dayjs];
+  filterKeys?: InboundExportFilterKey[];
 };
+type InboundExportFilterKey =
+  | 'withoutPoOnly'
+  | 'agingOnly'
+  | 'qcPendingOnly'
+  | 'supervisorPendingOnly'
+  | 'issueOnly';
 type InboundReportOption = {
   label: string;
   value: InboundExportReportKey;
@@ -116,6 +121,8 @@ type DashboardStatCard = {
   color?: string;
   prefix?: ReactNode;
 };
+
+const DEFAULT_TABLE_PAGE_SIZE = 10;
 
 const simulationRoleLabel: Record<InboundWorkspaceRole, string> = {
   WAREHOUSE_STAFF: 'Warehouse Staff',
@@ -181,6 +188,17 @@ const allInboundReportOptions: InboundReportOption[] = Array.from(
   ).values(),
 );
 
+const inboundExportFilterOptions: Array<{
+  label: string;
+  value: InboundExportFilterKey;
+}> = [
+  { label: 'IR without PO only', value: 'withoutPoOnly' },
+  { label: 'Aging only', value: 'agingOnly' },
+  { label: 'QC pending only', value: 'qcPendingOnly' },
+  { label: 'Supervisor pending only', value: 'supervisorPendingOnly' },
+  { label: 'IR with issue only', value: 'issueOnly' },
+];
+
 function getInboundExportDateRange(period: InboundExportPeriod): [Dayjs, Dayjs] {
   const today = dayjs();
 
@@ -206,6 +224,7 @@ function InboundExportReportModal({
 }) {
   const [form] = Form.useForm<InboundExportFormValues>();
   const period = Form.useWatch('period', form);
+  const reportTarget = Form.useWatch('reportTarget', form);
 
   useEffect(() => {
     if (!open) return;
@@ -214,8 +233,20 @@ function InboundExportReportModal({
       reportTarget: reportOptions[0]?.value || 'PO_LIST',
       period: 'DAILY',
       dateRange: getInboundExportDateRange('DAILY'),
+      filterKeys: [],
     });
   }, [form, open, reportOptions]);
+
+  useEffect(() => {
+    if (reportTarget !== 'PO_LIST') return;
+    const currentFilters = form.getFieldValue('filterKeys') || [];
+    const poFilters = currentFilters.filter(
+      (filter: InboundExportFilterKey) => filter === 'agingOnly',
+    );
+    if (poFilters.length !== currentFilters.length) {
+      form.setFieldValue('filterKeys', poFilters);
+    }
+  }, [form, reportTarget]);
 
   return (
     <Modal
@@ -241,6 +272,7 @@ function InboundExportReportModal({
               reportTarget: values.reportTarget,
               period: values.period,
               dateRange,
+              filterKeys: values.filterKeys || [],
             });
           }}
         >
@@ -250,11 +282,7 @@ function InboundExportReportModal({
     >
       <Form form={form} layout="vertical">
         <Form.Item name="reportTarget" label="Report Type" rules={[{ required: true }]}>
-          <Radio.Group
-            optionType="button"
-            buttonStyle="solid"
-            options={reportOptions}
-          />
+          <Radio.Group optionType="button" buttonStyle="solid" options={reportOptions} />
         </Form.Item>
 
         <Form.Item name="period" label="Export Period" rules={[{ required: true }]}>
@@ -270,6 +298,17 @@ function InboundExportReportModal({
               { label: 'Weekly', value: 'WEEKLY' },
               { label: 'Pick a Date Range', value: 'CUSTOM' },
             ]}
+          />
+        </Form.Item>
+
+        <Form.Item name="filterKeys" label="Optional Filters">
+          <Checkbox.Group
+            style={{ display: 'grid', gap: 8 }}
+            options={
+              reportTarget === 'PO_LIST'
+                ? inboundExportFilterOptions.filter((option) => option.value === 'agingOnly')
+                : inboundExportFilterOptions
+            }
           />
         </Form.Item>
 
@@ -336,7 +375,11 @@ function normalizeReceiptForUI(receipt: GoodsReceipt): GoodsReceipt {
   const supplierNames = receipt.supplierNames?.length
     ? receipt.supplierNames
     : Array.from(
-        new Set([...poReferences.map((reference) => reference.supplier), receipt.supplier].filter(Boolean)),
+        new Set(
+          [...poReferences.map((reference) => reference.supplier), receipt.supplier].filter(
+            Boolean,
+          ),
+        ),
       );
 
   return {
@@ -352,10 +395,7 @@ function isVisibleOperationalReceipt(receipt: GoodsReceipt) {
 
 function getReceiptDateForFilter(receipt: GoodsReceipt): string {
   return (
-    receipt.actualReceiptDate ||
-    receipt.createdDate?.slice(0, 10) ||
-    receipt.expectedDate ||
-    ''
+    receipt.actualReceiptDate || receipt.createdDate?.slice(0, 10) || receipt.expectedDate || ''
   );
 }
 
@@ -367,6 +407,63 @@ function isReceiptInDateRange(receipt: GoodsReceipt, dateRange: [string, string]
 
   const [dateFrom, dateTo] = dateRange;
   return receiptDate >= dateFrom && receiptDate <= dateTo;
+}
+
+function getHistoryStatusFilter(
+  filter: HistoryStatusFilter,
+  activeRole: InboundWorkspaceRole,
+): string | null {
+  switch (filter) {
+    case 'Draft':
+      return 'Draft';
+    case 'Pending':
+      return 'Pending';
+    case 'Ready to Post SAP':
+      return 'Ready to Post SAP';
+    case 'Complete':
+      return 'Complete';
+    case 'Correction Required':
+    case 'Rejected':
+    case 'QC_REJECTED':
+      return 'Rejected';
+    case 'SUPERVISOR_PENDING':
+      return 'Submitted';
+    case 'QC_PENDING':
+      return 'QC_PENDING';
+    default:
+      return activeRole === 'WAREHOUSE_SUPERVISOR' ? 'SUPERVISOR_QUEUE_ALL' : null;
+  }
+}
+
+function getSupervisorQueueStatusFilter(filter: HistoryStatusFilter): string | null {
+  switch (filter) {
+    case 'SUPERVISOR_PENDING':
+      return 'Submitted';
+    case 'QC_PENDING':
+      return 'QC_PENDING';
+    case 'QC_REJECTED':
+    case 'Rejected':
+      return 'Rejected';
+    case 'Ready to Post SAP':
+      return 'Ready to Post SAP';
+    case 'Complete':
+      return 'Complete';
+    default:
+      return null;
+  }
+}
+
+function getQcStatusFilter(filter: QcQueueStatusFilter): string | null {
+  switch (filter) {
+    case 'All':
+      return null;
+    case 'Correction Required':
+      return 'Rejected';
+    case 'Pending':
+      return 'QC_PENDING';
+    default:
+      return filter;
+  }
 }
 
 function sortPurchaseOrdersByLatestExpectedDate(purchaseOrders: PurchaseOrder[]): PurchaseOrder[] {
@@ -394,56 +491,29 @@ function getDefaultHistoryStatusFilter(role: InboundWorkspaceRole): HistoryStatu
   return role === 'WAREHOUSE_SUPERVISOR' ? 'SUPERVISOR_PENDING' : 'ALL';
 }
 
-function matchesSupervisorHistoryStatusFilter(
-  receipt: GoodsReceipt,
-  filter: HistoryStatusFilter,
-): boolean {
-  if (filter === 'ALL') {
-    return true;
-  }
-
-  if (filter === 'SUPERVISOR_PENDING') {
-    return receipt.processState === 'PENDING_SUPERVISOR_REVIEW';
-  }
-
-  if (filter === 'QC_PENDING') {
-    return receipt.processState === 'QC_PENDING';
-  }
-
-  if (filter === 'QC_REJECTED') {
-    return receipt.processState === 'CORRECTION_REQUIRED' || receipt.processState === 'MISMATCH_EXCEPTION';
-  }
-
-  return getInboundHistoryStatus(receipt) === filter;
-}
-
-function getSupervisorSortPriority(receipt: GoodsReceipt): number {
-  if (receipt.processState === 'PENDING_SUPERVISOR_REVIEW') return 0;
-  if (receipt.processState === 'QC_PENDING') return 1;
-  if (receipt.processState === 'CORRECTION_REQUIRED' || receipt.processState === 'MISMATCH_EXCEPTION') return 2;
-  return 3;
-}
-
 type UpcomingInboundListviewProps = {
   routeView?: InboundRouteView;
 };
 
-export default function UpcomingInboundListview({ routeView = 'list' }: UpcomingInboundListviewProps) {
+export default function UpcomingInboundListview({
+  routeView = 'list',
+}: UpcomingInboundListviewProps) {
   const access = useAccess();
   const location = useLocation();
   const isInboundAdmin = Boolean(access?.inboundVisibleBusinessUnits?.includes?.('*'));
+  const hasInboundSyncAdminRole = Boolean(access?.hasInboundSyncAdminRole);
   const inboundVisibleBusinessUnits: string[] = isInboundAdmin
     ? []
-    : ((access?.inboundVisibleBusinessUnits as string[] | undefined) || []);
+    : (access?.inboundVisibleBusinessUnits as string[] | undefined) || [];
   const inboundWarehouseBusinessUnits: string[] = isInboundAdmin
     ? []
-    : ((access?.inboundWarehouseBusinessUnits as string[] | undefined) || []);
+    : (access?.inboundWarehouseBusinessUnits as string[] | undefined) || [];
   const inboundQcBusinessUnits: string[] = isInboundAdmin
     ? []
-    : ((access?.inboundQcBusinessUnits as string[] | undefined) || []);
+    : (access?.inboundQcBusinessUnits as string[] | undefined) || [];
   const inboundSupervisorBusinessUnits: string[] = isInboundAdmin
     ? []
-    : ((access?.inboundSupervisorBusinessUnits as string[] | undefined) || []);
+    : (access?.inboundSupervisorBusinessUnits as string[] | undefined) || [];
   const requestActions = simpleRequestActions();
   const services = UpcomingInboundServiceAPI(requestActions);
   const [inboundView, setInboundView] = useState<InboundViewMode>('operations');
@@ -452,22 +522,35 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     inboundVisibleBusinessUnits[0],
   );
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
-  const [supplierMasterOptions, setSupplierMasterOptions] = useState<InboundSupplierMasterApi[]>([]);
+  const [poPagination, setPoPagination] = useState({
+    current: 1,
+    pageSize: DEFAULT_TABLE_PAGE_SIZE,
+    total: 0,
+  });
+  const [supplierMasterOptions, setSupplierMasterOptions] = useState<InboundSupplierMasterApi[]>(
+    [],
+  );
   const [uomMasterOptions, setUomMasterOptions] = useState<InboundUomMasterApi[]>([]);
-  const [warehouseMasterOptions, setWarehouseMasterOptions] = useState<InboundWarehouseMasterApi[]>([]);
+  const [warehouseMasterOptions, setWarehouseMasterOptions] = useState<InboundWarehouseMasterApi[]>(
+    [],
+  );
 
   // Shared PO filters
   const [poSearchValue, setPOSearchValue] = useState('');
   const [poVendorFilter, setPOVendorFilter] = useState<string>('ALL');
   const [poTypeFilter, setPOTypeFilter] = useState<'ALL' | PurchaseOrder['type']>('ALL');
   const [queueSearchValue, setQueueSearchValue] = useState('');
-  const [queueTypeFilter, setQueueTypeFilter] = useState<'ALL' | GoodsReceipt['receiptType']>('ALL');
-  const [queueSourceFilter, setQueueSourceFilter] =
-    useState<'ALL' | 'STANDARD' | 'TEMP'>('ALL');
+  const [queueTypeFilter, setQueueTypeFilter] = useState<'ALL' | GoodsReceipt['receiptType']>(
+    'ALL',
+  );
+  const [queueSourceFilter, setQueueSourceFilter] = useState<'ALL' | 'STANDARD' | 'TEMP'>('ALL');
   const [qcStatusFilter, setQcStatusFilter] = useState<QcQueueStatusFilter>('Pending');
-  const [historyTypeFilter, setHistoryTypeFilter] = useState<'ALL' | 'Planned' | 'Unplanned'>('ALL');
+  const [historyTypeFilter, setHistoryTypeFilter] = useState<'ALL' | 'Planned' | 'Unplanned'>(
+    'ALL',
+  );
   const [historyStatusFilter, setHistoryStatusFilter] = useState<HistoryStatusFilter>('ALL');
-  const [dashboardSummaryRange, setDashboardSummaryRange] = useState<DashboardSummaryViewMode>('OVERALL');
+  const [dashboardSummaryRange, setDashboardSummaryRange] =
+    useState<DashboardSummaryViewMode>('OVERALL');
   const [dashboardPeriodFilter, setDashboardPeriodFilter] = useState<[string, string] | null>(null);
   const [isExportingReport, setIsExportingReport] = useState(false);
   const [isExportReportModalOpen, setIsExportReportModalOpen] = useState(false);
@@ -491,6 +574,18 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
 
   // GR state (mirrors WarehouseStaffUI)
   const [receipts, setReceipts] = useState<GoodsReceipt[]>([]);
+  const [awaitingPOLinkReceipts, setAwaitingPOLinkReceipts] = useState<GoodsReceipt[]>([]);
+  const [exceptionQueueReceipts, setExceptionQueueReceipts] = useState<GoodsReceipt[]>([]);
+  const [queuePagination, setQueuePagination] = useState({
+    current: 1,
+    pageSize: DEFAULT_TABLE_PAGE_SIZE,
+    total: 0,
+  });
+  const [historyPagination, setHistoryPagination] = useState({
+    current: 1,
+    pageSize: DEFAULT_TABLE_PAGE_SIZE,
+    total: 0,
+  });
   const [selectedPOs, setSelectedPOs] = useState<PurchaseOrder[]>([]);
   const [selectedWarehousePONumbers, setSelectedWarehousePONumbers] = useState<string[]>([]);
   const getPurchaseOrderRowKey = useCallback(
@@ -514,7 +609,9 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   const [isTempGRCreationOpen, setIsTempGRCreationOpen] = useState(false);
   const [selectedPODetail, setSelectedPODetail] = useState<PurchaseOrder | null>(null);
   const [selectedGR, setSelectedGR] = useState<GoodsReceipt | null>(null);
-  const [warehouseCorrectionReceipt, setWarehouseCorrectionReceipt] = useState<GoodsReceipt | null>(null);
+  const [warehouseCorrectionReceipt, setWarehouseCorrectionReceipt] = useState<GoodsReceipt | null>(
+    null,
+  );
   const [linkPOReceipt, setLinkPOReceipt] = useState<GoodsReceipt | null>(null);
   const [supervisorApprovalSuccess, setSupervisorApprovalSuccess] =
     useState<SupervisorApprovalSuccessData | null>(null);
@@ -537,7 +634,8 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       : inboundSupervisorBusinessUnits.length > 0);
   const canSyncPurchaseOrdersFromSap =
     Boolean(access?.canSyncInboundPurchaseOrders) &&
-    (isInboundAdmin ||
+    (hasInboundSyncAdminRole ||
+      isInboundAdmin ||
       (hasActiveBusinessUnit
         ? inboundSupervisorBusinessUnits.includes(activeBusinessUnitFilter!)
         : inboundSupervisorBusinessUnits.length > 0));
@@ -556,8 +654,8 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     activeBusinessUnitFilter && canUseWarehouseRole
       ? [activeBusinessUnitFilter]
       : isInboundAdmin
-        ? warehouseMasterBusinessUnits
-        : inboundWarehouseBusinessUnits;
+      ? warehouseMasterBusinessUnits
+      : inboundWarehouseBusinessUnits;
 
   const inboundRoleOptions = useMemo(() => {
     const roles: InboundWorkspaceRole[] = [];
@@ -590,8 +688,15 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   );
 
   const warehouseVendorOptions = useMemo(
-    () => getPurchaseOrderVendorOptions(purchaseOrders),
-    [purchaseOrders],
+    () =>
+      Array.from(
+        new Set(
+          supplierMasterOptions
+            .map((supplier) => supplier.supplier_name?.trim())
+            .filter((supplier): supplier is string => Boolean(supplier)),
+        ),
+      ).sort((left, right) => left.localeCompare(right)),
+    [supplierMasterOptions],
   );
 
   const supplierOptionsForTempReceipt = useMemo<InboundSupplierMasterApi[]>(() => {
@@ -622,44 +727,12 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     return null;
   }, [dashboardPeriodFilter, dashboardSummaryRange]);
 
-  const filteredWarehousePurchaseOrders = useMemo(() => {
-    let data = [...purchaseOrders];
-
-    if (activeBusinessUnitFilter) {
-      data = data.filter((po) => po.businessUnit === activeBusinessUnitFilter);
-    }
-
-    if (poSearchValue.trim()) {
-      const term = poSearchValue.trim().toUpperCase();
-      data = data.filter(
-        (po) =>
-          po.poNumber.toUpperCase().includes(term) ||
-          po.supplier.toUpperCase().includes(term),
-      );
-    }
-
-    if (poVendorFilter !== 'ALL') {
-      data = data.filter((po) => po.supplier?.trim() === poVendorFilter);
-    }
-
-    if (poTypeFilter !== 'ALL') {
-      data = data.filter((po) => po.type === poTypeFilter);
-    }
-
-    if (sharedDateRangeFilter) {
-      const [dateFrom, dateTo] = sharedDateRangeFilter;
-      data = data.filter((po) => po.expectedDate >= dateFrom && po.expectedDate <= dateTo);
-    }
-
-    return data;
-  }, [activeBusinessUnitFilter, poSearchValue, poTypeFilter, poVendorFilter, purchaseOrders, sharedDateRangeFilter]);
-
   const selectedWarehousePOs = useMemo(
     () =>
-      filteredWarehousePurchaseOrders.filter((purchaseOrder) =>
+      purchaseOrders.filter((purchaseOrder) =>
         selectedWarehousePONumbers.includes(getPurchaseOrderRowKey(purchaseOrder)),
       ),
-    [filteredWarehousePurchaseOrders, getPurchaseOrderRowKey, selectedWarehousePONumbers],
+    [getPurchaseOrderRowKey, purchaseOrders, selectedWarehousePONumbers],
   );
 
   const selectedWarehousePOVendor = useMemo(
@@ -673,13 +746,13 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   });
 
   const buildPurchaseOrderAdvanceSearchCriteria = () => {
-    const [dateFrom, dateTo] = sharedDateRangeFilter || [];
-
     return {
       ...buildBusinessUnitCriteria(),
-      dateFrom: dateFrom || null,
-      dateTo: dateTo || null,
-      expectedDate: dateFrom && dateFrom === dateTo ? dateFrom : null,
+      supplier: poVendorFilter === 'ALL' ? null : poVendorFilter,
+      type: poTypeFilter === 'ALL' ? null : poTypeFilter,
+      dateFrom: null,
+      dateTo: null,
+      expectedDate: null,
     };
   };
 
@@ -690,11 +763,57 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     dateTo: sharedDateRangeFilter?.[1] ?? null,
   });
 
-  const buildGoodsReceiptCriteria = () => ({
-    ...buildBusinessUnitCriteria(),
-    dateFrom: sharedDateRangeFilter?.[0] ?? null,
-    dateTo: sharedDateRangeFilter?.[1] ?? null,
-  });
+  const buildGoodsReceiptCriteria = (
+    mode: 'operations' | 'history',
+  ): {
+    businessUnit?: string | null;
+    business_unit?: string | null;
+    dateFrom?: string | null;
+    dateTo?: string | null;
+    searchValue?: string;
+    receiptType?: string | null;
+    receiptSourceGroup?: 'STANDARD' | 'TEMP' | null;
+    status?: string | null;
+    processStates?: string[] | null;
+  } => {
+    const criteria: {
+      businessUnit?: string | null;
+      business_unit?: string | null;
+      dateFrom?: string | null;
+      dateTo?: string | null;
+      searchValue?: string;
+      receiptType?: string | null;
+      receiptSourceGroup?: 'STANDARD' | 'TEMP' | null;
+      status?: string | null;
+      processStates?: string[] | null;
+    } = {
+      ...buildBusinessUnitCriteria(),
+      dateFrom: null,
+      dateTo: null,
+    };
+
+    if (mode === 'operations') {
+      if (activeRole === 'QC' || activeRole === 'WAREHOUSE_SUPERVISOR') {
+        criteria.searchValue = queueSearchValue.trim() || undefined;
+        criteria.receiptType = queueTypeFilter === 'ALL' ? null : queueTypeFilter;
+      }
+
+      if (activeRole === 'QC') {
+        criteria.status = getQcStatusFilter(qcStatusFilter);
+      }
+
+      if (activeRole === 'WAREHOUSE_SUPERVISOR') {
+        criteria.receiptSourceGroup = queueSourceFilter === 'ALL' ? null : queueSourceFilter;
+        criteria.status = getSupervisorQueueStatusFilter(historyStatusFilter);
+      }
+
+      return criteria;
+    }
+
+    criteria.receiptType = historyTypeFilter === 'ALL' ? null : historyTypeFilter;
+    criteria.status = getHistoryStatusFilter(historyStatusFilter, activeRole);
+    return criteria;
+  };
 
   const applyPurchaseOrderResult = (nextPurchaseOrders: PurchaseOrder[]) => {
     setPurchaseOrders(nextPurchaseOrders);
@@ -711,7 +830,9 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
         .map(
           (selected) =>
             nextPurchaseOrders.find(
-              (po) => po.id === selected.id || getPurchaseOrderRowKey(po) === getPurchaseOrderRowKey(selected),
+              (po) =>
+                po.id === selected.id ||
+                getPurchaseOrderRowKey(po) === getPurchaseOrderRowKey(selected),
             ) || null,
         )
         .filter((po): po is PurchaseOrder => po !== null),
@@ -723,64 +844,18 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     );
   };
 
-  const loadInboundData = async () => {
-    if (!isInboundAdmin && inboundVisibleBusinessUnits.length > 0 && !activeBusinessUnitFilter) {
-      return;
-    }
-
-    const [poResult, receiptResult, summaryResult, supplierResult, uomResult, warehouseResult] =
-      await Promise.allSettled([
-        services.pagePurchaseOrders({
-          criteria: {
-            advanceSearch: buildPurchaseOrderAdvanceSearchCriteria(),
-          },
-          pagination: {
-            current: 1,
-            pageSize: 200,
-          },
-        }),
-        services.pageGoodsReceipts({
-          criteria: buildGoodsReceiptCriteria(),
-          pagination: {
-            current: 1,
-            pageSize: 200,
-          },
-        }),
-        services.getDashboardSummary(buildDashboardSummaryParams()),
-        services.listSuppliers({
-          businessUnit: activeBusinessUnitFilter ?? null,
-          status: 'Active',
-        }),
-        services.listUoms({}),
-        services.listWarehouses({
-          businessUnit: activeBusinessUnitFilter ?? null,
-          status: 'Active',
-        }),
-      ]);
-
-    if (poResult.status === 'fulfilled') {
-      const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.value.items);
-      applyPurchaseOrderResult(nextPurchaseOrders);
-    } else {
-      message.error(poResult.reason?.message || 'Failed to load purchase orders.');
-    }
-
-    if (receiptResult.status === 'fulfilled') {
-      setReceipts(
-        receiptResult.value.items
-          .map(normalizeReceiptForUI)
-          .filter(isVisibleOperationalReceipt)
-          .filter((receipt) => isReceiptInDateRange(receipt, sharedDateRangeFilter)),
-      );
-    } else {
-      message.error(receiptResult.reason?.message || 'Failed to load inbound receiving history.');
-    }
-
-    if (summaryResult.status === 'fulfilled') {
-      setInboundStats(summaryResult.value);
-    } else {
-      message.error(summaryResult.reason?.message || 'Failed to load inbound dashboard summary.');
-    }
+  const loadMasterData = async () => {
+    const [supplierResult, uomResult, warehouseResult] = await Promise.allSettled([
+      services.listSuppliers({
+        businessUnit: activeBusinessUnitFilter ?? null,
+        status: 'Active',
+      }),
+      services.listUoms({}),
+      services.listWarehouses({
+        businessUnit: activeBusinessUnitFilter ?? null,
+        status: 'Active',
+      }),
+    ]);
 
     if (supplierResult.status === 'fulfilled') {
       setSupplierMasterOptions(supplierResult.value);
@@ -800,6 +875,151 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       setWarehouseMasterOptions([]);
       message.warning('Warehouse master data did not load.');
     }
+  };
+
+  const loadPurchaseOrders = async (
+    current = poPagination.current,
+    pageSize = poPagination.pageSize,
+  ) => {
+    const poResult = await services.pagePurchaseOrders({
+      criteria: {
+        searchValue: poSearchValue.trim() || undefined,
+        advanceSearch: buildPurchaseOrderAdvanceSearchCriteria(),
+      },
+      pagination: {
+        current,
+        pageSize,
+      },
+    });
+
+    const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.items);
+    applyPurchaseOrderResult(nextPurchaseOrders);
+    setPoPagination({
+      current,
+      pageSize,
+      total: poResult.total || nextPurchaseOrders.length,
+    });
+  };
+
+  const loadReceipts = async (
+    mode: 'operations' | 'history',
+    current: number,
+    pageSize: number,
+  ) => {
+    const receiptResult = await services.pageGoodsReceipts({
+      criteria: buildGoodsReceiptCriteria(mode),
+      pagination: {
+        current,
+        pageSize,
+      },
+    });
+
+    const nextReceipts = receiptResult.items
+      .map(normalizeReceiptForUI)
+      .filter(isVisibleOperationalReceipt);
+    setReceipts(nextReceipts);
+
+    const nextPagination = {
+      current,
+      pageSize,
+      total: receiptResult.total || nextReceipts.length,
+    };
+
+    if (mode === 'history') {
+      setHistoryPagination(nextPagination);
+    } else {
+      setQueuePagination(nextPagination);
+    }
+  };
+
+  const loadDashboardSummary = async () => {
+    const summaryResult = await services.getDashboardSummary(buildDashboardSummaryParams());
+    setInboundStats(summaryResult);
+  };
+
+  const loadWarehouseSupportReceipts = async () => {
+    const [awaitingPoResult, exceptionResult] = await Promise.all([
+      services.pageGoodsReceipts({
+        criteria: {
+          ...buildBusinessUnitCriteria(),
+          dateFrom: null,
+          dateTo: null,
+          receiptSourceType: 'TEMP_NO_PO',
+          poLinkStatus: 'WAITING_PO',
+        },
+        pagination: {
+          current: 1,
+          pageSize: 10,
+        },
+      }),
+      services.pageGoodsReceipts({
+        criteria: {
+          ...buildBusinessUnitCriteria(),
+          dateFrom: null,
+          dateTo: null,
+          processStates: ['MISMATCH_EXCEPTION', 'CORRECTION_REQUIRED'],
+        },
+        pagination: {
+          current: 1,
+          pageSize: 10,
+        },
+      }),
+    ]);
+
+    setAwaitingPOLinkReceipts(awaitingPoResult.items.map(normalizeReceiptForUI));
+    setExceptionQueueReceipts(exceptionResult.items.map(normalizeReceiptForUI));
+  };
+
+  const loadInboundData = async () => {
+    if (!isInboundAdmin && inboundVisibleBusinessUnits.length > 0 && !activeBusinessUnitFilter) {
+      return;
+    }
+
+    await loadDashboardSummary();
+
+    if (activeRole === 'WAREHOUSE_STAFF') {
+      await Promise.all([
+        loadPurchaseOrders(poPagination.current, poPagination.pageSize),
+        loadReceipts('operations', queuePagination.current, queuePagination.pageSize),
+        loadWarehouseSupportReceipts(),
+      ]);
+      return;
+    }
+
+    setAwaitingPOLinkReceipts([]);
+    setExceptionQueueReceipts([]);
+
+    if (effectiveInboundView === 'history') {
+      await loadReceipts('history', historyPagination.current, historyPagination.pageSize);
+      return;
+    }
+
+    await loadReceipts('operations', queuePagination.current, queuePagination.pageSize);
+  };
+
+  const handlePurchaseOrderPageChange = (page: number, pageSize?: number) => {
+    const nextPageSize = pageSize || poPagination.pageSize;
+    void loadPurchaseOrders(page, nextPageSize);
+  };
+
+  const handleQueuePageChange = (page: number, pageSize?: number) => {
+    const nextPageSize = pageSize || queuePagination.pageSize;
+    void loadReceipts('operations', page, nextPageSize);
+  };
+
+  const handleHistoryPageChange = (page: number, pageSize?: number) => {
+    const nextPageSize = pageSize || historyPagination.pageSize;
+    void loadReceipts('history', page, nextPageSize);
+  };
+
+  const refreshCurrentTable = async () => {
+    if (activeRole === 'WAREHOUSE_STAFF') {
+      await loadPurchaseOrders(poPagination.current, poPagination.pageSize);
+      return;
+    }
+
+    const pagination = effectiveInboundView === 'history' ? historyPagination : queuePagination;
+    await loadReceipts(effectiveInboundView, pagination.current, pagination.pageSize);
   };
 
   useEffect(() => {
@@ -824,8 +1044,15 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       setLinkPOReceipt(null);
       setSupervisorApprovalSuccess(null);
     }
-    void loadInboundData();
+    if (!isInboundAdmin && inboundVisibleBusinessUnits.length > 0 && !activeBusinessUnitFilter) {
+      return;
+    }
+    void loadDashboardSummary();
   }, [activeBusinessUnit, isCreateInboundRoute, isReceiveWithoutPoRoute]);
+
+  useEffect(() => {
+    void loadMasterData();
+  }, [activeBusinessUnitFilter]);
 
   useEffect(() => {
     if (!hasInitializedDashboardSummary.current) {
@@ -835,7 +1062,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     if (dashboardSummaryRange === 'CUSTOM' && !dashboardPeriodFilter) {
       return;
     }
-    void loadInboundData();
+    void loadDashboardSummary();
   }, [dashboardPeriodFilter, dashboardSummaryRange]);
 
   useEffect(() => {
@@ -845,10 +1072,57 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     setSimulationRole(inboundRoleOptions[0]);
   }, [inboundRoleOptions, isRoleSimulationEnabled, simulationRole]);
 
+  useEffect(() => {
+    setPoPagination((prev) => ({ ...prev, current: 1 }));
+    if (activeRole === 'WAREHOUSE_STAFF') {
+      void loadPurchaseOrders(1, poPagination.pageSize);
+      void loadReceipts('operations', 1, queuePagination.pageSize);
+      void loadWarehouseSupportReceipts();
+    }
+  }, [
+    activeRole,
+    activeBusinessUnitFilter,
+    poSearchValue,
+    poTypeFilter,
+    poVendorFilter,
+  ]);
+
+  useEffect(() => {
+    setQueuePagination((prev) => ({ ...prev, current: 1 }));
+    if (activeRole !== 'WAREHOUSE_STAFF' && effectiveInboundView === 'operations') {
+      void loadReceipts('operations', 1, queuePagination.pageSize);
+    }
+  }, [
+    activeBusinessUnitFilter,
+    activeRole,
+    effectiveInboundView,
+    historyStatusFilter,
+    qcStatusFilter,
+    queueSearchValue,
+    queueSourceFilter,
+    queueTypeFilter,
+  ]);
+
+  useEffect(() => {
+    setHistoryPagination((prev) => ({ ...prev, current: 1 }));
+    if (effectiveInboundView === 'history') {
+      void loadReceipts('history', 1, historyPagination.pageSize);
+    }
+  }, [
+    activeBusinessUnitFilter,
+    activeRole,
+    effectiveInboundView,
+    historyStatusFilter,
+    historyTypeFilter,
+  ]);
+
   const syncReceiptInState = (receipt: GoodsReceipt) => {
     const normalized = normalizeReceiptForUI(receipt);
 
-    if (!isVisibleOperationalReceipt(normalized) || !isReceiptInDateRange(normalized, sharedDateRangeFilter)) {
+    if (
+      !isVisibleOperationalReceipt(normalized) ||
+      !isReceiptInDateRange(normalized, sharedDateRangeFilter)
+    ) {
       setReceipts((prev) => prev.filter((row) => row.grNumber !== normalized.grNumber));
       setSelectedGR((prev) => (prev?.grNumber === normalized.grNumber ? null : prev));
       return normalized;
@@ -874,10 +1148,10 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     dashboardSummaryRange === 'CUSTOM' && dashboardPeriodFilter
       ? 'Incoming in Selected Period'
       : dashboardSummaryRange === 'DAILY'
-        ? 'Incoming Today'
-        : dashboardSummaryRange === 'WEEKLY'
-          ? 'Incoming This Week'
-          : 'Incoming Overall';
+      ? 'Incoming Today'
+      : dashboardSummaryRange === 'WEEKLY'
+      ? 'Incoming This Week'
+      : 'Incoming Overall';
   const dashboardStatCards: DashboardStatCard[] =
     activeRole === 'WAREHOUSE_STAFF'
       ? [
@@ -923,113 +1197,108 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
           },
         ]
       : activeRole === 'QC'
-        ? [
-            {
-              title: 'Total IR',
-              value: inboundStats.totalIrGrs,
-              color: '#1890ff',
-              prefix: <InboxOutlined />,
-            },
-            {
-              title: 'Aging PO Items',
-              value: agingPoItemCount,
-              color: '#cf1322',
-              prefix: <WarningOutlined />,
-            },
-            {
-              title: 'Pending Review',
-              value: inboundStats.qcPending,
-              color: '#faad14',
-              prefix: <ClockCircleOutlined />,
-            },
-            {
-              title: 'Completed',
-              value: inboundStats.completed,
-              color: '#52c41a',
-              prefix: <InboxOutlined />,
-            },
-            {
-              title: 'Submitted',
-              value: inboundStats.supervisorPending,
-              color: '#1677ff',
-              prefix: <ClockCircleOutlined />,
-            },
-            {
-              title: 'Rejected',
-              value: inboundStats.returnedForCorrection,
-              color: '#ff4d4f',
-              prefix: <WarningOutlined />,
-            },
-          ]
-        : [
-            {
-              title: 'Total IR',
-              value: inboundStats.totalIrGrs,
-              color: '#1890ff',
-              prefix: <InboxOutlined />,
-            },
-            {
-              title: 'Aging PO Items',
-              value: agingPoItemCount,
-              color: '#cf1322',
-              prefix: <WarningOutlined />,
-            },
-            {
-              title: 'Pending Review',
-              value: inboundStats.supervisorPending,
-              color: '#d48806',
-              prefix: <ClockCircleOutlined />,
-            },
-            {
-              title: 'QC Pending',
-              value: inboundStats.qcPending,
-              color: '#faad14',
-              prefix: <ClockCircleOutlined />,
-            },
-            {
-              title: 'Completed',
-              value: inboundStats.completed,
-              color: '#52c41a',
-              prefix: <InboxOutlined />,
-            },
-            {
-              title: 'Return for Correction',
-              value: inboundStats.returnedForCorrection,
-              color: '#ff4d4f',
-              prefix: <WarningOutlined />,
-            },
-          ];
-
-  const exceptionQueue = useMemo(() => getExceptionQueueReceipts(receipts), [receipts]);
+      ? [
+          {
+            title: 'Total IR',
+            value: inboundStats.totalIrGrs,
+            color: '#1890ff',
+            prefix: <InboxOutlined />,
+          },
+          {
+            title: 'Aging PO Items',
+            value: agingPoItemCount,
+            color: '#cf1322',
+            prefix: <WarningOutlined />,
+          },
+          {
+            title: 'Pending Review',
+            value: inboundStats.qcPending,
+            color: '#faad14',
+            prefix: <ClockCircleOutlined />,
+          },
+          {
+            title: 'Completed',
+            value: inboundStats.completed,
+            color: '#52c41a',
+            prefix: <InboxOutlined />,
+          },
+          {
+            title: 'Submitted',
+            value: inboundStats.supervisorPending,
+            color: '#1677ff',
+            prefix: <ClockCircleOutlined />,
+          },
+          {
+            title: 'Rejected',
+            value: inboundStats.returnedForCorrection,
+            color: '#ff4d4f',
+            prefix: <WarningOutlined />,
+          },
+        ]
+      : [
+          {
+            title: 'Total IR',
+            value: inboundStats.totalIrGrs,
+            color: '#1890ff',
+            prefix: <InboxOutlined />,
+          },
+          {
+            title: 'Aging PO Items',
+            value: agingPoItemCount,
+            color: '#cf1322',
+            prefix: <WarningOutlined />,
+          },
+          {
+            title: 'Pending Review',
+            value: inboundStats.supervisorPending,
+            color: '#d48806',
+            prefix: <ClockCircleOutlined />,
+          },
+          {
+            title: 'QC Pending',
+            value: inboundStats.qcPending,
+            color: '#faad14',
+            prefix: <ClockCircleOutlined />,
+          },
+          {
+            title: 'Completed',
+            value: inboundStats.completed,
+            color: '#52c41a',
+            prefix: <InboxOutlined />,
+          },
+          {
+            title: 'Return for Correction',
+            value: inboundStats.returnedForCorrection,
+            color: '#ff4d4f',
+            prefix: <WarningOutlined />,
+          },
+        ];
 
   const qcRelevantReceipts = useMemo(
     () => receipts.filter((receipt) => getQcQueueStatus(receipt) !== null),
     [receipts],
   );
-  const shouldShowQcReceiptNotificationBadge = useCallback(
-    (receipt: GoodsReceipt) => {
-      const status = getQcQueueStatus(receipt);
+  const shouldShowQcReceiptNotificationBadge = useCallback((receipt: GoodsReceipt) => {
+    const status = getQcQueueStatus(receipt);
 
-      if (!status) {
-        return false;
-      }
-
-      if (status === 'Pending') {
-        return receipt.items.some((item) => !item.qcDecision);
-      }
-
-      if (status === 'Submitted' || status === 'Rejected') {
-        if (status === 'Submitted') {
-          return !receipt.qcSubmittedViewedAt;
-        }
-
-        return isQcRejectedReceipt(receipt) && !receipt.qcRejectedViewedAt;
-      }
-
+    if (!status) {
       return false;
-    },
-    [],
-  );
+    }
+
+    if (status === 'Pending') {
+      return receipt.items.some((item) => !item.qcDecision);
+    }
+
+    if (status === 'Submitted' || status === 'Rejected') {
+      if (status === 'Submitted') {
+        return !receipt.qcSubmittedViewedAt;
+      }
+
+      return isQcRejectedReceipt(receipt) && !receipt.qcRejectedViewedAt;
+    }
+
+    return false;
+  }, []);
   const qcStatusCounts = useMemo(() => {
     const counts = {
       Pending: 0,
@@ -1053,7 +1322,9 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     () =>
       qcStatusOptions.map((option) => {
         if (
-          (option.value === 'Pending' || option.value === 'Submitted' || option.value === 'Rejected') &&
+          (option.value === 'Pending' ||
+            option.value === 'Submitted' ||
+            option.value === 'Rejected') &&
           qcStatusCounts[option.value] > 0
         ) {
           return {
@@ -1067,97 +1338,12 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     [qcStatusCounts],
   );
 
-  const supervisorStatusReceipts = useMemo(
-    () => receipts,
-    [receipts],
-  );
-
-  const awaitingPOLinkReceipts = useMemo(
-    () =>
-      receipts
-        .filter((r) => r.receiptSourceType === 'TEMP_NO_PO' && r.poLinkStatus === 'WAITING_PO')
-        .sort((a, b) => b.createdDate.localeCompare(a.createdDate)),
-    [receipts],
-  );
-
   const warehouseRejectedReceiptCount = useMemo(
     () => receipts.filter((receipt) => getInboundHistoryStatus(receipt) === 'Rejected').length,
     [receipts],
   );
 
-  const filteredRoleQueue = useMemo(() => {
-    const source =
-      activeRole === 'QC'
-        ? qcRelevantReceipts
-        : activeRole === 'WAREHOUSE_SUPERVISOR'
-          ? supervisorStatusReceipts
-          : [];
-
-    let data = [...source];
-
-    if (queueSearchValue.trim()) {
-      const term = queueSearchValue.trim().toUpperCase();
-      data = data.filter(
-        (receipt) =>
-          receipt.grNumber.toUpperCase().includes(term) ||
-          getReceiptIrNumber(receipt).toUpperCase().includes(term) ||
-          (receipt.sapDocNum?.toUpperCase().includes(term) ?? false) ||
-          (receipt.sapGrNumber?.toUpperCase().includes(term) ?? false) ||
-          (getReceiptApprovedGrNumber(receipt)?.toUpperCase().includes(term) ?? false) ||
-          receipt.poNumber.toUpperCase().includes(term) ||
-          getReceiptPOReferences(receipt).some((reference) =>
-            reference.poNumber.toUpperCase().includes(term) ||
-            reference.supplier.toUpperCase().includes(term),
-          ) ||
-          receipt.supplier.toUpperCase().includes(term) ||
-          receipt.createdBy.toUpperCase().includes(term),
-      );
-    }
-
-    if (queueTypeFilter !== 'ALL') {
-      data = data.filter((receipt) => receipt.receiptType === queueTypeFilter);
-    }
-
-    if (activeRole === 'QC') {
-      if (qcStatusFilter !== 'All') {
-        data = data.filter((receipt) => getQcQueueStatus(receipt) === qcStatusFilter);
-      }
-    } else {
-      if (historyStatusFilter !== 'ALL') {
-        data = data.filter((receipt) =>
-          activeRole === 'WAREHOUSE_SUPERVISOR'
-            ? matchesSupervisorHistoryStatusFilter(receipt, historyStatusFilter)
-            : getInboundHistoryStatus(receipt) === historyStatusFilter,
-        );
-      }
-
-      if (queueSourceFilter === 'STANDARD') {
-        data = data.filter((receipt) => receipt.receiptSourceType !== 'TEMP_NO_PO');
-      } else if (queueSourceFilter === 'TEMP') {
-        data = data.filter((receipt) => receipt.receiptSourceType === 'TEMP_NO_PO');
-      }
-    }
-
-    return data.sort((a, b) => {
-      if (activeRole === 'WAREHOUSE_SUPERVISOR') {
-        const priorityDiff = getSupervisorSortPriority(a) - getSupervisorSortPriority(b);
-        if (priorityDiff !== 0) {
-          return priorityDiff;
-        }
-      }
-
-      return b.createdDate.localeCompare(a.createdDate);
-    });
-  }, [
-    qcRelevantReceipts,
-    qcStatusFilter,
-    queueSearchValue,
-    queueSourceFilter,
-    queueTypeFilter,
-    activeRole,
-    historyStatusFilter,
-    supervisorStatusReceipts,
-  ]);
+  const filteredRoleQueue = useMemo(() => receipts, [receipts]);
 
   // Handlers (mirrors WarehouseStaffUI)
   const hydratePurchaseOrder = async (po: PurchaseOrder): Promise<PurchaseOrder> => {
@@ -1178,7 +1364,9 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   const handleCreateGR = async (purchaseOrders: PurchaseOrder[]) => {
     if (!purchaseOrders.length) return;
     if (!canCombinePurchaseOrders(purchaseOrders)) {
-      message.error('You can only combine purchase orders from the same business unit and vendor into one IR/GR.');
+      message.error(
+        'You can only combine purchase orders from the same business unit and vendor into one IR/GR.',
+      );
       return;
     }
 
@@ -1192,7 +1380,9 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   const handleCreateSelectedGR = async () => {
     if (!selectedWarehousePOs.length) return;
     if (!canCombinePurchaseOrders(selectedWarehousePOs)) {
-      message.error('You can only combine purchase orders from the same business unit and vendor into one IR/GR.');
+      message.error(
+        'You can only combine purchase orders from the same business unit and vendor into one IR/GR.',
+      );
       return;
     }
 
@@ -1228,14 +1418,18 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
         if (isCancelled) return;
 
         if (!canCombinePurchaseOrders(purchaseOrdersFromRoute)) {
-          message.error('Selected purchase orders no longer share the same business unit and vendor. Please reselect them.');
+          message.error(
+            'Selected purchase orders no longer share the same business unit and vendor. Please reselect them.',
+          );
           closeInboundEntryRoute();
           return;
         }
 
         setSelectedPODetail(null);
         setSelectedPOs(
-          [...purchaseOrdersFromRoute].sort((left, right) => left.poNumber.localeCompare(right.poNumber)),
+          [...purchaseOrdersFromRoute].sort((left, right) =>
+            left.poNumber.localeCompare(right.poNumber),
+          ),
         );
         setIsGRCreationOpen(true);
       } catch (error: any) {
@@ -1268,7 +1462,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   }, [canUseWarehouseRole, closeInboundEntryRoute, isReceiveWithoutPoRoute]);
 
   const handleWarehousePOSelectionChange = (nextSelectedRowKeys: string[]) => {
-    const nextSelectedPOs = filteredWarehousePurchaseOrders.filter((purchaseOrder) =>
+    const nextSelectedPOs = purchaseOrders.filter((purchaseOrder) =>
       nextSelectedRowKeys.includes(getPurchaseOrderRowKey(purchaseOrder)),
     );
 
@@ -1277,7 +1471,9 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       return;
     }
 
-    setSelectedWarehousePONumbers(nextSelectedPOs.map((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder)));
+    setSelectedWarehousePONumbers(
+      nextSelectedPOs.map((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder)),
+    );
   };
 
   const handleCreateTempGR = () => {
@@ -1487,7 +1683,10 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
               `${right.businessUnit || ''}::${right.poNumber}`,
             ),
           )
-          .map((reference) => [`${reference.businessUnit || ''}::${reference.poNumber}`, reference]),
+          .map((reference) => [
+            `${reference.businessUnit || ''}::${reference.poNumber}`,
+            reference,
+          ]),
       ).values(),
     );
     const primaryPoReference = canonicalPoReferences[0];
@@ -1787,6 +1986,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     const dateTo = dateToValue.format('YYYY-MM-DD');
     const isPoReport = values.reportTarget === 'PO_LIST';
     const searchValue = isPoReport ? poSearchValue : queueSearchValue;
+    const filterKeys = values.filterKeys || [];
 
     try {
       setIsExportingReport(true);
@@ -1796,6 +1996,11 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
         dateFrom,
         dateTo,
         searchValue: searchValue.trim() || null,
+        withoutPoOnly: filterKeys.includes('withoutPoOnly'),
+        agingOnly: filterKeys.includes('agingOnly'),
+        qcPendingOnly: filterKeys.includes('qcPendingOnly'),
+        supervisorPendingOnly: filterKeys.includes('supervisorPendingOnly'),
+        issueOnly: filterKeys.includes('issueOnly'),
       });
 
       await downloadGenericReport(requestActions)({
@@ -1834,14 +2039,14 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
 
   useEffect(() => {
     const visiblePurchaseOrderKeys = new Set(
-      filteredWarehousePurchaseOrders.map((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder)),
+      purchaseOrders.map((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder)),
     );
 
     setSelectedWarehousePONumbers((prev) => {
       const next = prev.filter((poKey) => visiblePurchaseOrderKeys.has(poKey));
       return next.length === prev.length ? prev : next;
     });
-  }, [filteredWarehousePurchaseOrders, getPurchaseOrderRowKey]);
+  }, [getPurchaseOrderRowKey, purchaseOrders]);
 
   useEffect(() => {
     if (poVendorFilter === 'ALL') {
@@ -1862,49 +2067,42 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
 
     previousRoleRef.current = activeRole;
     setHistoryStatusFilter(getDefaultHistoryStatusFilter(activeRole));
+    setQueuePagination((prev) => ({ ...prev, current: 1 }));
+    setHistoryPagination((prev) => ({ ...prev, current: 1 }));
   }, [activeRole]);
-
-  const lastStatusRefreshKeyRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    const refreshKey =
-      activeRole === 'QC'
-        ? `QC:${qcStatusFilter}`
-        : activeRole === 'WAREHOUSE_SUPERVISOR'
-          ? `WAREHOUSE_SUPERVISOR:${historyStatusFilter}`
-          : null;
-
-    if (!refreshKey) {
-      lastStatusRefreshKeyRef.current = null;
-      return;
-    }
-
-    if (lastStatusRefreshKeyRef.current === null) {
-      lastStatusRefreshKeyRef.current = refreshKey;
-      return;
-    }
-
-    if (lastStatusRefreshKeyRef.current === refreshKey) {
-      return;
-    }
-
-    lastStatusRefreshKeyRef.current = refreshKey;
-    void loadInboundData();
-  }, [activeRole, historyStatusFilter, qcStatusFilter]);
 
   const poHeaderTitle = (
     <div style={{ paddingLeft: 8 }}>
-      <Text strong>{`Purchase Orders (${filteredWarehousePurchaseOrders.length})`}</Text>
+      <Text strong>{`Purchase Orders (${poPagination.total})`}</Text>
     </div>
   );
 
   const poHeaderActions = (
     <Space size={8} wrap>
-      <Text type="secondary" style={{ fontSize: 12 }}>
-        {selectedWarehousePOs.length > 0 && selectedWarehousePOVendor
-          ? `${selectedWarehousePOs.length} PO${selectedWarehousePOs.length > 1 ? 's' : ''} selected from ${selectedWarehousePOVendor}`
-          : 'Select same-BU, same-vendor POs to create one IR/GR'}
-      </Text>
+      <Input.Search
+        allowClear
+        placeholder="Search PO / PO Doc Num / Supplier"
+        onSearch={handleWarehousePOSearch}
+        onChange={(e) => setPOSearchValue(e.target.value)}
+        style={{ width: 240 }}
+      />
+      <Select
+        value={poVendorFilter}
+        onChange={(value) => setPOVendorFilter(value)}
+        style={{ width: 220 }}
+        options={[
+          { label: 'All Vendors', value: 'ALL' },
+          ...warehouseVendorOptions.map((vendor) => ({
+            label: vendor,
+            value: vendor,
+          })),
+        ]}
+      />
+      <Radio.Group value={poTypeFilter} onChange={(e) => setPOTypeFilter(e.target.value)}>
+        <Radio.Button value="ALL">All</Radio.Button>
+        <Radio.Button value="Planned">Planned</Radio.Button>
+        <Radio.Button value="Unplanned">Unplanned</Radio.Button>
+      </Radio.Group>
       <Button
         type="primary"
         onClick={() => void handleCreateSelectedGR()}
@@ -1926,12 +2124,16 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       >
         Receive Without PO
       </Button>
+      <Button icon={<ReloadOutlined />} onClick={() => void refreshCurrentTable()}>
+        Refresh
+      </Button>
     </Space>
   );
 
-  const roleSelectorOptions = (isRoleSimulationEnabled
-    ? (Object.keys(simulationRoleLabel) as InboundWorkspaceRole[])
-    : inboundRoleOptions
+  const roleSelectorOptions = (
+    isRoleSimulationEnabled
+      ? (Object.keys(simulationRoleLabel) as InboundWorkspaceRole[])
+      : inboundRoleOptions
   ).map((role) => ({
     label: simulationRoleLabel[role],
     value: role,
@@ -1939,12 +2141,11 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   const shouldShowBusinessUnitControl = !isInboundAdmin && inboundVisibleBusinessUnits.length > 0;
   const canSelectBusinessUnit = inboundVisibleBusinessUnits.length > 1;
 
-  const shouldShowRoleSelector = !isInboundAdmin && (isRoleSimulationEnabled || inboundRoleOptions.length > 1);
+  const shouldShowRoleSelector =
+    !isInboundAdmin && (isRoleSimulationEnabled || inboundRoleOptions.length > 1);
   const shouldShowInboundTabs = activeRole === 'WAREHOUSE_STAFF';
   const dashboardSummaryTitle =
-    activeRole === 'WAREHOUSE_STAFF'
-      ? 'Upcoming Inbound Dashboard'
-      : 'Inbound Receiving Dashboard';
+    activeRole === 'WAREHOUSE_STAFF' ? 'Upcoming Inbound Dashboard' : 'Inbound Receiving Dashboard';
   const operationsTabLabel =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Inbound Receiving' : 'Inbound Upcoming';
   const historyTabLabel =
@@ -1981,42 +2182,95 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     () => (isInboundAdmin ? allInboundReportOptions : inboundReportOptionsByRole[activeRole]),
     [activeRole, isInboundAdmin],
   );
-  const historyReceipts = useMemo(() => {
-    if (activeRole !== 'WAREHOUSE_SUPERVISOR') {
-      return receipts;
-    }
-
-    return receipts.filter((receipt) => {
-      const historyStatus = getInboundHistoryStatus(receipt);
-      return historyStatus === 'Complete' || historyStatus === 'Rejected';
-    });
-  }, [activeRole, receipts]);
-  const filteredHistoryReceiptCount = useMemo(() => {
-    let data = historyReceipts;
-    if (historyTypeFilter !== 'ALL') {
-      data = data.filter((receipt) => receipt.receiptType === historyTypeFilter);
-    }
-    if (historyStatusFilter !== 'ALL') {
-      data = data.filter((receipt) =>
-        activeRole === 'WAREHOUSE_SUPERVISOR'
-          ? matchesSupervisorHistoryStatusFilter(receipt, historyStatusFilter)
-          : getInboundHistoryStatus(receipt) === historyStatusFilter,
-      );
-    }
-    return data.length;
-  }, [activeRole, historyReceipts, historyStatusFilter, historyTypeFilter]);
+  const historyReceipts = useMemo(() => receipts, [receipts]);
+  const filteredHistoryReceiptCount = historyPagination.total;
   const historyHeaderTitle =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Good Receipt' : 'Inbound Receiving';
   const historyStatusFilterOptions =
     activeRole === 'WAREHOUSE_SUPERVISOR'
       ? supervisorHistoryStatusOptions
       : activeRole === 'WAREHOUSE_STAFF'
-        ? warehouseHistoryStatusOptions
-        : historyStatusOptions;
+      ? warehouseHistoryStatusOptions
+      : historyStatusOptions;
   const inboundReceivingHeaderTitle = (
     <div style={{ paddingLeft: 8 }}>
       <Text strong>{`${historyHeaderTitle} (${filteredHistoryReceiptCount})`}</Text>
     </div>
+  );
+  const queueTableToolbar = (
+    <Space size={8} wrap>
+      <Input.Search
+        allowClear
+        placeholder="Search IR / GR Doc Num / PO / PO Doc Num / Supplier"
+        onSearch={(value) => setQueueSearchValue(value)}
+        onChange={(event) => {
+          if (!event.target.value) {
+            setQueueSearchValue('');
+          }
+        }}
+        style={{ width: 280 }}
+      />
+      <Radio.Group
+        value={queueTypeFilter}
+        onChange={(event) => setQueueTypeFilter(event.target.value)}
+      >
+        <Radio.Button value="ALL">All</Radio.Button>
+        <Radio.Button value="Planned">Planned</Radio.Button>
+        <Radio.Button value="Unplanned">Unplanned</Radio.Button>
+      </Radio.Group>
+      {activeRole === 'QC' ? (
+        <Radio.Group
+          value={qcStatusFilter}
+          onChange={(event) => setQcStatusFilter(event.target.value)}
+        >
+          {qcStatusOptionsWithBadge.map((option) => (
+            <Radio.Button key={option.value} value={option.value}>
+              <Badge count={option.badgeCount ?? 0} size="small" offset={[8, -6]}>
+                {option.label}
+              </Badge>
+            </Radio.Button>
+          ))}
+        </Radio.Group>
+      ) : (
+        <>
+          <Radio.Group
+            value={queueSourceFilter}
+            onChange={(event) => setQueueSourceFilter(event.target.value)}
+          >
+            <Radio.Button value="ALL">All Source</Radio.Button>
+            <Radio.Button value="STANDARD">Standard</Radio.Button>
+            <Radio.Button value="TEMP">Temporary</Radio.Button>
+          </Radio.Group>
+          <Select<HistoryStatusFilter>
+            value={historyStatusFilter}
+            onChange={(value) => setHistoryStatusFilter(value)}
+            options={supervisorHistoryStatusOptions}
+            style={{ width: 170 }}
+          />
+        </>
+      )}
+      <Button icon={<ReloadOutlined />} onClick={() => void refreshCurrentTable()}>
+        Refresh
+      </Button>
+    </Space>
+  );
+  const historyTableToolbar = (
+    <Space size={8} wrap>
+      <Radio.Group value={historyTypeFilter} onChange={(e) => setHistoryTypeFilter(e.target.value)}>
+        <Radio.Button value="ALL">All</Radio.Button>
+        <Radio.Button value="Planned">Planned</Radio.Button>
+        <Radio.Button value="Unplanned">Unplanned</Radio.Button>
+      </Radio.Group>
+      <Select<HistoryStatusFilter>
+        value={historyStatusFilter}
+        onChange={(value) => setHistoryStatusFilter(value)}
+        options={historyStatusFilterOptions}
+        style={{ width: 190 }}
+      />
+      <Button icon={<ReloadOutlined />} onClick={() => void refreshCurrentTable()}>
+        Refresh
+      </Button>
+    </Space>
   );
   const workspaceContent =
     (warehouseCorrectionReceipt &&
@@ -2095,436 +2349,258 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
       {workspaceContent ? (
         workspaceContent
       ) : (
-      <div style={{ marginTop: 16 }}>
-        {shouldShowRoleSelector && (
-          <Card size="small" bodyStyle={{ padding: '12px 16px' }} style={{ marginBottom: 16 }}>
-            <Row justify="space-between" align="middle" gutter={[12, 12]}>
-              <Col>
-                <Text strong>{isRoleSimulationEnabled ? 'Role Simulation' : 'Role Workspace'}</Text>
-                <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 2 }}>
-                  {isRoleSimulationEnabled
-                    ? 'Frontend-only switch for Warehouse Staff, QC, and Warehouse Supervisor.'
-                    : 'Switch between the inbound roles granted to your current account.'}
-                </div>
-              </Col>
-              <Col>
-                <Segmented
-                  value={simulationRole}
-                  onChange={(value) => handleRoleChange(value as InboundWorkspaceRole)}
-                  options={roleSelectorOptions}
-                />
-              </Col>
-            </Row>
-          </Card>
-        )}
-
-        <Row justify="space-between" align="middle" gutter={[12, 12]} style={{ marginBottom: 12 }}>
-          <Col>
-            <Text strong>{dashboardSummaryTitle}</Text>
-          </Col>
-          <Col>
-            <Space size={12} wrap>
-              {shouldShowBusinessUnitControl && (
-                <Space size={8}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    Business Unit
+        <div style={{ marginTop: 16 }}>
+          {shouldShowRoleSelector && (
+            <Card size="small" bodyStyle={{ padding: '12px 16px' }} style={{ marginBottom: 16 }}>
+              <Row justify="space-between" align="middle" gutter={[12, 12]}>
+                <Col>
+                  <Text strong>
+                    {isRoleSimulationEnabled ? 'Role Simulation' : 'Role Workspace'}
                   </Text>
-                  <Select
-                    value={activeBusinessUnit}
-                    open={canSelectBusinessUnit ? undefined : false}
-                    onChange={(value) => {
-                      if (!canSelectBusinessUnit) return;
-                      setActiveBusinessUnit(value);
-                      resetWorkspaceFilters();
-                    }}
-                    style={{ width: 120 }}
-                    options={inboundVisibleBusinessUnits.map((businessUnit) => ({
-                      label: businessUnit,
-                      value: businessUnit,
-                    }))}
+                  <div style={{ fontSize: 12, color: '#8c8c8c', marginTop: 2 }}>
+                    {isRoleSimulationEnabled
+                      ? 'Frontend-only switch for Warehouse Staff, QC, and Warehouse Supervisor.'
+                      : 'Switch between the inbound roles granted to your current account.'}
+                  </div>
+                </Col>
+                <Col>
+                  <Segmented
+                    value={simulationRole}
+                    onChange={(value) => handleRoleChange(value as InboundWorkspaceRole)}
+                    options={roleSelectorOptions}
                   />
-                </Space>
-              )}
-              <Button
-                icon={<ExportOutlined />}
-                loading={isExportingReport}
-                onClick={() => setIsExportReportModalOpen(true)}
-                style={{ fontWeight: 600 }}
-              >
-                Export Report
-              </Button>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: 3,
-                  background: '#f5f5f5',
-                  border: '1px solid #d9d9d9',
-                  borderRadius: 12,
-                }}
-              >
-                {[
-                  { label: 'Overall', value: 'OVERALL' },
-                  { label: 'Daily', value: 'DAILY' },
-                  { label: 'Weekly', value: 'WEEKLY' },
-                  { label: 'Pick Period', value: 'CUSTOM' },
-                ].map((option) => {
-                  const isActive = dashboardSummaryRange === option.value;
+                </Col>
+              </Row>
+            </Card>
+          )}
 
-                  return (
-                    <Button
-                      key={option.value}
-                      size="small"
-                      type={isActive ? 'primary' : 'default'}
-                      onClick={() => {
-                        setDashboardSummaryRange(option.value as DashboardSummaryViewMode);
-                        if (option.value !== 'CUSTOM') {
-                          setDashboardPeriodFilter(null);
-                        }
+          <Row
+            justify="space-between"
+            align="middle"
+            gutter={[12, 12]}
+            style={{ marginBottom: 12 }}
+          >
+            <Col>
+              <Text strong>{dashboardSummaryTitle}</Text>
+            </Col>
+            <Col>
+              <Space size={12} wrap>
+                {shouldShowBusinessUnitControl && (
+                  <Space size={8}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Business Unit
+                    </Text>
+                    <Select
+                      value={activeBusinessUnit}
+                      open={canSelectBusinessUnit ? undefined : false}
+                      onChange={(value) => {
+                        if (!canSelectBusinessUnit) return;
+                        setActiveBusinessUnit(value);
+                        resetWorkspaceFilters();
                       }}
-                      style={{
-                        minWidth: 78,
-                        height: 30,
-                        borderRadius: 9,
-                        fontWeight: 600,
-                        boxShadow: isActive ? '0 4px 10px rgba(0, 0, 0, 0.08)' : 'none',
-                      }}
-                    >
-                      {option.label}
-                    </Button>
-                  );
-                })}
-              </div>
-              {dashboardSummaryRange === 'CUSTOM' && (
-                <DatePicker.RangePicker
-                  size="small"
-                  allowClear
-                  style={{ width: 220 }}
-                  placeholder={['Start date', 'End date']}
-                  onChange={(values) => {
-                    if (!values?.[0] || !values?.[1]) {
-                      setDashboardPeriodFilter(null);
-                      setDashboardSummaryRange('OVERALL');
-                      return;
-                    }
-
-                    setDashboardPeriodFilter([
-                      values[0].format('YYYY-MM-DD'),
-                      values[1].format('YYYY-MM-DD'),
-                    ]);
-                  }}
-                />
-              )}
-              {canSyncPurchaseOrdersFromSap && (
+                      style={{ width: 120 }}
+                      options={inboundVisibleBusinessUnits.map((businessUnit) => ({
+                        label: businessUnit,
+                        value: businessUnit,
+                      }))}
+                    />
+                  </Space>
+                )}
                 <Button
-                  icon={<SyncOutlined />}
-                  loading={isSyncingPurchaseOrders}
-                  onClick={() => void handleSyncPurchaseOrdersFromSap()}
+                  icon={<ExportOutlined />}
+                  loading={isExportingReport}
+                  onClick={() => setIsExportReportModalOpen(true)}
                   style={{ fontWeight: 600 }}
                 >
-                  Sync SAP PO
+                  Export Report
                 </Button>
-              )}
-            </Space>
-          </Col>
-        </Row>
-
-        {/* Stats Row */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 16,
-            marginBottom: 16,
-          }}
-        >
-          {dashboardStatCards.map((card) => (
-            <div key={card.title}>
-              <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
-                <Statistic
-                  title={<Text style={{ fontSize: 12 }}>{card.title}</Text>}
-                  value={card.value}
-                  valueStyle={{
-                    fontSize: 24,
-                    ...(card.color ? { color: card.color } : {}),
-                  }}
-                  prefix={card.prefix}
-                />
-              </Card>
-            </div>
-          ))}
-        </div>
-
-        <ProCard bordered style={{ marginBottom: 0 }}>
-          <Row justify="space-between" align="middle" gutter={[12, 12]}>
-            {shouldShowInboundTabs && (
-              <Col>
-                <Space
-                  size={6}
-                  wrap
+                <div
                   style={{
-                    padding: 2,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: 3,
                     background: '#f5f5f5',
-                    border: '1px solid #e8e8e8',
-                    borderRadius: 14,
+                    border: '1px solid #d9d9d9',
+                    borderRadius: 12,
                   }}
                 >
-                  {inboundViewOptions.map((option) => {
-                    const isActive = inboundView === option.value;
+                  {[
+                    { label: 'Overall', value: 'OVERALL' },
+                    { label: 'Daily', value: 'DAILY' },
+                    { label: 'Weekly', value: 'WEEKLY' },
+                    { label: 'Pick Period', value: 'CUSTOM' },
+                  ].map((option) => {
+                    const isActive = dashboardSummaryRange === option.value;
 
                     return (
                       <Button
                         key={option.value}
-                        className="inbound-workspace-tab-button"
-                        type={isActive ? 'primary' : 'default'}
                         size="small"
-                        icon={option.icon}
-                        onClick={() => handleInboundViewChange(option.value)}
+                        type={isActive ? 'primary' : 'default'}
+                        onClick={() => {
+                          setDashboardSummaryRange(option.value as DashboardSummaryViewMode);
+                          if (option.value !== 'CUSTOM') {
+                            setDashboardPeriodFilter(null);
+                          }
+                        }}
                         style={{
-                          minHeight: 32,
-                          paddingInline: 10,
-                          borderRadius: 10,
+                          minWidth: 78,
+                          height: 30,
+                          borderRadius: 9,
                           fontWeight: 600,
-                          boxShadow: isActive ? '0 4px 12px rgba(22, 119, 255, 0.16)' : 'none',
+                          boxShadow: isActive ? '0 4px 10px rgba(0, 0, 0, 0.08)' : 'none',
                         }}
                       >
                         {option.label}
                       </Button>
                     );
                   })}
-                </Space>
-              </Col>
-            )}
-            <Col flex="auto">
-              {effectiveInboundView === 'operations' ? (
-                activeRole === 'WAREHOUSE_STAFF' ? (
-                  <Space size="large" wrap style={{ justifyContent: 'flex-end', width: '100%' }}>
-                    <Input.Search
-                      allowClear
-                      placeholder="Search PO / Supplier"
-                      onSearch={handleWarehousePOSearch}
-                      onChange={(e) => setPOSearchValue(e.target.value)}
-                      style={{ width: 220 }}
-                    />
-                    <Select
-                      value={poVendorFilter}
-                      onChange={(value) => setPOVendorFilter(value)}
-                      style={{ width: 220 }}
-                      options={[
-                        { label: 'All Vendors', value: 'ALL' },
-                        ...warehouseVendorOptions.map((vendor) => ({
-                          label: vendor,
-                          value: vendor,
-                        })),
-                      ]}
-                    />
-                    <Radio.Group
-                      value={poTypeFilter}
-                      onChange={(e) => setPOTypeFilter(e.target.value)}
-                    >
-                      <Radio.Button value="ALL">All</Radio.Button>
-                      <Radio.Button value="Planned">Planned</Radio.Button>
-                      <Radio.Button value="Unplanned">Unplanned</Radio.Button>
-                    </Radio.Group>
-                  </Space>
-                ) : activeRole === 'QC' ? (
-                  <Space size="large" wrap style={{ justifyContent: 'flex-end', width: '100%' }}>
-                    <Input.Search
-                      allowClear
-                      placeholder="Search GR / PO / Supplier"
-                      onSearch={(value) => setQueueSearchValue(value)}
-                      onChange={(event) => !event.target.value && setQueueSearchValue('')}
-                      style={{ width: 260 }}
-                    />
-                    <Radio.Group
-                      value={queueTypeFilter}
-                      onChange={(event) => setQueueTypeFilter(event.target.value)}
-                    >
-                      <Radio.Button value="ALL">All</Radio.Button>
-                      <Radio.Button value="Planned">Planned</Radio.Button>
-                      <Radio.Button value="Unplanned">Unplanned</Radio.Button>
-                    </Radio.Group>
-                    <Radio.Group
-                      value={qcStatusFilter}
-                      onChange={(event) => setQcStatusFilter(event.target.value)}
-                    >
-                      {qcStatusOptionsWithBadge.map((option) => (
-                        <Radio.Button key={option.value} value={option.value}>
-                          <Badge count={option.badgeCount ?? 0} size="small" offset={[8, -6]}>
-                            {option.label}
-                          </Badge>
-                        </Radio.Button>
-                      ))}
-                    </Radio.Group>
-                  </Space>
-                ) : (
-                  <Space size="large" wrap style={{ justifyContent: 'flex-end', width: '100%' }}>
-                    <Input.Search
-                      allowClear
-                      placeholder="Search GR / PO / Supplier"
-                      onSearch={(value) => setQueueSearchValue(value)}
-                      onChange={(event) => !event.target.value && setQueueSearchValue('')}
-                      style={{ width: 260 }}
-                    />
-                    <Radio.Group
-                      value={queueTypeFilter}
-                      onChange={(event) => setQueueTypeFilter(event.target.value)}
-                    >
-                      <Radio.Button value="ALL">All</Radio.Button>
-                      <Radio.Button value="Planned">Planned</Radio.Button>
-                      <Radio.Button value="Unplanned">Unplanned</Radio.Button>
-                    </Radio.Group>
-                    <Radio.Group
-                      value={queueSourceFilter}
-                      onChange={(event) => setQueueSourceFilter(event.target.value)}
-                    >
-                      <Radio.Button value="ALL">All Source</Radio.Button>
-                      <Radio.Button value="STANDARD">Standard</Radio.Button>
-                      <Radio.Button value="TEMP">Temporary</Radio.Button>
-                    </Radio.Group>
-                    <Select<HistoryStatusFilter>
-                      value={historyStatusFilter}
-                      onChange={(value) => setHistoryStatusFilter(value)}
-                      options={supervisorHistoryStatusOptions}
-                      style={{ width: 160 }}
-                    />
-                  </Space>
-                )
-              ) : effectiveInboundView === 'history' ? (
-                <Space size="large" wrap style={{ justifyContent: 'flex-end', width: '100%' }}>
-                  <Radio.Group
-                    value={historyTypeFilter}
-                    onChange={(e) => setHistoryTypeFilter(e.target.value)}
+                </div>
+                {dashboardSummaryRange === 'CUSTOM' && (
+                  <DatePicker.RangePicker
+                    size="small"
+                    allowClear
+                    style={{ width: 220 }}
+                    placeholder={['Start date', 'End date']}
+                    onChange={(values) => {
+                      if (!values?.[0] || !values?.[1]) {
+                        setDashboardPeriodFilter(null);
+                        setDashboardSummaryRange('OVERALL');
+                        return;
+                      }
+
+                      setDashboardPeriodFilter([
+                        values[0].format('YYYY-MM-DD'),
+                        values[1].format('YYYY-MM-DD'),
+                      ]);
+                    }}
+                  />
+                )}
+                {canSyncPurchaseOrdersFromSap && (
+                  <Button
+                    icon={<SyncOutlined />}
+                    loading={isSyncingPurchaseOrders}
+                    onClick={() => void handleSyncPurchaseOrdersFromSap()}
+                    style={{ fontWeight: 600 }}
                   >
-                    <Radio.Button value="ALL">All</Radio.Button>
-                    <Radio.Button value="Planned">Planned</Radio.Button>
-                    <Radio.Button value="Unplanned">Unplanned</Radio.Button>
-                  </Radio.Group>
-                  <Space size={8}>
-                    {activeRole !== 'WAREHOUSE_SUPERVISOR' && activeRole !== 'WAREHOUSE_STAFF' && (
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        Status
-                      </Text>
-                    )}
-                    <Select<HistoryStatusFilter>
-                      value={historyStatusFilter}
-                      onChange={(value) => setHistoryStatusFilter(value)}
-                      options={historyStatusFilterOptions}
-                      style={{ width: 190 }}
-                    />
-                  </Space>
-                </Space>
-              ) : null}
+                    Sync SAP PO
+                  </Button>
+                )}
+              </Space>
             </Col>
           </Row>
-        </ProCard>
 
-        {/* ── Inbound Operations View ── */}
-        <div
-          key={`${activeRole}-${effectiveInboundView}`}
-          className="inbound-workspace-tab-pane"
-        >
-          {effectiveInboundView === 'operations' && (
-            <div>
-              {activeRole === 'WAREHOUSE_STAFF' ? (
-                <>
-                  <POListTable
-                    purchaseOrders={filteredWarehousePurchaseOrders}
-                    onViewDetails={handleViewPODetail}
-                    headerTitle={poHeaderTitle}
-                    toolbarExtra={poHeaderActions}
-                    selectedRowKeys={selectedWarehousePONumbers}
-                    lockedSupplier={selectedWarehousePOVendor}
-                    onSelectionChange={handleWarehousePOSelectionChange}
-                    onRefresh={loadInboundData}
+          {/* Stats Row */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 16,
+              marginBottom: 16,
+            }}
+          >
+            {dashboardStatCards.map((card) => (
+              <div key={card.title}>
+                <Card size="small" bodyStyle={{ padding: '12px 16px' }}>
+                  <Statistic
+                    title={<Text style={{ fontSize: 12 }}>{card.title}</Text>}
+                    value={card.value}
+                    valueStyle={{
+                      fontSize: 24,
+                      ...(card.color ? { color: card.color } : {}),
+                    }}
+                    prefix={card.prefix}
                   />
+                </Card>
+              </div>
+            ))}
+          </div>
 
-                  {awaitingPOLinkReceipts.length > 0 && (
-                    <Card
-                      size="small"
-                      style={{ marginBottom: 16, borderColor: '#d3adf7' }}
-                      title={
-                        <span>
-                          <Badge color="#722ed1" />
-                          <Text strong style={{ color: '#531dab', marginLeft: 8 }}>
-                            Awaiting PO Link
-                          </Text>
-                          <Badge
-                            count={awaitingPOLinkReceipts.length}
-                            style={{ marginLeft: 8, backgroundColor: '#722ed1' }}
-                          />
-                        </span>
-                      }
-                    >
-                      {awaitingPOLinkReceipts.map((gr) => (
-                        <div
-                          key={gr.grNumber}
+          <ProCard bordered style={{ marginBottom: 0 }}>
+            <Row justify="space-between" align="middle" gutter={[12, 12]}>
+              {shouldShowInboundTabs && (
+                <Col>
+                  <Space
+                    size={6}
+                    wrap
+                    style={{
+                      padding: 2,
+                      background: '#f5f5f5',
+                      border: '1px solid #e8e8e8',
+                      borderRadius: 14,
+                    }}
+                  >
+                    {inboundViewOptions.map((option) => {
+                      const isActive = inboundView === option.value;
+
+                      return (
+                        <Button
+                          key={option.value}
+                          className="inbound-workspace-tab-button"
+                          type={isActive ? 'primary' : 'default'}
+                          size="small"
+                          icon={option.icon}
+                          onClick={() => handleInboundViewChange(option.value)}
                           style={{
-                            padding: '8px 0',
-                            borderBottom: '1px solid #f0f0f0',
-                            cursor: 'pointer',
+                            minHeight: 32,
+                            paddingInline: 10,
+                            borderRadius: 10,
+                            fontWeight: 600,
+                            boxShadow: isActive ? '0 4px 12px rgba(22, 119, 255, 0.16)' : 'none',
                           }}
-                          onClick={() => handleOpenGRDetail(gr)}
                         >
-                          <Row align="middle" justify="space-between" gutter={12}>
-                            <Col flex="auto">
-                              <div>
-                                <Text strong style={{ color: '#531dab', fontSize: 13 }}>
-                                  {gr.tempReferenceNo || gr.grNumber}
-                                </Text>
-                                <Tag
-                                  color={getGoodsReceiptSourceColor(gr.receiptSourceType)}
-                                  style={{ marginLeft: 8 }}
-                                >
-                                  Temporary Receiving
-                                </Tag>
-                                <Tag color="warning" style={{ marginLeft: 8 }}>
-                                  {poLinkStatusLabel[gr.poLinkStatus]}
-                                </Tag>
-                              </div>
-                              <Text type="secondary" style={{ fontSize: 12 }}>
-                                {summarizeSuppliers(gr)} · {gr.pendingPOReason || 'Waiting for procurement PO'}
-                              </Text>
-                            </Col>
-                            <Col>
-                              <Button
-                                size="small"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setLinkPOReceipt(gr);
-                                }}
-                              >
-                                Link PO
-                              </Button>
-                            </Col>
-                          </Row>
-                        </div>
-                      ))}
-                    </Card>
-                  )}
+                          {option.label}
+                        </Button>
+                      );
+                    })}
+                  </Space>
+                </Col>
+              )}
+            </Row>
+          </ProCard>
 
-                  {exceptionQueue.length > 0 && (
-                    <Card
-                      size="small"
-                      title={
-                        <span>
-                          <Badge status="error" />
-                          <Text strong style={{ color: '#cf1322', marginLeft: 8 }}>
-                            Exception Queue
-                          </Text>
-                          <Badge
-                            count={exceptionQueue.length}
-                            style={{ marginLeft: 8, backgroundColor: '#ff4d4f' }}
-                          />
-                        </span>
-                      }
-                      style={{ borderColor: '#ffa39e' }}
-                    >
-                      {exceptionQueue.map((gr) => {
-                        const displayStatus = getReceiptSapStatus(gr) || getReceiptDisplayStatus(gr);
+          {/* ── Inbound Operations View ── */}
+          <div key={`${activeRole}-${effectiveInboundView}`} className="inbound-workspace-tab-pane">
+            {effectiveInboundView === 'operations' && (
+              <div>
+                {activeRole === 'WAREHOUSE_STAFF' ? (
+                  <>
+                    <POListTable
+                      purchaseOrders={purchaseOrders}
+                      onViewDetails={handleViewPODetail}
+                      headerTitle={poHeaderTitle}
+                      toolbarExtra={poHeaderActions}
+                      selectedRowKeys={selectedWarehousePONumbers}
+                      lockedSupplier={selectedWarehousePOVendor}
+                      onSelectionChange={handleWarehousePOSelectionChange}
+                      pagination={{
+                        current: poPagination.current,
+                        pageSize: poPagination.pageSize,
+                        total: poPagination.total,
+                        showSizeChanger: true,
+                        onChange: handlePurchaseOrderPageChange,
+                      }}
+                    />
 
-                        return (
+                    {awaitingPOLinkReceipts.length > 0 && (
+                      <Card
+                        size="small"
+                        style={{ marginBottom: 16, borderColor: '#d3adf7' }}
+                        title={
+                          <span>
+                            <Badge color="#722ed1" />
+                            <Text strong style={{ color: '#531dab', marginLeft: 8 }}>
+                              Awaiting PO Link
+                            </Text>
+                            <Badge
+                              count={awaitingPOLinkReceipts.length}
+                              style={{ marginLeft: 8, backgroundColor: '#722ed1' }}
+                            />
+                          </span>
+                        }
+                      >
+                        {awaitingPOLinkReceipts.map((gr) => (
                           <div
                             key={gr.grNumber}
                             style={{
@@ -2534,66 +2610,154 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
                             }}
                             onClick={() => handleOpenGRDetail(gr)}
                           >
-                            <Row align="middle" justify="space-between">
-                              <Col>
+                            <Row align="middle" justify="space-between" gutter={12}>
+                              <Col flex="auto">
                                 <div>
-                                  <Text strong style={{ color: '#cf1322', fontSize: 13 }}>
-                                    {gr.grNumber}
+                                  <Text strong style={{ color: '#531dab', fontSize: 13 }}>
+                                    {gr.tempReferenceNo || gr.grNumber}
                                   </Text>
-                                  <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
-                                    - {summarizePOReferences(gr)}
-                                  </Text>
+                                  <Tag
+                                    color={getGoodsReceiptSourceColor(gr.receiptSourceType)}
+                                    style={{ marginLeft: 8 }}
+                                  >
+                                    Temporary Receiving
+                                  </Tag>
+                                  <Tag color="warning" style={{ marginLeft: 8 }}>
+                                    {poLinkStatusLabel[gr.poLinkStatus]}
+                                  </Tag>
                                 </div>
                                 <Text type="secondary" style={{ fontSize: 12 }}>
-                                  {summarizeSuppliers(gr)} &middot;{' '}
-                                  <Tag color={getReceiptDisplayStatusColor(displayStatus)} bordered={false}>
-                                    {displayStatus}
-                                  </Tag>
+                                  {summarizeSuppliers(gr)} ·{' '}
+                                  {gr.pendingPOReason || 'Waiting for procurement PO'}
                                 </Text>
+                              </Col>
+                              <Col>
+                                <Button
+                                  size="small"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setLinkPOReceipt(gr);
+                                  }}
+                                >
+                                  Link PO
+                                </Button>
                               </Col>
                             </Row>
                           </div>
-                        );
-                      })}
-                    </Card>
-                  )}
-                </>
-              ) : (
-                <GRQueueTable
-                  receipts={filteredRoleQueue}
-                  onViewDetail={handleOpenGRDetail}
-                  statusMode={activeRole === 'QC' ? 'qc' : 'legacy'}
-                  onRefresh={loadInboundData}
-                  shouldShowNotificationBadge={
-                    activeRole === 'QC' ? shouldShowQcReceiptNotificationBadge : undefined
-                  }
-                  headerTitle={
-                    <div style={{ paddingLeft: 8 }}>
-                      <Text strong>{`Inbound Receiving (${filteredRoleQueue.length})`}</Text>
-                    </div>
-                  }
-                />
-              )}
-            </div>
-          )}
+                        ))}
+                      </Card>
+                    )}
 
-          {/* ── GR History View ── */}
-          {effectiveInboundView === 'history' && (
-            <Card size="small" style={{ marginBottom: 16 }} bodyStyle={{ padding: 0 }}>
-              <InboundGRTable
-                receipts={historyReceipts}
-                onViewDetail={handleOpenGRDetail}
-                typeFilter={historyTypeFilter}
-                statusFilter={historyStatusFilter}
-                headerTitle={inboundReceivingHeaderTitle}
-                hideSourceAndPoLink={activeRole === 'WAREHOUSE_STAFF' || activeRole === 'WAREHOUSE_SUPERVISOR'}
-                showNotificationBadge={activeRole === 'WAREHOUSE_STAFF'}
-                onRefresh={loadInboundData}
-              />
-            </Card>
-          )}
+                    {exceptionQueueReceipts.length > 0 && (
+                      <Card
+                        size="small"
+                        title={
+                          <span>
+                            <Badge status="error" />
+                            <Text strong style={{ color: '#cf1322', marginLeft: 8 }}>
+                              Exception Queue
+                            </Text>
+                            <Badge
+                              count={exceptionQueueReceipts.length}
+                              style={{ marginLeft: 8, backgroundColor: '#ff4d4f' }}
+                            />
+                          </span>
+                        }
+                        style={{ borderColor: '#ffa39e' }}
+                      >
+                        {exceptionQueueReceipts.map((gr) => {
+                          const displayStatus =
+                            getReceiptSapStatus(gr) || getReceiptDisplayStatus(gr);
+
+                          return (
+                            <div
+                              key={gr.grNumber}
+                              style={{
+                                padding: '8px 0',
+                                borderBottom: '1px solid #f0f0f0',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => handleOpenGRDetail(gr)}
+                            >
+                              <Row align="middle" justify="space-between">
+                                <Col>
+                                  <div>
+                                    <Text strong style={{ color: '#cf1322', fontSize: 13 }}>
+                                      {gr.grNumber}
+                                    </Text>
+                                    <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                                      - {summarizePOReferences(gr)}
+                                    </Text>
+                                  </div>
+                                  <Text type="secondary" style={{ fontSize: 12 }}>
+                                    {summarizeSuppliers(gr)} &middot;{' '}
+                                    <Tag
+                                      color={getReceiptDisplayStatusColor(displayStatus)}
+                                      bordered={false}
+                                    >
+                                      {displayStatus}
+                                    </Tag>
+                                  </Text>
+                                </Col>
+                              </Row>
+                            </div>
+                          );
+                        })}
+                      </Card>
+                    )}
+                  </>
+                ) : (
+                  <GRQueueTable
+                    receipts={filteredRoleQueue}
+                    onViewDetail={handleOpenGRDetail}
+                    statusMode={activeRole === 'QC' ? 'qc' : 'legacy'}
+                    shouldShowNotificationBadge={
+                      activeRole === 'QC' ? shouldShowQcReceiptNotificationBadge : undefined
+                    }
+                    headerTitle={
+                      <div style={{ paddingLeft: 8 }}>
+                        <Text strong>{`Inbound Receiving (${queuePagination.total})`}</Text>
+                      </div>
+                    }
+                    toolbarExtra={queueTableToolbar}
+                    pagination={{
+                      current: queuePagination.current,
+                      pageSize: queuePagination.pageSize,
+                      total: queuePagination.total,
+                      showSizeChanger: true,
+                      onChange: handleQueuePageChange,
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* ── GR History View ── */}
+            {effectiveInboundView === 'history' && (
+              <Card size="small" style={{ marginBottom: 16 }} bodyStyle={{ padding: 0 }}>
+                <InboundGRTable
+                  receipts={historyReceipts}
+                  onViewDetail={handleOpenGRDetail}
+                  typeFilter="ALL"
+                  statusFilter="ALL"
+                  headerTitle={inboundReceivingHeaderTitle}
+                  toolbarExtra={historyTableToolbar}
+                  hideSourceAndPoLink={
+                    activeRole === 'WAREHOUSE_STAFF' || activeRole === 'WAREHOUSE_SUPERVISOR'
+                  }
+                  showNotificationBadge={activeRole === 'WAREHOUSE_STAFF'}
+                  pagination={{
+                    current: historyPagination.current,
+                    pageSize: historyPagination.pageSize,
+                    total: historyPagination.total,
+                    showSizeChanger: true,
+                    onChange: handleHistoryPageChange,
+                  }}
+                />
+              </Card>
+            )}
+          </div>
         </div>
-      </div>
       )}
 
       <InboundExportReportModal

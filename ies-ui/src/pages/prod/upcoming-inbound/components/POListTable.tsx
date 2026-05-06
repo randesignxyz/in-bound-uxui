@@ -1,7 +1,8 @@
-import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
-import { Flex, Progress, Tag, Tooltip } from 'antd';
+import type { ProColumns } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
-import type { ActionType, ProColumns } from '@ant-design/pro-table';
+import { Flex, Progress, Tag, Tooltip } from 'antd';
+import type { TablePaginationConfig } from 'antd/es/table';
+import { type MouseEvent, type ReactNode } from 'react';
 import type { PurchaseOrder } from '../workflow';
 
 interface POListTableProps {
@@ -12,7 +13,7 @@ interface POListTableProps {
   selectedRowKeys?: string[];
   lockedSupplier?: string;
   onSelectionChange?: (selectedRowKeys: string[]) => void;
-  onRefresh?: () => Promise<void> | void;
+  pagination?: TablePaginationConfig;
 }
 
 export function POListTable({
@@ -23,12 +24,11 @@ export function POListTable({
   selectedRowKeys = [],
   lockedSupplier,
   onSelectionChange,
-  onRefresh,
+  pagination,
 }: POListTableProps) {
-  const actionRef = useRef<ActionType>();
-  const originalReloadRef = useRef<ActionType['reload']>();
   const hasActiveSelection = selectedRowKeys.length > 0;
-  const getRowKey = (purchaseOrder: PurchaseOrder) => `${purchaseOrder.businessUnit || 'UNSPECIFIED'}::${purchaseOrder.poNumber}`;
+  const getRowKey = (purchaseOrder: PurchaseOrder) =>
+    `${purchaseOrder.businessUnit || 'UNSPECIFIED'}::${purchaseOrder.poNumber}`;
   const isSelectionLockedRow = (purchaseOrder: PurchaseOrder) =>
     Boolean(lockedSupplier) &&
     purchaseOrder.supplier !== lockedSupplier &&
@@ -67,6 +67,13 @@ export function POListTable({
           {r.poNumber}
         </a>
       ),
+    },
+    {
+      key: 'sapDocNum',
+      title: 'PO Doc Num',
+      dataIndex: 'sapDocNum',
+      width: 140,
+      render: (_: any, r: PurchaseOrder) => r.sapDocNum || '-',
     },
     {
       key: 'type',
@@ -145,24 +152,8 @@ export function POListTable({
     }),
   }));
 
-  useEffect(() => {
-    if (!actionRef.current || !onRefresh) {
-      return;
-    }
-
-    if (!originalReloadRef.current) {
-      originalReloadRef.current = actionRef.current.reload?.bind(actionRef.current);
-    }
-
-    actionRef.current.reload = async (resetPageIndex?: boolean) => {
-      await onRefresh();
-      return originalReloadRef.current?.(resetPageIndex);
-    };
-  }, [onRefresh]);
-
   return (
     <ProTable<PurchaseOrder>
-      actionRef={actionRef}
       headerTitle={headerTitle}
       columns={interactiveColumns}
       dataSource={purchaseOrders}
@@ -170,10 +161,10 @@ export function POListTable({
       bordered
       size="small"
       search={false}
-      options={{ density: false, setting: false }}
+      options={{ density: false, setting: false, reload: false }}
       toolBarRender={() => (toolbarExtra ? [toolbarExtra] : [])}
       tableAlertRender={false}
-      pagination={{ pageSize: 10, showSizeChanger: true }}
+      pagination={pagination ?? { pageSize: 10, showSizeChanger: true }}
       tableLayout="fixed"
       rowSelection={
         onSelectionChange

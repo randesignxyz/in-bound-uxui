@@ -11,6 +11,7 @@ export type InboundProcessState =
   | 'CORRECTION_REQUIRED'
   | 'MERGED_TO_SUPERVISOR_REVIEW'
   | 'SUPERVISOR_APPROVED'
+  | 'SAP_SYNCED'
   | 'TRANSFERRED_TO_PM_RM_WH'
   | 'FIN_SUBMITTED'
   | 'DAILY_CLOSED'
@@ -620,6 +621,8 @@ export function getReceiptDisplayStatus(receipt: GoodsReceipt) {
       return 'Pending Supervisor Review';
     case 'SUPERVISOR_APPROVED':
       return 'Ready to Post SAP';
+    case 'SAP_SYNCED':
+      return receipt.sapGrStatus?.trim() || 'SAP Synced';
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -655,6 +658,7 @@ export function getReceiptDisplayStatusColor(displayStatus: string) {
     case 'Pending SAP':
       return 'gold';
     case 'QC Passed':
+    case 'SAP Synced':
       return 'blue';
     case 'Supervisor Approved':
     case 'Open':
@@ -686,6 +690,7 @@ export function getInboundHistoryStatus(receipt: GoodsReceipt): InboundHistorySt
       return 'Pending';
     case 'SUPERVISOR_APPROVED':
       return 'Ready to Post SAP';
+    case 'SAP_SYNCED':
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -708,6 +713,7 @@ export function getQcQueueStatus(receipt: GoodsReceipt): QcQueueStatus | null {
     case 'MERGED_TO_SUPERVISOR_REVIEW':
       return 'Submitted';
     case 'SUPERVISOR_APPROVED':
+    case 'SAP_SYNCED':
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -876,6 +882,7 @@ export const officialStateLabel: Record<InboundProcessState, string> = {
   CORRECTION_REQUIRED: 'Correction Required',
   MERGED_TO_SUPERVISOR_REVIEW: 'Merged To Supervisor Review',
   SUPERVISOR_APPROVED: 'Ready to Post SAP',
+  SAP_SYNCED: 'SAP Synced',
   TRANSFERRED_TO_PM_RM_WH: 'Supervisor Approved',
   FIN_SUBMITTED: 'Supervisor Approved',
   DAILY_CLOSED: 'Supervisor Approved',
@@ -892,6 +899,7 @@ export function getGoodsReceiptWorkflowProgress(receipt: GoodsReceipt) {
     PENDING_SUPERVISOR_REVIEW: 75,
     MERGED_TO_SUPERVISOR_REVIEW: 75,
     SUPERVISOR_APPROVED: 100,
+    SAP_SYNCED: 100,
     TRANSFERRED_TO_PM_RM_WH: 100,
     FIN_SUBMITTED: 100,
     DAILY_CLOSED: 100,
@@ -937,6 +945,7 @@ const workflowPath: InboundProcessState[] = [
 
 function getVisibleWorkflowState(processState: InboundProcessState): InboundProcessState {
   switch (processState) {
+    case 'SAP_SYNCED':
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -1055,6 +1064,7 @@ function mapActivityProcessStateToTimelineStates(
     case 'MISMATCH_EXCEPTION':
       return ['CORRECTION_REQUIRED'];
     case 'TRANSFERRED_TO_PM_RM_WH':
+    case 'SAP_SYNCED':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
     case 'MONTHLY_SUMMARY_READY':

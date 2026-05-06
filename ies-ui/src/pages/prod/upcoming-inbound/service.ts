@@ -104,6 +104,13 @@ const UpcomingInboundAction = {
     payload: params,
   }),
 
+  syncPurchaseOrdersFromSap: (): ServiceApiType<Record<string, never>> => ({
+    type: 'EXEC',
+    endpoint: 'PROD',
+    actionName: 'inbound-sync-po-from-sap',
+    payload: {},
+  }),
+
   listSuppliers: (
     params: InboundSupplierMasterListParams,
   ): ServiceApiType<InboundSupplierMasterListParams> => ({
@@ -285,6 +292,12 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
         UpcomingInboundAction.listPurchaseOrders(),
       )(requestAction)) as InboundPurchaseOrderApi[];
       return mapInboundPurchaseOrders(response);
+    },
+
+    syncPurchaseOrdersFromSap: async (): Promise<InboundSuccessPayloadResponse<Record<string, unknown>>> => {
+      return (await singleRequest<InboundSuccessPayloadResponse<Record<string, unknown>>>(
+        UpcomingInboundAction.syncPurchaseOrdersFromSap(),
+      )(requestAction)) as InboundSuccessPayloadResponse<Record<string, unknown>>;
     },
 
     listSuppliers: async (

@@ -40,6 +40,7 @@ const PROCESS_STATE_VALUES: UpcomingInboundProcessState[] = [
   'CORRECTION_REQUIRED',
   'MERGED_TO_SUPERVISOR_REVIEW',
   'SUPERVISOR_APPROVED',
+  'SAP_SYNCED',
   'TRANSFERRED_TO_PM_RM_WH',
   'FIN_SUBMITTED',
   'DAILY_CLOSED',
@@ -432,6 +433,7 @@ function scenarioStepNumber(processState: UpcomingInboundProcessState): number {
     case 'PENDING_SUPERVISOR_REVIEW':
       return 2;
     case 'SUPERVISOR_APPROVED':
+    case 'SAP_SYNCED':
       return 3;
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':

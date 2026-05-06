@@ -27,6 +27,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ),
     ).sort();
 
+  const hasInboundAdminRole = roles.some((role) => role === 'ROLE_INBOUND_ADMIN');
   const inboundWarehouseBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_WAREHOUSE_STAFF_');
   const inboundQcBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_QC_');
   const inboundSupervisorBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_SUPERVISOR_');
@@ -51,7 +52,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
   const hasInboundWarehouseRole = inboundWarehouseBusinessUnits.length > 0;
   const hasInboundQcRole = inboundQcBusinessUnits.length > 0;
   const hasInboundSupervisorRole = inboundSupervisorBusinessUnits.length > 0;
-  const hasInboundRole = hasInboundWarehouseRole || hasInboundQcRole || hasInboundSupervisorRole;
+  const hasInboundRole = hasInboundAdminRole || hasInboundWarehouseRole || hasInboundQcRole || hasInboundSupervisorRole;
 
   // Check if user has ANY super role (auto allow all)
   const isSuperAdmin = roles.some(r => SUPER_ROLES.includes(r));
@@ -184,9 +185,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessPurchaseMenuItem:
       currentUser?.authorities.some((item) => item === 'ROLE_PURCHASE_ADMIN') || false,
     canAccessInboundWarehouseStaff: hasInboundWarehouseRole || isSuperAdmin,
+    canSyncInboundPurchaseOrders: hasInboundAdminRole || hasInboundSupervisorRole || isSuperAdmin,
     canAccessInboundQc: hasInboundQcRole || isSuperAdmin,
     canAccessInboundSupervisor: hasInboundSupervisorRole || isSuperAdmin,
-    inboundVisibleBusinessUnits: isSuperAdmin ? ['*'] : inboundVisibleBusinessUnits,
+    inboundVisibleBusinessUnits: isSuperAdmin || hasInboundAdminRole ? ['*'] : inboundVisibleBusinessUnits,
     inboundWarehouseBusinessUnits: isSuperAdmin ? ['*'] : inboundWarehouseBusinessUnits,
     inboundQcBusinessUnits: isSuperAdmin ? ['*'] : inboundQcBusinessUnits,
     inboundSupervisorBusinessUnits: isSuperAdmin ? ['*'] : inboundSupervisorBusinessUnits,

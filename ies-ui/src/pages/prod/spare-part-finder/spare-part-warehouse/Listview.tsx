@@ -13,10 +13,13 @@ import { SparePartWarehouseReturnAPI } from './service.return';
 // Count returns with APPROVED or PARTIAL_RETURN status
 const countApprovedAndPartialReturns = async (requestAction: RequestActions): Promise<number> => {
   try {
-    const response = await SparePartWarehouseReturnAPI(requestAction)
-      .paga_fetch_spare_parts_return_by_status_approved(0, 20);
+    const api = SparePartWarehouseReturnAPI(requestAction);
+    const [approvedResponse, partialResponse] = await Promise.all([
+      api.paga_fetch_spare_parts_return_by_status_approved(0, 1, undefined, undefined, 'APPROVED'),
+      api.paga_fetch_spare_parts_return_by_status_approved(0, 1, undefined, undefined, 'PARTIAL_RETURN'),
+    ]);
 
-    return (response as any)?.total ?? 0;
+    return ((approvedResponse as any)?.total ?? 0) + ((partialResponse as any)?.total ?? 0);
   } catch (error) {
     console.error('Failed to count returns:', error);
     return 0;

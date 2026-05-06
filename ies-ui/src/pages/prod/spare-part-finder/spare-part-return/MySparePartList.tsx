@@ -354,7 +354,7 @@ export default function MySparePartList() {
             return {
               data: result.items,
               success: true,
-              total: result.items.length,
+              total: result.total,
             };
           }}
           rowSelection={{

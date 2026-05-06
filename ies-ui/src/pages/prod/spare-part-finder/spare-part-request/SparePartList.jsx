@@ -83,6 +83,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const canSeeStatusFilter = access.canSpfWarehouseStaff || access.canAdmin;
   const canSelectRows = access.canSpfRequester || access.canSpfApprover;
   const canManageImages = access.canSpfWarehouseStaff || access.canAdmin;
+  const canExportExcel = access.canSpfWarehouseStaff || access.canAdmin;
 
   const [searchInputValue, setSearchInputValue] = useState('');
   const [searchValue, setSearchValue] = useState('');
@@ -721,9 +722,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             />
           {/* ) : null} */}
 
-          <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
-            Export Excel
-          </Button>
+          {canExportExcel ? (
+            <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
+              Export Excel
+            </Button>
+          ) : null}
 
           {/* <RangePicker
             allowClear
@@ -970,14 +973,16 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         onChange={handleImportFileChange}
       />
 
-      <RequestsWarehouseExportExcel
-        open={exportModalOpen}
-        loading={exportLoading}
-        businessUnitOptions={knownBusinessUnits}
-        showDateRange={false}
-        onCancel={() => setExportModalOpen(false)}
-        onSave={exportRequests}
-      />
+      {canExportExcel ? (
+        <RequestsWarehouseExportExcel
+          open={exportModalOpen}
+          loading={exportLoading}
+          businessUnitOptions={knownBusinessUnits}
+          showDateRange={false}
+          onCancel={() => setExportModalOpen(false)}
+          onSave={exportRequests}
+        />
+      ) : null}
 
       <SpfDetails
         open={detailsOpen}

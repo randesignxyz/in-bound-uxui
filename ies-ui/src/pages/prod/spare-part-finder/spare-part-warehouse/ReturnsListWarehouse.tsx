@@ -1,5 +1,6 @@
 import { EyeOutlined, FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProColumns, ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, Card, DatePicker, Input, Select, Tag, Typography, message } from 'antd';
 import { Space } from 'antd/lib';
 import dayjs from 'dayjs';
@@ -82,6 +83,8 @@ interface ReturnsListWarehouseProps {
 }
 
 export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseProps = {}) {
+  const access = useAccess();
+  const canExportExcel = access.canSpfWarehouseStaff || access.canAdmin;
   const actionRef = useRef<ActionType>();
   const [selectedReturn, setSelectedReturn] = useState<WarehouseReturnRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -323,9 +326,11 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
               actionRef.current?.reloadAndRest?.();
             }}
           />
-          <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
-            Export Excel
-          </Button>
+          {canExportExcel ? (
+            <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
+              Export Excel
+            </Button>
+          ) : null}
         </Space>
       </div>
 
@@ -393,14 +398,16 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
         } : null}
         returnId={selectedReturn?.returnId}
       />
-      <RequestsWarehouseExportExcel
-        open={exportModalOpen}
-        loading={exportLoading}
-        businessUnitOptions={knownBusinessUnits}
-        reportName="return_by_date_range(default_today_7dayts)_promt_by_BU"
-        onCancel={() => setExportModalOpen(false)}
-        onSave={exportRequests}
-      />
+      {canExportExcel ? (
+        <RequestsWarehouseExportExcel
+          open={exportModalOpen}
+          loading={exportLoading}
+          businessUnitOptions={knownBusinessUnits}
+          reportName="return_by_date_range(default_today_7dayts)_promt_by_BU"
+          onCancel={() => setExportModalOpen(false)}
+          onSave={exportRequests}
+        />
+      ) : null}
     </>
   );
 }

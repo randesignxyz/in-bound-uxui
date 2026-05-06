@@ -28,6 +28,8 @@ type FormValues = {
   businessUnits?: string[];
 };
 
+const ALL_BUSINESS_UNITS = 'All';
+
 const getDateRangeByPeriod = (period: ExportPeriod): [Dayjs, Dayjs] => {
   const today = dayjs();
 
@@ -63,9 +65,7 @@ export default function RequestsWarehouseExportExcel({
       dateRange: showDateRange ? getDateRangeByPeriod('week') : undefined,
       businessUnits: defaultBusinessUnits?.length
         ? defaultBusinessUnits
-        : businessUnitOptions[0]
-          ? [businessUnitOptions[0]]
-          : [],
+        : [ALL_BUSINESS_UNITS],
     });
   }, [businessUnitOptions, defaultBusinessUnits, form, open, showDateRange]);
 
@@ -90,7 +90,9 @@ export default function RequestsWarehouseExportExcel({
               ? values.dateRange || getDateRangeByPeriod(values.period)
               : undefined;
 
-            const selectedBU = values.businessUnits || [];
+            const selectedBU = values.businessUnits?.includes(ALL_BUSINESS_UNITS)
+              ? []
+              : values.businessUnits || [];
             await onSave({
               dateRange,
               businessUnits: selectedBU,
@@ -141,7 +143,25 @@ export default function RequestsWarehouseExportExcel({
             allowClear
             showSearch
             placeholder="All Business Units"
-            options={businessUnitOptions.map((item) => ({ label: item, value: item }))}
+            options={[
+              { label: ALL_BUSINESS_UNITS, value: ALL_BUSINESS_UNITS },
+              ...businessUnitOptions
+                .filter((item) => item !== ALL_BUSINESS_UNITS)
+                .map((item) => ({ label: item, value: item })),
+            ]}
+            onSelect={(value) => {
+              if (value === ALL_BUSINESS_UNITS) {
+                form.setFieldValue('businessUnits', [ALL_BUSINESS_UNITS]);
+                return;
+              }
+
+              form.setFieldValue(
+                'businessUnits',
+                (form.getFieldValue('businessUnits') || []).filter(
+                  (item: string) => item !== ALL_BUSINESS_UNITS,
+                ),
+              );
+            }}
           />
         </Form.Item>
       </Form>

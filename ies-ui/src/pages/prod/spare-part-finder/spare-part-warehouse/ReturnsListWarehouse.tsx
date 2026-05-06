@@ -141,7 +141,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
       try {
         await downloadGenericReport(requestAction)({
           fileName: `spare-part-returns-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
-          type: 'EXCEL',
+          type: 'EXCELOPENXML',
           data: {
             reportName: 'spare_parts_returns',
             reportPath: getUrlReporting('prod'),
@@ -167,7 +167,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
         });
         setExportModalOpen(false);
       } catch (error) {
-        message.error('Failed to export Excel.');
+        message.error('Failed to export XLSX. Please confirm the report service allows SSRS EXCELOPENXML rendering.');
       } finally {
         exportInFlightRef.current = false;
         setExportLoading(false);

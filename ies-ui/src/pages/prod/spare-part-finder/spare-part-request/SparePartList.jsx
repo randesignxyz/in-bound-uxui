@@ -285,7 +285,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     onResubmitDraftHandled?.();
   }, [onResubmitDraftHandled, resubmitDraft]);
 
-  const reloadTable = (resetPage = false) => {
+  const reloadTable = (resetPage = false, delay = 0) => {
     if (reloadTimerRef.current) {
       clearTimeout(reloadTimerRef.current);
       reloadTimerRef.current = undefined;
@@ -296,9 +296,12 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       reloadTimerRef.current = setTimeout(() => {
         reloadTimerRef.current = undefined;
         actionRef.current?.reload?.();
-      }, 0);
+      }, delay);
     } else {
-      actionRef.current?.reload?.();
+      reloadTimerRef.current = setTimeout(() => {
+        reloadTimerRef.current = undefined;
+        actionRef.current?.reload?.();
+      }, delay);
     }
   };
 
@@ -321,7 +324,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     filtersRef.current = nextFilters;
     setFilters(nextFilters);
     abortActiveListRequest();
-    reloadTable(resetPage);
+    reloadTable(resetPage, 120);
   };
 
   const syncSelection = (normalizedKeys, rows = []) => {

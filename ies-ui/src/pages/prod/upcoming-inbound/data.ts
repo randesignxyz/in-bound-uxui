@@ -41,6 +41,8 @@ export interface InboundSupplierMasterListParams {
 }
 
 export interface InboundUomMasterListParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
   searchValue?: string | null;
   status?: string | null;
 }
@@ -69,6 +71,8 @@ export interface InboundSupplierMasterApi {
 
 export interface InboundUomMasterApi {
   id?: number | null;
+  business_unit: string;
+  uom_entry?: number | null;
   uom_code: string;
   uom_name: string;
   status: string;
@@ -93,15 +97,12 @@ export interface InboundItemMasterApi {
 
 export interface InboundGoodsReceiptSearch {
   searchValue?: string;
-  sort?: {
-    createdDate?: SortOrder;
-    actual_receipt_date?: SortOrder;
-  };
   businessUnit?: string | null;
   business_unit?: string | null;
   status?: string | null;
   processState?: string | null;
   processStates?: string[] | null;
+  qcQueueStatus?: string | null;
   receiptType?: string | null;
   receiptSourceType?: string | null;
   receiptSourceGroup?: 'STANDARD' | 'TEMP' | null;

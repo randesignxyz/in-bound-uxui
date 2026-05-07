@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { Badge, Tag, Typography } from 'antd';
+import type { ProColumns } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
-import type { ActionType, ProColumns } from '@ant-design/pro-table';
+import { Badge, Tag, Typography } from 'antd';
+import type { TablePaginationConfig } from 'antd/es/table';
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import {
   GoodsReceipt,
   InboundHistoryStatus,
+  getGoodsReceiptSourceColor,
   getInboundHistoryStatus,
   getInboundHistoryStatusColor,
-  getGoodsReceiptSourceColor,
   getPOLinkStatusColor,
   getReceiptApprovedGrNumber,
   getReceiptDisplayStatusColor,
@@ -27,16 +28,12 @@ interface InboundGRTableProps {
   receipts: GoodsReceipt[];
   onViewDetail: (gr: GoodsReceipt) => void;
   typeFilter: 'ALL' | 'Planned' | 'Unplanned';
-  statusFilter:
-    | 'ALL'
-    | InboundHistoryStatus
-    | 'SUPERVISOR_PENDING'
-    | 'QC_PENDING'
-    | 'QC_REJECTED';
+  statusFilter: 'ALL' | InboundHistoryStatus | 'SUPERVISOR_PENDING' | 'QC_PENDING' | 'QC_REJECTED';
   headerTitle?: ReactNode;
+  toolbarExtra?: ReactNode;
   hideSourceAndPoLink?: boolean;
   showNotificationBadge?: boolean;
-  onRefresh?: () => Promise<void> | void;
+  pagination?: TablePaginationConfig;
 }
 
 function matchesStatusFilter(
@@ -68,13 +65,11 @@ export function InboundGRTable({
   typeFilter,
   statusFilter,
   headerTitle,
+  toolbarExtra,
   hideSourceAndPoLink = false,
   showNotificationBadge = false,
-  onRefresh,
+  pagination,
 }: InboundGRTableProps) {
-  const actionRef = useRef<ActionType>();
-  const originalReloadRef = useRef<ActionType['reload']>();
-
   const filteredReceipts = useMemo(() => {
     let data = receipts;
     if (typeFilter !== 'ALL') {
@@ -83,7 +78,9 @@ export function InboundGRTable({
     data = data.filter((r) => matchesStatusFilter(r, statusFilter));
     return data;
   }, [receipts, typeFilter, statusFilter]);
-  const showApprovedGrColumn = filteredReceipts.some((receipt) => getReceiptApprovedGrNumber(receipt));
+  const showApprovedGrColumn = filteredReceipts.some((receipt) =>
+    getReceiptApprovedGrNumber(receipt),
+  );
 
   const columns: ProColumns<GoodsReceipt>[] = [
     {
@@ -95,11 +92,7 @@ export function InboundGRTable({
           showNotificationBadge && getInboundHistoryStatus(r) === 'Rejected';
 
         return (
-          <Badge
-            dot={shouldShowRowBadge}
-            color="#ff4d4f"
-            offset={[2, 2]}
-          >
+          <Badge dot={shouldShowRowBadge} color="#ff4d4f" offset={[2, 2]}>
             <a onClick={() => onViewDetail(r)}>{getReceiptIrNumber(r)}</a>
           </Badge>
         );
@@ -175,7 +168,6 @@ export function InboundGRTable({
       key: 'createdDate',
       title: 'Created Date',
       dataIndex: 'createdDate',
-      sorter: (a: GoodsReceipt, b: GoodsReceipt) => a.createdDate.localeCompare(b.createdDate),
     },
     {
       key: 'status',
@@ -184,7 +176,9 @@ export function InboundGRTable({
         const historyStatus = getInboundHistoryStatus(r);
         const sapStatus = getReceiptSapStatus(r);
         const displayStatus = sapStatus || historyStatus;
-        const color = sapStatus ? getReceiptDisplayStatusColor(sapStatus) : getInboundHistoryStatusColor(historyStatus);
+        const color = sapStatus
+          ? getReceiptDisplayStatusColor(sapStatus)
+          : getInboundHistoryStatusColor(historyStatus);
 
         return (
           <Tag color={color} bordered={false}>
@@ -195,24 +189,8 @@ export function InboundGRTable({
     },
   ];
 
-  useEffect(() => {
-    if (!actionRef.current || !onRefresh) {
-      return;
-    }
-
-    if (!originalReloadRef.current) {
-      originalReloadRef.current = actionRef.current.reload?.bind(actionRef.current);
-    }
-
-    actionRef.current.reload = async (resetPageIndex?: boolean) => {
-      await onRefresh();
-      return originalReloadRef.current?.(resetPageIndex);
-    };
-  }, [onRefresh]);
-
   return (
     <ProTable<GoodsReceipt>
-      actionRef={actionRef}
       headerTitle={headerTitle}
       columns={columns}
       dataSource={filteredReceipts}
@@ -220,8 +198,9 @@ export function InboundGRTable({
       bordered
       size="small"
       search={false}
-      options={{ density: false, setting: false }}
-      pagination={{ pageSize: 10, showSizeChanger: true }}
+      options={{ density: false, setting: false, reload: false }}
+      toolBarRender={() => (toolbarExtra ? [toolbarExtra] : [])}
+      pagination={pagination ?? { pageSize: 10, showSizeChanger: true }}
       onRow={(record) => ({
         onClick: () => onViewDetail(record),
         style: { cursor: 'pointer' },

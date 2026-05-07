@@ -20,6 +20,7 @@ export interface InboundPurchaseOrderSearch {
   advanceSearch?: {
     businessUnit?: string | null;
     business_unit?: string | null;
+    supplier?: string | null;
     type?: string | null;
     expectedDate?: string | null;
     dateFrom?: string | null;
@@ -84,6 +85,11 @@ export interface InboundGoodsReceiptSearch {
   business_unit?: string | null;
   status?: string | null;
   processState?: string | null;
+  processStates?: string[] | null;
+  receiptType?: string | null;
+  receiptSourceType?: string | null;
+  receiptSourceGroup?: 'STANDARD' | 'TEMP' | null;
+  poLinkStatus?: string | null;
   dateFrom?: string | null;
   dateTo?: string | null;
 }
@@ -118,6 +124,11 @@ export interface InboundExportReportParams {
   dateFrom?: string | null;
   dateTo?: string | null;
   searchValue?: string | null;
+  withoutPoOnly?: boolean | null;
+  agingOnly?: boolean | null;
+  qcPendingOnly?: boolean | null;
+  supervisorPendingOnly?: boolean | null;
+  issueOnly?: boolean | null;
 }
 
 export interface InboundReportParamData {

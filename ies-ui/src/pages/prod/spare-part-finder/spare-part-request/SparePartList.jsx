@@ -1,7 +1,7 @@
 import Icon, { FileExcelOutlined, ReloadOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Button, Card, DatePicker, Input, Modal, Select, Space, Tag, Typography, message } from 'antd';
+import { Button, Card, DatePicker, Input, Modal, Select, Space, Tag, Typography, Upload, message } from 'antd';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getUrlReporting } from '@/pages/ReportUrl';
@@ -91,7 +91,6 @@ const buildResubmitRow = (line, item) => ({
 export default function SparePartListView({ resubmitDraft, onResubmitDraftHandled }) {
   const access = useAccess();
   const actionRef = useRef();
-  const importInputRef = useRef();
   const detailRequestRef = useRef(0);
   const searchDebounceRef = useRef();
   const reloadTimerRef = useRef();
@@ -129,6 +128,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const [requestInitialRemark, setRequestInitialRemark] = useState('');
   const [requestInitialPriority, setRequestInitialPriority] = useState('normal');
   const [importingFile, setImportingFile] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsItem, setDetailsItem] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -537,13 +537,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     });
   };
 
-  const handleImportClick = () => {
-    importInputRef.current?.click?.();
-  };
-
-  const handleImportFileChange = async (event) => {
-    const file = event?.target?.files?.[0];
-    event.target.value = '';
+  const importRequestFile = async (file) => {
     if (!file) return;
 
     if (!String(file.name || '').toLowerCase().endsWith('.xlsx')) {
@@ -573,6 +567,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       setRequestInitialPriority('normal');
       setRequestItems(importedItems);
       setRequestModalOpen(true);
+      setImportModalOpen(false);
       message.success(`Imported ${result.successCount} row(s) successfully.`);
     } catch (error) {
       const errorMessage =
@@ -584,6 +579,15 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     } finally {
       setImportingFile(false);
     }
+  };
+
+  const handleImportClick = () => {
+    setImportModalOpen(true);
+  };
+
+  const handleImportBeforeUpload = async (file) => {
+    await importRequestFile(file);
+    return Upload.LIST_IGNORE;
   };
 
   const openDetails = async (item) => {
@@ -1045,13 +1049,54 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         initialPriority={requestInitialPriority}
       />
 
-      <input
-        ref={importInputRef}
-        type="file"
-        accept=".xlsx"
-        style={{ display: 'none' }}
-        onChange={handleImportFileChange}
-      />
+      <Modal
+        open={importModalOpen}
+        title="Import Request File"
+        footer={null}
+        onCancel={() => {
+          if (!importingFile) {
+            setImportModalOpen(false);
+          }
+        }}
+        destroyOnClose
+      >
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Upload.Dragger
+            accept=".xlsx"
+            maxCount={1}
+            multiple={false}
+            showUploadList={false}
+            beforeUpload={handleImportBeforeUpload}
+            disabled={importingFile}
+            style={{ padding: '12px 0' }}
+          >
+            <p className="ant-upload-drag-icon">
+              <UploadOutlined />
+            </p>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>
+              Drag and drop an Excel file here
+            </Typography.Text>
+            <Typography.Text type="secondary">
+              or click this area to choose a `.xlsx` file
+            </Typography.Text>
+          </Upload.Dragger>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Upload
+              accept=".xlsx"
+              maxCount={1}
+              multiple={false}
+              showUploadList={false}
+              beforeUpload={handleImportBeforeUpload}
+              disabled={importingFile}
+            >
+              <Button icon={<FileExcelOutlined />} loading={importingFile}>
+                Choose File
+              </Button>
+            </Upload>
+          </div>
+        </Space>
+      </Modal>
 
       {canExportExcel ? (
         <RequestsWarehouseExportExcel

@@ -228,6 +228,9 @@ function InboundExportReportModal({
   const [form] = Form.useForm<InboundExportFormValues>();
   const period = Form.useWatch('period', form);
   const reportTarget = Form.useWatch('reportTarget', form);
+  const shouldExpandModal =
+    reportOptions.length > 2 || reportOptions.some((option) => option.label.length > 18);
+  const modalWidth = shouldExpandModal ? 760 : 520;
 
   useEffect(() => {
     if (!open) return;
@@ -256,7 +259,8 @@ function InboundExportReportModal({
     <Modal
       title="Export Report"
       open={open}
-      width={520}
+      width={modalWidth}
+      style={{ maxWidth: 'calc(100vw - 32px)' }}
       onCancel={onCancel}
       confirmLoading={loading}
       footer={[
@@ -287,7 +291,21 @@ function InboundExportReportModal({
     >
       <Form form={form} layout="vertical">
         <Form.Item name="reportTarget" label="Report Type" rules={[{ required: true }]}>
-          <Radio.Group optionType="button" buttonStyle="solid" options={reportOptions} />
+          <Radio.Group
+            optionType="button"
+            buttonStyle="solid"
+            style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}
+          >
+            {reportOptions.map((option) => (
+              <Radio.Button
+                key={option.value}
+                value={option.value}
+                style={{ marginInlineEnd: 0, marginBlockEnd: 0, borderRadius: 6 }}
+              >
+                {option.label}
+              </Radio.Button>
+            ))}
+          </Radio.Group>
         </Form.Item>
 
         <Form.Item name="period" label="Export Period" rules={[{ required: true }]}>
@@ -414,7 +432,11 @@ function isVisibleOperationalReceipt(receipt: GoodsReceipt) {
 
 function getReceiptDateForFilter(receipt: GoodsReceipt): string {
   return (
-    receipt.actualReceiptDate || receipt.createdDate?.slice(0, 10) || receipt.expectedDate || ''
+    receipt.actualReceiptDate ||
+    receipt.postingDate ||
+    receipt.createdDate?.slice(0, 10) ||
+    receipt.expectedDate ||
+    ''
   );
 }
 
@@ -478,8 +500,6 @@ function getQcStatusFilter(filter: QcQueueStatusFilter): string | null {
       return null;
     case 'Correction Required':
       return 'Rejected';
-    case 'Pending':
-      return 'QC_PENDING';
     default:
       return filter;
   }
@@ -684,6 +704,8 @@ export default function UpcomingInboundListview({
     if (canUseSupervisorRole) roles.push('WAREHOUSE_SUPERVISOR');
     return roles;
   }, [canUseQcRole, canUseSupervisorRole, canUseWarehouseRole]);
+  const hasInboundWorkspaceAccess =
+    isInboundAdmin || inboundVisibleBusinessUnits.length > 0 || inboundRoleOptions.length > 0;
 
   const isRoleSimulationEnabled = USE_STATIC_AUTH;
   const activeRole: InboundWorkspaceRole =
@@ -764,6 +786,10 @@ export default function UpcomingInboundListview({
     [selectedWarehousePOs],
   );
   const agingPoItemCount = inboundStats.agingPoItems;
+  const purchaseOrderRequestIdRef = useRef(0);
+  const receiptRequestIdRef = useRef(0);
+  const warehouseSupportRequestIdRef = useRef(0);
+  const dashboardSummaryRequestIdRef = useRef(0);
 
   const buildBusinessUnitCriteria = () => ({
     businessUnit: activeBusinessUnitFilter || null,
@@ -774,8 +800,8 @@ export default function UpcomingInboundListview({
       ...buildBusinessUnitCriteria(),
       supplier: poVendorFilter === 'ALL' ? null : poVendorFilter,
       type: poTypeFilter === 'ALL' ? null : poTypeFilter,
-      dateFrom: null,
-      dateTo: null,
+      dateFrom: sharedDateRangeFilter?.[0] ?? null,
+      dateTo: sharedDateRangeFilter?.[1] ?? null,
       expectedDate: null,
     };
   };
@@ -797,6 +823,7 @@ export default function UpcomingInboundListview({
     searchValue?: string;
     receiptType?: string | null;
     receiptSourceGroup?: 'STANDARD' | 'TEMP' | null;
+    qcQueueStatus?: string | null;
     status?: string | null;
     processStates?: string[] | null;
   } => {
@@ -808,12 +835,13 @@ export default function UpcomingInboundListview({
       searchValue?: string;
       receiptType?: string | null;
       receiptSourceGroup?: 'STANDARD' | 'TEMP' | null;
+      qcQueueStatus?: string | null;
       status?: string | null;
       processStates?: string[] | null;
     } = {
       ...buildBusinessUnitCriteria(),
-      dateFrom: null,
-      dateTo: null,
+      dateFrom: sharedDateRangeFilter?.[0] ?? null,
+      dateTo: sharedDateRangeFilter?.[1] ?? null,
     };
 
     if (mode === 'operations') {
@@ -823,12 +851,21 @@ export default function UpcomingInboundListview({
       }
 
       if (activeRole === 'QC') {
-        criteria.status = getQcStatusFilter(qcStatusFilter);
-      }
-
-      if (activeRole === 'WAREHOUSE_SUPERVISOR') {
+        criteria.qcQueueStatus = getQcStatusFilter(qcStatusFilter);
+      } else if (activeRole === 'WAREHOUSE_SUPERVISOR') {
         criteria.receiptSourceGroup = queueSourceFilter === 'ALL' ? null : queueSourceFilter;
         criteria.status = getSupervisorQueueStatusFilter(historyStatusFilter);
+      }
+
+      if (!criteria.status && !criteria.processStates && !criteria.qcQueueStatus) {
+        criteria.processStates = [
+          'GRPO_DRAFT',
+          'CORRECTION_REQUIRED',
+          'PENDING_SUPERVISOR_REVIEW',
+          'MISMATCH_EXCEPTION',
+          'QC_PENDING',
+          'SUPERVISOR_APPROVED',
+        ];
       }
 
       return criteria;
@@ -916,6 +953,7 @@ export default function UpcomingInboundListview({
     current = poPagination.current,
     pageSize = poPagination.pageSize,
   ) => {
+    const requestId = ++purchaseOrderRequestIdRef.current;
     const poResult = await services.pagePurchaseOrders({
       criteria: {
         searchValue: poSearchValue.trim() || undefined,
@@ -926,6 +964,10 @@ export default function UpcomingInboundListview({
         pageSize,
       },
     });
+
+    if (requestId !== purchaseOrderRequestIdRef.current) {
+      return;
+    }
 
     const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.items);
     applyPurchaseOrderResult(nextPurchaseOrders);
@@ -941,6 +983,7 @@ export default function UpcomingInboundListview({
     current: number,
     pageSize: number,
   ) => {
+    const requestId = ++receiptRequestIdRef.current;
     const receiptResult = await services.pageGoodsReceipts({
       criteria: buildGoodsReceiptCriteria(mode),
       pagination: {
@@ -948,6 +991,10 @@ export default function UpcomingInboundListview({
         pageSize,
       },
     });
+
+    if (requestId !== receiptRequestIdRef.current) {
+      return;
+    }
 
     const nextReceipts = receiptResult.items
       .map(normalizeReceiptForUI)
@@ -968,11 +1015,16 @@ export default function UpcomingInboundListview({
   };
 
   const loadDashboardSummary = async () => {
+    const requestId = ++dashboardSummaryRequestIdRef.current;
     const summaryResult = await services.getDashboardSummary(buildDashboardSummaryParams());
+    if (requestId !== dashboardSummaryRequestIdRef.current) {
+      return;
+    }
     setInboundStats(summaryResult);
   };
 
   const loadWarehouseSupportReceipts = async () => {
+    const requestId = ++warehouseSupportRequestIdRef.current;
     const [awaitingPoResult, exceptionResult] = await Promise.all([
       services.pageGoodsReceipts({
         criteria: {
@@ -1001,11 +1053,19 @@ export default function UpcomingInboundListview({
       }),
     ]);
 
+    if (requestId !== warehouseSupportRequestIdRef.current) {
+      return;
+    }
+
     setAwaitingPOLinkReceipts(awaitingPoResult.items.map(normalizeReceiptForUI));
     setExceptionQueueReceipts(exceptionResult.items.map(normalizeReceiptForUI));
   };
 
   const loadInboundData = async () => {
+    if (!hasInboundWorkspaceAccess) {
+      return;
+    }
+
     if (!isInboundAdmin && inboundVisibleBusinessUnits.length > 0 && !activeBusinessUnitFilter) {
       return;
     }
@@ -1048,6 +1108,10 @@ export default function UpcomingInboundListview({
   };
 
   const refreshCurrentTable = async () => {
+    if (!hasInboundWorkspaceAccess) {
+      return;
+    }
+
     if (activeRole === 'WAREHOUSE_STAFF') {
       await loadPurchaseOrders(poPagination.current, poPagination.pageSize);
       return;
@@ -1056,6 +1120,29 @@ export default function UpcomingInboundListview({
     const pagination = effectiveInboundView === 'history' ? historyPagination : queuePagination;
     await loadReceipts(effectiveInboundView, pagination.current, pagination.pageSize);
   };
+
+  useEffect(() => {
+    if (!hasInboundWorkspaceAccess) {
+      setPurchaseOrders([]);
+      setReceipts([]);
+      setAwaitingPOLinkReceipts([]);
+      setExceptionQueueReceipts([]);
+      setSelectedPOs([]);
+      setSelectedWarehousePONumbers([]);
+      setSelectedPODetail(null);
+      setSelectedGR(null);
+      setWarehouseCorrectionReceipt(null);
+      setLinkPOReceipt(null);
+      setSupervisorApprovalSuccess(null);
+      setPoPagination((prev) => ({ ...prev, current: 1, total: 0 }));
+      setQueuePagination((prev) => ({ ...prev, current: 1, total: 0 }));
+      setHistoryPagination((prev) => ({ ...prev, current: 1, total: 0 }));
+      purchaseOrderRequestIdRef.current += 1;
+      receiptRequestIdRef.current += 1;
+      warehouseSupportRequestIdRef.current += 1;
+      dashboardSummaryRequestIdRef.current += 1;
+    }
+  }, [hasInboundWorkspaceAccess]);
 
   useEffect(() => {
     if (isInboundAdmin) return;
@@ -1070,6 +1157,10 @@ export default function UpcomingInboundListview({
   }, [activeBusinessUnit, inboundVisibleBusinessUnitsKey, isInboundAdmin]);
 
   useEffect(() => {
+    if (!hasInboundWorkspaceAccess) {
+      return;
+    }
+
     if (!isCreateInboundRoute && !isReceiveWithoutPoRoute) {
       setSelectedPOs([]);
       setSelectedWarehousePONumbers([]);
@@ -1083,11 +1174,14 @@ export default function UpcomingInboundListview({
       return;
     }
     void loadDashboardSummary();
-  }, [activeBusinessUnit, isCreateInboundRoute, isReceiveWithoutPoRoute]);
+  }, [activeBusinessUnit, hasInboundWorkspaceAccess, isCreateInboundRoute, isReceiveWithoutPoRoute]);
 
   useEffect(() => {
+    if (!hasInboundWorkspaceAccess) {
+      return;
+    }
     void loadMasterData();
-  }, [activeBusinessUnitFilter]);
+  }, [activeBusinessUnitFilter, hasInboundWorkspaceAccess]);
 
   useEffect(() => {
     if (!hasInitializedDashboardSummary.current) {
@@ -1108,6 +1202,9 @@ export default function UpcomingInboundListview({
   }, [inboundRoleOptions, isRoleSimulationEnabled, simulationRole]);
 
   useEffect(() => {
+    if (!hasInboundWorkspaceAccess) {
+      return;
+    }
     setPoPagination((prev) => ({ ...prev, current: 1 }));
     if (activeRole === 'WAREHOUSE_STAFF') {
       void loadPurchaseOrders(1, poPagination.pageSize);
@@ -1120,9 +1217,14 @@ export default function UpcomingInboundListview({
     poSearchValue,
     poTypeFilter,
     poVendorFilter,
+    sharedDateRangeFilter,
+    hasInboundWorkspaceAccess,
   ]);
 
   useEffect(() => {
+    if (!hasInboundWorkspaceAccess) {
+      return;
+    }
     setQueuePagination((prev) => ({ ...prev, current: 1 }));
     if (activeRole !== 'WAREHOUSE_STAFF' && effectiveInboundView === 'operations') {
       void loadReceipts('operations', 1, queuePagination.pageSize);
@@ -1136,9 +1238,14 @@ export default function UpcomingInboundListview({
     queueSearchValue,
     queueSourceFilter,
     queueTypeFilter,
+    sharedDateRangeFilter,
+    hasInboundWorkspaceAccess,
   ]);
 
   useEffect(() => {
+    if (!hasInboundWorkspaceAccess) {
+      return;
+    }
     setHistoryPagination((prev) => ({ ...prev, current: 1 }));
     if (effectiveInboundView === 'history') {
       void loadReceipts('history', 1, historyPagination.pageSize);
@@ -1149,6 +1256,8 @@ export default function UpcomingInboundListview({
     effectiveInboundView,
     historyStatusFilter,
     historyTypeFilter,
+    sharedDateRangeFilter,
+    hasInboundWorkspaceAccess,
   ]);
 
   const syncReceiptInState = (receipt: GoodsReceipt) => {
@@ -2384,7 +2493,7 @@ export default function UpcomingInboundListview({
     <>
       <style>{inboundWorkspaceMotionStyles}</style>
       <BreadCrumbCom separator=">" routes={routes} />
-      {workspaceContent ? (
+      {!hasInboundWorkspaceAccess && !workspaceContent ? null : workspaceContent ? (
         workspaceContent
       ) : (
         <div style={{ marginTop: 16 }}>
@@ -2776,8 +2885,6 @@ export default function UpcomingInboundListview({
                 <InboundGRTable
                   receipts={historyReceipts}
                   onViewDetail={handleOpenGRDetail}
-                  typeFilter="ALL"
-                  statusFilter="ALL"
                   headerTitle={inboundReceivingHeaderTitle}
                   toolbarExtra={historyTableToolbar}
                   hideSourceAndPoLink={

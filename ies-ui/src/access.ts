@@ -186,6 +186,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) => item === 'ROLE_PURCHASE_ADMIN') || false,
     canAccessInboundWarehouseStaff: hasInboundWarehouseRole || isSuperAdmin,
     canSyncInboundPurchaseOrders: hasInboundSyncAdminRole || hasInboundSupervisorRole || isSuperAdmin,
+    canSyncInboundMasterData: hasInboundSyncAdminRole || hasInboundSupervisorRole || isSuperAdmin,
     canAccessInboundQc: hasInboundQcRole || isSuperAdmin,
     canAccessInboundSupervisor: hasInboundSupervisorRole || isSuperAdmin,
     inboundVisibleBusinessUnits: isSuperAdmin ? ['*'] : inboundVisibleBusinessUnits,

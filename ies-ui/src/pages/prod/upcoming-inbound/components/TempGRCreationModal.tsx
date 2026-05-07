@@ -191,11 +191,6 @@ export function TempGRCreationModal({
     [businessUnit, warehouseOptions],
   );
 
-  useEffect(() => {
-    if (!open || selectedWarehouseCode || visibleWarehouseOptions.length !== 1) return;
-    setSelectedWarehouseCode(visibleWarehouseOptions[0].value);
-  }, [open, selectedWarehouseCode, visibleWarehouseOptions]);
-
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     setItems((prev) =>
       prev.map((item, itemIndex) => {

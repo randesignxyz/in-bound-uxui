@@ -785,11 +785,14 @@ export function GRDetailSidebar({
         title: 'QC Decision',
         key: 'qcDecision',
         width: 120,
-        render: (_: unknown, row: EditableSidebarItem) => (
-          <Tag color={row.qcDecision === 'Reject' ? 'red' : 'green'}>
-            {row.qcDecision || 'Pass'}
-          </Tag>
-        ),
+        render: (_: unknown, row: EditableSidebarItem) => {
+          const decision = row.qcDecision;
+          return (
+            <Tag color={decision === 'Reject' ? 'red' : decision === 'Pass' ? 'green' : 'default'}>
+              {decision || 'Pending'}
+            </Tag>
+          );
+        },
       },
     );
   }

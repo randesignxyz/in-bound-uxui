@@ -172,7 +172,7 @@ export default function RequestsListWarehouse() {
       try {
         await downloadGenericReport(requestActions)({
           fileName: `spare-part-requests-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
-          type: 'EXCEL',
+          type: 'EXCELOPENXML',
           data: {
             reportName: 'spare_parts_requests',
             reportPath: getUrlReporting('prod'),
@@ -197,13 +197,13 @@ export default function RequestsListWarehouse() {
         });
         setExportModalOpen(false);
       } catch (error) {
-        message.error('Failed to export Excel.');
+        message.error('Failed to export XLSX. Please confirm the report service allows SSRS EXCELOPENXML rendering.');
       } finally {
         exportInFlightRef.current = false;
         setExportLoading(false);
       }
     },
-    [],
+    [requestActions],
   );
 
   const filteredRequests = useMemo(

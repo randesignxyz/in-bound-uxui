@@ -104,6 +104,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const [categoryItems, setCategoryItems] = useState([]);
   const [knownWarehouses, setKnownWarehouses] = useState([]);
   const [knownBusinessUnits, setKnownBusinessUnits] = useState([]);
+  const [canLoadFilterOptions, setCanLoadFilterOptions] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const exportInFlightRef = useRef(false);
@@ -133,6 +134,8 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const businessUnitOptions = knownBusinessUnits.map((item) => ({ label: item, value: item }));
 
   useEffect(() => {
+    if (!canLoadFilterOptions) return;
+
     fetchSparePartCategories()
       .then((items) => setCategoryItems(items.filter((item) => item?.id && item?.category_name)))
       .catch(() => undefined);
@@ -140,9 +143,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     fetchSparePartBusinessUnits()
       .then((items) => setKnownBusinessUnits(items.map(i => i.businessUnit).filter(Boolean)))
       .catch(() => undefined);
-  }, []);
+  }, [canLoadFilterOptions]);
 
   useEffect(() => {
+    if (!canLoadFilterOptions) return;
+
     const fetchWarehouses = async () => {
       try {
         const selectedBusinessUnits = filters.businessUnits.filter(Boolean);
@@ -168,7 +173,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       }
     };
     fetchWarehouses();
-  }, [filters.businessUnits, filters.warehouse]);
+  }, [canLoadFilterOptions, filters.businessUnits, filters.warehouse]);
 
   useEffect(() => {
     if (searchInputValue === searchValue) return;
@@ -342,6 +347,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       if (activeListControllerRef.current === controller) {
         activeListControllerRef.current = undefined;
       }
+      setCanLoadFilterOptions(true);
     }
 
     let rows = response.items || [];
@@ -568,15 +574,15 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   };
 
   const exportRequests = useCallback(
-    async ({ dateRange, businessUnits }) => {
+    async ({ dateRange, businessUnits, warehouses }) => {
       if (exportInFlightRef.current) return;
 
       exportInFlightRef.current = true;
       setExportLoading(true);
       try {
-        await downloadGenericReport(requestActions)?.({
+        const params = {
           fileName: `spare-parts-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
-          type: 'EXCEL',
+          type: 'EXCELOPENXML',
           data: {
             reportName: 'spare_parts',
             reportPath: getUrlReporting('prod'),
@@ -585,13 +591,20 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
                 key: 'BusinessUnit',
                 value: businessUnits.length > 0 ? businessUnits.join(',') : 'All',
                 type: 'string',
-              }
+              },
+              {
+                key: 'Warehouse',
+                value: warehouses?.length > 0 ? warehouses.join(',') : 'All',
+                type: 'string',
+              },
             ],
           },
-        });
+        };
+
+        await downloadGenericReport(requestActions)?.(params);
         setExportModalOpen(false);
       } catch (error) {
-        message.error('Failed to export Excel.');
+        message.error('Failed to export XLSX. Please confirm the report service allows SSRS EXCELOPENXML rendering.');
       } finally {
         exportInFlightRef.current = false;
         setExportLoading(false);
@@ -1020,12 +1033,17 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
       {canExportExcel ? (
         <RequestsWarehouseExportExcel
-          open={exportModalOpen}
-          loading={exportLoading}
-          businessUnitOptions={knownBusinessUnits}
-          showDateRange={false}
-          onCancel={() => setExportModalOpen(false)}
-          onSave={exportRequests}
+        open={exportModalOpen}
+        loading={exportLoading}
+        businessUnitOptions={knownBusinessUnits}
+        defaultBusinessUnits={filters.businessUnits.length > 0 ? filters.businessUnits : undefined}
+        warehouseOptions={knownWarehouses}
+        defaultWarehouses={filters.warehouse ? [filters.warehouse] : undefined}
+        reportName="spare_parts"
+        showWarehouse
+        showDateRange={false}
+        onCancel={() => setExportModalOpen(false)}
+        onSave={exportRequests}
         />
       ) : null}
 

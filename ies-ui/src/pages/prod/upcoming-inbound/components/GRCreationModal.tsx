@@ -707,7 +707,7 @@ export function GRCreationModal({
       setPostingDate(initialReceipt.postingDate || dayjs().format('YYYY-MM-DD'));
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
       setDeliveryNoteNumber(initialReceipt.deliveryNoteNumber || '');
-      setSelectedWarehouseCode(initialReceipt.receiverWarehouseName || warehouseOptions[0]?.value || '');
+      setSelectedWarehouseCode(initialReceipt.receiverWarehouseName || '');
       setPoDeliveryNotes(buildInitialPoDeliveryNotes(purchaseOrders, initialReceipt));
       setItems(
         initialReceipt.items.map((item) => ({
@@ -727,7 +727,7 @@ export function GRCreationModal({
     setPostingDate(dayjs().format('YYYY-MM-DD'));
     setActualReceiptDate(dayjs().format('YYYY-MM-DD'));
     setDeliveryNoteNumber('');
-    setSelectedWarehouseCode(warehouseOptions[0]?.value || '');
+    setSelectedWarehouseCode('');
     setPoDeliveryNotes(buildInitialPoDeliveryNotes(purchaseOrders));
     setItems(buildInitialItems(purchaseOrders));
     setUploadedFiles([]);
@@ -735,7 +735,7 @@ export function GRCreationModal({
     setErrors({});
     setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
     closeScanModal();
-  }, [correctionMode, initialReceipt, open, purchaseOrders, warehouseOptions]);
+  }, [correctionMode, initialReceipt, open, purchaseOrders]);
 
   const groupedItems = purchaseOrders.map((purchaseOrder) => ({
     poNumber: purchaseOrder.poNumber,

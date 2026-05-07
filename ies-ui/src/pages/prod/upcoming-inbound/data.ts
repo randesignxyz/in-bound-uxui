@@ -52,6 +52,13 @@ export interface InboundWarehouseMasterListParams {
   status?: string | null;
 }
 
+export interface InboundItemMasterListParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
+  searchValue?: string | null;
+  activeOnly?: boolean | null;
+}
+
 export interface InboundSupplierMasterApi {
   id?: number | null;
   business_unit: string;
@@ -73,6 +80,15 @@ export interface InboundWarehouseMasterApi {
   warehouse_code: string;
   warehouse_name: string;
   status: string;
+}
+
+export interface InboundItemMasterApi {
+  id?: number | null;
+  business_unit: string;
+  item_code: string;
+  item_name: string;
+  uom: string;
+  is_active: boolean;
 }
 
 export interface InboundGoodsReceiptSearch {
@@ -118,6 +134,8 @@ export type InboundExportReportKey =
   | 'SUPERVISOR_APPROVAL'
   | 'RECEIVING_STATUS_SUMMARY';
 
+export type InboundExportPlannedFilter = 'ALL' | 'Planned' | 'Unplanned';
+
 export interface InboundExportReportParams {
   reportKey: InboundExportReportKey;
   businessUnit?: string | null;
@@ -129,6 +147,7 @@ export interface InboundExportReportParams {
   qcPendingOnly?: boolean | null;
   supervisorPendingOnly?: boolean | null;
   issueOnly?: boolean | null;
+  plannedFilter?: InboundExportPlannedFilter | null;
 }
 
 export interface InboundReportParamData {

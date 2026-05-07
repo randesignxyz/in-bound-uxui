@@ -54,7 +54,9 @@ import type {
   InboundDashboardSummaryApi,
   InboundDashboardSummaryParams,
   InboundDashboardSummaryRange,
+  InboundExportPlannedFilter,
   InboundExportReportKey,
+  InboundItemMasterApi,
   InboundSaveGoodsReceiptInput,
   InboundSupplierMasterApi,
   InboundUomMasterApi,
@@ -101,6 +103,7 @@ type DashboardSummaryViewMode = InboundDashboardSummaryRange | 'CUSTOM';
 type InboundExportPeriod = 'DAILY' | 'WEEKLY' | 'CUSTOM';
 type InboundExportFormValues = {
   reportTarget: InboundExportReportKey;
+  plannedFilter: InboundExportPlannedFilter;
   period: InboundExportPeriod;
   dateRange?: [Dayjs, Dayjs];
   filterKeys?: InboundExportFilterKey[];
@@ -231,6 +234,7 @@ function InboundExportReportModal({
 
     form.setFieldsValue({
       reportTarget: reportOptions[0]?.value || 'PO_LIST',
+      plannedFilter: 'ALL',
       period: 'DAILY',
       dateRange: getInboundExportDateRange('DAILY'),
       filterKeys: [],
@@ -270,6 +274,7 @@ function InboundExportReportModal({
 
             await onExport({
               reportTarget: values.reportTarget,
+              plannedFilter: values.plannedFilter || 'ALL',
               period: values.period,
               dateRange,
               filterKeys: values.filterKeys || [],
@@ -300,6 +305,20 @@ function InboundExportReportModal({
             ]}
           />
         </Form.Item>
+
+        {reportTarget !== 'PO_LIST' && (
+          <Form.Item name="plannedFilter" label="Receipt Type">
+            <Radio.Group
+              optionType="button"
+              buttonStyle="solid"
+              options={[
+                { label: 'All', value: 'ALL' },
+                { label: 'Planned', value: 'Planned' },
+                { label: 'Unplanned', value: 'Unplanned' },
+              ]}
+            />
+          </Form.Item>
+        )}
 
         <Form.Item name="filterKeys" label="Optional Filters">
           <Checkbox.Group
@@ -534,6 +553,7 @@ export default function UpcomingInboundListview({
   const [warehouseMasterOptions, setWarehouseMasterOptions] = useState<InboundWarehouseMasterApi[]>(
     [],
   );
+  const [itemMasterOptions, setItemMasterOptions] = useState<InboundItemMasterApi[]>([]);
 
   // Shared PO filters
   const [poSearchValue, setPOSearchValue] = useState('');
@@ -707,6 +727,10 @@ export default function UpcomingInboundListview({
     return uomMasterOptions;
   }, [uomMasterOptions]);
 
+  const itemOptionsForTempReceipt = useMemo<InboundItemMasterApi[]>(() => {
+    return itemMasterOptions;
+  }, [itemMasterOptions]);
+
   const sharedDateRangeFilter = useMemo<[string, string] | null>(() => {
     if (dashboardSummaryRange === 'CUSTOM') {
       return dashboardPeriodFilter;
@@ -845,7 +869,7 @@ export default function UpcomingInboundListview({
   };
 
   const loadMasterData = async () => {
-    const [supplierResult, uomResult, warehouseResult] = await Promise.allSettled([
+    const [supplierResult, uomResult, warehouseResult, itemResult] = await Promise.allSettled([
       services.listSuppliers({
         businessUnit: activeBusinessUnitFilter ?? null,
         status: 'Active',
@@ -854,6 +878,10 @@ export default function UpcomingInboundListview({
       services.listWarehouses({
         businessUnit: activeBusinessUnitFilter ?? null,
         status: 'Active',
+      }),
+      services.listItems({
+        businessUnit: activeBusinessUnitFilter ?? null,
+        activeOnly: true,
       }),
     ]);
 
@@ -874,6 +902,13 @@ export default function UpcomingInboundListview({
     } else {
       setWarehouseMasterOptions([]);
       message.warning('Warehouse master data did not load.');
+    }
+
+    if (itemResult.status === 'fulfilled') {
+      setItemMasterOptions(itemResult.value);
+    } else {
+      setItemMasterOptions([]);
+      message.warning('Item master data did not load.');
     }
   };
 
@@ -2001,6 +2036,7 @@ export default function UpcomingInboundListview({
         qcPendingOnly: filterKeys.includes('qcPendingOnly'),
         supervisorPendingOnly: filterKeys.includes('supervisorPendingOnly'),
         issueOnly: filterKeys.includes('issueOnly'),
+        plannedFilter: values.plannedFilter === 'ALL' ? null : values.plannedFilter,
       });
 
       await downloadGenericReport(requestActions)({
@@ -2285,6 +2321,7 @@ export default function UpcomingInboundListview({
           availableBusinessUnits={tempReceiptBusinessUnits}
           supplierOptions={supplierOptionsForTempReceipt}
           uomOptions={uomOptionsForTempReceipt}
+          itemOptions={itemOptionsForTempReceipt}
           warehouseOptions={warehouseMasterOptions}
         />
       ) : (
@@ -2328,6 +2365,7 @@ export default function UpcomingInboundListview({
         availableBusinessUnits={tempReceiptBusinessUnits}
         supplierOptions={supplierOptionsForTempReceipt}
         uomOptions={uomOptionsForTempReceipt}
+        itemOptions={itemOptionsForTempReceipt}
         warehouseOptions={warehouseMasterOptions}
       />
     )) ||

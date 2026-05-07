@@ -12,6 +12,8 @@ import {
   InboundGoodsReceiptApi,
   InboundGoodsReceiptCountParams,
   InboundGoodsReceiptSearch,
+  InboundItemMasterApi,
+  InboundItemMasterListParams,
   InboundGoodsReceiptStatusChangeInput,
   InboundLinkPoInput,
   InboundMarkQcBadgeViewedInput,
@@ -138,6 +140,15 @@ const UpcomingInboundAction = {
     type: 'LIST_QUERY',
     endpoint: 'PROD',
     actionName: 'inbound-list-warehouses',
+    payload: params,
+  }),
+
+  listItems: (
+    params: InboundItemMasterListParams,
+  ): ServiceApiType<InboundItemMasterListParams> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-list-items',
     payload: params,
   }),
 
@@ -364,6 +375,28 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
       });
     },
 
+    listItems: async (
+      params: InboundItemMasterListParams = {},
+    ): Promise<InboundItemMasterApi[]> => {
+      const response = await request<InboundItemMasterApi[]>(`${PROD_API}/inbound/master-data/items`, {
+        method: 'POST',
+        data: params,
+      });
+      const itemsByKey = new Map<string, InboundItemMasterApi>();
+      extractArrayResponse(response)
+        .map(normalizeInboundItemMaster)
+        .filter((item) => item.item_code && item.item_name)
+        .forEach((item) => {
+          const key = `${item.business_unit || 'ALL'}::${item.item_code}`;
+          itemsByKey.set(key, item);
+        });
+
+      return Array.from(itemsByKey.values()).sort((left, right) => {
+        const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
+        return businessUnitCompare || left.item_code.localeCompare(right.item_code);
+      });
+    },
+
     pageGoodsReceipts: async (
       params: InboundGoodsReceiptTableParams,
     ): Promise<Paging<UpcomingInboundGoodsReceipt>> => {
@@ -540,5 +573,21 @@ function normalizeInboundWarehouseMaster(
     warehouse_name:
       value?.warehouse_name ?? value?.warehouseName ?? value?.name ?? warehouseCode ?? '',
     status: value?.status ?? 'Active',
+  };
+}
+
+function normalizeInboundItemMaster(value: InboundItemMasterApi | any): InboundItemMasterApi {
+  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
+  const itemCode = value?.item_code ?? value?.itemCode ?? value?.code ?? '';
+  const itemName = value?.item_name ?? value?.itemName ?? value?.name ?? itemCode ?? '';
+  const uom = value?.uom ?? value?.uom_code ?? value?.uomCode ?? '';
+
+  return {
+    id: value?.id ?? null,
+    business_unit: String(businessUnit).trim().toUpperCase(),
+    item_code: String(itemCode).trim(),
+    item_name: String(itemName).trim(),
+    uom: String(uom).trim(),
+    is_active: Boolean(value?.is_active ?? value?.isActive ?? true),
   };
 }

@@ -2,6 +2,7 @@ import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import { FileExcelOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, DatePicker, Input, Select, Space, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -23,8 +24,10 @@ import { getUrlReporting } from '@/pages/ReportUrl';
 
 export default function RequestsListWarehouse() {
   const { RangePicker } = DatePicker;
+  const access = useAccess();
   const requestActions = simpleRequestActions();
   const services = SparePartWarehouseService(requestActions);
+  const canExportExcel = access.canSpfWarehouseStaff || access.canAdmin;
   const [searchInput, setSearchInput] = useState('');
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | WarehouseDisplayStatus>('All');
@@ -169,7 +172,7 @@ export default function RequestsListWarehouse() {
       try {
         await downloadGenericReport(requestActions)({
           fileName: `spare-part-requests-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
-          type: 'EXCEL',
+          type: 'EXCELOPENXML',
           data: {
             reportName: 'spare_parts_requests',
             reportPath: getUrlReporting('prod'),
@@ -194,13 +197,13 @@ export default function RequestsListWarehouse() {
         });
         setExportModalOpen(false);
       } catch (error) {
-        message.error('Failed to export Excel.');
+        message.error('Failed to export XLSX. Please confirm the report service allows SSRS EXCELOPENXML rendering.');
       } finally {
         exportInFlightRef.current = false;
         setExportLoading(false);
       }
     },
-    [],
+    [requestActions],
   );
 
   const filteredRequests = useMemo(
@@ -350,9 +353,11 @@ export default function RequestsListWarehouse() {
                 ))} 
               </div>
             </div> */}
-            <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
-              Export Excel
-            </Button>
+            {canExportExcel ? (
+              <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
+                Export Excel
+              </Button>
+            ) : null}
           </Space>
 
           {/* <Button icon={<ReloadOutlined />} onClick={reloadRequests}>
@@ -454,14 +459,16 @@ export default function RequestsListWarehouse() {
           applyResponseUpdate(response);
         }}
       />
-      <RequestsWarehouseExportExcel
-        open={exportModalOpen}
-        loading={exportLoading}
-        businessUnitOptions={knownBusinessUnits}
-        reportName="prod_spf_requests"
-        onCancel={() => setExportModalOpen(false)}
-        onSave={exportRequests}
-      />
+      {canExportExcel ? (
+        <RequestsWarehouseExportExcel
+          open={exportModalOpen}
+          loading={exportLoading}
+          businessUnitOptions={knownBusinessUnits}
+          reportName="prod_spf_requests"
+          onCancel={() => setExportModalOpen(false)}
+          onSave={exportRequests}
+        />
+      ) : null}
     </>
   );
 }

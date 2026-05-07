@@ -1,7 +1,7 @@
 import Icon, { FileExcelOutlined, ReloadOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Button, Card, DatePicker, Input, Modal, Select, Space, Tag, Typography, message } from 'antd';
+import { Button, Card, DatePicker, Input, Modal, Select, Space, Tag, Typography, Upload, message } from 'antd';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getUrlReporting } from '@/pages/ReportUrl';
@@ -30,6 +30,36 @@ const getSparePartRowKey = (record) =>
   `${record?.id ?? ''}-${record?.productId || ''}-${normalizeBusinessUnit(record?.businessUnit) || 'no-bu'}-${record?.warehouse || record?.locations?.[0]?.warehouseCode || 'no-warehouse'}`;
 
 const normalizeBusinessUnit = (value) => String(value || '').trim().toUpperCase();
+
+const getUniqueWarehouseItems = (items = []) => {
+  const seen = new Set();
+  return items
+    .map((item) => ({
+      warehouseCode: String(item?.warehouseCode || '').trim(),
+      warehouseName: String(item?.warehouseName || '').trim(),
+    }))
+    .filter((item) => {
+      if (!item.warehouseCode || seen.has(item.warehouseCode)) return false;
+      seen.add(item.warehouseCode);
+      return true;
+    });
+};
+
+const getWarehouseCodes = (items = []) =>
+  items.map((item) => item.warehouseCode).filter(Boolean);
+
+const areStringArraysEqual = (left = [], right = []) =>
+  left.length === right.length && left.every((item, index) => item === right[index]);
+
+const normalizeBusinessUnitFilters = (items = []) =>
+  Array.from(new Set(items.map((item) => String(item || '').trim()).filter(Boolean))).sort();
+
+const areFiltersEqual = (left = {}, right = {}) =>
+  left.category === right.category &&
+  left.status === right.status &&
+  left.warehouse === right.warehouse &&
+  areStringArraysEqual(left.businessUnits || [], right.businessUnits || []) &&
+  JSON.stringify(left.createdDateRange || []) === JSON.stringify(right.createdDateRange || []);
 
 const buildResubmitItem = (line, index) => ({
   id: Number(line.requestLineId || index + 1),
@@ -61,9 +91,9 @@ const buildResubmitRow = (line, item) => ({
 export default function SparePartListView({ resubmitDraft, onResubmitDraftHandled }) {
   const access = useAccess();
   const actionRef = useRef();
-  const importInputRef = useRef();
   const detailRequestRef = useRef(0);
   const searchDebounceRef = useRef();
+  const reloadTimerRef = useRef();
   const searchValueRef = useRef('');
   const filtersRef = useRef({
     businessUnits: [],
@@ -73,6 +103,8 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     createdDateRange: undefined,
   });
   const requestSeqRef = useRef(0);
+  const warehouseOptionsSeqRef = useRef(0);
+  const activeWarehouseOptionsControllerRef = useRef();
   const activeListControllerRef = useRef();
   const currentRowsRef = useRef([]);
   const requestActions = simpleRequestActions();
@@ -83,6 +115,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const canSeeStatusFilter = access.canSpfWarehouseStaff || access.canAdmin;
   const canSelectRows = access.canSpfRequester || access.canSpfApprover;
   const canManageImages = access.canSpfWarehouseStaff || access.canAdmin;
+  const canExportExcel = access.canSpfWarehouseStaff || access.canAdmin;
 
   const [searchInputValue, setSearchInputValue] = useState('');
   const [searchValue, setSearchValue] = useState('');
@@ -95,6 +128,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const [requestInitialRemark, setRequestInitialRemark] = useState('');
   const [requestInitialPriority, setRequestInitialPriority] = useState('normal');
   const [importingFile, setImportingFile] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsItem, setDetailsItem] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -103,6 +137,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const [categoryItems, setCategoryItems] = useState([]);
   const [knownWarehouses, setKnownWarehouses] = useState([]);
   const [knownBusinessUnits, setKnownBusinessUnits] = useState([]);
+  const [canLoadFilterOptions, setCanLoadFilterOptions] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const exportInFlightRef = useRef(false);
@@ -119,6 +154,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     activeListControllerRef.current = undefined;
   };
 
+  const abortActiveWarehouseOptionsRequest = () => {
+    activeWarehouseOptionsControllerRef.current?.abort?.();
+    activeWarehouseOptionsControllerRef.current = undefined;
+  };
+
   const categoryOptions = [
     { label: 'All Categories', value: '' },
     ...categoryItems.map((item) => ({ label: item.category_name, value: item.category_name })),
@@ -126,12 +166,20 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
   const warehouseOptions = [
     { label: 'All Warehouses', value: '' },
-    ...knownWarehouses.map((wh) => ({ label: wh, value: wh })),
+    ...knownWarehouses.map((warehouse) => ({
+      label:
+        warehouse.warehouseName && warehouse.warehouseName !== warehouse.warehouseCode
+          ? `${warehouse.warehouseCode} - ${warehouse.warehouseName}`
+          : warehouse.warehouseCode,
+      value: warehouse.warehouseCode,
+    })),
   ];
 
   const businessUnitOptions = knownBusinessUnits.map((item) => ({ label: item, value: item }));
 
   useEffect(() => {
+    if (!canLoadFilterOptions) return;
+
     fetchSparePartCategories()
       .then((items) => setCategoryItems(items.filter((item) => item?.id && item?.category_name)))
       .catch(() => undefined);
@@ -139,35 +187,42 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     fetchSparePartBusinessUnits()
       .then((items) => setKnownBusinessUnits(items.map(i => i.businessUnit).filter(Boolean)))
       .catch(() => undefined);
-  }, []);
+  }, [canLoadFilterOptions]);
 
   useEffect(() => {
-    const fetchWarehouses = async () => {
-      try {
-        const selectedBusinessUnits = filters.businessUnits.filter(Boolean);
-        const responses =
-          selectedBusinessUnits.length === 0
-            ? [await fetchSparePartWarehouses('')]
-            : await Promise.all(
-                selectedBusinessUnits.map(async (businessUnit) => {
-                  const warehouses = await fetchSparePartWarehouses(businessUnit);
-                  return warehouses.length > 0 ? warehouses : fetchSparePartWarehouses('');
-                }),
-              );
-        const warehouseCodes = Array.from(
-          new Set(responses.flat().map((item) => item.warehouseCode).filter(Boolean)),
-        );
+    if (!canLoadFilterOptions) return;
 
-        setKnownWarehouses(warehouseCodes);
-        if (filters.warehouse && !warehouseCodes.includes(filters.warehouse)) {
+    const selectedBusinessUnits = filters.businessUnits.filter(Boolean);
+    const optionsSeq = ++warehouseOptionsSeqRef.current;
+    const controller = new AbortController();
+
+    abortActiveWarehouseOptionsRequest();
+    activeWarehouseOptionsControllerRef.current = controller;
+
+    fetchSparePartWarehouses(
+      selectedBusinessUnits.length > 0 ? selectedBusinessUnits : undefined,
+      controller.signal,
+    )
+      .then((warehouses) => {
+        if (controller.signal.aborted || optionsSeq !== warehouseOptionsSeqRef.current) return;
+
+        const warehouseItems = getUniqueWarehouseItems(warehouses);
+        const warehouseCodes = getWarehouseCodes(warehouseItems);
+        setKnownWarehouses(warehouseItems);
+        if (filtersRef.current.warehouse && !warehouseCodes.includes(filtersRef.current.warehouse)) {
           applyFiltersAndReload((previous) => ({ ...previous, warehouse: '' }));
         }
-      } catch (err) {
+      })
+      .catch((error) => {
+        if (controller.signal.aborted || error?.name === 'AbortError' || optionsSeq !== warehouseOptionsSeqRef.current) return;
         setKnownWarehouses([]);
-      }
-    };
-    fetchWarehouses();
-  }, [filters.businessUnits, filters.warehouse]);
+      })
+      .finally(() => {
+        if (activeWarehouseOptionsControllerRef.current === controller) {
+          activeWarehouseOptionsControllerRef.current = undefined;
+        }
+      });
+  }, [canLoadFilterOptions, filters.businessUnits]);
 
   useEffect(() => {
     if (searchInputValue === searchValue) return;
@@ -194,6 +249,10 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       if (searchDebounceRef.current) {
         clearTimeout(searchDebounceRef.current);
       }
+      if (reloadTimerRef.current) {
+        clearTimeout(reloadTimerRef.current);
+      }
+      abortActiveWarehouseOptionsRequest();
       abortActiveListRequest();
     };
   }, []);
@@ -221,9 +280,15 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   }, [onResubmitDraftHandled, resubmitDraft]);
 
   const reloadTable = (resetPage = false) => {
+    if (reloadTimerRef.current) {
+      clearTimeout(reloadTimerRef.current);
+      reloadTimerRef.current = undefined;
+    }
+
     if (resetPage) {
       actionRef.current?.setPageInfo?.({ current: 1 });
-      setTimeout(() => {
+      reloadTimerRef.current = setTimeout(() => {
+        reloadTimerRef.current = undefined;
         actionRef.current?.reload?.();
       }, 0);
     } else {
@@ -245,6 +310,8 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
   const applyFiltersAndReload = (updater, resetPage = true) => {
     const nextFilters = typeof updater === 'function' ? updater(filtersRef.current) : updater;
+    if (areFiltersEqual(filtersRef.current, nextFilters)) return;
+
     filtersRef.current = nextFilters;
     setFilters(nextFilters);
     abortActiveListRequest();
@@ -292,15 +359,21 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       .filter(Boolean);
 
   const updateBusinessUnitFilters = (nextBusinessUnits) => {
-    applyFiltersAndReload((previous) => ({ ...previous, businessUnits: nextBusinessUnits }));
+    const normalizedBusinessUnits = normalizeBusinessUnitFilters(nextBusinessUnits);
+    applyFiltersAndReload((previous) => ({
+      ...previous,
+      businessUnits: normalizedBusinessUnits,
+      warehouse: '',
+    }));
   };
 
   const toggleBusinessUnitFilter = (businessUnit) => {
-    const isSelected = filtersRef.current.businessUnits.includes(businessUnit);
+    const selectedBusinessUnits = filtersRef.current.businessUnits;
+    const isSelected = selectedBusinessUnits.includes(businessUnit);
     updateBusinessUnitFilters(
       isSelected
-        ? filtersRef.current.businessUnits.filter((item) => item !== businessUnit)
-        : [...filtersRef.current.businessUnits, businessUnit],
+        ? selectedBusinessUnits.filter((item) => item !== businessUnit)
+        : [...selectedBusinessUnits, businessUnit],
     );
   };
 
@@ -341,6 +414,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       if (activeListControllerRef.current === controller) {
         activeListControllerRef.current = undefined;
       }
+      setCanLoadFilterOptions(true);
     }
 
     let rows = response.items || [];
@@ -463,13 +537,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     });
   };
 
-  const handleImportClick = () => {
-    importInputRef.current?.click?.();
-  };
-
-  const handleImportFileChange = async (event) => {
-    const file = event?.target?.files?.[0];
-    event.target.value = '';
+  const importRequestFile = async (file) => {
     if (!file) return;
 
     if (!String(file.name || '').toLowerCase().endsWith('.xlsx')) {
@@ -499,6 +567,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       setRequestInitialPriority('normal');
       setRequestItems(importedItems);
       setRequestModalOpen(true);
+      setImportModalOpen(false);
       message.success(`Imported ${result.successCount} row(s) successfully.`);
     } catch (error) {
       const errorMessage =
@@ -510,6 +579,15 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     } finally {
       setImportingFile(false);
     }
+  };
+
+  const handleImportClick = () => {
+    setImportModalOpen(true);
+  };
+
+  const handleImportBeforeUpload = async (file) => {
+    await importRequestFile(file);
+    return Upload.LIST_IGNORE;
   };
 
   const openDetails = async (item) => {
@@ -563,15 +641,15 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   };
 
   const exportRequests = useCallback(
-    async ({ dateRange, businessUnits }) => {
+    async ({ dateRange, businessUnits, warehouses }) => {
       if (exportInFlightRef.current) return;
 
       exportInFlightRef.current = true;
       setExportLoading(true);
       try {
-        await downloadGenericReport(requestActions)?.({
+        const params = {
           fileName: `spare-parts-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
-          type: 'EXCEL',
+          type: 'EXCELOPENXML',
           data: {
             reportName: 'spare_parts',
             reportPath: getUrlReporting('prod'),
@@ -580,13 +658,20 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
                 key: 'BusinessUnit',
                 value: businessUnits.length > 0 ? businessUnits.join(',') : 'All',
                 type: 'string',
-              }
+              },
+              {
+                key: 'Warehouse',
+                value: warehouses?.length > 0 ? warehouses.join(',') : 'All',
+                type: 'string',
+              },
             ],
           },
-        });
+        };
+
+        await downloadGenericReport(requestActions)?.(params);
         setExportModalOpen(false);
       } catch (error) {
-        message.error('Failed to export Excel.');
+        message.error('Failed to export XLSX. Please confirm the report service allows SSRS EXCELOPENXML rendering.');
       } finally {
         exportInFlightRef.current = false;
         setExportLoading(false);
@@ -721,9 +806,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
             />
           {/* ) : null} */}
 
-          <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
-            Export Excel
-          </Button>
+          {canExportExcel ? (
+            <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
+              Export Excel
+            </Button>
+          ) : null}
 
           {/* <RangePicker
             allowClear
@@ -962,22 +1049,70 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         initialPriority={requestInitialPriority}
       />
 
-      <input
-        ref={importInputRef}
-        type="file"
-        accept=".xlsx"
-        style={{ display: 'none' }}
-        onChange={handleImportFileChange}
-      />
+      <Modal
+        open={importModalOpen}
+        title="Import Request File"
+        footer={null}
+        onCancel={() => {
+          if (!importingFile) {
+            setImportModalOpen(false);
+          }
+        }}
+        destroyOnClose
+      >
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Upload.Dragger
+            accept=".xlsx"
+            maxCount={1}
+            multiple={false}
+            showUploadList={false}
+            beforeUpload={handleImportBeforeUpload}
+            disabled={importingFile}
+            style={{ padding: '12px 0' }}
+          >
+            <p className="ant-upload-drag-icon">
+              <UploadOutlined />
+            </p>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>
+              Drag and drop an Excel file here
+            </Typography.Text>
+            <Typography.Text type="secondary">
+              or click this area to choose a `.xlsx` file
+            </Typography.Text>
+          </Upload.Dragger>
 
-      <RequestsWarehouseExportExcel
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Upload
+              accept=".xlsx"
+              maxCount={1}
+              multiple={false}
+              showUploadList={false}
+              beforeUpload={handleImportBeforeUpload}
+              disabled={importingFile}
+            >
+              <Button icon={<FileExcelOutlined />} loading={importingFile}>
+                Choose File
+              </Button>
+            </Upload>
+          </div>
+        </Space>
+      </Modal>
+
+      {canExportExcel ? (
+        <RequestsWarehouseExportExcel
         open={exportModalOpen}
         loading={exportLoading}
         businessUnitOptions={knownBusinessUnits}
+        defaultBusinessUnits={filters.businessUnits.length > 0 ? filters.businessUnits : undefined}
+        warehouseOptions={getWarehouseCodes(knownWarehouses)}
+        defaultWarehouses={filters.warehouse ? [filters.warehouse] : undefined}
+        reportName="spare_parts"
+        showWarehouse
         showDateRange={false}
         onCancel={() => setExportModalOpen(false)}
         onSave={exportRequests}
-      />
+        />
+      ) : null}
 
       <SpfDetails
         open={detailsOpen}

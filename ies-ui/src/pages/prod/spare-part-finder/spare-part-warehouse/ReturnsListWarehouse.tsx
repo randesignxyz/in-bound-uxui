@@ -1,11 +1,12 @@
 import { EyeOutlined, FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProColumns, ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, Card, DatePicker, Input, Select, Tag, Typography, message } from 'antd';
 import { Space } from 'antd/lib';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { downloadGenericReport, RequestActions } from '@/services/apiGateway';
-import { SparePartRequestAPI } from '../spare-part-request/service.api';
+import { fetchSparePartBusinessUnits } from '../spare-part-request/service.api';
 import { SparePartWarehouseReturnAPI } from './service.return';
 import type { RequestDetailData, ReturnStatus } from '../spare-part-return/data';
 import ReturnsListDrawer from './ReturnsListDrawer';
@@ -82,6 +83,8 @@ interface ReturnsListWarehouseProps {
 }
 
 export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseProps = {}) {
+  const access = useAccess();
+  const canExportExcel = access.canSpfWarehouseStaff || access.canAdmin;
   const actionRef = useRef<ActionType>();
   const [selectedReturn, setSelectedReturn] = useState<WarehouseReturnRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -107,39 +110,22 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
     setDetailOpen(true);
   };
 
-  // const loadBusinessUnits = useCallback(async () => {
-  //   try {
-  //     const sparePartServices = SparePartRequestAPI(requestAction);
-  //     const response = await sparePartServices.page({
-  //       criteria: {
-  //         searchValue: '',
-  //         category: '',
-  //         status: 'All',
-  //         warehouse: '',
-  //       },
-  //       pagination: {
-  //         current: 1,
-  //         pageSize: 20,
-  //       },
-  //     });
+  const loadBusinessUnits = useCallback(async () => {
+    try {
+      const response = await fetchSparePartBusinessUnits();
+      const businessUnits = response
+        .map((item) => item.businessUnit)
+        .filter(Boolean)
+        .sort();
+      setKnownBusinessUnits(businessUnits);
+    } catch (error) {
+      message.error('Failed to load business units.');
+    }
+  }, []);
 
-  //     const businessUnits = Array.from(
-  //       new Set(
-  //         (response.items || [])
-  //           .map((item) => item.businessUnit)
-  //           .filter((item): item is string => Boolean(item && item !== '-')),
-  //       ),
-  //     ).sort();
-
-  //     setKnownBusinessUnits(businessUnits);
-  //   } catch (error) {
-  //     message.error('Failed to load business units.');
-  //   }
-  // }, [requestAction]);
-
-  // useEffect(() => {
-  //   loadBusinessUnits();
-  // }, [loadBusinessUnits]);
+  useEffect(() => {
+    loadBusinessUnits();
+  }, [loadBusinessUnits]);
 
   const exportRequests = useCallback(
     async ({ dateRange, businessUnits }: RequestsWarehouseExportValues) => {
@@ -155,7 +141,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
       try {
         await downloadGenericReport(requestAction)({
           fileName: `spare-part-returns-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}`,
-          type: 'EXCEL',
+          type: 'EXCELOPENXML',
           data: {
             reportName: 'spare_parts_returns',
             reportPath: getUrlReporting('prod'),
@@ -181,7 +167,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
         });
         setExportModalOpen(false);
       } catch (error) {
-        message.error('Failed to export Excel.');
+        message.error('Failed to export XLSX. Please confirm the report service allows SSRS EXCELOPENXML rendering.');
       } finally {
         exportInFlightRef.current = false;
         setExportLoading(false);
@@ -323,9 +309,11 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
               actionRef.current?.reloadAndRest?.();
             }}
           />
-          <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
-            Export Excel
-          </Button>
+          {canExportExcel ? (
+            <Button icon={<FileExcelOutlined />} onClick={() => setExportModalOpen(true)}>
+              Export Excel
+            </Button>
+          ) : null}
         </Space>
       </div>
 
@@ -393,14 +381,16 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
         } : null}
         returnId={selectedReturn?.returnId}
       />
-      <RequestsWarehouseExportExcel
-        open={exportModalOpen}
-        loading={exportLoading}
-        businessUnitOptions={knownBusinessUnits}
-        reportName="return_by_date_range(default_today_7dayts)_promt_by_BU"
-        onCancel={() => setExportModalOpen(false)}
-        onSave={exportRequests}
-      />
+      {canExportExcel ? (
+        <RequestsWarehouseExportExcel
+          open={exportModalOpen}
+          loading={exportLoading}
+          businessUnitOptions={knownBusinessUnits}
+          reportName="return_by_date_range(default_today_7dayts)_promt_by_BU"
+          onCancel={() => setExportModalOpen(false)}
+          onSave={exportRequests}
+        />
+      ) : null}
     </>
   );
 }

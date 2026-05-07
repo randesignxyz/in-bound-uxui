@@ -14,9 +14,11 @@ import SparePartImage from './SparePartImage';
 import SpfDetails from './SpfDetails';
 import RequestsWarehouseExportExcel from '../spare-part-warehouse/RequestsWarehouseExportExcel';
 
+const DEFAULT_STATUS_FILTER = 'available';
+
 const statusOptions = [
-  { label: 'All Status', value: 'All' },
   { label: 'Available', value: 'available' },
+  { label: 'All Status', value: 'All' },
   { label: 'Low', value: 'low' },
   { label: 'No Stock', value: 'no-stock' },
 ];
@@ -98,7 +100,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const filtersRef = useRef({
     businessUnits: [],
     category: undefined,
-    status: 'All',
+    status: DEFAULT_STATUS_FILTER,
     warehouse: '',
     createdDateRange: undefined,
   });
@@ -107,6 +109,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const activeWarehouseOptionsControllerRef = useRef();
   const activeListControllerRef = useRef();
   const currentRowsRef = useRef([]);
+  const currentTotalRef = useRef(0);
   const requestActions = simpleRequestActions();
   const services = SparePartRequestAPI(requestActions);
   const requestServices = SparePartRequestService(requestActions);
@@ -144,13 +147,16 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const [filters, setFilters] = useState({
     businessUnits: [],
     category: undefined,
-    status: 'All',
+    status: DEFAULT_STATUS_FILTER,
     warehouse: '',
     createdDateRange: undefined,
   });
 
   const abortActiveListRequest = () => {
-    activeListControllerRef.current?.abort?.();
+    if (activeListControllerRef.current) {
+      requestSeqRef.current += 1;
+      activeListControllerRef.current.abort?.();
+    }
     activeListControllerRef.current = undefined;
   };
 
@@ -378,11 +384,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   };
 
   const requestData = async (params) => {
+    abortActiveListRequest();
     const requestSeq = ++requestSeqRef.current;
     const requestFilters = filtersRef.current;
     const controller = new AbortController();
 
-    abortActiveListRequest();
     activeListControllerRef.current = controller;
 
     let response;
@@ -405,7 +411,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       if (controller.signal.aborted || error?.name === 'AbortError') {
         return {
           data: currentRowsRef.current,
-          total: currentRowsRef.current.length,
+          total: currentTotalRef.current,
           success: true,
         };
       }
@@ -415,6 +421,14 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         activeListControllerRef.current = undefined;
       }
       setCanLoadFilterOptions(true);
+    }
+
+    if (controller.signal.aborted || requestSeq !== requestSeqRef.current) {
+      return {
+        data: currentRowsRef.current,
+        total: currentTotalRef.current,
+        success: true,
+      };
     }
 
     let rows = response.items || [];
@@ -433,13 +447,19 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     if (requestSeq !== requestSeqRef.current) {
       return {
         data: currentRowsRef.current,
-        total: currentRowsRef.current.length,
+        total: currentTotalRef.current,
         success: true,
       };
     }
 
+    const total =
+      requestFilters.createdDateRange?.length === 2
+        ? rows.length
+        : response.total || 0;
+
     setCurrentRows(rows);
     currentRowsRef.current = rows;
+    currentTotalRef.current = total;
     setSelectedItemsById((previous) => {
       if (!selectedRowKeys?.length) return previous;
       const next = { ...previous };
@@ -454,10 +474,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
     return {
       data: rows,
-      total:
-        requestFilters.createdDateRange?.length === 2
-          ? rows.length
-          : response.total || 0,
+      total,
       success: true,
     };
   };

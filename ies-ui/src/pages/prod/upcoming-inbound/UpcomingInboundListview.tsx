@@ -30,6 +30,7 @@ import {
   WarningOutlined,
   ClockCircleOutlined,
   ExportOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import { history, useAccess, useLocation } from '@umijs/max';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -470,6 +471,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   const [dashboardPeriodFilter, setDashboardPeriodFilter] = useState<[string, string] | null>(null);
   const [isExportingReport, setIsExportingReport] = useState(false);
   const [isExportReportModalOpen, setIsExportReportModalOpen] = useState(false);
+  const [isSyncingPurchaseOrders, setIsSyncingPurchaseOrders] = useState(false);
   const [inboundStats, setInboundStats] = useState<InboundDashboardSummaryApi>({
     expectedToday: 0,
     qcPending: 0,
@@ -533,6 +535,12 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     (hasActiveBusinessUnit
       ? inboundSupervisorBusinessUnits.includes(activeBusinessUnitFilter!)
       : inboundSupervisorBusinessUnits.length > 0);
+  const canSyncPurchaseOrdersFromSap =
+    Boolean(access?.canSyncInboundPurchaseOrders) &&
+    (isInboundAdmin ||
+      (hasActiveBusinessUnit
+        ? inboundSupervisorBusinessUnits.includes(activeBusinessUnitFilter!)
+        : inboundSupervisorBusinessUnits.length > 0));
   const warehouseMasterBusinessUnits = useMemo(
     () =>
       Array.from(
@@ -1807,6 +1815,23 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
     }
   };
 
+  const handleSyncPurchaseOrdersFromSap = async () => {
+    try {
+      setIsSyncingPurchaseOrders(true);
+      const response = await services.syncPurchaseOrdersFromSap();
+      await loadInboundData();
+      if (response.data?.skipped) {
+        message.warning(response.message || 'Inbound PO sync from SAP was skipped.');
+      } else {
+        message.success(response.message || 'Inbound PO sync from SAP completed.');
+      }
+    } catch (error: any) {
+      message.error(error?.message || 'Failed to sync inbound PO from SAP.');
+    } finally {
+      setIsSyncingPurchaseOrders(false);
+    }
+  };
+
   useEffect(() => {
     const visiblePurchaseOrderKeys = new Set(
       filteredWarehousePurchaseOrders.map((purchaseOrder) => getPurchaseOrderRowKey(purchaseOrder)),
@@ -1914,7 +1939,7 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
   const shouldShowBusinessUnitControl = !isInboundAdmin && inboundVisibleBusinessUnits.length > 0;
   const canSelectBusinessUnit = inboundVisibleBusinessUnits.length > 1;
 
-  const shouldShowRoleSelector = isRoleSimulationEnabled || inboundRoleOptions.length > 1;
+  const shouldShowRoleSelector = !isInboundAdmin && (isRoleSimulationEnabled || inboundRoleOptions.length > 1);
   const shouldShowInboundTabs = activeRole === 'WAREHOUSE_STAFF';
   const dashboardSummaryTitle =
     activeRole === 'WAREHOUSE_STAFF'
@@ -2190,6 +2215,16 @@ export default function UpcomingInboundListview({ routeView = 'list' }: Upcoming
                     ]);
                   }}
                 />
+              )}
+              {canSyncPurchaseOrdersFromSap && (
+                <Button
+                  icon={<SyncOutlined />}
+                  loading={isSyncingPurchaseOrders}
+                  onClick={() => void handleSyncPurchaseOrdersFromSap()}
+                  style={{ fontWeight: 600 }}
+                >
+                  Sync SAP PO
+                </Button>
               )}
             </Space>
           </Col>

@@ -1,6 +1,7 @@
 import { Button, DatePicker, Form, Modal, Radio, Select } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { fetchSparePartWarehouses } from '../spare-part-request/service.api';
 
 const { RangePicker } = DatePicker;
 
@@ -33,8 +34,23 @@ type FormValues = {
   warehouses?: string[];
 };
 
+type WarehouseOption = {
+  warehouseCode: string;
+  warehouseName?: string;
+};
+
 const ALL_BUSINESS_UNITS = 'All';
 const ALL_WAREHOUSES = 'All';
+
+const getUniqueWarehouses = (items: WarehouseOption[] = []) => {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const warehouseCode = String(item?.warehouseCode || '').trim();
+    if (!warehouseCode || seen.has(warehouseCode)) return false;
+    seen.add(warehouseCode);
+    return true;
+  });
+};
 
 const getDateRangeByPeriod = (period: ExportPeriod): [Dayjs, Dayjs] => {
   const today = dayjs();
@@ -65,6 +81,10 @@ export default function RequestsWarehouseExportExcel({
 }: Props) {
   const [form] = Form.useForm<FormValues>();
   const period = Form.useWatch('period', form);
+  const selectedBusinessUnits = Form.useWatch('businessUnits', form);
+  const [loadedWarehouseOptions, setLoadedWarehouseOptions] = useState<WarehouseOption[]>([]);
+  const [warehouseOptionsLoading, setWarehouseOptionsLoading] = useState(false);
+  const warehouseOptionsSeqRef = useRef(0);
 
   useEffect(() => {
     if (!open) return;
@@ -79,7 +99,45 @@ export default function RequestsWarehouseExportExcel({
         ? defaultWarehouses
         : [ALL_WAREHOUSES],
     });
-  }, [businessUnitOptions, defaultBusinessUnits, defaultWarehouses, form, open, showDateRange, warehouseOptions]);
+  }, [businessUnitOptions, defaultBusinessUnits, defaultWarehouses, form, open, showDateRange]);
+
+  useEffect(() => {
+    if (!open || !showWarehouse) return;
+
+    const businessUnits = selectedBusinessUnits?.includes(ALL_BUSINESS_UNITS)
+      ? []
+      : selectedBusinessUnits || [];
+    const requestSeq = ++warehouseOptionsSeqRef.current;
+    const controller = new AbortController();
+
+    setWarehouseOptionsLoading(true);
+    setLoadedWarehouseOptions([]);
+    fetchSparePartWarehouses(businessUnits.length > 0 ? businessUnits : undefined, controller.signal)
+      .then((items) => {
+        if (controller.signal.aborted || requestSeq !== warehouseOptionsSeqRef.current) return;
+        setLoadedWarehouseOptions(getUniqueWarehouses(items));
+      })
+      .catch((error) => {
+        if (controller.signal.aborted || error?.name === 'AbortError' || requestSeq !== warehouseOptionsSeqRef.current) return;
+        setLoadedWarehouseOptions([]);
+      })
+      .finally(() => {
+        if (controller.signal.aborted || requestSeq !== warehouseOptionsSeqRef.current) return;
+        setWarehouseOptionsLoading(false);
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [open, selectedBusinessUnits, showWarehouse]);
+
+  const exportWarehouseOptions = showWarehouse
+    ? loadedWarehouseOptions
+    : getUniqueWarehouses(
+        warehouseOptions
+          .filter((item) => item !== ALL_WAREHOUSES)
+          .map((item) => ({ warehouseCode: item, warehouseName: item })),
+      );
 
   return (
     <Modal
@@ -165,9 +223,24 @@ export default function RequestsWarehouseExportExcel({
                 .filter((item) => item !== ALL_BUSINESS_UNITS)
                 .map((item) => ({ label: item, value: item })),
             ]}
+            onChange={(values: string[]) => {
+              if (!values?.length) {
+                form.setFieldValue('businessUnits', [ALL_BUSINESS_UNITS]);
+                form.setFieldValue('warehouses', [ALL_WAREHOUSES]);
+                return;
+              }
+
+              const nextValues =
+                values.includes(ALL_BUSINESS_UNITS) && values.length > 1
+                  ? values.filter((item) => item !== ALL_BUSINESS_UNITS)
+                  : values;
+              form.setFieldValue('businessUnits', nextValues);
+              form.setFieldValue('warehouses', [ALL_WAREHOUSES]);
+            }}
             onSelect={(value) => {
               if (value === ALL_BUSINESS_UNITS) {
                 form.setFieldValue('businessUnits', [ALL_BUSINESS_UNITS]);
+                form.setFieldValue('warehouses', [ALL_WAREHOUSES]);
                 return;
               }
 
@@ -188,11 +261,16 @@ export default function RequestsWarehouseExportExcel({
               allowClear
               showSearch
               placeholder="All Warehouses"
+              loading={warehouseOptionsLoading}
               options={[
                 { label: ALL_WAREHOUSES, value: ALL_WAREHOUSES },
-                ...warehouseOptions
-                  .filter((item) => item !== ALL_WAREHOUSES)
-                  .map((item) => ({ label: item, value: item })),
+                ...exportWarehouseOptions.map((item) => ({
+                  label:
+                    item.warehouseName && item.warehouseName !== item.warehouseCode
+                      ? `${item.warehouseCode} - ${item.warehouseName}`
+                      : item.warehouseCode,
+                  value: item.warehouseCode,
+                })),
               ]}
               onSelect={(value) => {
                 if (value === ALL_WAREHOUSES) {

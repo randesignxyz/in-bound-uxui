@@ -31,6 +31,36 @@ const getSparePartRowKey = (record) =>
 
 const normalizeBusinessUnit = (value) => String(value || '').trim().toUpperCase();
 
+const getUniqueWarehouseItems = (items = []) => {
+  const seen = new Set();
+  return items
+    .map((item) => ({
+      warehouseCode: String(item?.warehouseCode || '').trim(),
+      warehouseName: String(item?.warehouseName || '').trim(),
+    }))
+    .filter((item) => {
+      if (!item.warehouseCode || seen.has(item.warehouseCode)) return false;
+      seen.add(item.warehouseCode);
+      return true;
+    });
+};
+
+const getWarehouseCodes = (items = []) =>
+  items.map((item) => item.warehouseCode).filter(Boolean);
+
+const areStringArraysEqual = (left = [], right = []) =>
+  left.length === right.length && left.every((item, index) => item === right[index]);
+
+const normalizeBusinessUnitFilters = (items = []) =>
+  Array.from(new Set(items.map((item) => String(item || '').trim()).filter(Boolean))).sort();
+
+const areFiltersEqual = (left = {}, right = {}) =>
+  left.category === right.category &&
+  left.status === right.status &&
+  left.warehouse === right.warehouse &&
+  areStringArraysEqual(left.businessUnits || [], right.businessUnits || []) &&
+  JSON.stringify(left.createdDateRange || []) === JSON.stringify(right.createdDateRange || []);
+
 const buildResubmitItem = (line, index) => ({
   id: Number(line.requestLineId || index + 1),
   image: line.image,
@@ -64,6 +94,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const importInputRef = useRef();
   const detailRequestRef = useRef(0);
   const searchDebounceRef = useRef();
+  const reloadTimerRef = useRef();
   const searchValueRef = useRef('');
   const filtersRef = useRef({
     businessUnits: [],
@@ -73,6 +104,8 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     createdDateRange: undefined,
   });
   const requestSeqRef = useRef(0);
+  const warehouseOptionsSeqRef = useRef(0);
+  const activeWarehouseOptionsControllerRef = useRef();
   const activeListControllerRef = useRef();
   const currentRowsRef = useRef([]);
   const requestActions = simpleRequestActions();
@@ -121,6 +154,11 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     activeListControllerRef.current = undefined;
   };
 
+  const abortActiveWarehouseOptionsRequest = () => {
+    activeWarehouseOptionsControllerRef.current?.abort?.();
+    activeWarehouseOptionsControllerRef.current = undefined;
+  };
+
   const categoryOptions = [
     { label: 'All Categories', value: '' },
     ...categoryItems.map((item) => ({ label: item.category_name, value: item.category_name })),
@@ -128,7 +166,13 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
   const warehouseOptions = [
     { label: 'All Warehouses', value: '' },
-    ...knownWarehouses.map((wh) => ({ label: wh, value: wh })),
+    ...knownWarehouses.map((warehouse) => ({
+      label:
+        warehouse.warehouseName && warehouse.warehouseName !== warehouse.warehouseCode
+          ? `${warehouse.warehouseCode} - ${warehouse.warehouseName}`
+          : warehouse.warehouseCode,
+      value: warehouse.warehouseCode,
+    })),
   ];
 
   const businessUnitOptions = knownBusinessUnits.map((item) => ({ label: item, value: item }));
@@ -148,32 +192,37 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   useEffect(() => {
     if (!canLoadFilterOptions) return;
 
-    const fetchWarehouses = async () => {
-      try {
-        const selectedBusinessUnits = filters.businessUnits.filter(Boolean);
-        const responses =
-          selectedBusinessUnits.length === 0
-            ? [await fetchSparePartWarehouses('')]
-            : await Promise.all(
-                selectedBusinessUnits.map(async (businessUnit) => {
-                  const warehouses = await fetchSparePartWarehouses(businessUnit);
-                  return warehouses.length > 0 ? warehouses : fetchSparePartWarehouses('');
-                }),
-              );
-        const warehouseCodes = Array.from(
-          new Set(responses.flat().map((item) => item.warehouseCode).filter(Boolean)),
-        );
+    const selectedBusinessUnits = filters.businessUnits.filter(Boolean);
+    const optionsSeq = ++warehouseOptionsSeqRef.current;
+    const controller = new AbortController();
 
-        setKnownWarehouses(warehouseCodes);
-        if (filters.warehouse && !warehouseCodes.includes(filters.warehouse)) {
+    abortActiveWarehouseOptionsRequest();
+    activeWarehouseOptionsControllerRef.current = controller;
+
+    fetchSparePartWarehouses(
+      selectedBusinessUnits.length > 0 ? selectedBusinessUnits : undefined,
+      controller.signal,
+    )
+      .then((warehouses) => {
+        if (controller.signal.aborted || optionsSeq !== warehouseOptionsSeqRef.current) return;
+
+        const warehouseItems = getUniqueWarehouseItems(warehouses);
+        const warehouseCodes = getWarehouseCodes(warehouseItems);
+        setKnownWarehouses(warehouseItems);
+        if (filtersRef.current.warehouse && !warehouseCodes.includes(filtersRef.current.warehouse)) {
           applyFiltersAndReload((previous) => ({ ...previous, warehouse: '' }));
         }
-      } catch (err) {
+      })
+      .catch((error) => {
+        if (controller.signal.aborted || error?.name === 'AbortError' || optionsSeq !== warehouseOptionsSeqRef.current) return;
         setKnownWarehouses([]);
-      }
-    };
-    fetchWarehouses();
-  }, [canLoadFilterOptions, filters.businessUnits, filters.warehouse]);
+      })
+      .finally(() => {
+        if (activeWarehouseOptionsControllerRef.current === controller) {
+          activeWarehouseOptionsControllerRef.current = undefined;
+        }
+      });
+  }, [canLoadFilterOptions, filters.businessUnits]);
 
   useEffect(() => {
     if (searchInputValue === searchValue) return;
@@ -200,6 +249,10 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       if (searchDebounceRef.current) {
         clearTimeout(searchDebounceRef.current);
       }
+      if (reloadTimerRef.current) {
+        clearTimeout(reloadTimerRef.current);
+      }
+      abortActiveWarehouseOptionsRequest();
       abortActiveListRequest();
     };
   }, []);
@@ -227,9 +280,15 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   }, [onResubmitDraftHandled, resubmitDraft]);
 
   const reloadTable = (resetPage = false) => {
+    if (reloadTimerRef.current) {
+      clearTimeout(reloadTimerRef.current);
+      reloadTimerRef.current = undefined;
+    }
+
     if (resetPage) {
       actionRef.current?.setPageInfo?.({ current: 1 });
-      setTimeout(() => {
+      reloadTimerRef.current = setTimeout(() => {
+        reloadTimerRef.current = undefined;
         actionRef.current?.reload?.();
       }, 0);
     } else {
@@ -251,6 +310,8 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
   const applyFiltersAndReload = (updater, resetPage = true) => {
     const nextFilters = typeof updater === 'function' ? updater(filtersRef.current) : updater;
+    if (areFiltersEqual(filtersRef.current, nextFilters)) return;
+
     filtersRef.current = nextFilters;
     setFilters(nextFilters);
     abortActiveListRequest();
@@ -298,15 +359,21 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       .filter(Boolean);
 
   const updateBusinessUnitFilters = (nextBusinessUnits) => {
-    applyFiltersAndReload((previous) => ({ ...previous, businessUnits: nextBusinessUnits }));
+    const normalizedBusinessUnits = normalizeBusinessUnitFilters(nextBusinessUnits);
+    applyFiltersAndReload((previous) => ({
+      ...previous,
+      businessUnits: normalizedBusinessUnits,
+      warehouse: '',
+    }));
   };
 
   const toggleBusinessUnitFilter = (businessUnit) => {
-    const isSelected = filtersRef.current.businessUnits.includes(businessUnit);
+    const selectedBusinessUnits = filtersRef.current.businessUnits;
+    const isSelected = selectedBusinessUnits.includes(businessUnit);
     updateBusinessUnitFilters(
       isSelected
-        ? filtersRef.current.businessUnits.filter((item) => item !== businessUnit)
-        : [...filtersRef.current.businessUnits, businessUnit],
+        ? selectedBusinessUnits.filter((item) => item !== businessUnit)
+        : [...selectedBusinessUnits, businessUnit],
     );
   };
 
@@ -992,7 +1059,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         loading={exportLoading}
         businessUnitOptions={knownBusinessUnits}
         defaultBusinessUnits={filters.businessUnits.length > 0 ? filters.businessUnits : undefined}
-        warehouseOptions={knownWarehouses}
+        warehouseOptions={getWarehouseCodes(knownWarehouses)}
         defaultWarehouses={filters.warehouse ? [filters.warehouse] : undefined}
         reportName="spare_parts"
         showWarehouse

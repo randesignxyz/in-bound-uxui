@@ -9,6 +9,7 @@ type ExportPeriod = 'week' | 'month' | 'year' | 'custom';
 export type RequestsWarehouseExportValues = {
   dateRange?: [Dayjs, Dayjs];
   businessUnits: string[];
+  warehouses?: string[];
 };
 
 type Props = {
@@ -16,8 +17,11 @@ type Props = {
   loading?: boolean;
   businessUnitOptions: string[];
   defaultBusinessUnits?: string[];
+  warehouseOptions?: string[];
+  defaultWarehouses?: string[];
   reportName: string;
   showDateRange?: boolean;
+  showWarehouse?: boolean;
   onCancel: () => void;
   onSave: (values: RequestsWarehouseExportValues) => Promise<void> | void;
 };
@@ -26,9 +30,11 @@ type FormValues = {
   period: ExportPeriod;
   dateRange?: [Dayjs, Dayjs];
   businessUnits?: string[];
+  warehouses?: string[];
 };
 
 const ALL_BUSINESS_UNITS = 'All';
+const ALL_WAREHOUSES = 'All';
 
 const getDateRangeByPeriod = (period: ExportPeriod): [Dayjs, Dayjs] => {
   const today = dayjs();
@@ -49,8 +55,11 @@ export default function RequestsWarehouseExportExcel({
   loading,
   businessUnitOptions,
   defaultBusinessUnits,
+  warehouseOptions = [],
+  defaultWarehouses,
   reportName,
   showDateRange = true,
+  showWarehouse = false,
   onCancel,
   onSave,
 }: Props) {
@@ -66,12 +75,15 @@ export default function RequestsWarehouseExportExcel({
       businessUnits: defaultBusinessUnits?.length
         ? defaultBusinessUnits
         : [ALL_BUSINESS_UNITS],
+      warehouses: defaultWarehouses?.length
+        ? defaultWarehouses
+        : [ALL_WAREHOUSES],
     });
-  }, [businessUnitOptions, defaultBusinessUnits, form, open, showDateRange]);
+  }, [businessUnitOptions, defaultBusinessUnits, defaultWarehouses, form, open, showDateRange, warehouseOptions]);
 
   return (
     <Modal
-      title={reportName === 'prod_spf_requests' ? 'Export Excel' : 'Export Return Excel'}
+      title={reportName === 'spare_parts' || reportName === 'prod_spf_requests' ? 'Export Excel' : 'Export Return Excel'}
       open={open}
       confirmLoading={loading}
       onCancel={onCancel}
@@ -93,9 +105,13 @@ export default function RequestsWarehouseExportExcel({
             const selectedBU = values.businessUnits?.includes(ALL_BUSINESS_UNITS)
               ? []
               : values.businessUnits || [];
+            const selectedWarehouses = values.warehouses?.includes(ALL_WAREHOUSES)
+              ? []
+              : values.warehouses || [];
             await onSave({
               dateRange,
               businessUnits: selectedBU,
+              warehouses: selectedWarehouses,
             });
           }}
         >
@@ -164,6 +180,36 @@ export default function RequestsWarehouseExportExcel({
             }}
           />
         </Form.Item>
+
+        {showWarehouse ? (
+          <Form.Item name="warehouses" label="Warehouse">
+            <Select
+              mode="multiple"
+              allowClear
+              showSearch
+              placeholder="All Warehouses"
+              options={[
+                { label: ALL_WAREHOUSES, value: ALL_WAREHOUSES },
+                ...warehouseOptions
+                  .filter((item) => item !== ALL_WAREHOUSES)
+                  .map((item) => ({ label: item, value: item })),
+              ]}
+              onSelect={(value) => {
+                if (value === ALL_WAREHOUSES) {
+                  form.setFieldValue('warehouses', [ALL_WAREHOUSES]);
+                  return;
+                }
+
+                form.setFieldValue(
+                  'warehouses',
+                  (form.getFieldValue('warehouses') || []).filter(
+                    (item: string) => item !== ALL_WAREHOUSES,
+                  ),
+                );
+              }}
+            />
+          </Form.Item>
+        ) : null}
       </Form>
     </Modal>
   );

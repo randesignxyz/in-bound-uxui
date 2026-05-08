@@ -41,6 +41,8 @@ export interface InboundSupplierMasterListParams {
 }
 
 export interface InboundUomMasterListParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
   searchValue?: string | null;
   status?: string | null;
 }
@@ -50,6 +52,13 @@ export interface InboundWarehouseMasterListParams {
   business_unit?: string | null;
   searchValue?: string | null;
   status?: string | null;
+}
+
+export interface InboundItemMasterListParams {
+  businessUnit?: string | null;
+  business_unit?: string | null;
+  searchValue?: string | null;
+  activeOnly?: boolean | null;
 }
 
 export interface InboundSupplierMasterApi {
@@ -62,6 +71,8 @@ export interface InboundSupplierMasterApi {
 
 export interface InboundUomMasterApi {
   id?: number | null;
+  business_unit: string;
+  uom_entry?: number | null;
   uom_code: string;
   uom_name: string;
   status: string;
@@ -75,17 +86,23 @@ export interface InboundWarehouseMasterApi {
   status: string;
 }
 
+export interface InboundItemMasterApi {
+  id?: number | null;
+  business_unit: string;
+  item_code: string;
+  item_name: string;
+  uom: string;
+  is_active: boolean;
+}
+
 export interface InboundGoodsReceiptSearch {
   searchValue?: string;
-  sort?: {
-    createdDate?: SortOrder;
-    actual_receipt_date?: SortOrder;
-  };
   businessUnit?: string | null;
   business_unit?: string | null;
   status?: string | null;
   processState?: string | null;
   processStates?: string[] | null;
+  qcQueueStatus?: string | null;
   receiptType?: string | null;
   receiptSourceType?: string | null;
   receiptSourceGroup?: 'STANDARD' | 'TEMP' | null;
@@ -118,6 +135,8 @@ export type InboundExportReportKey =
   | 'SUPERVISOR_APPROVAL'
   | 'RECEIVING_STATUS_SUMMARY';
 
+export type InboundExportPlannedFilter = 'ALL' | 'Planned' | 'Unplanned';
+
 export interface InboundExportReportParams {
   reportKey: InboundExportReportKey;
   businessUnit?: string | null;
@@ -129,6 +148,7 @@ export interface InboundExportReportParams {
   qcPendingOnly?: boolean | null;
   supervisorPendingOnly?: boolean | null;
   issueOnly?: boolean | null;
+  plannedFilter?: InboundExportPlannedFilter | null;
 }
 
 export interface InboundReportParamData {

@@ -28,6 +28,7 @@ import {
 } from '../workflow';
 import type { GRItem } from '../workflow';
 import type {
+  InboundItemMasterApi,
   InboundSupplierMasterApi,
   InboundUomMasterApi,
   InboundWarehouseMasterApi,
@@ -55,6 +56,7 @@ interface TempGRCreationModalProps {
   initialReceipt?: UpcomingInboundGoodsReceipt | null;
   correctionMode?: boolean;
   availableBusinessUnits?: string[];
+  itemOptions?: InboundItemMasterApi[];
   supplierOptions?: InboundSupplierMasterApi[];
   uomOptions?: InboundUomMasterApi[];
   warehouseOptions?: InboundWarehouseMasterApi[];
@@ -102,6 +104,7 @@ export function TempGRCreationModal({
   initialReceipt,
   correctionMode = false,
   availableBusinessUnits = [],
+  itemOptions = [],
   supplierOptions = [],
   uomOptions = [],
   warehouseOptions = [],
@@ -158,19 +161,48 @@ export function TempGRCreationModal({
       supplierOptions
         .filter((option) => !businessUnit || !option.business_unit || option.business_unit === businessUnit)
         .map((option) => ({
-          label: `${option.supplier_name} (${option.supplier_code})`,
+          label: `${option.supplier_code} - ${option.supplier_name}`,
           value: option.supplier_name,
         })),
     [businessUnit, supplierOptions],
   );
 
+  const visibleItemOptions = useMemo(
+    () =>
+      itemOptions
+        .filter((option) => !businessUnit || !option.business_unit || option.business_unit === businessUnit)
+        .map((option) => ({
+          label: option.item_code,
+          value: option.item_code,
+          itemName: option.item_name,
+          uom: option.uom,
+        })),
+    [businessUnit, itemOptions],
+  );
+
+  const itemOptionByCode = useMemo(
+    () =>
+      new Map(
+        visibleItemOptions.map((option) => [
+          option.value,
+          {
+            itemName: option.itemName,
+            uom: option.uom,
+          },
+        ]),
+      ),
+    [visibleItemOptions],
+  );
+
   const visibleUomOptions = useMemo(
     () =>
-      uomOptions.map((option) => ({
-        label: getUomOptionLabel(option),
-        value: option.uom_code,
-      })),
-    [uomOptions],
+      uomOptions
+        .filter((option) => !businessUnit || !option.business_unit || option.business_unit === businessUnit)
+        .map((option) => ({
+          label: getUomOptionLabel(option),
+          value: option.uom_code,
+        })),
+    [businessUnit, uomOptions],
   );
 
   const visibleWarehouseOptions = useMemo(
@@ -220,6 +252,32 @@ export function TempGRCreationModal({
       return nextErrors;
     });
   }, []);
+
+  const handleSelectItemCode = useCallback(
+    (index: number, value: string) => {
+      const selectedItem = itemOptionByCode.get(value);
+      setItems((prev) =>
+        prev.map((item, itemIndex) =>
+          itemIndex !== index
+            ? item
+            : {
+                ...item,
+                code: value,
+                name: selectedItem?.itemName || '',
+                uom: selectedItem?.uom || '',
+              },
+        ),
+      );
+      setErrors((prev) => ({
+        ...prev,
+        [`code-${index}`]: false,
+        [`name-${index}`]: false,
+        [`uom-${index}`]: false,
+        [`duplicate-${index}`]: false,
+      }));
+    },
+    [itemOptionByCode],
+  );
 
   const addItemRow = () => setItems((prev) => [...prev, buildEmptyItem()]);
 
@@ -410,21 +468,25 @@ export function TempGRCreationModal({
             data-testid={`temp-gr-item-identity-${record.index}`}
             style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}
           >
-            <Input
+            <Select
+              showSearch
+              value={record.code || undefined}
+              onChange={(value) => handleSelectItemCode(record.index, value)}
               placeholder="Item code"
-              value={record.code}
-              onChange={(event) => updateItem(record.index, 'code', event.target.value)}
+              options={visibleItemOptions}
+              optionFilterProp="label"
+              notFoundContent="No item master data"
               status={
                 errors[`code-${record.index}`] || errors[`duplicate-${record.index}`]
                   ? 'error'
                   : undefined
               }
-              style={{ width: 120, flex: '0 0 120px' }}
+              style={{ width: 180, flex: '0 0 180px' }}
             />
             <Input
               placeholder="Item name"
               value={record.name}
-              onChange={(event) => updateItem(record.index, 'name', event.target.value)}
+              readOnly
               status={errors[`name-${record.index}`] ? 'error' : undefined}
               style={{ flex: 1, minWidth: 0 }}
             />
@@ -543,7 +605,7 @@ export function TempGRCreationModal({
         ),
       },
     ],
-    [errors, items.length, updateItem, visibleUomOptions],
+    [errors, handleSelectItemCode, items.length, visibleItemOptions, visibleUomOptions, updateItem],
   );
 
   return (
@@ -582,6 +644,7 @@ export function TempGRCreationModal({
                     onChange={(value) => {
                       setBusinessUnit(value);
                       setSelectedWarehouseCode('');
+                      setItems([buildEmptyItem()]);
                       setErrors((prev) => ({ ...prev, businessUnit: false, warehouseCode: false }));
                     }}
                     disabled={availableBusinessUnits.length <= 1 || correctionMode}

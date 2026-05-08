@@ -10,7 +10,7 @@ export interface SparePartRequestListSearch {
   category?: string;
   categoryId?: number;
   warehouse?: string;
-  businessUnit?: string | string[];
+  businessUnit?: string[];
 }
 
 interface SparePartRequestListApiSearch {
@@ -21,7 +21,7 @@ interface SparePartRequestListApiSearch {
     category: string;
     type: string;
     categoryId?: number;
-    businessUnit?: string | string[];
+    businessUnit: string[];
   };
 }
 
@@ -113,7 +113,7 @@ const SparePartRequestTestAction = {
         category: params.criteria?.category || '',
         type: '',
         categoryId: params.criteria?.categoryId,
-        businessUnit: params.criteria?.businessUnit || '',
+        businessUnit: params.criteria?.businessUnit || [],
       },
     },
     pagination: {
@@ -352,56 +352,50 @@ export const uploadFilesToFileService = async (files: File[]): Promise<string[]>
 };
 
 export const fetchSparePartCategories = async (): Promise<SparePartCategoryApiItem[]> => {
-  const token = localStorage.getItem('accessToken');
-  const response = await fetch(`${getServiceUrl('PROD')}/spare-part-finder/categories`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to load spare part categories.');
-  }
-
-  const payload = await response.json().catch(() => []);
+  const response = await request<SparePartCategoryApiItem[] | { data?: SparePartCategoryApiItem[] }>(
+    `${getServiceUrl('PROD')}/spare-part-finder/categories`,
+    {
+      method: 'GET',
+    },
+  );
+  const payload = Array.isArray(response) ? response : response?.data;
   return Array.isArray(payload) ? payload : [];
 };
 
 export const fetchSparePartBusinessUnits = async (): Promise<{ businessUnit: string }[]> => {
-  const token = localStorage.getItem('accessToken');
-  const response = await fetch(`${getServiceUrl('PROD')}/name/get-spare-part-business-units/list`, {
-    method: 'POST',
-    headers: token
-      ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-      : { 'Content-Type': 'application/json' },
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to load spare part business units.');
-  }
-
-  const payload = await response.json().catch(() => []);
+  const response = await request<{ businessUnit: string }[] | { data?: { businessUnit: string }[] }>(
+    `${getServiceUrl('PROD')}/name/get-spare-part-business-units/list`,
+    {
+      method: 'POST',
+    },
+  );
+  const payload = Array.isArray(response) ? response : response?.data;
   return Array.isArray(payload) ? payload : [];
 };
 
 export const fetchSparePartWarehouses = async (
-  businessUnit?: string,
+  businessUnit?: string | string[],
+  signal?: AbortSignal,
 ): Promise<{ warehouseCode: string; warehouseName: string }[]> => {
-  const token = localStorage.getItem('accessToken');
-  const url = businessUnit
-    ? `${getServiceUrl('PROD')}/spare-part-finder/warehouses?businessUnit=${encodeURIComponent(businessUnit)}`
-    : `${getServiceUrl('PROD')}/spare-part-finder/warehouses`;
-  const response = await fetch(
+  const businessUnits = Array.isArray(businessUnit)
+    ? businessUnit
+    : businessUnit
+      ? [businessUnit]
+      : [];
+  const url =
+    businessUnits.length > 0
+      ? `${getServiceUrl('PROD')}/spare-part-finder/warehouses?businessUnit=${encodeURIComponent(JSON.stringify(businessUnits))}`
+      : `${getServiceUrl('PROD')}/spare-part-finder/warehouses?`;
+  const response = await request<
+    { warehouseCode: string; warehouseName: string }[] | { data?: { warehouseCode: string; warehouseName: string }[] }
+  >(
     url,
     {
       method: 'GET',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal,
     },
   );
-
-  if (!response.ok) {
-    throw new Error('Failed to load spare part warehouses.');
-  }
-
-  const payload = await response.json().catch(() => []);
+  const payload = Array.isArray(response) ? response : response?.data;
   return Array.isArray(payload) ? payload : [];
 };
 

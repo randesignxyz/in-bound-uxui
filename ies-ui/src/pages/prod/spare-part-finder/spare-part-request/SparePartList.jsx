@@ -100,6 +100,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const [detailsItem, setDetailsItem] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState(null);
+  const [detailsMode, setDetailsMode] = useState('view');
   const [currentRows, setCurrentRows] = useState([]);
   const [categoryItems, setCategoryItems] = useState([]);
   const [knownWarehouses, setKnownWarehouses] = useState([]);
@@ -523,12 +524,13 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     return Upload.LIST_IGNORE;
   };
 
-  const openDetails = async (item) => {
+  const openDetails = async (item, mode = 'view') => {
     const requestId = detailRequestRef.current + 1;
     detailRequestRef.current = requestId;
     setDetailsItem(null);
     setDetailsError(null);
     setDetailsLoading(Boolean(item));
+    setDetailsMode(mode);
     setDetailsOpen(true);
 
     if (!item) {
@@ -561,6 +563,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     setDetailsItem(null);
     setDetailsError(null);
     setDetailsLoading(false);
+    setDetailsMode('view');
   };
 
   const handleRequestPartsFromDetails = () => {
@@ -928,7 +931,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
                   <a
                     style={{ color: '#1890ff', fontSize: 16, cursor: 'pointer' }}
                     onClick={() => {
-                      openDetails(record);
+                      openDetails(record, 'edit');
                     }}>
                     Edit
                   </a>
@@ -1059,6 +1062,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         canManageImages={canManageImages}
         onUploadImages={canManageImages ? handleUploadProductImages : undefined}
         onDeleteImage={canManageImages ? handleDeleteProductImage : undefined}
+        editOnlyMode={detailsMode === 'edit'}
         onUpdateDetail={canManageImages ? handleUpdateProductDetail : undefined}
         categoryOptions={categoryItems.map((item) => ({
           label: item.category_name,

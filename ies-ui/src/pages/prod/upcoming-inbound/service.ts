@@ -118,6 +118,13 @@ const UpcomingInboundAction = {
     payload: {},
   }),
 
+  syncMasterDataFromSap: (): ServiceApiType<Record<string, never>> => ({
+    type: 'EXEC',
+    endpoint: 'PROD',
+    actionName: 'inbound-sync-master-data-from-sap',
+    payload: {},
+  }),
+
   listSuppliers: (
     params: InboundSupplierMasterListParams,
   ): ServiceApiType<InboundSupplierMasterListParams> => ({
@@ -158,10 +165,7 @@ const UpcomingInboundAction = {
     type: 'PAGING_QUERY',
     endpoint: 'PROD',
     actionName: 'inbound-fetch-paging-goods-receipt',
-    payload: (() => {
-      const { sort: _sort, ...criteria } = params.criteria || {};
-      return criteria;
-    })(),
+    payload: params.criteria || {},
     pagination: {
       pageSize: params.pagination?.pageSize,
       page: toBackendPage(params.pagination?.current),
@@ -304,6 +308,14 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
       )(requestAction)) as InboundSuccessPayloadResponse<Record<string, unknown>>;
     },
 
+    syncMasterDataFromSap: async (): Promise<
+      InboundSuccessPayloadResponse<Record<string, unknown>>
+    > => {
+      return (await singleRequest<InboundSuccessPayloadResponse<Record<string, unknown>>>(
+        UpcomingInboundAction.syncMasterDataFromSap(),
+      )(requestAction)) as InboundSuccessPayloadResponse<Record<string, unknown>>;
+    },
+
     listSuppliers: async (
       params: InboundSupplierMasterListParams = {},
     ): Promise<InboundSupplierMasterApi[]> => {
@@ -339,15 +351,19 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
           data: params,
         },
       );
-      const uomsByCode = new Map<string, InboundUomMasterApi>();
+      const uomsByKey = new Map<string, InboundUomMasterApi>();
       extractArrayResponse(response)
         .map(normalizeInboundUomMaster)
         .filter((uom) => uom.uom_code)
-        .forEach((uom) => uomsByCode.set(uom.uom_code.toUpperCase(), uom));
+        .forEach((uom) => {
+          const key = `${uom.business_unit || 'ALL'}::${uom.uom_entry ?? ''}::${uom.uom_code.toUpperCase()}`;
+          uomsByKey.set(key, uom);
+        });
 
-      return Array.from(uomsByCode.values()).sort((left, right) =>
-        left.uom_code.localeCompare(right.uom_code),
-      );
+      return Array.from(uomsByKey.values()).sort((left, right) => {
+        const businessUnitCompare = left.business_unit.localeCompare(right.business_unit);
+        return businessUnitCompare || left.uom_code.localeCompare(right.uom_code);
+      });
     },
 
     listWarehouses: async (
@@ -537,6 +553,8 @@ function extractArrayResponse<IN>(response: IN[] | any): IN[] {
 function normalizeInboundUomMaster(value: InboundUomMasterApi | any): InboundUomMasterApi {
   return {
     id: value?.id ?? null,
+    business_unit: String(value?.business_unit ?? value?.businessUnit ?? '').trim().toUpperCase(),
+    uom_entry: value?.uom_entry ?? value?.uomEntry ?? null,
     uom_code: value?.uom_code ?? value?.uomCode ?? value?.code ?? '',
     uom_name:
       value?.uom_name ?? value?.uomName ?? value?.name ?? value?.uom_code ?? value?.uomCode ?? '',

@@ -161,7 +161,7 @@ export function TempGRCreationModal({
       supplierOptions
         .filter((option) => !businessUnit || !option.business_unit || option.business_unit === businessUnit)
         .map((option) => ({
-          label: `${option.supplier_name} (${option.supplier_code})`,
+          label: `${option.supplier_code} - ${option.supplier_name}`,
           value: option.supplier_name,
         })),
     [businessUnit, supplierOptions],
@@ -196,11 +196,13 @@ export function TempGRCreationModal({
 
   const visibleUomOptions = useMemo(
     () =>
-      uomOptions.map((option) => ({
-        label: getUomOptionLabel(option),
-        value: option.uom_code,
-      })),
-    [uomOptions],
+      uomOptions
+        .filter((option) => !businessUnit || !option.business_unit || option.business_unit === businessUnit)
+        .map((option) => ({
+          label: getUomOptionLabel(option),
+          value: option.uom_code,
+        })),
+    [businessUnit, uomOptions],
   );
 
   const visibleWarehouseOptions = useMemo(

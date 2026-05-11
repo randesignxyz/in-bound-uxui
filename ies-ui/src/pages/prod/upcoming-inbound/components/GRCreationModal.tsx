@@ -1,22 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Button,
   Card,
   Collapse,
   DatePicker,
-  Divider,
-  Descriptions,
   Form,
   Input,
   InputNumber,
   Modal,
-  Progress,
   Row,
   Col,
   Select,
   Space,
-  Steps,
   Table,
   Tag,
   Typography,
@@ -26,11 +21,8 @@ import {
 import type { UploadFile, UploadProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  CameraOutlined,
   CloseCircleFilled,
   InboxOutlined,
-  MobileOutlined,
-  QrcodeOutlined,
   WarningFilled,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -227,9 +219,7 @@ export function GRCreationModal({
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
   const [poUploadedFiles, setPoUploadedFiles] = useState<Record<string, UploadFile[]>>({});
   const [errors, setErrors] = useState<Record<string, boolean>>({});
-  const [scanModalOpen, setScanModalOpen] = useState(false);
-  const [scanTargetPoNumber, setScanTargetPoNumber] = useState<string | null>(null);
-  const [scannedValue, setScannedValue] = useState('');
+
   const [previewState, setPreviewState] = useState<{
     fileName?: string;
     url?: string;
@@ -639,67 +629,7 @@ export function GRCreationModal({
     message.error('Preview is not available for this file.');
   };
 
-  const openScanModal = (poNumber: string) => {
-    setScanTargetPoNumber(poNumber);
-    setScanModalOpen(true);
-    setScannedValue(`PO-SCAN-${poNumber}`);
-  };
 
-  const closeScanModal = () => {
-    setScanModalOpen(false);
-    setScanTargetPoNumber(null);
-    setScannedValue('');
-  };
-
-  const confirmScan = () => {
-    if (!scanTargetPoNumber) {
-      return;
-    }
-
-    const fallbackBarcode = `PO-SCAN-${scanTargetPoNumber}`;
-    const barcodeValue = scannedValue.trim() || fallbackBarcode;
-    const autoProductDate = dayjs(postingDate || undefined).format('YYYY-MM-DD');
-    const autoExpiry = dayjs(autoProductDate || undefined)
-      .add(12, 'month')
-      .format('YYYY-MM-DD');
-
-    let targetRowIndex = 0;
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.poNumber !== scanTargetPoNumber || item.isMissing || item.isDeferred) {
-          return item;
-        }
-
-        targetRowIndex += 1;
-        const poScanPrefix = scanTargetPoNumber.replace(/[^A-Z0-9]/gi, '');
-        const poSequence = String(targetRowIndex).padStart(2, '0');
-
-        return {
-          ...item,
-          receiveQty: item.poQty,
-          productDate: item.productDate || autoProductDate,
-          expiryDate: item.expiryDate || autoExpiry,
-          batchNumber: item.batchNumber || `${poScanPrefix}-${poSequence}`,
-          barcode: item.barcode || `${barcodeValue}-${poSequence}`,
-        };
-      }),
-    );
-    setErrors((prev) => {
-      const next = { ...prev };
-      items.forEach((item, index) => {
-        if (item.poNumber !== scanTargetPoNumber) {
-          return;
-        }
-        delete next[`receiveQty-${index}`];
-        delete next[`productDate-${index}`];
-        delete next[`expiryDate-${index}`];
-        delete next[`batchNumber-${index}`];
-        delete next[`missingRemark-${index}`];
-      });
-      return next;
-    });
-    closeScanModal();
-  };
 
   useEffect(() => {
     if (!open) return;
@@ -720,7 +650,7 @@ export function GRCreationModal({
       setPoUploadedFiles(buildInitialPoUploadFiles(purchaseOrders, initialReceipt));
       setErrors({});
       setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
-      closeScanModal();
+
       return;
     }
 
@@ -734,7 +664,6 @@ export function GRCreationModal({
     setPoUploadedFiles(buildInitialPoUploadFiles(purchaseOrders));
     setErrors({});
     setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
-    closeScanModal();
   }, [correctionMode, initialReceipt, open, purchaseOrders]);
 
   const groupedItems = purchaseOrders.map((purchaseOrder) => ({
@@ -759,10 +688,7 @@ export function GRCreationModal({
       }))
       .filter((item) => item.poNumber === purchaseOrder.poNumber),
   }));
-  const scanTargetPurchaseOrder =
-    purchaseOrders.find((purchaseOrder) => purchaseOrder.poNumber === scanTargetPoNumber) || null;
-  const scanTargetGroup =
-    groupedItems.find((group) => group.poNumber === scanTargetPoNumber) || null;
+
   const missingItemsCount = items.filter((item) => item.isMissing).length;
   const shortItemsCount = items.filter((item) => !item.isDeferred && !item.isMissing && item.receiveQty < item.poQty)
     .length;
@@ -950,8 +876,7 @@ export function GRCreationModal({
     },
   ];
 
-  const scanProgress = scannedValue.trim() ? 100 : 68;
-  const scanStep = scannedValue.trim() ? 2 : 1;
+
 
   return (
     <>
@@ -1216,18 +1141,7 @@ export function GRCreationModal({
                           {group.deferredCount} not arrived
                         </Tag>
                       )}
-                      <Button
-                        size="small"
-                        icon={<QrcodeOutlined />}
-                        data-testid={`scan-po-button-${group.poNumber}`}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          openScanModal(group.poNumber);
-                        }}
-                      >
-                        Scan PO Barcode
-                      </Button>
+
                     </Space>
                   </div>
                 ),
@@ -1375,167 +1289,7 @@ export function GRCreationModal({
         </div>
       </FullscreenModal>
 
-      <Modal
-        open={scanModalOpen}
-        onCancel={closeScanModal}
-        footer={null}
-        width={460}
-        centered
-        destroyOnClose
-        title={
-          <Space>
-            <MobileOutlined />
-            <span>Receipt Barcode Scanner</span>
-          </Space>
-        }
-      >
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
-          <Card
-            size="small"
-            title={
-              <Space>
-                <CameraOutlined />
-                <span>Live Camera Preview</span>
-              </Space>
-            }
-            extra={<Tag color="processing">Rear Camera</Tag>}
-            bodyStyle={{ padding: 12 }}
-          >
-            <div
-              style={{
-                height: 280,
-                borderRadius: 12,
-                position: 'relative',
-                overflow: 'hidden',
-                background: 'linear-gradient(180deg, #1f2937 0%, #111827 100%)',
-                border: '1px solid #d9d9d9',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background:
-                    'repeating-linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 4px, transparent 4px, transparent 14px)',
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 38,
-                  right: 38,
-                  top: 52,
-                  bottom: 52,
-                  border: '2px solid rgba(255,255,255,0.85)',
-                  borderRadius: 16,
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 56,
-                  right: 56,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  height: 3,
-                  background: '#52c41a',
-                  boxShadow: '0 0 10px rgba(82,196,26,0.75)',
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 16,
-                  left: 16,
-                  right: 16,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  color: 'rgba(255,255,255,0.85)',
-                  fontSize: 12,
-                }}
-              >
-                <span>{scanTargetPurchaseOrder?.poNumber || '-'}</span>
-                <span>{scanTargetGroup?.rows.length || 0} item rows</span>
-              </div>
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                  color: 'rgba(255,255,255,0.85)',
-                  fontSize: 12,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <span>Align PO barcode inside frame</span>
-                <span>{scanProgress}% match</span>
-              </div>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <Progress percent={scanProgress} status="active" showInfo={false} />
-            </div>
-          </Card>
 
-          <Steps
-            size="small"
-            current={scanStep}
-            items={[
-              { title: 'Detect' },
-              { title: 'Decode' },
-              { title: 'Fill Items' },
-            ]}
-          />
-
-          <Card size="small" title="Decoded PO Data">
-            <Descriptions size="small" column={2}>
-              <Descriptions.Item label="PO Reference">
-                {scanTargetPurchaseOrder?.poNumber || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Supplier">
-                {scanTargetPurchaseOrder?.supplier || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Receipt Type">
-                {scanTargetPurchaseOrder?.type || receiptType}
-              </Descriptions.Item>
-              <Descriptions.Item label="Item Count">
-                {scanTargetGroup?.rows.length || 0}
-              </Descriptions.Item>
-            </Descriptions>
-            <Divider style={{ margin: '12px 0' }} />
-            <Form layout="vertical">
-              <Form.Item label="Scanned Barcode">
-                <Input
-                  value={scannedValue}
-                  onChange={(event) => setScannedValue(event.target.value)}
-                  prefix={<QrcodeOutlined />}
-                  placeholder={
-                    scanTargetPurchaseOrder
-                      ? `Scan result for ${scanTargetPurchaseOrder.poNumber}`
-                      : 'Scan result for the PO barcode'
-                  }
-                />
-              </Form.Item>
-            </Form>
-          </Card>
-
-          <Alert
-            type="info"
-            showIcon
-            message="Confirming the scan will fill quantities, product dates, expiry dates, batch numbers, and barcode values for this PO's non-missing rows."
-          />
-
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Button type="primary" block icon={<QrcodeOutlined />} onClick={confirmScan}>
-              Confirm PO Scan
-            </Button>
-            <Button block onClick={closeScanModal}>
-              Cancel
-            </Button>
-          </Space>
-        </Space>
-      </Modal>
     </>
   );
 }

@@ -3,10 +3,8 @@ import ProTable from '@ant-design/pro-table';
 import { Badge, Tag, Typography } from 'antd';
 import type { TablePaginationConfig } from 'antd/es/table';
 import type { ReactNode } from 'react';
-import { useMemo } from 'react';
 import {
   GoodsReceipt,
-  InboundHistoryStatus,
   getGoodsReceiptSourceColor,
   getInboundHistoryStatus,
   getInboundHistoryStatusColor,
@@ -27,8 +25,6 @@ const { Text } = Typography;
 interface InboundGRTableProps {
   receipts: GoodsReceipt[];
   onViewDetail: (gr: GoodsReceipt) => void;
-  typeFilter: 'ALL' | 'Planned' | 'Unplanned';
-  statusFilter: 'ALL' | InboundHistoryStatus | 'SUPERVISOR_PENDING' | 'QC_PENDING' | 'QC_REJECTED';
   headerTitle?: ReactNode;
   toolbarExtra?: ReactNode;
   hideSourceAndPoLink?: boolean;
@@ -36,49 +32,16 @@ interface InboundGRTableProps {
   pagination?: TablePaginationConfig;
 }
 
-function matchesStatusFilter(
-  receipt: GoodsReceipt,
-  statusFilter: InboundGRTableProps['statusFilter'],
-) {
-  if (statusFilter === 'ALL') {
-    return true;
-  }
-
-  if (statusFilter === 'SUPERVISOR_PENDING') {
-    return receipt.processState === 'PENDING_SUPERVISOR_REVIEW';
-  }
-
-  if (statusFilter === 'QC_PENDING') {
-    return receipt.processState === 'QC_PENDING';
-  }
-
-  if (statusFilter === 'QC_REJECTED') {
-    return receipt.processState === 'CORRECTION_REQUIRED';
-  }
-
-  return getInboundHistoryStatus(receipt) === statusFilter;
-}
-
 export function InboundGRTable({
   receipts,
   onViewDetail,
-  typeFilter,
-  statusFilter,
   headerTitle,
   toolbarExtra,
   hideSourceAndPoLink = false,
   showNotificationBadge = false,
   pagination,
 }: InboundGRTableProps) {
-  const filteredReceipts = useMemo(() => {
-    let data = receipts;
-    if (typeFilter !== 'ALL') {
-      data = data.filter((r) => r.receiptType === typeFilter);
-    }
-    data = data.filter((r) => matchesStatusFilter(r, statusFilter));
-    return data;
-  }, [receipts, typeFilter, statusFilter]);
-  const showApprovedGrColumn = filteredReceipts.some((receipt) =>
+  const showApprovedGrColumn = receipts.some((receipt) =>
     getReceiptApprovedGrNumber(receipt),
   );
 
@@ -193,7 +156,7 @@ export function InboundGRTable({
     <ProTable<GoodsReceipt>
       headerTitle={headerTitle}
       columns={columns}
-      dataSource={filteredReceipts}
+      dataSource={receipts}
       rowKey={(record) => record.receivingNumber || record.grNumber}
       bordered
       size="small"

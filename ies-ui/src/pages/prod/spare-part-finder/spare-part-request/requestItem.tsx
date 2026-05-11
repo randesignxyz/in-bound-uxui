@@ -466,19 +466,21 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       const loading = warehouseOptions.length === 0 && Boolean(loadingWarehouseUnits[businessUnit]);
 
       return (
-        <Select
-          showSearch
-          placeholder="Select warehouse"
-          optionFilterProp="label"
-          style={{ width: '100%' }}
-          loading={loading}
-          value={record.toWarehouseCode || undefined}
-          onChange={(value) => updateRow(record.key, { toWarehouseCode: value })}
-          options={warehouseOptions.map((warehouse) => ({
-            value: warehouse.warehouseCode,
-            label: warehouse.warehouseCode,
-          }))}
-        />
+        <Space direction="vertical" size={2} style={{ width: '100%' }}>
+          <Select
+            showSearch
+            placeholder="Select warehouse"
+            optionFilterProp="label"
+            style={{ width: '100%' }}
+            loading={loading}
+            value={record.toWarehouseCode || undefined}
+            onChange={(value) => updateRow(record.key, { toWarehouseCode: value })}
+            options={warehouseOptions.map((warehouse) => ({
+              value: warehouse.warehouseCode,
+              label: warehouse.warehouseCode,
+            }))}
+          />
+        </Space>
       );
      }
      },

@@ -387,6 +387,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
           loading={exportLoading}
           businessUnitOptions={knownBusinessUnits}
           reportName="return_by_date_range(default_today_7dayts)_promt_by_BU"
+          singleBusinessUnit
           onCancel={() => setExportModalOpen(false)}
           onSave={exportRequests}
         />

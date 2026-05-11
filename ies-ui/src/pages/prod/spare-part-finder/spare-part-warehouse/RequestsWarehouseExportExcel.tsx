@@ -1,6 +1,6 @@
 import { Button, DatePicker, Form, Modal, Radio, Select } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchSparePartWarehouses } from '../spare-part-request/service.api';
 
 const { RangePicker } = DatePicker;
@@ -23,6 +23,11 @@ type Props = {
   reportName: string;
   showDateRange?: boolean;
   showWarehouse?: boolean;
+  requireWarehouseSelection?: boolean;
+  singleBusinessUnit?: boolean;
+  includeAllBusinessUnits?: boolean;
+  singleWarehouse?: boolean;
+  includeAllWarehouses?: boolean;
   onCancel: () => void;
   onSave: (values: RequestsWarehouseExportValues) => Promise<void> | void;
 };
@@ -30,8 +35,8 @@ type Props = {
 type FormValues = {
   period: ExportPeriod;
   dateRange?: [Dayjs, Dayjs];
-  businessUnits?: string[];
-  warehouses?: string[];
+  businessUnits?: string | string[];
+  warehouses?: string | string[];
 };
 
 type WarehouseOption = {
@@ -41,6 +46,11 @@ type WarehouseOption = {
 
 const ALL_BUSINESS_UNITS = 'All';
 const ALL_WAREHOUSES = 'All';
+
+const toArray = (value?: string | string[]) => {
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+};
 
 const getUniqueWarehouses = (items: WarehouseOption[] = []) => {
   const seen = new Set<string>();
@@ -76,6 +86,11 @@ export default function RequestsWarehouseExportExcel({
   reportName,
   showDateRange = true,
   showWarehouse = false,
+  requireWarehouseSelection = false,
+  singleBusinessUnit = false,
+  includeAllBusinessUnits = true,
+  singleWarehouse = false,
+  includeAllWarehouses = true,
   onCancel,
   onSave,
 }: Props) {
@@ -85,28 +100,56 @@ export default function RequestsWarehouseExportExcel({
   const [loadedWarehouseOptions, setLoadedWarehouseOptions] = useState<WarehouseOption[]>([]);
   const [warehouseOptionsLoading, setWarehouseOptionsLoading] = useState(false);
   const warehouseOptionsSeqRef = useRef(0);
+  const selectableBusinessUnits = useMemo(
+    () => businessUnitOptions.filter((item) => item !== ALL_BUSINESS_UNITS),
+    [businessUnitOptions],
+  );
 
   useEffect(() => {
     if (!open) return;
 
+    const initialBusinessUnits = defaultBusinessUnits?.length
+      ? defaultBusinessUnits
+      : includeAllBusinessUnits
+        ? [ALL_BUSINESS_UNITS]
+        : selectableBusinessUnits.slice(0, 1);
+
     form.setFieldsValue({
       period: showDateRange ? 'week' : undefined,
       dateRange: showDateRange ? getDateRangeByPeriod('week') : undefined,
-      businessUnits: defaultBusinessUnits?.length
-        ? defaultBusinessUnits
-        : [ALL_BUSINESS_UNITS],
+      businessUnits: singleBusinessUnit
+        ? initialBusinessUnits[0]
+        : initialBusinessUnits,
       warehouses: defaultWarehouses?.length
-        ? defaultWarehouses
-        : [ALL_WAREHOUSES],
+        ? singleWarehouse
+          ? defaultWarehouses[0]
+          : defaultWarehouses
+        : requireWarehouseSelection || !includeAllWarehouses
+          ? undefined
+          : [ALL_WAREHOUSES],
     });
-  }, [businessUnitOptions, defaultBusinessUnits, defaultWarehouses, form, open, showDateRange]);
+  }, [
+    businessUnitOptions,
+    defaultBusinessUnits,
+    defaultWarehouses,
+    form,
+    includeAllBusinessUnits,
+    includeAllWarehouses,
+    open,
+    requireWarehouseSelection,
+    selectableBusinessUnits,
+    singleBusinessUnit,
+    singleWarehouse,
+    showDateRange,
+  ]);
 
   useEffect(() => {
     if (!open || !showWarehouse) return;
 
-    const businessUnits = selectedBusinessUnits?.includes(ALL_BUSINESS_UNITS)
+    const selectedBusinessUnitValues = toArray(selectedBusinessUnits);
+    const businessUnits = selectedBusinessUnitValues.includes(ALL_BUSINESS_UNITS)
       ? []
-      : selectedBusinessUnits || [];
+      : selectedBusinessUnitValues;
     const requestSeq = ++warehouseOptionsSeqRef.current;
     const controller = new AbortController();
 
@@ -138,6 +181,11 @@ export default function RequestsWarehouseExportExcel({
           .filter((item) => item !== ALL_WAREHOUSES)
           .map((item) => ({ warehouseCode: item, warehouseName: item })),
       );
+  const allWarehouseOption = requireWarehouseSelection
+    ? []
+    : includeAllWarehouses
+      ? [{ label: ALL_WAREHOUSES, value: ALL_WAREHOUSES }]
+      : [];
 
   return (
     <Modal
@@ -160,12 +208,25 @@ export default function RequestsWarehouseExportExcel({
               ? values.dateRange || getDateRangeByPeriod(values.period)
               : undefined;
 
-            const selectedBU = values.businessUnits?.includes(ALL_BUSINESS_UNITS)
+            const businessUnitValues = toArray(values.businessUnits);
+            const selectedBU = businessUnitValues.includes(ALL_BUSINESS_UNITS)
               ? []
-              : values.businessUnits || [];
-            const selectedWarehouses = values.warehouses?.includes(ALL_WAREHOUSES)
+              : businessUnitValues;
+            const warehouseValues = toArray(values.warehouses);
+            const selectedWarehouses = warehouseValues.includes(ALL_WAREHOUSES)
               ? []
-              : values.warehouses || [];
+              : warehouseValues;
+
+            if (requireWarehouseSelection && selectedWarehouses.length === 0) {
+              form.setFields([
+                {
+                  name: 'warehouses',
+                  errors: ['Please select at least one warehouse.'],
+                },
+              ]);
+              return;
+            }
+
             await onSave({
               dateRange,
               businessUnits: selectedBU,
@@ -213,57 +274,102 @@ export default function RequestsWarehouseExportExcel({
 
         <Form.Item name="businessUnits" label="Business Unit">
           <Select
-            mode="multiple"
-            allowClear
+            mode={singleBusinessUnit ? undefined : 'multiple'}
+            allowClear={includeAllBusinessUnits}
             showSearch
-            placeholder="All Business Units"
+            placeholder={includeAllBusinessUnits ? 'All Business Units' : 'Select Business Unit'}
             options={[
-              { label: ALL_BUSINESS_UNITS, value: ALL_BUSINESS_UNITS },
-              ...businessUnitOptions
-                .filter((item) => item !== ALL_BUSINESS_UNITS)
-                .map((item) => ({ label: item, value: item })),
+              ...(includeAllBusinessUnits
+                ? [{ label: ALL_BUSINESS_UNITS, value: ALL_BUSINESS_UNITS }]
+                : []),
+              ...selectableBusinessUnits.map((item) => ({ label: item, value: item })),
             ]}
-            onChange={(values: string[]) => {
+            onChange={(value: string | string[]) => {
+              const values = toArray(value);
               if (!values?.length) {
-                form.setFieldValue('businessUnits', [ALL_BUSINESS_UNITS]);
-                form.setFieldValue('warehouses', [ALL_WAREHOUSES]);
+                const fallbackBusinessUnits = includeAllBusinessUnits
+                  ? [ALL_BUSINESS_UNITS]
+                  : selectableBusinessUnits.slice(0, 1);
+                form.setFieldValue(
+                  'businessUnits',
+                  singleBusinessUnit ? fallbackBusinessUnits[0] : fallbackBusinessUnits,
+                );
+                form.setFieldValue(
+                  'warehouses',
+                  requireWarehouseSelection || !includeAllWarehouses ? undefined : [ALL_WAREHOUSES],
+                );
                 return;
               }
 
               const nextValues =
-                values.includes(ALL_BUSINESS_UNITS) && values.length > 1
+                includeAllBusinessUnits && values.includes(ALL_BUSINESS_UNITS) && values.length > 1
                   ? values.filter((item) => item !== ALL_BUSINESS_UNITS)
                   : values;
-              form.setFieldValue('businessUnits', nextValues);
-              form.setFieldValue('warehouses', [ALL_WAREHOUSES]);
+              form.setFieldValue(
+                'businessUnits',
+                singleBusinessUnit ? nextValues[0] : nextValues,
+              );
+              form.setFieldValue(
+                'warehouses',
+                requireWarehouseSelection || !includeAllWarehouses ? undefined : [ALL_WAREHOUSES],
+              );
             }}
             onSelect={(value) => {
-              if (value === ALL_BUSINESS_UNITS) {
-                form.setFieldValue('businessUnits', [ALL_BUSINESS_UNITS]);
-                form.setFieldValue('warehouses', [ALL_WAREHOUSES]);
+              if (includeAllBusinessUnits && value === ALL_BUSINESS_UNITS) {
+                form.setFieldValue(
+                  'businessUnits',
+                  singleBusinessUnit ? ALL_BUSINESS_UNITS : [ALL_BUSINESS_UNITS],
+                );
+                form.setFieldValue(
+                  'warehouses',
+                  requireWarehouseSelection || !includeAllWarehouses ? undefined : [ALL_WAREHOUSES],
+                );
                 return;
               }
 
-              form.setFieldValue(
-                'businessUnits',
-                (form.getFieldValue('businessUnits') || []).filter(
-                  (item: string) => item !== ALL_BUSINESS_UNITS,
-                ),
-              );
+              if (!singleBusinessUnit) {
+                form.setFieldValue(
+                  'businessUnits',
+                  toArray(form.getFieldValue('businessUnits')).filter(
+                    (item: string) => item !== ALL_BUSINESS_UNITS,
+                  ),
+                );
+              }
             }}
           />
         </Form.Item>
 
         {showWarehouse ? (
-          <Form.Item name="warehouses" label="Warehouse">
+          <Form.Item
+            name="warehouses"
+            label="Warehouse"
+            rules={
+              requireWarehouseSelection
+                ? [
+                    {
+                      validator: (_, value: string | string[] | undefined) => {
+                        const selectedWarehouses = toArray(value).filter(
+                          (item) => item && item !== ALL_WAREHOUSES,
+                        );
+                        return selectedWarehouses.length > 0
+                          ? Promise.resolve()
+                          : Promise.reject(new Error('Please select at least one warehouse.'));
+                      },
+                    },
+                  ]
+                : undefined
+            }
+          >
             <Select
-              mode="multiple"
+              mode={singleWarehouse ? undefined : 'multiple'}
               allowClear
               showSearch
-              placeholder="All Warehouses"
+              placeholder={
+                requireWarehouseSelection ? 'Select warehouse' : 'All Warehouses'
+              }
               loading={warehouseOptionsLoading}
               options={[
-                { label: ALL_WAREHOUSES, value: ALL_WAREHOUSES },
+                ...allWarehouseOption,
                 ...exportWarehouseOptions.map((item) => ({
                   label:
                     item.warehouseName && item.warehouseName !== item.warehouseCode
@@ -274,13 +380,15 @@ export default function RequestsWarehouseExportExcel({
               ]}
               onSelect={(value) => {
                 if (value === ALL_WAREHOUSES) {
-                  form.setFieldValue('warehouses', [ALL_WAREHOUSES]);
+                  form.setFieldValue('warehouses', singleWarehouse ? ALL_WAREHOUSES : [ALL_WAREHOUSES]);
                   return;
                 }
 
+                if (singleWarehouse) return;
+
                 form.setFieldValue(
                   'warehouses',
-                  (form.getFieldValue('warehouses') || []).filter(
+                  toArray(form.getFieldValue('warehouses')).filter(
                     (item: string) => item !== ALL_WAREHOUSES,
                   ),
                 );

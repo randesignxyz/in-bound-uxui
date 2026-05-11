@@ -182,6 +182,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   ];
 
   const businessUnitOptions = knownBusinessUnits.map((item) => ({ label: item, value: item }));
+  const isSingleBusinessUnitScope = knownBusinessUnits.length === 1;
 
   useEffect(() => {
     if (!canLoadFilterOptions) return;
@@ -624,10 +625,12 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     }
 
     try {
+      const businessUnit = normalizeBusinessUnit(item.businessUnit);
       const detail = await services.detail({
         id: item.id,
         productId: item.productId,
         warehouseCode: item.warehouse || item.locations?.[0]?.warehouseCode,
+        businessUnit: businessUnit && businessUnit !== '-' ? businessUnit : undefined,
       });
       if (detailRequestRef.current !== requestId) return;
       setDetailsItem(detail || null);
@@ -1120,17 +1123,28 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
 
       {canExportExcel ? (
         <RequestsWarehouseExportExcel
-        open={exportModalOpen}
-        loading={exportLoading}
-        businessUnitOptions={knownBusinessUnits}
-        defaultBusinessUnits={filters.businessUnits.length > 0 ? filters.businessUnits : undefined}
-        warehouseOptions={getWarehouseCodes(knownWarehouses)}
-        defaultWarehouses={filters.warehouse ? [filters.warehouse] : undefined}
-        reportName="spare_parts"
-        showWarehouse
-        showDateRange={false}
-        onCancel={() => setExportModalOpen(false)}
-        onSave={exportRequests}
+          open={exportModalOpen}
+          loading={exportLoading}
+          businessUnitOptions={knownBusinessUnits}
+          defaultBusinessUnits={
+            filters.businessUnits.length > 0
+              ? filters.businessUnits
+              : isSingleBusinessUnitScope
+                ? knownBusinessUnits
+                : undefined
+          }
+          warehouseOptions={getWarehouseCodes(knownWarehouses)}
+          defaultWarehouses={filters.warehouse ? [filters.warehouse] : undefined}
+          reportName="spare_parts"
+          showWarehouse
+          requireWarehouseSelection
+          singleWarehouse
+          includeAllWarehouses={false}
+          singleBusinessUnit={isSingleBusinessUnitScope}
+          includeAllBusinessUnits={!isSingleBusinessUnitScope}
+          showDateRange={false}
+          onCancel={() => setExportModalOpen(false)}
+          onSave={exportRequests}
         />
       ) : null}
 

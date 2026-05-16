@@ -760,7 +760,8 @@ export function GRCreationModal({
         <InputNumber
           min={0}
           max={record.poQty}
-          value={record.receiveQty}
+          value={record.receiveQty === 0 ? null : record.receiveQty}
+          placeholder='0'
           onChange={(value) => updateItem(record.index, 'receiveQty', value ?? 0)}
           style={{ width: '100%' }}
           controls

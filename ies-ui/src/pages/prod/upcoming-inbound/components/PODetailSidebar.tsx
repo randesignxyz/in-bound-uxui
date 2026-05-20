@@ -199,22 +199,28 @@ export function PODetailSidebar({
             </Descriptions.Item>
             <Descriptions.Item label="Linked PR" span={2}>
               {prLinks.length > 0 ? (
-                <Space size={[8, 8]} wrap>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {prLinks.map((link) => {
                     const prHref = link.prUuid ? `${prProcessPathPrefix}${link.prUuid}` : undefined;
-                    return (
-                      <Tag key={link.prNumber} color="cyan" bordered={false}>
-                        {prHref ? (
-                          <a href={prHref} target="_blank" rel="noreferrer">
-                            {link.prNumber}
-                          </a>
-                        ) : (
-                          link.prNumber
-                        )}
-                      </Tag>
+                    return prHref ?(
+                      <Button
+                        key={link.prNumber}
+                        type="link"
+                        icon={<ExportOutlined />}
+                        style={{ paddingInline: 0, height: 'auto', lineHeight: '1.2', justifyContent: 'flex-start', width: 'fit-content' }}
+                        href={prHref}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {link.prNumber}
+                      </Button>
+                    ) : (
+                      <Text key={link.prNumber} type="secondary">
+                        {link.prNumber}
+                      </Text>
                     );
                   })}
-                </Space>
+                </div>
               ) : (
                 <Text type="secondary">No linked PR from SAP</Text>
               )}
@@ -246,7 +252,7 @@ export function PODetailSidebar({
                       key={`linked-ir-${log.receiptId}`}
                       type="link"
                       icon={<ExportOutlined />}
-                      style={{ paddingInline: 0, justifyContent: 'flex-start', width: 'fit-content' }}
+                      style={{ paddingInline: 0, height: 'auto', lineHeight: '1.2', justifyContent: 'flex-start', width: 'fit-content' }}
                       onClick={() => {
                         if (typeof log.receiptId === 'number') {
                           onOpenReceiptInNewTab(log.receiptId);

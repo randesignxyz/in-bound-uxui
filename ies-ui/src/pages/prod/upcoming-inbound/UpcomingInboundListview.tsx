@@ -1275,7 +1275,7 @@ export default function UpcomingInboundListview({
     setReceipts((prev) => {
       const exists = prev.some((row) => row.grNumber === normalized.grNumber);
       if (!exists) {
-        return [normalized, ...prev];
+        return prev;  
       }
       return prev.map((row) => (row.grNumber === normalized.grNumber ? normalized : row));
     });
@@ -1443,8 +1443,14 @@ export default function UpcomingInboundListview({
 
     return false;
   }, []);
-  const qcStatusCounts = useMemo(() => {
-    const counts = {
+  const [qcStatusCounts, setQcStatusCounts] = useState({
+    Pending: 0,
+    Submitted: 0,
+    Rejected: 0,
+  });
+
+  useEffect(() => {
+    const currentCounts = {
       Pending: 0,
       Submitted: 0,
       Rejected: 0,
@@ -1456,28 +1462,41 @@ export default function UpcomingInboundListview({
         (status === 'Pending' || status === 'Submitted' || status === 'Rejected') &&
         shouldShowQcReceiptNotificationBadge(receipt)
       ) {
-        counts[status] += 1;
+        currentCounts[status] += 1;
       }
     });
 
-    return counts;
+    setQcStatusCounts((prev) => {
+      // If "All" is selected, we have the full data and can safely update everything
+      if (qcStatusFilter === 'All') {
+        return currentCounts;
+      }
+
+      const next = { ...prev };
+      if (qcStatusFilter === 'Pending') next.Pending = currentCounts.Pending;
+      if (qcStatusFilter === 'Submitted') next.Submitted = currentCounts.Submitted;
+      if (qcStatusFilter === 'Rejected') next.Rejected = currentCounts.Rejected;
+
+      if (
+        next.Pending === prev.Pending &&
+        next.Submitted === prev.Submitted &&
+        next.Rejected === prev.Rejected
+      ) {
+        return prev;
+      }
+      return next;
+      });
+
   }, [qcRelevantReceipts, shouldShowQcReceiptNotificationBadge]);
+
   const qcStatusOptionsWithBadge = useMemo<QcStatusOptionWithBadge[]>(
     () =>
       qcStatusOptions.map((option) => {
-        if (
-          (option.value === 'Pending' ||
-            option.value === 'Submitted' ||
-            option.value === 'Rejected') &&
-          qcStatusCounts[option.value] > 0
-        ) {
-          return {
-            ...option,
-            badgeCount: qcStatusCounts[option.value],
-          };
-        }
-
-        return option;
+        const badgeCount = qcStatusCounts[option.value as keyof typeof qcStatusCounts] || 0;
+        return {
+          ...option,
+          badgeCount: badgeCount > 0 ? badgeCount : undefined,
+        };
       }),
     [qcStatusCounts],
   );
@@ -2016,6 +2035,19 @@ export default function UpcomingInboundListview({
       });
       await loadInboundData();
       const updated = syncReceiptInState(response.data);
+
+      setQcStatusCounts((prev) => {
+        const isPass = updated.qcResult === 'Pass';
+        return {
+          ...prev,
+          Pending: qcStatusFilter === 'Pending' ? Math.max(0, prev.Pending - 1) : prev.Pending,
+          Submitted: isPass ? prev.Submitted + 1 : prev.Submitted,
+          Rejected: !isPass ? prev.Rejected + 1 : prev.Rejected,
+        };
+      });
+
+      setQcStatusFilter(updated.qcResult === 'Pass' ? 'Submitted' : 'Rejected');
+
       if (updated.qcResult === 'Pass') {
         setSelectedGR(null);
       } else {
@@ -2368,13 +2400,18 @@ export default function UpcomingInboundListview({
           value={qcStatusFilter}
           onChange={(event) => setQcStatusFilter(event.target.value)}
         >
-          {qcStatusOptionsWithBadge.map((option) => (
+          {qcStatusOptionsWithBadge.map((option) => {
+            const isActive = qcStatusFilter === option.value;
+            return (
             <Radio.Button key={option.value} value={option.value}>
               <Badge count={option.badgeCount ?? 0} size="small" offset={[8, -6]}>
-                {option.label}
+                <span style={{ color: isActive ? '#B49900' : 'inherit' }}>
+                  {option.label}
+                </span>
               </Badge>
             </Radio.Button>
-          ))}
+            );
+      })}
         </Radio.Group>
       ) : (
         <>
@@ -2539,7 +2576,8 @@ export default function UpcomingInboundListview({
                     </Text>
                     <Select
                       value={activeBusinessUnit}
-                      open={canSelectBusinessUnit ? undefined : false}
+                      disabled={!canSelectBusinessUnit}
+                      // open={canSelectBusinessUnit ? undefined : false}
                       onChange={(value) => {
                         if (!canSelectBusinessUnit) return;
                         setActiveBusinessUnit(value);

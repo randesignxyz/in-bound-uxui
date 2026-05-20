@@ -73,6 +73,7 @@ type SparePartDetailParams = {
   id?: number;
   productId?: string;
   warehouseCode?: string;
+  businessUnit?: string;
 };
 
 export type UpdateSparePartDetailPayload = {
@@ -129,6 +130,7 @@ const SparePartRequestTestAction = {
       id: params.id,
       productId: params.productId,
       warehouseCode: params.warehouseCode,
+      businessUnit: params.businessUnit,
     },
   }),
   updateImages: (payload: { productId: string; images: string[] }): ServiceApiType<{ productId: string; images: string[] }> => ({
@@ -353,9 +355,9 @@ export const uploadFilesToFileService = async (files: File[]): Promise<string[]>
 
 export const fetchSparePartCategories = async (): Promise<SparePartCategoryApiItem[]> => {
   const response = await request<SparePartCategoryApiItem[] | { data?: SparePartCategoryApiItem[] }>(
-    `${getServiceUrl('PROD')}/spare-part-finder/categories`,
+    `${getServiceUrl('PROD')}/name/get-spare-part-categories/list`,
     {
-      method: 'GET',
+      method: 'POST',
     },
   );
   const payload = Array.isArray(response) ? response : response?.data;
@@ -367,6 +369,7 @@ export const fetchSparePartBusinessUnits = async (): Promise<{ businessUnit: str
     `${getServiceUrl('PROD')}/name/get-spare-part-business-units/list`,
     {
       method: 'POST',
+      data: {},
     },
   );
   const payload = Array.isArray(response) ? response : response?.data;
@@ -382,16 +385,15 @@ export const fetchSparePartWarehouses = async (
     : businessUnit
       ? [businessUnit]
       : [];
-  const url =
-    businessUnits.length > 0
-      ? `${getServiceUrl('PROD')}/spare-part-finder/warehouses?businessUnit=${encodeURIComponent(JSON.stringify(businessUnits))}`
-      : `${getServiceUrl('PROD')}/spare-part-finder/warehouses?`;
   const response = await request<
     { warehouseCode: string; warehouseName: string }[] | { data?: { warehouseCode: string; warehouseName: string }[] }
   >(
-    url,
+    `${getServiceUrl('PROD')}/name/get-spare-part-warehouses-by-business-unit/list`,
     {
-      method: 'GET',
+      method: 'POST',
+      data: {
+        businessUnit: businessUnits,
+      },
       signal,
     },
   );

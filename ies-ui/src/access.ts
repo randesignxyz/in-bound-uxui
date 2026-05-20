@@ -6,7 +6,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
   // ============ REACH CUSOMER PERMISSION ===============
   const groupMap = currentUser?.groupAttributeMap || {};
-  const roles = currentUser?.authorities || [];
+  const roles: string[] = (currentUser?.authorities as string[] | undefined) || [];
 
   // Define global admin roles
   const SUPER_ROLES = [
@@ -16,6 +16,43 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     // "ROLE_SFA_ADMIN",
     // "ROLE_DSD_ADMIN"
   ];
+
+  const buildInboundBusinessUnits = (prefix: string) =>
+    Array.from(
+      new Set(
+        roles
+          .filter((role) => role.startsWith(prefix) && role.length > prefix.length)
+          .map((role) => role.slice(prefix.length).trim().toUpperCase())
+          .filter(Boolean),
+      ),
+    ).sort();
+
+  const hasInboundSyncAdminRole = roles.some((role) => role === 'ROLE_INBOUND_ADMIN');
+  const inboundWarehouseBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_WAREHOUSE_STAFF_');
+  const inboundQcBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_QC_');
+  const inboundSupervisorBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_SUPERVISOR_');
+  const inboundVisibleBusinessUnits = Array.from(
+    new Set([
+      ...inboundWarehouseBusinessUnits,
+      ...inboundQcBusinessUnits,
+      ...inboundSupervisorBusinessUnits,
+    ]),
+  ).sort();
+
+  const OUTBOUND_TRANSFER_ROLES = [
+    'ROLE_ADMIN',
+    'ROLE_PROD_ADMIN',
+    'ROLE_PROD_PRO_ADMIN',
+    'ROLE_PROD_NVC_ADMIN',
+    'ROLE_PROD_OFL_ADMIN',
+    'ROLE_PROD_OMM_ADMIN',
+    'ROLE_PROD_WARE_ADMIN',
+  ];
+
+  const hasInboundWarehouseRole = inboundWarehouseBusinessUnits.length > 0;
+  const hasInboundQcRole = inboundQcBusinessUnits.length > 0;
+  const hasInboundSupervisorRole = inboundSupervisorBusinessUnits.length > 0;
+  const hasInboundRole = hasInboundWarehouseRole || hasInboundQcRole || hasInboundSupervisorRole;
 
   // Check if user has ANY super role (auto allow all)
   const isSuperAdmin = roles.some(r => SUPER_ROLES.includes(r));
@@ -147,6 +184,16 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) => item === 'ROLE_INVENTORY_ADMIN') || false,
     canAccessPurchaseMenuItem:
       currentUser?.authorities.some((item) => item === 'ROLE_PURCHASE_ADMIN') || false,
+    canAccessInboundWarehouseStaff: hasInboundWarehouseRole || isSuperAdmin,
+    canSyncInboundPurchaseOrders: hasInboundSyncAdminRole || hasInboundSupervisorRole || isSuperAdmin,
+    canSyncInboundMasterData: hasInboundSyncAdminRole || hasInboundSupervisorRole || isSuperAdmin,
+    canAccessInboundQc: hasInboundQcRole || isSuperAdmin,
+    canAccessInboundSupervisor: hasInboundSupervisorRole || isSuperAdmin,
+    inboundVisibleBusinessUnits: isSuperAdmin ? ['*'] : inboundVisibleBusinessUnits,
+    inboundWarehouseBusinessUnits: isSuperAdmin ? ['*'] : inboundWarehouseBusinessUnits,
+    inboundQcBusinessUnits: isSuperAdmin ? ['*'] : inboundQcBusinessUnits,
+    inboundSupervisorBusinessUnits: isSuperAdmin ? ['*'] : inboundSupervisorBusinessUnits,
+    hasInboundSyncAdminRole: hasInboundSyncAdminRole || false,
 
     canAccessQuotationMenuItem:
       currentUser?.authorities.some((item) => item === 'ROLE_ADMIN') || false,
@@ -594,45 +641,28 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessProdMenu:
       currentUser?.authorities.some((item) =>
         [
-          'ROLE_ADMIN',
-          'ROLE_PROD_ADMIN',
-          'ROLE_PROD_PRO_ADMIN',
-          'ROLE_PROD_NVC_ADMIN',
-          'ROLE_PROD_OFL_ADMIN',
-          'ROLE_PROD_OMM_ADMIN',
-          'ROLE_PROD_WARE_ADMIN',
+          ...OUTBOUND_TRANSFER_ROLES,
           'ROLE_PROD_WTP_ADMIN',
         ].some((it) => it === item),
-      ) ||
-      hasSpfRequesterRole ||
-      hasSpfApproverRole ||
-      hasSpfWarehouseRole ||
-      false,
+      ) || hasInboundRole
+        || hasSpfRequesterRole
+        || hasSpfApproverRole
+        || hasSpfWarehouseRole
+        || false,
+
+    canAccessUpcomingInboundMenuItem:
+      currentUser?.authorities.some((item) =>
+        OUTBOUND_TRANSFER_ROLES.some((it) => it === item),
+      ) || hasInboundRole || false,
 
     canAccessInventoryTranferRequestMenuItem:
       currentUser?.authorities.some((item) =>
-        [
-          'ROLE_ADMIN',
-          'ROLE_PROD_ADMIN',
-          'ROLE_PROD_PRO_ADMIN',
-          'ROLE_PROD_NVC_ADMIN',
-          'ROLE_PROD_OFL_ADMIN',
-          'ROLE_PROD_OMM_ADMIN',
-          'ROLE_PROD_WARE_ADMIN',
-        ].some((it) => it === item),
+        OUTBOUND_TRANSFER_ROLES.some((it) => it === item),
       ) || false,
 
     canAccessInventoryTranferMenuItem:
       currentUser?.authorities.some((item) =>
-        [
-          'ROLE_ADMIN',
-          'ROLE_PROD_ADMIN',
-          'ROLE_PROD_PRO_ADMIN',
-          'ROLE_PROD_NVC_ADMIN',
-          'ROLE_PROD_OFL_ADMIN',
-          'ROLE_PROD_OMM_ADMIN',
-          'ROLE_PROD_WARE_ADMIN',
-        ].some((it) => it === item),
+        OUTBOUND_TRANSFER_ROLES.some((it) => it === item),
       ) || false,
 
     canMakeInventoryTranferRequest:
@@ -1472,5 +1502,3 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
 
 }
-
-

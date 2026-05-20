@@ -1,90 +1,90 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import { Badge, Tabs } from 'antd';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { RequestActions } from '@/services/apiGateway';
 import { ProdPaths } from '../..';
 // @ts-ignore
 import SparePartList from '../spare-part-request/SparePartList';
 import RequestsListWarehouse from './RequestsListWarehouse';
 import ReturnsListWarehouse from './ReturnsListWarehouse';
 import BreadCrumbCom from '@/pages/fleet/components/BreadCrumbCom';
-import { SparePartWarehouseService } from './service';
-import { subscribeWarehouseBadgeRefresh } from '../shared/badgeEvents';
+import { SparePartWarehouseReturnAPI } from './service.return';
+
+// Count returns with APPROVED or PARTIAL_RETURN status
+const countApprovedAndPartialReturns = async (requestAction: RequestActions): Promise<number> => {
+  try {
+    const api = SparePartWarehouseReturnAPI(requestAction);
+    const [approvedResponse, partialResponse] = await Promise.all([
+      api.paga_fetch_spare_parts_return_by_status_approved(0, 1, undefined, undefined, 'APPROVED'),
+      api.paga_fetch_spare_parts_return_by_status_approved(0, 1, undefined, undefined, 'PARTIAL_RETURN'),
+    ]);
+
+    return ((approvedResponse as any)?.total ?? 0) + ((partialResponse as any)?.total ?? 0);
+  } catch (error) {
+    console.error('Failed to count returns:', error);
+    return 0;
+  }
+};
+
 export default function ListView() {
-    const services = useMemo(() => SparePartWarehouseService({}), []);
-    const [pendingRequestCount, setPendingRequestCount] = useState(0);
-    const routes =[
-        {
-           path: '/prod',
-           label: 'Prod',
-        },
-        { 
-           path: ProdPaths.sparePartRequest,
-           label: 'Spare Parts',
-        }
-    ]
+  const [returnCount, setReturnCount] = useState(0);
+  const [activeKey, setActiveKey] = useState('1');
 
-    const loadPendingRequestCount = useCallback(async () => {
-      try {
-        const dashboard = await services.getDashboard();
-        setPendingRequestCount(Number(dashboard.pendingCount || 0));
-      } catch {
-        setPendingRequestCount(0);
-      }
-    }, [services]);
+  const requestAction: RequestActions = useMemo(
+    () => ({
+      start: (name) => console.log(`Loading: ${name}`),
+      end: (status) => console.log(status),
+    }),
+    [],
+  );
 
-    useEffect(() => {
-      loadPendingRequestCount();
-    }, [loadPendingRequestCount]);
+  const refreshCount = useCallback(() => {
+    countApprovedAndPartialReturns(requestAction).then(setReturnCount);
+  }, [requestAction]);
 
-    useEffect(() => {
-      const handleWindowFocus = () => {
-        loadPendingRequestCount();
-      };
-      const unsubscribeWarehouseBadgeRefresh = subscribeWarehouseBadgeRefresh(() => {
-        loadPendingRequestCount();
-      });
+  useEffect(() => {
+    refreshCount();
+  }, [activeKey, refreshCount]);
 
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-          loadPendingRequestCount();
-        }
-      };
-
-      window.addEventListener('focus', handleWindowFocus);
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-
-      return () => {
-        unsubscribeWarehouseBadgeRefresh();
-        window.removeEventListener('focus', handleWindowFocus);
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-      };
-    }, [loadPendingRequestCount]);
+  const routes = [
+    {
+      path: '/prod',
+      label: 'Prod',
+    },
+    {
+      path: ProdPaths.sparePartRequest,
+      label: 'Spare Parts',
+    },
+  ];
 
   return (
-  <>
-    <BreadCrumbCom separator=">" routes={routes} />
-    <Tabs
-    items={[
-        {
+    <>
+      <BreadCrumbCom separator=">" routes={routes} />
+      <Tabs
+        activeKey={activeKey}
+        onChange={setActiveKey}
+        items={[
+          {
             label: 'Spare Parts',
             key: '1',
-            children: <SparePartList/>
-        },
-        {
+            children: <SparePartList />,
+          },
+          {
+            label: 'Requests List',
+            key: '2',
+            children: <RequestsListWarehouse />,
+          },
+          {
             label: (
-              <Badge count={pendingRequestCount} size="small" overflowCount={999}>
-                <span>Requests List</span>
+              <Badge count={returnCount} color="red" offset={[12, 0]}>
+                Return List
               </Badge>
             ),
-            key: '2',
-            children: <RequestsListWarehouse/>,
-        },
-        {
-            label: 'Return List',
             key: '3',
-            children: <ReturnsListWarehouse/>,
-        }
-    ]}
-    />
-  </>
+            children: <ReturnsListWarehouse onUpdate={refreshCount} />,
+          },
+        ]}
+      />
+    </>
   );
 }

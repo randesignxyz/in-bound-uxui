@@ -127,6 +127,36 @@ export interface PrintPDFData<T> {
   data?: T;
 }
 
+const getReportFileExtension = (type: ExportType) => {
+  switch (type) {
+    case 'EXCEL':
+      return 'xls';
+    case 'XLSX':
+    case 'EXCELOPENXML':
+      return 'xlsx';
+    case 'CSV':
+      return 'csv';
+    case 'PDF':
+    default:
+      return 'pdf';
+  }
+};
+
+const getReportMimeType = (type: ExportType) => {
+  switch (type) {
+    case 'EXCEL':
+      return 'application/vnd.ms-excel';
+    case 'XLSX':
+    case 'EXCELOPENXML':
+      return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    case 'CSV':
+      return 'text/csv';
+    case 'PDF':
+    default:
+      return 'application/pdf';
+  }
+};
+
 const doDownloadSalesReport = async <T>(params: DownloadData<T>): Promise<void> => {
   const blob = request<Blob>(`${SALE_API}/export/report/${params.reportName}/type/${params.type}`, {
     method: 'POST',
@@ -137,14 +167,13 @@ const doDownloadSalesReport = async <T>(params: DownloadData<T>): Promise<void> 
   const v = await blob;
   const element = document.createElement('a');
   element.target = '_blank';
-  const file = new Blob([v], { type: 'application/pdf' });
+  const file = new Blob([v], { type: getReportMimeType(params.type) });
   console.log('new Blob([v]', URL.createObjectURL(file));
   element.href = URL.createObjectURL(file);
 
   if (params.target) element.target = '_blank';
   if (!params.target)
-    element.download = `${params.fileName}-${moment().format()}.${params.type === 'EXCEL' ? 'xls' : 'pdf'
-      }`;
+    element.download = `${params.fileName}-${moment().format()}.${getReportFileExtension(params.type)}`;
   document.body.appendChild(element);
   element.click();
 };
@@ -368,14 +397,13 @@ const doDownloadReport = async <T>(params: DownloadData<T>): Promise<void> => {
   const v = await blob;
   const element = document.createElement('a');
   element.target = '_blank';
-  const file = new Blob([v], { type: 'application/pdf' });
+  const file = new Blob([v], { type: getReportMimeType(params.type) });
   console.log('new Blob([v]', URL.createObjectURL(file));
   element.href = URL.createObjectURL(file);
 
   if (params.target) element.target = '_blank';
   if (!params.target)
-    element.download = `${params.fileName}-${moment().format("YYYY-MM-DD HH:mm:ss")}.${params.type === 'EXCEL' ? 'xls' : 'pdf'
-      }`;
+    element.download = `${params.fileName}-${moment().format("YYYY-MM-DD HH:mm:ss")}.${getReportFileExtension(params.type)}`;
   document.body.appendChild(element);
   element.click();
 };

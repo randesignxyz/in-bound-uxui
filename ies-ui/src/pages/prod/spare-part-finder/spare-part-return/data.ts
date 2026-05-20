@@ -35,6 +35,7 @@ export interface SparePartPickedLine {
   imageId?: string;
   pendingReturnQty?: number;
   returnedQty?: number;
+  remainingQty?: number;
 }
 
 export interface SparePartShipment {
@@ -86,6 +87,7 @@ export interface SparePartReturnListItem {
   // mapped to old field names to match table columns
   part_number?: string;
   spare_part_name?: string;
+  description?: string;
   request_id?: string;
   quantity?: number;
   UoM?: string;
@@ -236,6 +238,7 @@ export interface RequestDetailLineItem {
   quantity_to_return: number;
   used_quantity: number;
   total: number;
+  forLine?: string;
   // Warehouse receipt fields (present when state = COMPLETED)
   received_qty?: number;
   good_qty?: number;
@@ -258,6 +261,7 @@ export interface RequestDetailActivityItem {
   good_qty?: number;
   damage_message?: string | null;
   remark?: string;
+  forLine?: string;
 }
 
 /** One activity in Recent Activities timeline */
@@ -358,7 +362,12 @@ export const mapToFlattenedRowsMySparePartList = (
         category:                 typeof line.category === 'string' ? line.category : line.category?.category_name || '-',
         pendingReturnQty:         line.pendingReturnQty ?? 0,
         returnedQty:              line.returnedQty ?? 0,
-        availableQty:             Math.max(0, line.deliveredQty - (line.pendingReturnQty ?? 0) - (line.returnedQty ?? 0)),
+        remainingQty:             line.remainingQty,
+        availableQty:             Math.max(
+          0,
+          (line.remainingQty ?? Math.max(0, line.deliveredQty - (line.pendingReturnQty ?? 0) - (line.returnedQty ?? 0))) -
+            (line.pendingReturnQty ?? 0),
+        ),
       }))
     )
   );

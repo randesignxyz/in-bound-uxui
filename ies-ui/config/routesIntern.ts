@@ -1,4 +1,4 @@
-﻿import icons from "@/.umi/plugin-layout/icons";
+import icons from "@/.umi/plugin-layout/icons";
 import { access } from "fs";
 
 /**
@@ -45,6 +45,13 @@ export default [
     access: 'canAccessInventoryTranferMenuItem',
     component: './prod/inventory-transfer/',
   },
+  {
+    path: '/prod/inventory-inbound/:view/*',
+    name: 'upcomingInbound',
+    hideInMenu: 'true',
+    access: 'canAccessUpcomingInboundMenuItem',
+    component: './prod/upcoming-inbound/',
+  },
 
   {
     path: '/prod/daily-water-treatment/:view/*',
@@ -88,13 +95,6 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessSparePartFinder',
     component: './prod/spare-part-finder/spare-part-request/',
-  },
-  {
-    path: '/prod/spare-part-request-test/:view/*',
-    name: 'sparePartRequestTest',
-    hideInMenu: 'true',
-    access: 'canAccessSparePartFinder',
-    component: './prod/spare-part-finder/spare-part-request-test',
   },
   {
     path: '/prod/spare-part-warehouse/:view/*',

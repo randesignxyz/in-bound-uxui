@@ -154,10 +154,12 @@ export interface DrawerBatchReturnItemsProps {
   onChange?: (updated: any) => void;
   onIssueRequest?: (payload: {
     id: number;
+    warehouseCode?: string;
     lines: Array<{ requestLineId: number; issueQty: number }>;
   }) => Promise<void>;
   onSaveDraft?: (payload: {
     id: number;
+    warehouseCode?: string;
     lines: Array<{ requestLineId: number; issueQty: number }>;
   }) => Promise<void>;
   onDeleteDraft?: (id: number) => Promise<void>;
@@ -172,6 +174,21 @@ const clampInt = (v: unknown) => {
   const n = Number(v);
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.floor(n));
+};
+
+const resolveSourceWarehouseCode = (items: RequestDetailLineItem[], itemDetailMap: Record<string, any>) => {
+  const sourceWarehouses = new Set(
+    items
+      .map((item) => {
+        const detail = itemDetailMap[item.productId];
+        const locations = Array.isArray(detail?.locations) ? detail.locations : [];
+        const locationWithStock = locations.find((location: any) => Number(location?.availableQty ?? 0) > 0);
+        return String(locationWithStock?.warehouseCode || detail?.warehouse || '').trim();
+      })
+      .filter(Boolean),
+  );
+
+  return sourceWarehouses.size === 1 ? Array.from(sourceWarehouses)[0] : undefined;
 };
 
 const getActivityRank = (label?: string): number => {
@@ -548,21 +565,24 @@ export default function RequestedBatchWareHouse({
     const detail = selectedProductDetail;
     if (!detail) return undefined;
     return {
-      image: detail.image,
-      imageId: detail.imageId,
-      locations: detail.locations,
-      spare_part_name: detail.partName,
-      part_number: detail.productId,
+      id: detail.id,
+      productId: detail.productId,
+      partName: detail.partName,
       description: detail.description,
-      stock_quantity: detail.stock,
-      receiving_from_warehouse: detail.warehouse,
-      company: detail.company,
+      stock: detail.stock,
+      warehouse: detail.warehouse || '',
       category: detail.category,
+      businessUnit: detail.businessUnit || '',
       uom: detail.uom,
-      business_unit: detail.businessUnit,
-      requested_date: detail.createdDate,
-      updated_date: detail.updatedDate,
-    };
+      uomOptions: detail.uom ? [detail.uom] : [],
+      status: detail.status || 'available',
+      isActive: detail.isActive ?? true,
+      image: detail.image,
+      imageId: detail.imageId ? (Array.isArray(detail.imageId) ? detail.imageId : [detail.imageId]) : [],
+      locations: detail.locations || [],
+      createdDate: detail.createdDate,
+      updatedDate: detail.updatedDate,
+    } as any;
   }, [selectedProductDetail]);
 
   const openProductDetails = async (record: RequestDetailLineItem) => {
@@ -885,7 +905,11 @@ export default function RequestedBatchWareHouse({
       return;
     }
 
-    onSaveDraft({ id: data.id, lines })
+    onSaveDraft({
+      id: data.id,
+      warehouseCode: resolveSourceWarehouseCode(workingItems, itemDetailMap),
+      lines,
+    })
       .then(() => {
         setDraftByProductId(nextDraft);
         setSendingByProductId((prev) => {
@@ -978,7 +1002,11 @@ export default function RequestedBatchWareHouse({
         message.warning('No valid request lines were found to issue.');
         return;
       }
-      onIssueRequest({ id: data.id, lines })
+      onIssueRequest({
+        id: data.id,
+        warehouseCode: resolveSourceWarehouseCode(workingItems, itemDetailMap),
+        lines,
+      })
         .then(() => {
           setDraftByProductId({});
           setSendingByProductId((prev) => {

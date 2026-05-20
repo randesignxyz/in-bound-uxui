@@ -20,6 +20,7 @@ import {
   message,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import SparePartImage from '../spare-part-request/SparePartImage';
 import type {
   RequestDetailActivityItem,
@@ -72,6 +73,7 @@ interface ReturnItem {
   goodQty?: number;
   damagedQty?: number;
   itemRemark?: string;
+  forLine?: string; // Not from API, but useful to show in table for warehouse staff to identify which line to receive against
   images?: string[];  // file IDs
 }
 
@@ -100,8 +102,8 @@ const STATUS_STEP_MAP: Record<ReturnStatus | string, number> = {
 };
 
 const statusColorMap: Record<ReturnStatus | string, string> = {
-  Pending: 'processing',
-  Approved: 'warning',
+  Pending: 'default',
+  Approved: 'default',
   Rejected: 'error',
   Receiving: 'processing',
   'In Progress': 'processing',
@@ -111,7 +113,7 @@ const statusColorMap: Record<ReturnStatus | string, string> = {
 
 const statusLabelMap: Record<ReturnStatus | string, string> = {
   Pending: 'Return',
-  Approved: 'Approved',
+  Approved: 'Pending',
   Rejected: 'Rejected',
   Receiving: 'Receiving',
   'In Progress': 'In Progress',
@@ -122,7 +124,7 @@ const statusLabelMap: Record<ReturnStatus | string, string> = {
 
 const formatDateTime = (date?: string) => {
   if (!date) return '—';
-  return formatSpfDateTime(date);
+  return dayjs(date).format('YYYY-MMM-DD hh:mm A');
 };
 
 /**
@@ -263,6 +265,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           uom: i.uom,
           usedQty: i.used_quantity ?? 0,
           qtyToReturn: i.quantity_to_return ?? 0,
+          forLine: i.forLine,
           // Receipt fields from completed returns
           receivedQty: i.received_qty,
           goodQty: i.good_qty,
@@ -358,6 +361,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             damaged_qty: i.damaged_qty,
             remark: i.remark,
             images: i.images,
+            forLine: i.forLine,
           })),
           activities: (item.activities ?? []).map((a: any) => ({
             label: a.label,
@@ -556,6 +560,70 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   const areImageListsEqual = (current: string[], next: string[]) =>
     current.length === next.length && current.every((id, index) => id === next[index]);
 
+  const normalizeQty = (value: string | number | null | undefined) => Number(value ?? 0) || 0;
+
+  const clampQty = (value: string | number | null | undefined, max: number) =>
+    Math.min(Math.max(normalizeQty(value), 0), Math.max(max, 0));
+
+  const getRemainingQty = (record: ReturnItem) =>
+    Math.max(record.qtyToReturn - (record.receivedQty ?? 0), 0);
+
+  const getReceiptQuantities = (record: ReturnItem) => {
+    const key = String(record.id);
+    const remaining = getRemainingQty(record);
+    const hasGoodInput = Object.prototype.hasOwnProperty.call(goodQtyMap, key);
+    const requestedGoodQty = goodQtyMap[key];
+    const requestedDamagedQty = damagedQtyMap[key] ?? 0;
+
+    if (hasGoodInput) {
+      const goodQty = clampQty(requestedGoodQty ?? 0, remaining);
+      const damagedQty = clampQty(requestedDamagedQty, remaining - goodQty);
+
+      return {
+        remaining,
+        goodQty,
+        damagedQty,
+        goodMax: remaining - damagedQty,
+        damagedMax: remaining - goodQty,
+        hasGoodInput,
+      };
+    }
+
+    const damagedQty = clampQty(requestedDamagedQty, remaining);
+    const goodQty = remaining - damagedQty;
+
+    return {
+      remaining,
+      goodQty,
+      damagedQty,
+      goodMax: remaining - damagedQty,
+      damagedMax: remaining,
+      hasGoodInput,
+    };
+  };
+
+  const handleGoodQtyChange = (record: ReturnItem, value: string | number | null) => {
+    const key = String(record.id);
+    const remaining = getRemainingQty(record);
+    const nextGoodQty = clampQty(value ?? 0, remaining);
+
+    setGoodQtyMap((prevMap) => ({ ...prevMap, [key]: nextGoodQty }));
+    setDamagedQtyMap((prevMap) => {
+      const nextDamagedQty = clampQty(prevMap[key] ?? 0, remaining - nextGoodQty);
+      return { ...prevMap, [key]: nextDamagedQty };
+    });
+  };
+
+  const handleDamagedQtyChange = (record: ReturnItem, value: string | number | null) => {
+    const key = String(record.id);
+    const { damagedMax } = getReceiptQuantities(record);
+    const nextDamagedQty = clampQty(value ?? 0, damagedMax);
+
+    setDamagedQtyMap((prevMap) => ({ ...prevMap, [key]: nextDamagedQty }));
+  };
+
+  const getRowRemark = (record: ReturnItem) => remarkMap[String(record.id)] ?? '';
+
   // ─── Upload damage images to FILE microservice ───────────────────
   const uploadFilesToFileService = async (files: UploadFile[]): Promise<string[]> => {
     const token = localStorage.getItem('accessToken');
@@ -592,22 +660,28 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
 
   const handleSave = async () => {
     if (!returnId) return;
+    const missingDamageRemark = tableItems.find((item) => {
+      if (checkReadOnly(item)) return false;
+      const { damagedQty } = getReceiptQuantities(item);
+      return damagedQty > 0 && getRowRemark(item).trim().length === 0;
+    });
+
+    if (missingDamageRemark) {
+      message.warning('Please enter a remark for damaged items');
+      return;
+    }
+
     setLoading(true);
     try {
       // Upload all damage images per row first, collect server IDs
       const itemsWithImages = await Promise.all(
         tableItems.map(async (item) => {
-          const key = String(item.id);
           const files = getRowAttachmentFiles(item);
           const existingImages = item.images ?? [];
           const damageImage = files.length > 0 ? await uploadFilesToFileService(files) : [];
           const imageChanged = areImageListsEqual(existingImages, damageImage) === false;
 
-          // Resolve defaults the same way the InputNumber columns do
-          const alreadyReceived = item.receivedQty ?? 0;
-          const remaining = item.qtyToReturn - alreadyReceived;
-          const goodQty    = goodQtyMap[key]    ?? remaining;
-          const damagedQty = damagedQtyMap[key] ?? 0;
+          const { goodQty, damagedQty } = getReceiptQuantities(item);
 
           if (goodQty + damagedQty <= 0 && !imageChanged) return null as any;
 
@@ -617,8 +691,8 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             receivedQty: goodQty + damagedQty,
             goodQty,
             damagedQty,
-            remark: remarkMap[key] ?? '',
-            damageMessages: damagedQty > 0 ? (remarkMap[key] ?? '') : undefined,
+            remark: getRowRemark(item),
+            damageMessages: damagedQty > 0 ? getRowRemark(item) : undefined,
             damageImage: imageChanged || damageImage.length > 0 ? damageImage : undefined,
           };
         })
@@ -637,6 +711,9 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       // ─── Refresh Logic ───
       await fetchDetail();        // Refresh drawer internal state
       onSuccess?.();               // Notify parent list to reload
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('spare-part-return-updated'));
+      }
       
       // Clear current batch inputs
       setGoodQtyMap({});
@@ -731,11 +808,8 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             title: 'Good',
             key: 'good_amount',
             render: (_: unknown, record: ReturnItem) => {
-              const key = String(record.id);
-              const alreadyReceived = record.receivedQty ?? 0;
-              const remaining = record.qtyToReturn - alreadyReceived;
-              const defaultVal = remaining; // Default to remaining for partial receipts
               const prev = record.goodQty ?? 0;
+              const { goodQty, goodMax } = getReceiptQuantities(record);
               
               if (checkReadOnly(record)) {
                 return (
@@ -753,11 +827,10 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                   )}
                   <InputNumber
                     min={0}
-                    max={remaining}
-                    defaultValue={defaultVal}
-                    value={goodQtyMap[key] ?? defaultVal}
+                    max={goodMax}
+                    value={goodQty}
                     style={{ width: '100%', minWidth: 60 }}
-                    onChange={(v) => setGoodQtyMap((prevMap) => ({ ...prevMap, [key]: v ?? 0 }))}
+                    onChange={(v) => handleGoodQtyChange(record, v)}
                   />
                 </div>
               );
@@ -765,14 +838,21 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             width: 100,
           },
           {
+            title: 'Line',
+            key: 'forLine',
+            render: (_: any, record: ReturnItem) => (
+            <span style={{ fontWeight: 600, color: '#1890ff' }}>
+              {record.forLine ?? '-'}
+            </span>
+          ),
+          },
+          {
             title: 'Damaged',
             key: 'damaged_amount',
             render: (_: unknown, record: ReturnItem) => {
-              const key = String(record.id);
-              const alreadyReceived = record.receivedQty ?? 0;
-              const remaining = record.qtyToReturn - alreadyReceived;
-              const defaultVal = 0; // Default damaged to 0 for partial receipts
               const prev = record.damagedQty ?? 0;
+              const { damagedQty, damagedMax, goodQty, hasGoodInput, remaining } = getReceiptQuantities(record);
+              const isFullyGood = hasGoodInput && goodQty >= remaining && damagedQty === 0;
               
               if (checkReadOnly(record)) {
                 return (
@@ -780,6 +860,9 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                     {record.damagedQty ?? '—'}
                   </span>
                 );
+              }
+              if (isFullyGood) {
+                return <Typography.Text type="secondary">0</Typography.Text>;
               }
               return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -790,11 +873,10 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                   )}
                   <InputNumber
                     min={0}
-                    max={remaining}
-                    defaultValue={defaultVal}
-                    value={damagedQtyMap[key] ?? defaultVal}
+                    max={damagedMax}
+                    value={damagedQty}
                     style={{ width: '100%', minWidth: 60 }}
-                    onChange={(v) => setDamagedQtyMap((prevMap) => ({ ...prevMap, [key]: v ?? 0 }))}
+                    onChange={(v) => handleDamagedQtyChange(record, v)}
                   />
                 </div>
               );
@@ -806,16 +888,28 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             key: 'messages',
             render: (_: unknown, record: ReturnItem) => {
               const key = String(record.id);
+              const rowRemark = getRowRemark(record);
+              const { damagedQty } = getReceiptQuantities(record);
+              const isRemarkRequired = damagedQty > 0;
+              const isMissingRequiredRemark = isRemarkRequired && rowRemark.trim().length === 0;
               if (checkReadOnly(record)) {
                 return <Typography.Text type="secondary">{record.itemRemark || '—'}</Typography.Text>;
               }
               return (
-                <Input.TextArea
-                  rows={1}
-                  placeholder="Enter any notes"
-                  value={remarkMap[key] ?? ''}
-                  onChange={(e) => setRemarkMap((prev) => ({ ...prev, [key]: e.target.value }))}
-                />
+                <div>
+                  <Input.TextArea
+                    rows={1}
+                    placeholder={isRemarkRequired ? 'Required for damage' : 'Enter any notes'}
+                    status={isMissingRequiredRemark ? 'error' : undefined}
+                    value={rowRemark}
+                    onChange={(e) => setRemarkMap((prev) => ({ ...prev, [key]: e.target.value }))}
+                  />
+                  {isMissingRequiredRemark && (
+                    <Typography.Text type="danger" style={{ display: 'block', fontSize: 12, marginTop: 4 }}>
+                      Remark required
+                    </Typography.Text>
+                  )}
+                </div>
               );
             },
             width: 180,
@@ -1011,7 +1105,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       width={'100%'}
       open={open}
       onClose={onClose}
-      styles={{ body: { backgroundColor: '#fafafa', padding: '24px' } }}
+      styles={{ body: { padding: '24px' } }}
       footer={
         shouldShowReceivedButton ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -1060,7 +1154,9 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           <Descriptions.Item label="Return Date">
             {formatDateTime(fetchedData?.request_date ?? data?.request_date)}
           </Descriptions.Item>
-          <Descriptions.Item label="Status">
+          <Descriptions.Item label="Status"
+             contentStyle={{ fontWeight: 400, color: '' }}
+          >
             <Tag color={statusColorMap[effectiveStatus]} bordered={false}>{statusLabelMap[effectiveStatus]}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Remarks">{fetchedData?.remarks || '—'}</Descriptions.Item>
@@ -1169,7 +1265,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                       <Typography.Text type="secondary">{activity.description}</Typography.Text>
                     </div>
                     {activity.date && (
-                      <Typography.Text type="secondary">{activity.date}</Typography.Text>
+                      <Typography.Text type="secondary">{formatDateTime(activity.date)}</Typography.Text>
                     )}
                   </div>
 
@@ -1200,6 +1296,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                           },
                           { title: 'From Warehouse', dataIndex: 'fromWarehouse' },
                           { title: 'To Warehouse', dataIndex: 'toWarehouse' },
+                          // {title: 'Line', dataIndex: 'forLine' },
                           { title: 'Business Unit', dataIndex: 'business_unit' },
                         ]}
                       />

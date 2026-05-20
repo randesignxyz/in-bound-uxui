@@ -10,7 +10,11 @@ import type {
   RequestStatus,
   SparePartRequestItem,
 } from './data';
-import { mapItem, type SparePartRequestListApiItem } from './service.api';
+import {
+  mapItem,
+  type SparePartCategoryApiItem,
+  type SparePartRequestListApiItem,
+} from './service.api';
 import type {
   RequestDetailActivity,
   RequestDetailData,
@@ -142,6 +146,11 @@ type CreateRequestPayload = {
   }>;
   remark: string;
   priority: 'normal' | 'high' | 'urgent';
+};
+
+type SparePartWarehouseOption = {
+  warehouseCode: string;
+  warehouseName: string;
 };
 
 const normalizeUomOptions = (value?: string | string[] | null) => {
@@ -276,6 +285,32 @@ const SparePartRequestAction = {
     actionName: 'confirm-spare-part-pickup',
     endpoint: 'PROD',
     payload: { id },
+  }),
+  categoryList: (): ServiceApiType<Record<string, never>> => ({
+    type: 'LIST_QUERY',
+    actionName: 'get-spare-part-categories',
+    endpoint: 'PROD',
+    payload: {},
+  }),
+  businessUnitList: (): ServiceApiType<Record<string, never>> => ({
+    type: 'LIST_QUERY',
+    actionName: 'get-spare-part-business-units',
+    endpoint: 'PROD',
+    payload: {},
+  }),
+  warehouseListByBusinessUnit: (
+    businessUnit?: string | string[],
+  ): ServiceApiType<{ businessUnit: string[] }> => ({
+    type: 'LIST_QUERY',
+    actionName: 'get-spare-part-warehouses-by-business-unit',
+    endpoint: 'PROD',
+    payload: {
+      businessUnit: Array.isArray(businessUnit)
+        ? businessUnit
+        : businessUnit
+          ? [businessUnit]
+          : [],
+    },
   }),
 };
 
@@ -888,6 +923,26 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
   confirmPickup: async (id: number): Promise<any> => {
     return await singleRequest<any>(SparePartRequestAction.confirmPickup(id))(requestAction);
   },
+  categoryList: async (): Promise<SparePartCategoryApiItem[]> => {
+    const response = await singleRequest<SparePartCategoryApiItem>(
+      SparePartRequestAction.categoryList(),
+    )(requestAction);
+    return Array.isArray(response) ? response : [];
+  },
+  businessUnitList: async (): Promise<{ businessUnit: string }[]> => {
+    const response = await singleRequest<{ businessUnit: string }>(
+      SparePartRequestAction.businessUnitList(),
+    )(requestAction);
+    return Array.isArray(response) ? response : [];
+  },
+  warehouseListByBusinessUnit: async (
+    businessUnit?: string | string[],
+  ): Promise<SparePartWarehouseOption[]> => {
+    const response = await singleRequest<SparePartWarehouseOption>(
+      SparePartRequestAction.warehouseListByBusinessUnit(businessUnit),
+    )(requestAction);
+    return Array.isArray(response) ? response : [];
+  },
   importRequestFile: async (file: File): Promise<ImportedRequestResult> => {
     requestAction?.start?.('import-spare-part-request');
     try {
@@ -917,7 +972,7 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
           toWarehouseCode: row.toWarehouseCode,
           forLine: row.forLine,
           uom: row.uom,
-          item: mapItem(row.item, row.toWarehouseCode),
+          item: mapItem(row.item),
         })) || [];
 
       const failedRows =

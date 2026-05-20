@@ -96,6 +96,8 @@ type ExecResponseDto<T> = {
 type PageIssueRequestsParams = {
   searchValue?: string;
   status?: 'All' | WarehouseDisplayStatus;
+  priority?: string;
+  dateRange?: [string, string] | null;
   pagination?: {
     current?: number;
     pageSize?: number;
@@ -104,6 +106,7 @@ type PageIssueRequestsParams = {
 
 type IssueRequestPayload = {
   id: number;
+  warehouseCode?: string;
   lines: Array<{
     requestLineId: number;
     issueQty: number;
@@ -132,6 +135,8 @@ const SparePartWarehouseAction = {
       advanceSearch: {
         searchValue: params.searchValue || '',
         status: mapIssueStatusFilter(params.status),
+        priority: mapPriorityFilter(params.priority),
+        dateRange: params.dateRange,
       },
     },
     pagination: {
@@ -201,6 +206,7 @@ const normalizePriority = (value?: string | null): WarehouseRequestRecord['prior
   const normalized = String(value || '').trim().toLowerCase();
   if (normalized === 'urgent') return 'Urgent';
   if (normalized === 'high') return 'High';
+  if (normalized === 'low') return 'Low';
   return 'Normal';
 };
 
@@ -312,7 +318,7 @@ const mapIssueLineToWarehouseLine = (item: IssueLineDto) => ({
   itemName: item.sparePartName,
   quantity: Number(item.approvedQty || 0),
   receivedQuantity: Number(item.issuedQty || 0),
-  businessUnit: item.unit || 'pcs',
+  businessUnit: item.forLine || '',
   uom: item.unit || 'pcs',
 });
 
@@ -398,10 +404,10 @@ const buildActivities = (
     orderedHistory.length > 0 && confirmedHistory.length === orderedHistory.length;
   const finalConfirmedEntry = hasAllShipmentsConfirmed
     ? [...confirmedHistory].sort((left, right) => {
-        const leftTime = new Date(left.pickupConfirmedAt || left.issuedAt || item.requestedDate || '').getTime();
-        const rightTime = new Date(right.pickupConfirmedAt || right.issuedAt || item.requestedDate || '').getTime();
-        return leftTime - rightTime;
-      })[confirmedHistory.length - 1]
+      const leftTime = new Date(left.pickupConfirmedAt || left.issuedAt || item.requestedDate || '').getTime();
+      const rightTime = new Date(right.pickupConfirmedAt || right.issuedAt || item.requestedDate || '').getTime();
+      return leftTime - rightTime;
+    })[confirmedHistory.length - 1]
     : undefined;
   const activities: RequestDetailActivity[] = [
     {
@@ -547,6 +553,13 @@ const mapIssueStatusFilter = (value?: 'All' | WarehouseDisplayStatus) => {
     default:
       return undefined;
   }
+};
+
+const mapPriorityFilter = (value?: string) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized || normalized === 'all') return undefined;
+  if (normalized === 'normal' || normalized === 'medium') return 'MEDIUM';
+  return normalized.toUpperCase();
 };
 
 export const SparePartWarehouseService = (requestAction: RequestActions) => ({

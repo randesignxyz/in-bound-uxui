@@ -27,7 +27,7 @@ export interface WarehouseRequestRecord {
   requestId: string;
   requestDate: string;
   requester: string;
-  priority: 'Urgent' | 'High' | 'Normal';
+  priority: 'Urgent' | 'High' | 'Normal' | 'Low';
   status:
     | 'Pending'
     | 'Approved'
@@ -58,6 +58,7 @@ export const priorityColorMap: Record<WarehouseRequestRecord['priority'], string
   Urgent: 'error',
   High: 'warning',
   Normal: 'info',
+  Low: 'default',
 };
 
 export const getWarehouseRequestStatus = (status: WarehouseRequestRecord['status']) => status;

@@ -9,13 +9,13 @@ export const ProdPaths = {
   prod: '/prod',
   transferRequest: '/prod/inventory-transfer-request',
   inventoryTransfer: '/prod/inventory-transfer',
+  upcomingInbound: '/prod/inventory-inbound',
   sparePartRequest: '/prod/spare-part-request',
   dailyWaterTreatment: '/prod/daily-water-treatment',
   dailyPreWaterTreatment: '/prod/daily-pre-water-treatment',
   dailyHACCPMonitoringtOzone: '/prod/daily-haccp-monitoring-ozone',
   dailyHACCPMonitoring: '/prod/daily-haccp-monitoring',
   sparePartReturn: '/prod/spare-part-return',
-  sparePartRequestTest: '/prod/spare-part-request-test',
   sparePartWarehouse: '/prod/spare-part-warehouse',
   sparePartApproval: '/prod/spare-part-approval',
 };
@@ -39,6 +39,14 @@ export default () => {
       icon: warehouseTransferIcon,
       link: `${ProdPaths.inventoryTransfer}/list`,
       visible: access.canAccessInventoryTranferMenuItem,
+    },
+    {
+      id: 'upcomingInbound',
+      name: 'Inventory Inbound',
+      description: 'Upcoming Inbound Receipt & PO Tracking',
+      icon: transferIcon,
+      link: `${ProdPaths.upcomingInbound}/list`,
+      visible: access.canAccessUpcomingInboundMenuItem,
     },
     // {
     //   id: 'sparePartRequest',
@@ -105,13 +113,6 @@ export default () => {
       icon: warehouseTransferIcon,
       link: `${ProdPaths.sparePartApproval}/list`,
       visible: access.canSpfApprover,
-    },
-    {
-      id: 'SparePartsListTest',
-      name: 'Spare Parts',
-      description: 'Spare Part Request List',
-      link: `${ProdPaths.sparePartRequestTest}/list`,
-      visible: access.canAdmin
     },
     {
       id: 'sparePartRequestWarehouse',

@@ -69,8 +69,8 @@ export default function MySparePartList() {
     end: (status, reason) => console.log(status, reason),
   };
   const onDetailHandler = (data: SparePartReturnListItem) => {
-    setDrawerOpen(true);
     setSelectedItem(data);
+    setDrawerOpen(true);
   };
 
   const handleTogglePickedItemState = async (record: SparePartReturnListItem) => {
@@ -103,6 +103,12 @@ export default function MySparePartList() {
   const handleReturnPart = () => {
     if (selectedItems.length > 0) {
       setModalOpen({ visible: true, data: selectedItems });
+    }
+  };
+
+  const notifyReturnUpdated = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('spare-part-return-updated'));
     }
   };
 
@@ -188,6 +194,7 @@ export default function MySparePartList() {
       setSelectedItems([]);
       setSelectedRowKeys([]);
       actionRef.current?.reloadAndRest?.();
+      notifyReturnUpdated();
     } catch (error) {
       console.error('Failed to submit return request:', error);
       const errorMessage =
@@ -228,7 +235,7 @@ export default function MySparePartList() {
           />
 
           {/* Desktop: Radio Group */}
-          <div className="radio-group-desktop">
+          {/* <div className="radio-group-desktop">
           <Select
             mode="multiple"
             allowClear
@@ -241,10 +248,10 @@ export default function MySparePartList() {
               value: opt.value,
             }))}
           />
-        </div>
+        </div> */}
 
           {/* Mobile: Dropdown */}
-          <div className="radio-group-mobile">
+          {/* <div className="radio-group-mobile">
             <Dropdown
               menu={{
                 items: radioOptions.map((opt) => ({
@@ -267,7 +274,7 @@ export default function MySparePartList() {
                 {selectedWarehouseLabel} <MoreOutlined />
               </Button>
             </Dropdown>
-          </div>
+          </div> */}
 
           <Select
             value={selectedCategory}
@@ -347,7 +354,7 @@ export default function MySparePartList() {
             return {
               data: result.items,
               success: true,
-              total: result.items.length,
+              total: result.total,
             };
           }}
           rowSelection={{
@@ -494,7 +501,14 @@ export default function MySparePartList() {
         onItemsChange={handleModalItemsChange}
         data={modalOpen.data}
       />
-      <DrawerViewItem open={drawerOpen} data={selectedItem} onClose={() => setDrawerOpen(false)} />
+      <DrawerViewItem
+        open={drawerOpen}
+        data={selectedItem}
+        onClose={() => {
+          setDrawerOpen(false);
+          setSelectedItem(null);
+        }}
+      />
     </>
   );
 }

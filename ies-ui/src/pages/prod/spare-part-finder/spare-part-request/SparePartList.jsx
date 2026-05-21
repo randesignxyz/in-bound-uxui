@@ -56,6 +56,15 @@ const areStringArraysEqual = (left = [], right = []) =>
 const normalizeBusinessUnitFilters = (items = []) =>
   Array.from(new Set(items.map((item) => String(item || '').trim()).filter(Boolean))).sort();
 
+const isAbortError = (error, signal) =>
+  Boolean(
+    signal?.aborted ||
+      error?.name === 'AbortError' ||
+      error?.type === 'AbortError' ||
+      error?.code === 'ERR_CANCELED' ||
+      error?.message === 'The user aborted a request.',
+  );
+
 const areFiltersEqual = (left = {}, right = {}) =>
   left.category === right.category &&
   left.status === right.status &&
@@ -222,7 +231,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         }
       })
       .catch((error) => {
-        if (controller.signal.aborted || error?.name === 'AbortError' || optionsSeq !== warehouseOptionsSeqRef.current) return;
+        if (isAbortError(error, controller.signal) || optionsSeq !== warehouseOptionsSeqRef.current) return;
         setKnownWarehouses([]);
       })
       .finally(() => {
@@ -413,14 +422,19 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         signal: controller.signal,
       });
     } catch (error) {
-      if (controller.signal.aborted || error?.name === 'AbortError') {
+      if (isAbortError(error, controller.signal)) {
         return {
           data: currentRowsRef.current,
           total: currentTotalRef.current,
           success: true,
         };
       }
-      throw error;
+      message.error('Failed to load spare parts.');
+      return {
+        data: currentRowsRef.current,
+        total: currentTotalRef.current,
+        success: false,
+      };
     } finally {
       if (activeListControllerRef.current === controller) {
         activeListControllerRef.current = undefined;

@@ -94,7 +94,7 @@ const buildResubmitRow = (line, item) => ({
   item,
   quantity: Math.max(Number(line.quantityToReturn || line.requestedQty || line.total || 1), 1),
   purpose: line.description || '',
-  toWarehouseCode: line.warehouse || '',
+  toWarehouseCode: line.toWarehouse || line.toWarehouseCode || '',
   forLine: line.company || '',
   uom: line.uom || '',
 });

@@ -426,5 +426,6 @@ export const fetchProductionLines = async (): Promise<{ id: number; lineCode: st
   }
 
   const payload = await response.json().catch(() => []);
-  return Array.isArray(payload) ? payload : [];
+  const lines = Array.isArray(payload) ? payload : payload?.data;
+  return Array.isArray(lines) ? lines : [];
 };

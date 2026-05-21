@@ -22,7 +22,11 @@ import RequestsWarehouseExportExcel, {
 import { SparePartWarehouseService } from './service';
 import { getUrlReporting } from '@/pages/ReportUrl';
 
-export default function RequestsListWarehouse() {
+interface RequestsListWarehouseProps {
+  onDataChanged?: () => void;
+}
+
+export default function RequestsListWarehouse({ onDataChanged }: RequestsListWarehouseProps) {
   const { RangePicker } = DatePicker;
   const access = useAccess();
   const requestActions = simpleRequestActions();
@@ -437,26 +441,32 @@ export default function RequestsListWarehouse() {
           const response = await services.issueRequest(payload);
           applyResponseUpdate(response);
           await reloadRequests();
+          onDataChanged?.();
         }}
         onSaveDraft={async (payload) => {
           const response = await services.saveDraft(payload);
           applyResponseUpdate(response);
+          onDataChanged?.();
         }}
         onDeleteDraft={async (id) => {
           const response = await services.deleteDraft(id);
           applyResponseUpdate(response);
+          onDataChanged?.();
         }}
         onConfirmPickup={async (payload) => {
           const response = await services.confirmPickup(payload);
           applyResponseUpdate(response);
+          onDataChanged?.();
         }}
         onGeneratePickupQr={async (payload) => {
           const response = await services.generatePickupQr(payload);
           applyResponseUpdate(response);
+          onDataChanged?.();
         }}
         onAcceptRequest={async (id) => {
           const response = await services.acceptRequest(id);
           applyResponseUpdate(response);
+          onDataChanged?.();
         }}
       />
       {canExportExcel ? (

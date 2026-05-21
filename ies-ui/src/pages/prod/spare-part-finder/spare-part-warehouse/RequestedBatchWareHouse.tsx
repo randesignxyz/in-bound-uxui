@@ -103,6 +103,9 @@ export interface RequestDetailLineItem {
   warehouseSentQuantity?: number;
   description?: string;
   stockQuantity?: number;
+  fromWarehouse?: string;
+  toWarehouse?: string;
+  productionLine?: string;
   warehouse?: string;
   zone?: string;
   shelf?: string;
@@ -189,6 +192,18 @@ const resolveSourceWarehouseCode = (items: RequestDetailLineItem[], itemDetailMa
   );
 
   return sourceWarehouses.size === 1 ? Array.from(sourceWarehouses)[0] : undefined;
+};
+
+const resolveRequestLineSourceWarehouse = (
+  item: RequestDetailLineItem,
+  itemDetailMap: Record<string, any>,
+) => {
+  if (item.fromWarehouse) return item.fromWarehouse;
+
+  const detail = itemDetailMap[item.productId];
+  const locations = Array.isArray(detail?.locations) ? detail.locations : [];
+  const locationWithStock = locations.find((location: any) => Number(location?.availableQty ?? 0) > 0);
+  return String(locationWithStock?.warehouseCode || detail?.warehouse || '').trim() || undefined;
 };
 
 const getActivityRank = (label?: string): number => {
@@ -337,6 +352,9 @@ export default function RequestedBatchWareHouse({
       warehouseSentQuantity: Number(it.receivedQuantity ?? it.issuedQty ?? 0),
       description: it.remark ?? it.description ?? undefined,
       stockQuantity: it.stockQuantity,
+      fromWarehouse: it.fromWarehouseCode ?? it.fromWarehouse ?? undefined,
+      toWarehouse: it.toWarehouseCode ?? undefined,
+      productionLine: it.forLine ?? undefined,
       warehouse: it.toWarehouseCode ?? req?.category,
       zone: it.zone,
       shelf: it.shelf,
@@ -1047,9 +1065,27 @@ export default function RequestedBatchWareHouse({
       ),
     },
     { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
-    { title: 'Qty Requested', dataIndex: 'quantityToReturn', width: 'auto', align: 'right' as const },
     {
-      title: 'Qty Sent',
+      title: 'From WH',
+      key: 'fromWarehouse',
+      width: 'auto',
+      render: (_: unknown, record) => resolveRequestLineSourceWarehouse(record, itemDetailMap) || '—',
+    },
+    {
+      title: 'To WH',
+      key: 'toWarehouse',
+      width: 'auto',
+      render: (_: unknown, record) => record.toWarehouse || record.warehouse || '—',
+    },
+    {
+      title: 'Line',
+      dataIndex: 'productionLine',
+      width: 'auto',
+      render: (_: unknown, record) => record.productionLine || '—',
+    },
+    { title: 'Requested', dataIndex: 'quantityToReturn', width: 'auto', align: 'right' as const },
+    {
+      title: 'Sent',
       key: 'sent',
       width: 'auto',
       align: 'right' as const,
@@ -1073,7 +1109,7 @@ export default function RequestedBatchWareHouse({
       width: 'auto'
     },
     {
-      title: 'Select Amount',
+      title: 'Amount',
       key: 'selectAmount',
       width: 'auto',
       render: (_: unknown, record) => {
@@ -1090,7 +1126,7 @@ export default function RequestedBatchWareHouse({
         const remainingRequestQty = Math.max(0, requestedQty - sentQty - draftedQty);
         const exceedsRemainingRequestQty = current > remainingRequestQty;
         return (
-          <div style={{ width: '100%', maxWidth: 140 }}>
+          <div style={{ width: '100%', maxWidth: 100 }}>
             <InputNumber
               style={{ width: '100%' }}
               status={exceedsRemainingRequestQty || exceedsAvailableQty || isOutOfStock ? 'error' : undefined}
@@ -1274,6 +1310,14 @@ export default function RequestedBatchWareHouse({
         />
       </Card>
     ) : null;
+
+  useEffect(() => {
+    if (!pickupQrModalOpen || !selectedPickupQrShipment) return;
+    if (selectedPickupQrShipment.status !== 'completed' && !selectedPickupQrShipment.confirmedAt) return;
+
+    setPickupQrModalOpen(false);
+    setPickupQrShipmentId(null);
+  }, [pickupQrModalOpen, selectedPickupQrShipment]);
 
   return (
     <>

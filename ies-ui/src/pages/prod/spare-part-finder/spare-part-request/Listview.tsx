@@ -1,16 +1,100 @@
 import BreadCrumbCom from '@/pages/fleet/components/BreadCrumbCom';
-import { simpleRequestActions } from '@/services/model';
-import { Tabs } from 'antd';
-import { useState } from 'react';
+import { useAccess } from '@umijs/max';
+import { Badge, Tabs } from 'antd';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { RequestActions } from '@/services/apiGateway';
 import { ProdPaths } from '../..';
 // @ts-ignore JSX component without local declaration file
 import SparePartList from './SparePartList';
 import type { RequestDetailData } from './RequestedBatchDrawer';
+import { SparePartRequestService } from './service';
 import MyRequestListview from './my-request/MyRequestListview';
 
 export default function ListView() {
+  const access = useAccess();
   const [activeTabKey, setActiveTabKey] = useState('1');
   const [resubmitDraft, setResubmitDraft] = useState<RequestDetailData | null>(null);
+  const [readyToPickupCount, setReadyToPickupCount] = useState(0);
+  const requestActions: RequestActions = useMemo(
+    () => ({
+      start: (serviceName) => console.log(`Loading: ${serviceName}`),
+      end: (status, reason) => console.log(status, reason),
+    }),
+    [],
+  );
+  const services = useMemo(() => SparePartRequestService(requestActions), [requestActions]);
+
+  const loadReadyToPickupCount = useCallback(async () => {
+    if (!access.canSpfRequester && !access.canSpfApprover) {
+      setReadyToPickupCount(0);
+      return;
+    }
+
+    try {
+      const pageSize = 100;
+      let currentPage = 1;
+      let total = 0;
+      let readyCount = 0;
+
+      do {
+        const response = await services.pageMyRequests(
+          {
+            criteria: {
+              advanceSearch: {},
+            },
+            pagination: {
+              current: currentPage,
+              pageSize,
+            },
+          },
+          'my',
+        );
+
+        const items = response.items || [];
+        total = Number(response.total || 0);
+        readyCount += items.filter((item) => item.requestStatus === 'ready_to_Pickup').length;
+        currentPage += 1;
+
+        if (items.length === 0) break;
+      } while ((currentPage - 1) * pageSize < total);
+
+      setReadyToPickupCount(readyCount);
+    } catch {
+      setReadyToPickupCount(0);
+    }
+  }, [access.canSpfApprover, access.canSpfRequester, services]);
+
+  useEffect(() => {
+    loadReadyToPickupCount();
+  }, [loadReadyToPickupCount]);
+
+  useEffect(() => {
+    const handleWindowFocus = () => loadReadyToPickupCount();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadReadyToPickupCount();
+      }
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [loadReadyToPickupCount]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadReadyToPickupCount();
+      }
+    }, 30000);
+
+    return () => window.clearInterval(timer);
+  }, [loadReadyToPickupCount]);
+
   const routes = [
     {
       path: '/prod',
@@ -40,11 +124,16 @@ export default function ListView() {
             ),
           },
           {
-            label: 'My Requests',
+            label: (
+              <Badge count={readyToPickupCount} color="red" offset={[12, 0]} overflowCount={999}>
+                <span>My Requests</span>
+              </Badge>
+            ),
             key: '2',
             children: (
               <MyRequestListview
                 isActive={activeTabKey === '2'}
+                onDataChanged={loadReadyToPickupCount}
                 onResubmitRequest={(detail) => {
                   setResubmitDraft(detail);
                   setActiveTabKey('1');

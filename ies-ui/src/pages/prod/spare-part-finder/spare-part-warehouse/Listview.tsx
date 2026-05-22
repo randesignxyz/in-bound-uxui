@@ -9,6 +9,7 @@ import RequestsListWarehouse from './RequestsListWarehouse';
 import ReturnsListWarehouse from './ReturnsListWarehouse';
 import BreadCrumbCom from '@/pages/fleet/components/BreadCrumbCom';
 import { SparePartWarehouseReturnAPI } from './service.return';
+import { SparePartWarehouseService } from './service';
 
 // Count returns with APPROVED or PARTIAL_RETURN status
 const countApprovedAndPartialReturns = async (requestAction: RequestActions): Promise<number> => {
@@ -28,6 +29,7 @@ const countApprovedAndPartialReturns = async (requestAction: RequestActions): Pr
 
 export default function ListView() {
   const [returnCount, setReturnCount] = useState(0);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
   const [activeKey, setActiveKey] = useState('1');
 
   const requestAction: RequestActions = useMemo(
@@ -42,9 +44,37 @@ export default function ListView() {
     countApprovedAndPartialReturns(requestAction).then(setReturnCount);
   }, [requestAction]);
 
+  const refreshPendingRequestCount = useCallback(async () => {
+    try {
+      const dashboard = await SparePartWarehouseService(requestAction).getDashboard();
+      setPendingRequestCount(Number(dashboard.pendingCount || 0));
+    } catch (error) {
+      console.error('Failed to count pending warehouse requests:', error);
+      setPendingRequestCount(0);
+    }
+  }, [requestAction]);
+
   useEffect(() => {
     refreshCount();
-  }, [activeKey, refreshCount]);
+    refreshPendingRequestCount();
+  }, [activeKey, refreshCount, refreshPendingRequestCount]);
+
+  useEffect(() => {
+    const handleWindowFocus = () => refreshPendingRequestCount();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshPendingRequestCount();
+      }
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshPendingRequestCount]);
 
   const routes = [
     {
@@ -70,9 +100,13 @@ export default function ListView() {
             children: <SparePartList />,
           },
           {
-            label: 'Requests List',
+            label: (
+              <Badge count={pendingRequestCount} color="red" offset={[12, 0]} overflowCount={999}>
+                <span>Requests List</span>
+              </Badge>
+            ),
             key: '2',
-            children: <RequestsListWarehouse />,
+            children: <RequestsListWarehouse onDataChanged={refreshPendingRequestCount} />,
           },
           {
             label: (

@@ -140,6 +140,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   const [lineOptions, setLineOptions] = useState<LineOption[]>([]);
   const [lineOptionsLoading, setLineOptionsLoading] = useState(false);
   const wasOpenRef = useRef(false);
+  const loadingWarehouseUnitsRef = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!open || !initialWarehousesByBusinessUnit) return;
@@ -149,6 +150,10 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       ...initialWarehousesByBusinessUnit,
     }));
   }, [initialWarehousesByBusinessUnit, open]);
+
+  useEffect(() => {
+    loadingWarehouseUnitsRef.current = loadingWarehouseUnits;
+  }, [loadingWarehouseUnits]);
 
   useEffect(() => {
     if (!open) {
@@ -249,10 +254,14 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     const missingBusinessUnits = businessUnits.filter(
       (businessUnit) =>
         (initialWarehousesByBusinessUnit?.[businessUnit] || warehousesByBusinessUnit[businessUnit]) === undefined &&
-        !loadingWarehouseUnits[businessUnit],
+        !loadingWarehouseUnitsRef.current[businessUnit],
     );
 
     if (missingBusinessUnits.length === 0) return;
+
+    missingBusinessUnits.forEach((businessUnit) => {
+      loadingWarehouseUnitsRef.current[businessUnit] = true;
+    });
 
     setLoadingWarehouseUnits((previous) => ({
       ...previous,
@@ -278,6 +287,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           message.error(`Failed to load ${businessUnit} warehouses.`);
         })
         .finally(() => {
+          loadingWarehouseUnitsRef.current[businessUnit] = false;
           if (cancelled) return;
           setLoadingWarehouseUnits((previous) => ({
             ...previous,
@@ -289,7 +299,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [initialWarehousesByBusinessUnit, loadingWarehouseUnits, open, rows, selectedItems, warehousesByBusinessUnit]);
+  }, [initialWarehousesByBusinessUnit, open, rows, selectedItems, warehousesByBusinessUnit]);
 
   useEffect(() => {
     if (!open || rows.length === 0) return;

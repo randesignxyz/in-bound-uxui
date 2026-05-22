@@ -15,7 +15,7 @@ import {
 } from 'antd';
 import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus } from './data';
 import SpfDetails from './SpfDetails';
 import { useAccess, useModel } from '@umijs/max';
@@ -198,6 +198,9 @@ export interface RequestDetailLineItem {
   warehouseSentQuantity?: number;
   description?: string;
   stockQuantity?: number;
+  fromWarehouse?: string;
+  toWarehouse?: string;
+  productionLine?: string;
   warehouse?: string;
   zone?: string;
   shelf?: string;
@@ -276,6 +279,7 @@ export default function RequestedBatchDrawer({
   const [selectedProductDetail, setSelectedProductDetail] = useState<any>(null);
   const [spfLoading, setSpfLoading] = useState(false);
   const [spfError, setSpfError] = useState<string | null>(null);
+  const [itemDetailMap, setItemDetailMap] = useState<Record<string, any>>({});
   const [pickedItems, setPickedItems] = useState<RequestDetailLineItem[]>([]);
   const [pickupSelection, setPickupSelection] = useState<string[]>([]);
   const [statusOverride, setStatusOverride] = useState<RequestStatus | null>(null);
@@ -323,6 +327,9 @@ export default function RequestedBatchDrawer({
         usedQuantity: 0,
         total: Number(item.requestedQty || 0),
         warehouseSentQuantity: 0,
+        fromWarehouse: undefined,
+        toWarehouse: item.toWarehouseCode || undefined,
+        productionLine: item.forLine || undefined,
         warehouse: item.toWarehouseCode || fallbackRequest.category,
         category: item.category || fallbackRequest.category,
         businessUnit: item.unit,
@@ -362,6 +369,18 @@ export default function RequestedBatchDrawer({
     currentUser.initialState?.currentUser?.login ||
     (access.canSpfApprover ? data.approvedBy : data.requestedBy) ||
     (access.canSpfApprover ? 'Approver' : 'Requester');
+
+  const resolveRequestLineSourceWarehouse = useCallback(
+    (item: RequestDetailLineItem) => {
+      if (item.fromWarehouse) return item.fromWarehouse;
+
+      const detail = itemDetailMap[item.productId];
+      const locations = Array.isArray(detail?.locations) ? detail.locations : [];
+      const locationWithStock = locations.find((location: any) => Number(location?.availableQty ?? 0) > 0);
+      return String(locationWithStock?.warehouseCode || detail?.warehouse || '').trim() || undefined;
+    },
+    [itemDetailMap],
+  );
 
   useEffect(() => {
     if (!open) {
@@ -618,6 +637,42 @@ export default function RequestedBatchDrawer({
       editedAtByRequestLineId,
     });
   }, [activityLogs, data.requestId, editedAtByRequestLineId, editedItems, itemMarks, open, quantityOverrides]);
+
+  useEffect(() => {
+    if (!open) {
+      setItemDetailMap({});
+      return;
+    }
+
+    const productIds = Array.from(new Set((data.items || []).map((item) => item.productId).filter(Boolean)));
+    if (!productIds.length) {
+      setItemDetailMap({});
+      return;
+    }
+
+    let active = true;
+
+    Promise.allSettled(
+      productIds.map((productId) => {
+        return sparePartServices.detail({
+          productId,
+        });
+      }),
+    ).then((results) => {
+      if (!active) return;
+
+      const nextMap: Record<string, any> = {};
+      results.forEach((result, index) => {
+        if (result.status !== 'fulfilled') return;
+        nextMap[productIds[index]] = result.value;
+      });
+      setItemDetailMap(nextMap);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [data.items, open]);
 
   const handleClose = () => {
     resetPersistRef.current = true;
@@ -918,6 +973,24 @@ export default function RequestedBatchDrawer({
       dataIndex: 'quantityToReturn',
       align: 'center',
       width: '10%',
+    },
+    {
+      title: 'From WH',
+      dataIndex: 'fromWarehouse',
+      width: '12%',
+      render: (_: unknown, record) => resolveRequestLineSourceWarehouse(record) || '—',
+    },
+    {
+      title: 'To WH',
+      dataIndex: 'toWarehouse',
+      width: '12%',
+      render: (_: unknown, record) => record.toWarehouse || record.warehouse || '—',
+    },
+    {
+      title: 'Line',
+      dataIndex: 'productionLine',
+      width: '14%',
+      render: (_: unknown, record) => record.productionLine || '—',
     },
     {
       title: 'Sent',

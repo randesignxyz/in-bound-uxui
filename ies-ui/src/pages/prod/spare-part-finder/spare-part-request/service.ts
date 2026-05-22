@@ -326,6 +326,7 @@ type ImportedRequestRowDto = {
   rowNumber: number;
   requestedQty: number;
   purpose: string;
+  warehouseCode?: string | null;
   toWarehouseCode: string;
   forLine: string;
   uom: string;
@@ -337,6 +338,7 @@ type ImportedRequestFailedRowDto = {
   productId?: string | null;
   requestedQty?: string | null;
   purpose?: string | null;
+  warehouseCode?: string | null;
   toWarehouseCode?: string | null;
   forLine?: string | null;
   uom?: string | null;
@@ -611,6 +613,9 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     usedQuantity: 0,
     total: Number(item.requestedQty || 0),
     warehouseSentQuantity: 0,
+    fromWarehouse: undefined,
+    toWarehouse: item.toWarehouseCode || undefined,
+    productionLine: item.forLine || undefined,
     warehouse: item.toWarehouseCode,
     category: item.category || detailCategory,
     businessUnit: item.unit,
@@ -673,6 +678,9 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     usedQuantity: confirmedPickedQtyByLineId.get(Number(line.requestLineId || 0)) || 0,
     total: Number(line.requestedQty || line.approvedQty || 0),
     warehouseSentQuantity: Number(line.issuedQty || 0),
+    fromWarehouse: undefined,
+    toWarehouse: line.toWarehouseCode || undefined,
+    productionLine: line.forLine || undefined,
     warehouse: line.toWarehouseCode || undefined,
     category: resolveCategoryName(line.category),
     businessUnit: line.unit || 'pcs',
@@ -820,6 +828,9 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
           warehouseSentQuantity: Number(historyLine.deliveredQty || 0),
           description: baseLine?.description,
           stockQuantity: baseLine?.stockQuantity,
+          fromWarehouse: baseLine?.fromWarehouse,
+          toWarehouse: baseLine?.toWarehouse,
+          productionLine: baseLine?.productionLine,
           warehouse: baseLine?.warehouse,
           zone: baseLine?.zone,
           shelf: baseLine?.shelf,
@@ -969,7 +980,7 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
           rowNumber: row.rowNumber,
           quantity: row.requestedQty,
           purpose: row.purpose,
-          toWarehouseCode: row.toWarehouseCode,
+          toWarehouseCode: '',
           forLine: row.forLine,
           uom: row.uom,
           item: mapItem(row.item),
@@ -981,7 +992,7 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
           productId: row.productId || undefined,
           requestedQty: row.requestedQty || undefined,
           purpose: row.purpose || undefined,
-          toWarehouseCode: row.toWarehouseCode || undefined,
+          toWarehouseCode: row.toWarehouseCode || row.warehouseCode || undefined,
           forLine: row.forLine || undefined,
           uom: row.uom || undefined,
           reasons: row.reasons || [],

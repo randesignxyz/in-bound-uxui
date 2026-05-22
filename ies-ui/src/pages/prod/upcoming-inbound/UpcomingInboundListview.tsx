@@ -1859,7 +1859,6 @@ export default function UpcomingInboundListview({
       data.receiptSourceType || (data.receiptType === 'Planned' ? 'PLANNED' : 'UNPLANNED_WITH_PO');
     const poLinkStatus: POLinkStatus =
       data.poLinkStatus || (receiptSourceType === 'TEMP_NO_PO' ? 'WAITING_PO' : 'NOT_REQUIRED');
-    const isNewMultiPOReceipt = !data.id && canonicalPoReferences.length > 1;
 
     return {
       id: data.id || undefined,
@@ -1870,7 +1869,7 @@ export default function UpcomingInboundListview({
       po_number: primaryPoReference?.poNumber || data.linkedPoNumber || undefined,
       supplier: primaryPoReference?.supplier || data.supplier,
       receipt_type: data.receiptType,
-      append_to_open_receiving: data.id ? false : !isNewMultiPOReceipt,
+      append_to_open_receiving: false,
       receipt_source_type: receiptSourceType,
       po_link_status: poLinkStatus,
       temp_reference_no: data.tempReferenceNo || undefined,

@@ -1146,21 +1146,21 @@ export default function RequestedBatchWareHouse({
                 type="danger"
                 style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
               >
-                Unavailable. Remaining qty is {remainingRequestQty}.
+                Unavailable. {remainingRequestQty} Remaining.
               </Text>
             ) : isOutOfStock ? (
               <Text
                 type="danger"
                 style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
               >
-                Unavailable. Available qty is 0.
+                No Stock
               </Text>
             ) : exceedsAvailableQty ? (
               <Text
                 type="danger"
                 style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
               >
-                Unavailable. Max available qty is {stock}.
+                Unavailable. {stock} In Stock.
               </Text>
             ) : null}
           </div>

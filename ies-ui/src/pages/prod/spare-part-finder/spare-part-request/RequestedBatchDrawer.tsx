@@ -1467,7 +1467,7 @@ export default function RequestedBatchDrawer({
       </Space>
     ) : access.canSpfRequester && effectiveStatus === 'rejected' ? (
       <Button type="primary" onClick={() => onResubmitRequest?.(data)}>
-        Re-submit Request
+        Re-Request
       </Button>
     ) : null;
 

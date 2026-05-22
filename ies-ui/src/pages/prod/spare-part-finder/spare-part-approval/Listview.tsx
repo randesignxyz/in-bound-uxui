@@ -166,7 +166,7 @@ export default function ListView() {
                     </Badge>
             ),
                     key: '2',
-                    children: <MyRequestsToReturn onUpdated={refreshPendingReturns} />,
+                    children: <MyRequestsToReturn defaultStatus="Pending" onUpdated={refreshPendingReturns} />,
                 }
             ]:[])
     ]}

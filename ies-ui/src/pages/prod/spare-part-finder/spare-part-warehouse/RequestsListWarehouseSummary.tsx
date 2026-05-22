@@ -78,13 +78,12 @@ export const buildSummaryColumns = (options: {
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
-    width: 120,
     render: (_, record) => {
       const status = deriveWarehouseDisplayStatus(record);
       return (
         <Tag
           color={warehouseStatusColorMap[status]}
-          style={{ width: '100%', textAlign: 'center' }}
+          style={{ display: 'inline-flex', alignItems: 'center', marginInlineEnd: 0 }}
         >
           {warehouseStatusLabelMap[status]}
         </Tag>

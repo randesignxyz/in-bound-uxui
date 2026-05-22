@@ -134,10 +134,10 @@ export default function MyRequestListview({
     status: 'ALL' | RequestStatus;
     priority: 'ALL' | RequestPriority;
     dateRange?: [string, string];
-  }>({
-    status: 'ALL',
+  }>(() => ({
+    status: scope === 'approval' ? 'pending' : 'ALL',
     priority: 'ALL',
-  });
+  }));
 
   const reloadTable = () => {
     actionRef.current?.setPageInfo?.({ current: 1 });
@@ -378,12 +378,11 @@ export default function MyRequestListview({
                 {
                   title: 'Status',
                   dataIndex: 'requestStatus',
-                  width: 140,
                   align: 'center',
                   render: (_, r) => (
                     <Tag
                       color={statusColorMap[deriveDisplayStatus(r)]}
-                      style={{ width: '100%', textAlign: 'center' }}
+                      style={{ display: 'inline-flex', alignItems: 'center', marginInlineEnd: 0 }}
                     >
                       {statusLabelMap[deriveDisplayStatus(r)]}
                     </Tag>

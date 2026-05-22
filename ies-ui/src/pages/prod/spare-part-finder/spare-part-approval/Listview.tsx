@@ -5,15 +5,24 @@ import { ProdPaths } from '../..';
 import MyRequestListview from '../spare-part-request/my-request/MyRequestListview';
 import MyRequestsToReturn from '../spare-part-return/MyRequestsToReturn';
 import { useAccess } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import { RequestActions } from '@/services/apiGateway';
 import { SparePartReturnAPI } from '../spare-part-return/service';
 import { SparePartRequestService } from '../spare-part-request/service';
+import { getUnreadBadgeCount, markBadgeSeen } from '../shared/badgeStorage';
 // import MyRequestsToReturn from '../spare-part-return/MyRequestsToReturn';
 
 export default function ListView() {
         const access = useAccess();
+        const { initialState } = useModel('@@initialState');
         const [contPendingReturns, setContPendingReturns] = useState(0);
         const [pendingRequestCount, setPendingRequestCount] = useState(0);
+        const [pendingRequestUnreadCount, setPendingRequestUnreadCount] = useState(0);
+        const [pendingReturnUnreadCount, setPendingReturnUnreadCount] = useState(0);
+        const [activeTabKey, setActiveTabKey] = useState('1');
+        const currentUserLogin = initialState?.currentUser?.login;
+        const approvalRequestBadgeKey = 'approver:request-list:pending';
+        const approvalReturnBadgeKey = 'approver:return-list:pending';
 
         const requestAction: RequestActions = useMemo(
             () => ({
@@ -40,11 +49,19 @@ export default function ListView() {
                 });
 
                 setContPendingReturns(result.total ?? result.items.length ?? 0);
+                setPendingReturnUnreadCount(
+                    getUnreadBadgeCount(
+                        approvalReturnBadgeKey,
+                        result.total ?? result.items.length ?? 0,
+                        currentUserLogin,
+                    ),
+                );
             } catch (error) {
                 console.error('Failed to count pending returns:', error);
                 setContPendingReturns(0);
+                setPendingReturnUnreadCount(0);
             }
-        }, [requestAction]);
+        }, [currentUserLogin, requestAction]);
 
         useEffect(() => {
             refreshPendingReturns();
@@ -69,11 +86,16 @@ export default function ListView() {
 
       try {
         const dashboard = await services.getApprovalDashboard();
-        setPendingRequestCount(Number(dashboard.pendingCount || 0));
+        const currentCount = Number(dashboard.pendingCount || 0);
+        setPendingRequestCount(currentCount);
+        setPendingRequestUnreadCount(
+          getUnreadBadgeCount(approvalRequestBadgeKey, currentCount, currentUserLogin),
+        );
       } catch {
         setPendingRequestCount(0);
+        setPendingRequestUnreadCount(0);
       }
-    }, [access.canSpfApprover, services]);
+    }, [access.canSpfApprover, currentUserLogin, services]);
 
     useEffect(() => {
       loadPendingRequestCount();
@@ -109,14 +131,27 @@ export default function ListView() {
       return () => window.clearInterval(timer);
     }, [loadPendingRequestCount]);
 
+    useEffect(() => {
+      if (activeTabKey === '1') {
+        markBadgeSeen(approvalRequestBadgeKey, pendingRequestCount, currentUserLogin);
+        setPendingRequestUnreadCount(0);
+      }
+      if (activeTabKey === '2') {
+        markBadgeSeen(approvalReturnBadgeKey, contPendingReturns, currentUserLogin);
+        setPendingReturnUnreadCount(0);
+      }
+    }, [activeTabKey, contPendingReturns, currentUserLogin, pendingRequestCount]);
+
   return (
   <>
     <BreadCrumbCom separator=">" routes={routes} />
     <Tabs
+    activeKey={activeTabKey}
+    onChange={setActiveTabKey}
     items={[
         {
             label: (
-                <Badge count={pendingRequestCount} size="small" overflowCount={999}>
+                <Badge count={pendingRequestUnreadCount} color="red" offset={[12, 0]} overflowCount={999}>
                     <span>Request List</span>
                 </Badge>
             ),
@@ -126,12 +161,12 @@ export default function ListView() {
             ...(access.canSpfApprover ?[
                 {
                 label: (
-                    <Badge color="red" offset={[12, 0]} count={contPendingReturns}>
+                    <Badge color="red" offset={[12, 0]} count={pendingReturnUnreadCount}>
                         Return List
                     </Badge>
             ),
                     key: '2',
-                    children: <MyRequestsToReturn onUpdated={refreshPendingReturns} />,
+                    children: <MyRequestsToReturn defaultStatus="Pending" onUpdated={refreshPendingReturns} />,
                 }
             ]:[])
     ]}

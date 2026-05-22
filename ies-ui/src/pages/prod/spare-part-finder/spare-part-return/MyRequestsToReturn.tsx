@@ -16,6 +16,7 @@ import { WarehouseReturnRow } from '../spare-part-warehouse/ReturnsListWarehouse
 
 interface MyRequestsToReturnProps {
   onUpdated?: () => void;
+  defaultStatus?: string;
 }
 
 const mapStatusToApiValue = (status: string) => {
@@ -54,9 +55,12 @@ const buildAdvanceSearch = (
   return baseSearch;
 };
 
-export default function MyRequestsToReturn({ onUpdated }: MyRequestsToReturnProps) {
+export default function MyRequestsToReturn({
+  onUpdated,
+  defaultStatus = 'Status',
+}: MyRequestsToReturnProps) {
   const actionRef = useRef<ActionType>();
-  const [statusFilter, setStatusFilter] = useState<string>('Status');
+  const [statusFilter, setStatusFilter] = useState<string>(defaultStatus);
   const [searchValue, setSearchValue] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -180,19 +184,6 @@ export default function MyRequestsToReturn({ onUpdated }: MyRequestsToReturnProp
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50],
           }}
-          onRow={(record) => ({
-                                onClick: (event) => {
-                                  const target = event.target;
-                                  if (
-                                    target instanceof HTMLElement &&
-                                    target.closest('a, button, input, textarea, .ant-select, .ant-picker')
-                                  ) {
-                                    return;
-                                  }
-                                  openDrawer(record as MyRequestToReturnItem);
-                                },
-                                style: { cursor: 'pointer' },
-                    })}
           request={fetchReturnPages}
           toolBarRender={() => [
             <Space key="toolbar" size="small">
@@ -235,8 +226,15 @@ export default function MyRequestsToReturn({ onUpdated }: MyRequestsToReturnProp
               key: 'return_id',
               title: 'Return Id',
               dataIndex: 'return_id',
-              render: (value) => (
-                <a>{value}</a>
+              render: (value, record) => (
+                <a
+                  onClick={(event) => {
+                    event.preventDefault();
+                    openDrawer(record);
+                  }}
+                >
+                  {value}
+                </a>
               ),
             },
             {
@@ -260,24 +258,24 @@ export default function MyRequestsToReturn({ onUpdated }: MyRequestsToReturnProp
               dataIndex: 'status',
               render: (status) =>
                 status === 'Pending' ? (
-                  <Tag color="default" bordered={false}>
+                  <Tag color="default" bordered={false} style={{ marginInlineEnd: 0 }}>
                     Pending
                   </Tag>
                 ) : status === 'Rejected' ? (
-                  <Tag color="error" bordered={false}>
+                  <Tag color="error" bordered={false} style={{ marginInlineEnd: 0 }}>
                     Rejected
                   </Tag>
                 ) : status === 'Completed' ? (
-                  <Tag color="success" bordered={false}>
+                  <Tag color="success" bordered={false} style={{ marginInlineEnd: 0 }}>
                     Completed
                   </Tag>
                 ) : status === 'Approved' ? (
-                  <Tag color="warning" bordered={false}>
+                  <Tag color="warning" bordered={false} style={{ marginInlineEnd: 0 }}>
                     Approved
                   </Tag>
                 ) 
                  : status === 'Partially Returned' ? (
-                  <Tag color="processing" bordered={false}>
+                  <Tag color="processing" bordered={false} style={{ marginInlineEnd: 0 }}>
                     Partially Returned
                   </Tag>
                 ) : (

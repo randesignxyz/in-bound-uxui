@@ -6,6 +6,8 @@ import MySparePartList from './MySparePartList';
 import MyRequestsToReturn from './MyRequestsToReturn';
 import { RequestActions } from '@/services/apiGateway';
 import { SparePartReturnAPI } from './service';
+import { useModel } from '@umijs/max';
+import { getUnreadBadgeCount, markBadgeSeen } from '../shared/badgeStorage';
 
 const countReturnStatuses = async (requestAction: RequestActions): Promise<number> => {
     const statuses = ['PENDING', 'APPROVED', 'PARTIAL_RETURN'];
@@ -37,7 +39,12 @@ const countReturnStatuses = async (requestAction: RequestActions): Promise<numbe
 };
 
 export default function ListView() {
+        const { initialState } = useModel('@@initialState');
         const [pendingApprovedpartially, setPendingApprovedpartially] = useState(0);
+        const [pendingApprovedpartiallyUnreadCount, setPendingApprovedpartiallyUnreadCount] = useState(0);
+        const [activeTabKey, setActiveTabKey] = useState('1');
+        const currentUserLogin = initialState?.currentUser?.login;
+        const requesterReturnBadgeKey = 'requester:return-list:pending-approved-partial';
 
         const requestAction: RequestActions = useMemo(
             () => ({
@@ -50,7 +57,10 @@ export default function ListView() {
         const refreshPendingApprovedpartially = useCallback(async () => {
             const count = await countReturnStatuses(requestAction);
             setPendingApprovedpartially(count);
-        }, [requestAction]);
+            setPendingApprovedpartiallyUnreadCount(
+                getUnreadBadgeCount(requesterReturnBadgeKey, count, currentUserLogin),
+            );
+        }, [currentUserLogin, requestAction]);
 
         useEffect(() => {
             refreshPendingApprovedpartially();
@@ -67,6 +77,12 @@ export default function ListView() {
             };
         }, [refreshPendingApprovedpartially]);
 
+        useEffect(() => {
+            if (activeTabKey !== '2') return;
+            markBadgeSeen(requesterReturnBadgeKey, pendingApprovedpartially, currentUserLogin);
+            setPendingApprovedpartiallyUnreadCount(0);
+        }, [activeTabKey, currentUserLogin, pendingApprovedpartially]);
+
         const routes = [
                 {
                      path: '/prod',
@@ -82,6 +98,8 @@ export default function ListView() {
   <>
     <BreadCrumbCom separator=">" routes={routes} />
     <Tabs
+    activeKey={activeTabKey}
+    onChange={setActiveTabKey}
     destroyInactiveTabPane={true}
     items={[
         {
@@ -91,7 +109,7 @@ export default function ListView() {
         },
         {
             label: (
-                    <Badge color="red" offset={[12, 0]} count={pendingApprovedpartially}>
+                    <Badge color="red" offset={[12, 0]} count={pendingApprovedpartiallyUnreadCount}>
                         My Return List
                     </Badge>
             ),

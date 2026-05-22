@@ -13,7 +13,7 @@ import {
   Modal,
   InputNumber,
 } from 'antd';
-import { DownOutlined, RightOutlined } from '@ant-design/icons';
+import { DownOutlined, EditOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus } from './data';
@@ -377,7 +377,15 @@ export default function RequestedBatchDrawer({
       const detail = itemDetailMap[item.productId];
       const locations = Array.isArray(detail?.locations) ? detail.locations : [];
       const locationWithStock = locations.find((location: any) => Number(location?.availableQty ?? 0) > 0);
-      return String(locationWithStock?.warehouseCode || detail?.warehouse || '').trim() || undefined;
+      const firstLocation = locations.find((location: any) => String(location?.warehouseCode || '').trim());
+      return (
+        String(
+          locationWithStock?.warehouseCode ||
+            firstLocation?.warehouseCode ||
+            detail?.warehouse ||
+            '',
+        ).trim() || undefined
+      );
     },
     [itemDetailMap],
   );
@@ -902,6 +910,7 @@ export default function RequestedBatchDrawer({
     {
       title: 'Product ID',
       dataIndex: 'productId',
+      width: 160,
       ellipsis: true,
       render: (_: unknown, record) => {
         const mark = itemMarks[record.productId];
@@ -917,7 +926,7 @@ export default function RequestedBatchDrawer({
               openProductDetails(record);
             }}
           >
-            {record.productId}
+            {record.productId || '—'}
           </Typography.Link>
         );
 
@@ -940,6 +949,7 @@ export default function RequestedBatchDrawer({
     {
       title: 'Item Name',
       dataIndex: 'itemName',
+      width: 220,
       ellipsis: true,
       render: (_: unknown, record) => {
         const mark = itemMarks[record.productId];
@@ -949,7 +959,7 @@ export default function RequestedBatchDrawer({
             delete={mark === 'deleted'}
             type={mark === 'deleted' ? 'danger' : mark === 'canceled' ? 'secondary' : isEdited ? 'warning' : undefined}
           >
-            {record.itemName}
+            {record.itemName || '—'}
           </Text>
         );
       },
@@ -1013,6 +1023,7 @@ export default function RequestedBatchDrawer({
           {
             title: 'Action',
             key: 'approver_action',
+            width: 56,
             ellipsis: true,
             render: (_: unknown, record: RequestDetailLineItem) => {
               const marked = itemMarks[record.productId];
@@ -1025,10 +1036,15 @@ export default function RequestedBatchDrawer({
               if (canEditOrDelete) {
                 return (
                   <Space size="small">
-                    <Button type="link" onClick={() => openEditQuantity(record)}>
-                      Edit Amount
-                    </Button>
                     <Button
+                      type="text"
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={() => openEditQuantity(record)}
+                      title="Edit Amount"
+                    >
+                    </Button>
+                    {/* <Button
                       danger
                       type="link"
                       onClick={() => {
@@ -1036,7 +1052,7 @@ export default function RequestedBatchDrawer({
                       }}
                     >
                       Delete
-                    </Button>
+                    </Button> */}
                   </Space>
                 );
               }
@@ -1326,6 +1342,10 @@ export default function RequestedBatchDrawer({
     let partialPickupCount = 0;
 
     return [...activityLogs]
+      .filter((activity) => {
+        const normalizedLabel = String(activity.label || '').trim().toLowerCase();
+        return !normalizedLabel.includes('confirm pick');
+      })
       .sort((left, right) => {
         const leftTime = new Date(left.date || data.requestDate).getTime();
         const rightTime = new Date(right.date || data.requestDate).getTime();
@@ -1361,13 +1381,6 @@ export default function RequestedBatchDrawer({
           return {
             ...activity,
             label: `Partial Pick up #${parsedBatchNo ?? partialPickupCount}`,
-          };
-        }
-
-        if (normalizedLabel.includes('confirm pick')) {
-          return {
-            ...activity,
-            label: 'Confirm Pick up',
           };
         }
 
@@ -1467,7 +1480,7 @@ export default function RequestedBatchDrawer({
       </Space>
     ) : access.canSpfRequester && effectiveStatus === 'rejected' ? (
       <Button type="primary" onClick={() => onResubmitRequest?.(data)}>
-        Re-submit Request
+        Re-Request
       </Button>
     ) : null;
 
@@ -1561,7 +1574,7 @@ export default function RequestedBatchDrawer({
         <Table<RequestDetailLineItem>
           size="small"
           rowKey="no"
-          tableLayout="fixed"
+          tableLayout="auto"
           pagination={false}
           columns={columns}
           dataSource={requestItems}

@@ -23,7 +23,17 @@ export const buildSummaryColumns = (options: {
     dataIndex: 'requestId',
     key: 'requestId',
     width: 120,
-    render: (value) => <Typography.Link>{value}</Typography.Link>,
+    render: (value, record) => (
+      <Typography.Link
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          options.onViewRequest?.(record);
+        }}
+      >
+        {value}
+      </Typography.Link>
+    ),
   },
   {
     title: 'Priority',
@@ -78,13 +88,12 @@ export const buildSummaryColumns = (options: {
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
-    width: 120,
     render: (_, record) => {
       const status = deriveWarehouseDisplayStatus(record);
       return (
         <Tag
           color={warehouseStatusColorMap[status]}
-          style={{ width: '100%', textAlign: 'center' }}
+          style={{ display: 'inline-flex', alignItems: 'center', marginInlineEnd: 0 }}
         >
           {warehouseStatusLabelMap[status]}
         </Tag>

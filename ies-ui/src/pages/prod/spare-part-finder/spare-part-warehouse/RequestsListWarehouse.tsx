@@ -34,7 +34,7 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
   const canExportExcel = access.canSpfWarehouseStaff || access.canAdmin;
   const [searchInput, setSearchInput] = useState('');
   const [searchText, setSearchText] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'All' | WarehouseDisplayStatus>('All');
+  const [statusFilter, setStatusFilter] = useState<'All' | WarehouseDisplayStatus>('Pending');
   const [priorityFilter, setPriorityFilter] = useState<string>('All');
   const [dateRangeFilter, setDateRangeFilter] = useState<[Dayjs, Dayjs] | null>(null);
   const [businessUnitFilters, setBusinessUnitFilters] = useState<string[]>([]);
@@ -391,7 +391,7 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
           columns={summaryColumns}
           dataSource={filteredRequests}
           loading={loading}
-          tableLayout="fixed"
+          tableLayout="auto"
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
@@ -400,19 +400,6 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
           }}
           search={false}
           options={false}
-          onRow={(record) => ({
-            onClick: (event) => {
-              const target = event.target;
-              if (
-                target instanceof HTMLElement &&
-                target.closest('a, button, input, textarea, .ant-select, .ant-picker')
-              ) {
-                return;
-              }
-              openDrawer(record as WarehouseRequestRecord);
-            },
-            style: { cursor: 'pointer' },
-          })}
         />
       </div>
 

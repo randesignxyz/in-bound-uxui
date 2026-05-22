@@ -662,6 +662,10 @@ export default function RequestedBatchWareHouse({
     }, getMaxVisibleActivityRank(effectiveStatus));
 
     return [...activityLogs]
+      .filter((activity) => {
+        const normalizedLabel = String(activity.label || '').trim().toLowerCase();
+        return !normalizedLabel.includes('confirm pick');
+      })
       .sort((left, right) => {
         const leftTime = new Date(left.date || data.requestDate).getTime();
         const rightTime = new Date(right.date || data.requestDate).getTime();
@@ -689,13 +693,6 @@ export default function RequestedBatchWareHouse({
           return {
             ...activity,
             label: `Partial Issue #${shipmentNo ?? partialIssueCount}`,
-          };
-        }
-
-        if (normalizedLabel.includes('confirm pick')) {
-          return {
-            ...activity,
-            label: 'Confirm Pick up',
           };
         }
 
@@ -1175,7 +1172,7 @@ export default function RequestedBatchWareHouse({
                 type="danger"
                 style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
               >
-                Unavailable. {remainingRequestQty} Remaining.
+                {remainingRequestQty} Remaining.
               </Text>
             ) : isOutOfStock ? (
               <Text
@@ -1189,7 +1186,7 @@ export default function RequestedBatchWareHouse({
                 type="danger"
                 style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
               >
-                Unavailable. {stock} In Stock.
+                {stock} In Stock.
               </Text>
             ) : null}
           </div>

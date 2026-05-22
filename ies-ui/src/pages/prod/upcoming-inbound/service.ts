@@ -62,7 +62,7 @@ function buildPurchaseOrderSearchPayload(
 
 function toBackendPage(page?: number): number | undefined {
   if (typeof page !== 'number' || Number.isNaN(page)) return undefined;
-  return Math.max(page - 1, 0);
+  return page;
 }
 
 const UpcomingInboundAction = {

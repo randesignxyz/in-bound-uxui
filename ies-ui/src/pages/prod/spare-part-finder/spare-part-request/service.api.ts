@@ -101,6 +101,15 @@ type SparePartRequestPageParams = {
   signal?: AbortSignal;
 };
 
+const isAbortError = (error: any, signal?: AbortSignal): boolean =>
+  Boolean(
+    signal?.aborted ||
+      error?.name === 'AbortError' ||
+      error?.type === 'AbortError' ||
+      error?.code === 'ERR_CANCELED' ||
+      error?.message === 'The user aborted a request.',
+  );
+
 const SparePartRequestTestAction = {
   page: (params: SparePartRequestPageParams): ServiceApiType<SparePartRequestListApiSearch> => ({
     type: 'PAGING_QUERY',
@@ -281,12 +290,13 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
             method: 'POST',
             data: action.payload || {},
             signal: params.signal,
+            skipErrorHandler: true,
           } as any,
         );
         response = (res as any)?.data ?? res;
         requestAction?.end?.('SUCCESS');
       } catch (error: any) {
-        if (params.signal.aborted || error?.name === 'AbortError') {
+        if (isAbortError(error, params.signal)) {
           requestAction?.end?.('SUCCESS');
           throw error;
         }
@@ -395,6 +405,7 @@ export const fetchSparePartWarehouses = async (
         businessUnit: businessUnits,
       },
       signal,
+      skipErrorHandler: Boolean(signal),
     },
   );
   const payload = Array.isArray(response) ? response : response?.data;
@@ -415,5 +426,6 @@ export const fetchProductionLines = async (): Promise<{ id: number; lineCode: st
   }
 
   const payload = await response.json().catch(() => []);
-  return Array.isArray(payload) ? payload : [];
+  const lines = Array.isArray(payload) ? payload : payload?.data;
+  return Array.isArray(lines) ? lines : [];
 };

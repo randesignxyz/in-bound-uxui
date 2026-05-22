@@ -326,6 +326,7 @@ type ImportedRequestRowDto = {
   rowNumber: number;
   requestedQty: number;
   purpose: string;
+  warehouseCode?: string | null;
   toWarehouseCode: string;
   forLine: string;
   uom: string;
@@ -337,6 +338,7 @@ type ImportedRequestFailedRowDto = {
   productId?: string | null;
   requestedQty?: string | null;
   purpose?: string | null;
+  warehouseCode?: string | null;
   toWarehouseCode?: string | null;
   forLine?: string | null;
   uom?: string | null;
@@ -978,7 +980,7 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
           rowNumber: row.rowNumber,
           quantity: row.requestedQty,
           purpose: row.purpose,
-          toWarehouseCode: row.toWarehouseCode,
+          toWarehouseCode: '',
           forLine: row.forLine,
           uom: row.uom,
           item: mapItem(row.item),
@@ -990,7 +992,7 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
           productId: row.productId || undefined,
           requestedQty: row.requestedQty || undefined,
           purpose: row.purpose || undefined,
-          toWarehouseCode: row.toWarehouseCode || undefined,
+          toWarehouseCode: row.toWarehouseCode || row.warehouseCode || undefined,
           forLine: row.forLine || undefined,
           uom: row.uom || undefined,
           reasons: row.reasons || [],

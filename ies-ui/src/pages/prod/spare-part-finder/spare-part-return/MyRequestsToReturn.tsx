@@ -184,19 +184,6 @@ export default function MyRequestsToReturn({
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50],
           }}
-          onRow={(record) => ({
-                                onClick: (event) => {
-                                  const target = event.target;
-                                  if (
-                                    target instanceof HTMLElement &&
-                                    target.closest('a, button, input, textarea, .ant-select, .ant-picker')
-                                  ) {
-                                    return;
-                                  }
-                                  openDrawer(record as MyRequestToReturnItem);
-                                },
-                                style: { cursor: 'pointer' },
-                    })}
           request={fetchReturnPages}
           toolBarRender={() => [
             <Space key="toolbar" size="small">
@@ -239,8 +226,15 @@ export default function MyRequestsToReturn({
               key: 'return_id',
               title: 'Return Id',
               dataIndex: 'return_id',
-              render: (value) => (
-                <a>{value}</a>
+              render: (value, record) => (
+                <a
+                  onClick={(event) => {
+                    event.preventDefault();
+                    openDrawer(record);
+                  }}
+                >
+                  {value}
+                </a>
               ),
             },
             {

@@ -400,19 +400,6 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
           }}
           search={false}
           options={false}
-          onRow={(record) => ({
-            onClick: (event) => {
-              const target = event.target;
-              if (
-                target instanceof HTMLElement &&
-                target.closest('a, button, input, textarea, .ant-select, .ant-picker')
-              ) {
-                return;
-              }
-              openDrawer(record as WarehouseRequestRecord);
-            },
-            style: { cursor: 'pointer' },
-          })}
         />
       </div>
 

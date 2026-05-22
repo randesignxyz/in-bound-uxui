@@ -439,19 +439,6 @@ export default function MyRequestListview({
                 
               ] as import('@ant-design/pro-components').ProColumns<MyRequestItem>[]
               }
-              onRow={(record) => ({
-                onClick: (event) => {
-                  const target = event.target;
-                  if (
-                    target instanceof HTMLElement &&
-                    target.closest('a, button, input, textarea, .ant-select, .ant-picker')
-                  ) {
-                    return;
-                  }
-                  openDetail(record);
-                },
-                style: { cursor: 'pointer' },
-              })}
               request={async (params, sort) => requestData(params, sort)}
             />
           </Card>

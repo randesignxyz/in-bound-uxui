@@ -350,19 +350,6 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
             pageSizeOptions: [10, 20, 50],
             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
           }}
-              onRow={(record) => ({
-                      onClick: (event) => {
-                        const target = event.target;
-                        if (
-                          target instanceof HTMLElement &&
-                          target.closest('a, button, input, textarea, .ant-select, .ant-picker')
-                        ) {
-                          return;
-                        }
-                        openDrawer(record as WarehouseReturnRow);
-                      },
-                      style: { cursor: 'pointer' },
-          })}
         />
       </Card>
 

@@ -23,7 +23,17 @@ export const buildSummaryColumns = (options: {
     dataIndex: 'requestId',
     key: 'requestId',
     width: 120,
-    render: (value) => <Typography.Link>{value}</Typography.Link>,
+    render: (value, record) => (
+      <Typography.Link
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          options.onViewRequest?.(record);
+        }}
+      >
+        {value}
+      </Typography.Link>
+    ),
   },
   {
     title: 'Priority',

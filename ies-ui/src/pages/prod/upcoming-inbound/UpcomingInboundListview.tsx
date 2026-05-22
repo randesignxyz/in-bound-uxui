@@ -873,6 +873,7 @@ export default function UpcomingInboundListview({
 
     criteria.receiptType = historyTypeFilter === 'ALL' ? null : historyTypeFilter;
     criteria.status = getHistoryStatusFilter(historyStatusFilter, activeRole);
+    criteria.searchValue = queueSearchValue.trim() || undefined;
     return criteria;
   };
 
@@ -1256,6 +1257,7 @@ export default function UpcomingInboundListview({
     effectiveInboundView,
     historyStatusFilter,
     historyTypeFilter,
+    queueSearchValue,
     sharedDateRangeFilter,
     hasInboundWorkspaceAccess,
   ]);
@@ -2324,7 +2326,7 @@ export default function UpcomingInboundListview({
   const dashboardSummaryTitle =
     activeRole === 'WAREHOUSE_STAFF' ? 'Upcoming Inbound Dashboard' : 'Inbound Receiving Dashboard';
   const operationsTabLabel =
-    activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Inbound Receiving' : 'Inbound Upcoming';
+    activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Inbound Receiving' : 'Upcoming PO';
   const historyTabLabel =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? (
       'GR History'
@@ -2438,6 +2440,15 @@ export default function UpcomingInboundListview({
   );
   const historyTableToolbar = (
     <Space size={8} wrap>
+      <Input.Search
+        allowClear
+        placeholder="Search IR / GR Doc Num / PO / PO Doc Num / Supplier"
+        onSearch={(value) => setQueueSearchValue(value)}
+        onChange={(event) => {
+          setQueueSearchValue(event.target.value);
+        }}
+        style={{ width: 280 }}
+      />
       <Radio.Group value={historyTypeFilter} onChange={(e) => setHistoryTypeFilter(e.target.value)}>
         <Radio.Button value="ALL">All</Radio.Button>
         <Radio.Button value="Planned">Planned</Radio.Button>

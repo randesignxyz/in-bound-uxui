@@ -930,7 +930,7 @@ export default function RequestedBatchWareHouse({
       return hasKnownStock && clampInt(nextDraft[item.productId]) > Math.max(0, stock);
     });
     if (hasUnavailableQty) {
-      message.error('Unavailable quantity. Please keep Select Amount within available stock.');
+      message.error('Unavailable quantity.');
       return;
     }
     const lines = workingItems

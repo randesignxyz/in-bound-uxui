@@ -134,10 +134,10 @@ export default function MyRequestListview({
     status: 'ALL' | RequestStatus;
     priority: 'ALL' | RequestPriority;
     dateRange?: [string, string];
-  }>({
-    status: 'ALL',
+  }>(() => ({
+    status: scope === 'approval' ? 'pending' : 'ALL',
     priority: 'ALL',
-  });
+  }));
 
   const reloadTable = () => {
     actionRef.current?.setPageInfo?.({ current: 1 });
@@ -378,12 +378,11 @@ export default function MyRequestListview({
                 {
                   title: 'Status',
                   dataIndex: 'requestStatus',
-                  width: 140,
                   align: 'center',
                   render: (_, r) => (
                     <Tag
                       color={statusColorMap[deriveDisplayStatus(r)]}
-                      style={{ width: '100%', textAlign: 'center' }}
+                      style={{ display: 'inline-flex', alignItems: 'center', marginInlineEnd: 0 }}
                     >
                       {statusLabelMap[deriveDisplayStatus(r)]}
                     </Tag>
@@ -440,19 +439,6 @@ export default function MyRequestListview({
                 
               ] as import('@ant-design/pro-components').ProColumns<MyRequestItem>[]
               }
-              onRow={(record) => ({
-                onClick: (event) => {
-                  const target = event.target;
-                  if (
-                    target instanceof HTMLElement &&
-                    target.closest('a, button, input, textarea, .ant-select, .ant-picker')
-                  ) {
-                    return;
-                  }
-                  openDetail(record);
-                },
-                style: { cursor: 'pointer' },
-              })}
               request={async (params, sort) => requestData(params, sort)}
             />
           </Card>

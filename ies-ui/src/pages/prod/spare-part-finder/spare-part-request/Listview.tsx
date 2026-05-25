@@ -9,12 +9,16 @@ import SparePartList from './SparePartList';
 import type { RequestDetailData } from './RequestedBatchDrawer';
 import { SparePartRequestService } from './service';
 import MyRequestListview from './my-request/MyRequestListview';
+import { getUnreadBadgeCount, markBadgeSeen } from '../shared/badgeStorage';
+import { useModel } from '@umijs/max';
 
 export default function ListView() {
   const access = useAccess();
+  const { initialState } = useModel('@@initialState');
   const [activeTabKey, setActiveTabKey] = useState('1');
   const [resubmitDraft, setResubmitDraft] = useState<RequestDetailData | null>(null);
   const [readyToPickupCount, setReadyToPickupCount] = useState(0);
+  const [readyToPickupUnreadCount, setReadyToPickupUnreadCount] = useState(0);
   const requestActions: RequestActions = useMemo(
     () => ({
       start: (serviceName) => console.log(`Loading: ${serviceName}`),
@@ -23,10 +27,13 @@ export default function ListView() {
     [],
   );
   const services = useMemo(() => SparePartRequestService(requestActions), [requestActions]);
+  const currentUserLogin = initialState?.currentUser?.login;
+  const readyBadgeKey = 'requester:my-requests:ready-to-pickup';
 
   const loadReadyToPickupCount = useCallback(async () => {
     if (!access.canSpfRequester && !access.canSpfApprover) {
       setReadyToPickupCount(0);
+      setReadyToPickupUnreadCount(0);
       return;
     }
 
@@ -59,10 +66,12 @@ export default function ListView() {
       } while ((currentPage - 1) * pageSize < total);
 
       setReadyToPickupCount(readyCount);
+      setReadyToPickupUnreadCount(getUnreadBadgeCount(readyBadgeKey, readyCount, currentUserLogin));
     } catch {
       setReadyToPickupCount(0);
+      setReadyToPickupUnreadCount(0);
     }
-  }, [access.canSpfApprover, access.canSpfRequester, services]);
+  }, [access.canSpfApprover, access.canSpfRequester, currentUserLogin, services]);
 
   useEffect(() => {
     loadReadyToPickupCount();
@@ -95,6 +104,12 @@ export default function ListView() {
     return () => window.clearInterval(timer);
   }, [loadReadyToPickupCount]);
 
+  useEffect(() => {
+    if (activeTabKey !== '2') return;
+    markBadgeSeen(readyBadgeKey, readyToPickupCount, currentUserLogin);
+    setReadyToPickupUnreadCount(0);
+  }, [activeTabKey, currentUserLogin, readyToPickupCount]);
+
   const routes = [
     {
       path: '/prod',
@@ -125,7 +140,7 @@ export default function ListView() {
           },
           {
             label: (
-              <Badge count={readyToPickupCount} color="red" offset={[12, 0]} overflowCount={999}>
+              <Badge count={readyToPickupUnreadCount} color="red" offset={[12, 0]} overflowCount={999}>
                 <span>My Requests</span>
               </Badge>
             ),

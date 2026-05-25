@@ -730,13 +730,13 @@ export default function SpfDetails({
                 </Text>
                 <Text type="secondary">or click to upload</Text>
               </Dragger>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Upload {...imageUploadProps}>
                   <Button icon={<UploadOutlined />} loading={imageUploading}>
                     Upload Image
                   </Button>
                 </Upload>
-              </div>
+              </div> */}
             </div>
             </div>
           ) : null}

@@ -899,17 +899,6 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
           rowClassName={(record) =>
             canSelectRows && selectedRowKeys.includes(getSparePartRowKey(record)) ? 'ant-table-row-selected' : ''
           }
-          onRow={(record) => ({
-            onClick: (event) => {
-              if (!canSelectRows) return;
-              const target = event.target;
-              if (target instanceof HTMLElement && target.closest('a, button, input, textarea, .ant-select')) {
-                return;
-              }
-              handleToggleRowSelection(record);
-            },
-            style: { cursor: canSelectRows ? 'pointer' : 'default' },
-          })}
           toolBarRender={() => [
             <Space key="spr-action-bar" size="small">
               <Button icon={<ReloadOutlined />} onClick={() => reloadTable(false)}>

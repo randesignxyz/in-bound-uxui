@@ -662,6 +662,10 @@ export default function RequestedBatchWareHouse({
     }, getMaxVisibleActivityRank(effectiveStatus));
 
     return [...activityLogs]
+      .filter((activity) => {
+        const normalizedLabel = String(activity.label || '').trim().toLowerCase();
+        return !normalizedLabel.includes('confirm pick');
+      })
       .sort((left, right) => {
         const leftTime = new Date(left.date || data.requestDate).getTime();
         const rightTime = new Date(right.date || data.requestDate).getTime();
@@ -689,13 +693,6 @@ export default function RequestedBatchWareHouse({
           return {
             ...activity,
             label: `Partial Issue #${shipmentNo ?? partialIssueCount}`,
-          };
-        }
-
-        if (normalizedLabel.includes('confirm pick')) {
-          return {
-            ...activity,
-            label: 'Confirm Pick up',
           };
         }
 
@@ -751,6 +748,26 @@ export default function RequestedBatchWareHouse({
 
     return remaining;
   };
+
+  const hasIssueQtyValidationError = useMemo(
+    () =>
+      workingItems.some((item) => {
+        const current = clampInt(sendingByProductId[item.productId]);
+        if (current <= 0) return false;
+
+        const stock = Number(itemDetailMap[item.productId]?.stock);
+        const hasKnownStock = Number.isFinite(stock);
+        const requestedQty = clampInt(item.quantityToReturn);
+        const sentQty = clampInt(item.warehouseSentQuantity);
+        const draftedQty = clampInt(draftByProductId[item.productId]);
+        const remainingRequestQty = Math.max(0, requestedQty - sentQty - draftedQty);
+
+        if (current > remainingRequestQty) return true;
+        if (hasKnownStock && current > Math.max(0, stock)) return true;
+        return false;
+      }),
+    [draftByProductId, itemDetailMap, sendingByProductId, workingItems],
+  );
 
   const emitWarehouseUpdate = (next: {
     status: 'Pending' | 'Approved' | 'In Progress' | 'Partial' | 'Completed' | 'Ready To Pick Up' | 'Rejected';
@@ -892,6 +909,11 @@ export default function RequestedBatchWareHouse({
       return;
     }
 
+    if (hasIssueQtyValidationError) {
+      message.error('Please keep Select Amount equal to or below the requested remaining quantity.');
+      return;
+    }
+
     const hasAnyChange = Object.values(sendingByProductId).some((v) => v > 0);
     if (!hasAnyChange) {
       message.warning('No new amounts to save. Please enter a quantity first.');
@@ -908,7 +930,7 @@ export default function RequestedBatchWareHouse({
       return hasKnownStock && clampInt(nextDraft[item.productId]) > Math.max(0, stock);
     });
     if (hasUnavailableQty) {
-      message.error('Unavailable quantity. Please keep Select Amount within available stock.');
+      message.error('Unavailable quantity.');
       return;
     }
     const lines = workingItems
@@ -994,6 +1016,10 @@ export default function RequestedBatchWareHouse({
   const handleSaveAndPickUp = () => {
     if (!canWarehouseOperate) {
       message.error('You are not allowed to operate.');
+      return;
+    }
+    if (hasIssueQtyValidationError) {
+      message.error('Please keep Select Amount equal to or below the requested remaining quantity.');
       return;
     }
     const mergedDraft = { ...draftByProductId };
@@ -1146,21 +1172,21 @@ export default function RequestedBatchWareHouse({
                 type="danger"
                 style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
               >
-                Unavailable. Remaining qty is {remainingRequestQty}.
+                {remainingRequestQty} Remaining.
               </Text>
             ) : isOutOfStock ? (
               <Text
                 type="danger"
                 style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
               >
-                Unavailable. Available qty is 0.
+                No Stock
               </Text>
             ) : exceedsAvailableQty ? (
               <Text
                 type="danger"
                 style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
               >
-                Unavailable. Max available qty is {stock}.
+                {stock} In Stock.
               </Text>
             ) : null}
           </div>
@@ -1288,7 +1314,11 @@ export default function RequestedBatchWareHouse({
                 <Button danger onClick={handleDeleteDraft} loading={draftDeleteLoading}>
                   Delete
                 </Button>
-                <Button type="primary" onClick={handleSaveAndPickUp} disabled={draftDeleteLoading}>
+                <Button
+                  type="primary"
+                  onClick={handleSaveAndPickUp}
+                  disabled={draftDeleteLoading || hasIssueQtyValidationError}
+                >
                   Save &amp; Pick up
                 </Button>
               </Space>
@@ -1342,14 +1372,18 @@ export default function RequestedBatchWareHouse({
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
             <Space>
               {showSaveDraft ? (
-                <Button onClick={handleSave} disabled={draftDeleteLoading}>
+                <Button onClick={handleSave} disabled={draftDeleteLoading || hasIssueQtyValidationError}>
                   Save (Draft)
                 </Button>
               ) : null}
             </Space>
             <Space>
               {showSaveAndPickUp ? (
-                <Button type="primary" onClick={handleSaveAndPickUp} disabled={draftDeleteLoading}>
+                <Button
+                  type="primary"
+                  onClick={handleSaveAndPickUp}
+                  disabled={draftDeleteLoading || hasIssueQtyValidationError}
+                >
                   Save &amp; Pick up
                 </Button>
               ) : null}

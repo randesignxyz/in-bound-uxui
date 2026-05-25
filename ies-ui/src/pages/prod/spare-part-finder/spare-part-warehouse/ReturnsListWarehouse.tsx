@@ -88,7 +88,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
   const actionRef = useRef<ActionType>();
   const [selectedReturn, setSelectedReturn] = useState<WarehouseReturnRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('PENDING');
   const [dateRangeFilter, setDateRangeFilter] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -245,7 +245,11 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
       render: (_dom, record) => {
         const statusKey = normalizeWarehouseReturnStatus(record.returnStatus);
         return (
-          <Tag bordered={false} color={STATUS_COLOR[statusKey] ?? 'success'}>
+          <Tag
+            bordered={false}
+            color={STATUS_COLOR[statusKey] ?? 'success'}
+            style={{ marginInlineEnd: 0 }}
+          >
             {STATUS_LABEL[statusKey] ?? record.returnStatus}
           </Tag>
         );
@@ -295,6 +299,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
             onChange={(v) => { setStatusFilter(v); actionRef.current?.reloadAndRest?.(); }}
             style={{ width: 180 }}
             options={[
+              { value: 'PENDING', label: 'Pending' },
               { value: 'all',       label: 'All Status' },
               { value: 'APPROVED',  label: 'Approved' },
               { value: 'PARTIAL_RETURN', label: 'Partially Returned' },
@@ -345,19 +350,6 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
             pageSizeOptions: [10, 20, 50],
             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
           }}
-              onRow={(record) => ({
-                      onClick: (event) => {
-                        const target = event.target;
-                        if (
-                          target instanceof HTMLElement &&
-                          target.closest('a, button, input, textarea, .ant-select, .ant-picker')
-                        ) {
-                          return;
-                        }
-                        openDrawer(record as WarehouseReturnRow);
-                      },
-                      style: { cursor: 'pointer' },
-          })}
         />
       </Card>
 

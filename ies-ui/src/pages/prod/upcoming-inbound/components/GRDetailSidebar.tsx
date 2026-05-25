@@ -265,6 +265,10 @@ export function GRDetailSidebar({
     viewerRole === 'WAREHOUSE_STAFF' &&
     receipt.receiptSourceType === 'TEMP_NO_PO' &&
     receipt.poLinkStatus === 'WAITING_PO';
+  const isSupervisorBlockedByMissingPo =
+    receipt.receiptSourceType === 'TEMP_NO_PO' &&
+    receipt.poLinkStatus === 'WAITING_PO' &&
+    !receipt.linkedPoNumber;
   const isQcEditable = viewerRole === 'QC' && receipt.processState === 'QC_PENDING';
   const canSupervisorReview =
     viewerRole === 'WAREHOUSE_SUPERVISOR' &&
@@ -613,6 +617,7 @@ export function GRDetailSidebar({
       <Button
         key="supervisor-reject"
         danger
+        disabled={isSupervisorBlockedByMissingPo}
         onClick={() => void handleSubmitSupervisorAction('reject')}
         loading={isSubmitting}
       >
@@ -623,6 +628,7 @@ export function GRDetailSidebar({
       <Button
         key="supervisor-approve"
         type="primary"
+        disabled={isSupervisorBlockedByMissingPo}
         onClick={() => void handleSubmitSupervisorAction('approve')}
         loading={isSubmitting}
       >
@@ -811,7 +817,14 @@ export function GRDetailSidebar({
           }}
         >
           <span>Inbound Receiving Detail</span>
-          <Space>{headerActions}</Space>
+          <Space size={12}>
+            {canSupervisorReview && isSupervisorBlockedByMissingPo && (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                Waiting for PO link
+              </Text>
+            )}
+            <Space>{headerActions}</Space>
+          </Space>
         </div>
       }
       open={drawerOpen}

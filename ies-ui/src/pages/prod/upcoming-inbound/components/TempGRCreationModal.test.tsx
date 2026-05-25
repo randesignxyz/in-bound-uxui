@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Modal } from 'antd';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { TempGRCreationModal } from './TempGRCreationModal';
 
@@ -113,6 +114,13 @@ describe('TempGRCreationModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Modal, 'confirm').mockImplementation((config) => {
+      void config.onOk?.();
+      return {
+        destroy: jest.fn(),
+        update: jest.fn(),
+      } as any;
+    });
   });
 
   it('blocks submit when product date is later than expiry date', async () => {
@@ -148,5 +156,66 @@ describe('TempGRCreationModal', () => {
     expect(identityRow.getAttribute('style')).toContain('display: flex');
     expect(within(identityRow).getByPlaceholderText('Item code')).not.toBeNull();
     expect(within(identityRow).getByPlaceholderText('Item name')).not.toBeNull();
+  });
+
+  it('submits temp receipts with discrepancy to QC instead of mismatch exception', async () => {
+    const submitSpy = jest.fn(async () => true);
+
+    render(
+      <TempGRCreationModal
+        open
+        onClose={onClose}
+        onSaveDraft={onSaveDraft}
+        onSubmit={submitSpy}
+        initialReceipt={createInitialReceipt({
+          items: [
+            {
+              code: 'ITEM-001',
+              name: 'Item 001',
+              poNumber: '',
+              supplier: 'Vendor Temp',
+              poQty: 10,
+              receiveQty: 5,
+              uom: 'KG',
+              productDate: '2027-04-01',
+              expiryDate: '2027-04-02',
+              batchNumber: 'BATCH-001',
+              barcode: 'BARCODE-001',
+              isMissing: false,
+              missingRemark: '',
+            },
+          ],
+        })}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit for QC' }));
+
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          processState: 'QC_PENDING',
+          qtyMatch: false,
+          qcResult: 'Pending',
+        }),
+      );
+    });
+  });
+
+  it('renders required item columns for receive without PO', async () => {
+    render(
+      <TempGRCreationModal
+        open
+        onClose={onClose}
+        onSaveDraft={onSaveDraft}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    expect(screen.getByText('Item')).not.toBeNull();
+    expect(screen.getByText('Qty')).not.toBeNull();
+    expect(screen.getByText('Received')).not.toBeNull();
+    expect(screen.getByText('UoM')).not.toBeNull();
+    expect(screen.getByText('Batch Number')).not.toBeNull();
   });
 });

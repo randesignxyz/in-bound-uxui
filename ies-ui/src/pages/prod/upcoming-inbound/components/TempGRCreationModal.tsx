@@ -156,6 +156,10 @@ export function TempGRCreationModal({
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [warehouseSearch, setWarehouseSearch] = useState('');
+  const [supplierSearch, setSupplierSearch] = useState('');
+  const [itemSearch, setItemSearch] = useState('');
   const [previewState, setPreviewState] = useState<{
     fileName?: string;
     url?: string;
@@ -164,6 +168,9 @@ export function TempGRCreationModal({
 
   useEffect(() => {
     if (!open) return;
+    setWarehouseSearch('');
+    setSupplierSearch('');
+    setItemSearch('');
     if (initialReceipt) {
       setPostingDate(initialReceipt.postingDate || dayjs().format('YYYY-MM-DD'));
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
@@ -259,6 +266,82 @@ export function TempGRCreationModal({
     },
     [businessUnit, warehouseOptions],
   );
+
+  const displayedWarehouseOptions = useMemo(() => {
+    const normalizedSearch = warehouseSearch.trim().toLowerCase();
+    const filtered = normalizedSearch
+      ? visibleWarehouseOptions.filter((option) =>
+          option.label.toLowerCase().includes(normalizedSearch)
+        )
+      : visibleWarehouseOptions;
+
+    const sliced = filtered.slice(0, 20);
+
+    if (
+      selectedWarehouseCode &&
+      !sliced.some((opt) => opt.value === selectedWarehouseCode)
+    ) {
+      const selectedOption = visibleWarehouseOptions.find(
+        (opt) => opt.value === selectedWarehouseCode
+      );
+      if (selectedOption) {
+        sliced.push(selectedOption);
+      }
+    }
+
+    return sliced;
+  }, [visibleWarehouseOptions, warehouseSearch, selectedWarehouseCode]);
+
+  const displayedSupplierOptions = useMemo(() => {
+    const normalizedSearch = supplierSearch.trim().toLowerCase();
+    const filtered = normalizedSearch
+      ? visibleSupplierOptions.filter((option) =>
+          option.label.toLowerCase().includes(normalizedSearch)
+        )
+      : visibleSupplierOptions;
+
+    const sliced = filtered.slice(0, 20);
+
+    if (
+      supplier &&
+      !sliced.some((opt) => opt.value === supplier)
+    ) {
+      const selectedOption = visibleSupplierOptions.find(
+        (opt) => opt.value === supplier
+      );
+      if (selectedOption) {
+        sliced.push(selectedOption);
+      }
+    }
+
+    return sliced;
+  }, [visibleSupplierOptions, supplierSearch, supplier]);
+
+  const displayedItemOptions = useMemo(() => {
+    const normalizedSearch = itemSearch.trim().toLowerCase();
+    const filtered = normalizedSearch
+      ? visibleItemOptions.filter((option) =>
+          option.label.toLowerCase().includes(normalizedSearch) ||
+          (option.itemName && option.itemName.toLowerCase().includes(normalizedSearch))
+        )
+      : visibleItemOptions;
+
+    const sliced = filtered.slice(0, 20);
+
+    const selectedCodes = new Set(items.map((item) => item.code).filter(Boolean));
+    selectedCodes.forEach((code) => {
+      if (!sliced.some((opt) => opt.value === code)) {
+        const selectedOption = visibleItemOptions.find(
+          (opt) => opt.value === code
+        );
+        if (selectedOption) {
+          sliced.push(selectedOption);
+        }
+      }
+    });
+
+    return sliced;
+  }, [visibleItemOptions, itemSearch, items]);
 
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     setItems((prev) =>
@@ -518,10 +601,19 @@ export function TempGRCreationModal({
             <Select
               showSearch
               value={record.code || undefined}
-              onChange={(value) => handleSelectItemCode(record.index, value)}
+              onChange={(value) => {
+                handleSelectItemCode(record.index, value);
+                setItemSearch('');
+              }}
+              onSearch={setItemSearch}
+              onDropdownVisibleChange={(visible) => {
+                if (!visible) {
+                  setItemSearch('');
+                }
+              }}
+              filterOption={false}
               placeholder="Item code"
-              options={visibleItemOptions}
-              optionFilterProp="label"
+              options={displayedItemOptions}
               notFoundContent="No item master data"
               status={
                 errors[`code-${record.index}`] || errors[`duplicate-${record.index}`]
@@ -663,7 +755,7 @@ export function TempGRCreationModal({
         ),
       },
     ],
-    [errors, handleSelectItemCode, items.length, visibleItemOptions, visibleUomOptions, updateItem],
+    [errors, handleSelectItemCode, items.length, displayedItemOptions, visibleUomOptions, updateItem],
   );
 
   return (
@@ -721,10 +813,19 @@ export function TempGRCreationModal({
                   <Select
                     showSearch
                     value={supplier || undefined}
-                    onChange={setSupplier}
+                    onChange={(value) => {
+                      setSupplier(value);
+                      setSupplierSearch('');
+                    }}
+                    onSearch={setSupplierSearch}
+                    onDropdownVisibleChange={(visible) => {
+                      if (!visible) {
+                        setSupplierSearch('');
+                      }
+                    }}
+                    filterOption={false}
                     placeholder="Supplier name"
-                    options={visibleSupplierOptions}
-                    optionFilterProp="label"
+                    options={displayedSupplierOptions}
                     notFoundContent="No supplier master data"
                   />
                 </Form.Item>
@@ -754,10 +855,17 @@ export function TempGRCreationModal({
                     onChange={(value) => {
                       setSelectedWarehouseCode(value);
                       setErrors((prev) => ({ ...prev, warehouseCode: false }));
+                      setWarehouseSearch('');
                     }}
+                    onSearch={setWarehouseSearch}
+                    onDropdownVisibleChange={(visible) => {
+                      if (!visible) {
+                        setWarehouseSearch('');
+                      }
+                    }}
+                    filterOption={false}
                     placeholder="Select warehouse"
-                    options={visibleWarehouseOptions}
-                    optionFilterProp="label"
+                    options={displayedWarehouseOptions}
                     notFoundContent="No warehouse master data"
                   />
                 </Form.Item>

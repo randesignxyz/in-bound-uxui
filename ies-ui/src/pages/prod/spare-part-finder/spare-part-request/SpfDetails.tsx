@@ -35,12 +35,13 @@ interface DrawerViewItemProps {
   onUpdateDetail?: (payload: {
     id?: number;
     productId?: string;
+    inventoryId?: number;
     partName: string;
     description?: string;
     uom: string[];
     kind?: string;
     categoryId?: number;
-    // isActive: boolean;
+    isActive?: boolean;
     warehouseCode?: string;
     rack?: string;
     shelve?: string;
@@ -51,6 +52,7 @@ interface DrawerViewItemProps {
 }
 
 type DetailLocation = {
+  inventoryId?: number | null;
   warehouseCode?: string;
   warehouseName?: string;
   level?: string;
@@ -122,7 +124,6 @@ export default function SpfDetails({
       description: data.description || '',
       kind: data.kind || 'consumable',
       categoryId: data.categoryId,
-      // isActive: data.isActive ?? true,
       rack: firstLocation?.rack || '',
       shelve: firstLocation?.shelve || '',
       level: firstLocation?.level || '',
@@ -198,6 +199,7 @@ export default function SpfDetails({
       await onUpdateDetail({
         id: data.id,
         productId: data.productId,
+        inventoryId: firstLocation?.inventoryId ?? undefined,
         partName: String(data.partName || '').trim(),
         description: String(values.description || '').trim() || undefined,
         uom:
@@ -211,7 +213,7 @@ export default function SpfDetails({
             .filter(Boolean),
         kind: values.kind,
         categoryId: values.categoryId,
-        // isActive: Boolean(values.isActive),
+        isActive: data.isActive ?? true,
         warehouseCode: firstLocation?.warehouseCode || data.warehouse || undefined,
         rack: String(values.rack || '').trim() || undefined,
         shelve: String(values.shelve || '').trim() || undefined,

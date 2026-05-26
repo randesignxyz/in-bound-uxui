@@ -66,6 +66,7 @@ interface RequestItemModalProps {
     priority: PriorityLevel;
   }) => void | Promise<void>;
   onAddMore?: () => void;
+  onItemsChange?: (items: SparePartRequestItem[]) => void;
   onViewProduct?: (item: SparePartRequestItem) => void | Promise<void>;
 }
 
@@ -115,8 +116,11 @@ const getItemUomOptions = (item: SparePartRequestItem) => {
 const normalizeBusinessUnit = (value?: string | null) =>
   String(value || '').trim().toUpperCase();
 
+const getInventoryId = (item: SparePartRequestItem) =>
+  item.locations?.[0]?.inventoryId ?? (item as any).inventoryId;
+
 const getRequestItemKey = (item: SparePartRequestItem) =>
-  `${item.productId || item.id || ''}::${item.warehouse || item.locations?.[0]?.warehouseCode || ''}`;
+  `${item.productId || item.id || ''}::${item.warehouse || item.locations?.[0]?.warehouseCode || ''}::${getInventoryId(item) ?? 'no-inventory'}`;
 
 const RequestItemModal: React.FC<RequestItemModalProps> = ({
   open,
@@ -128,6 +132,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   onCancel,
   onSubmit,
   onAddMore,
+  onItemsChange,
   onViewProduct,
 }) => {
   const [rows, setRows] = useState<RequestRowItem[]>([]);
@@ -353,6 +358,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       return;
     }
     setRows(updated);
+    onItemsChange?.(updated.map((row) => row.item));
   };
 
   const handleSubmit = async () => {

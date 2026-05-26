@@ -60,6 +60,7 @@ export interface SparePartRequestItem {
   warehouse: string;
   stockStatus?: string;
   locations?: {
+    inventoryId?: number | null;
     warehouseCode: string;
     warehouseName?: string;
     level: string;

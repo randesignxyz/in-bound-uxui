@@ -92,6 +92,7 @@ const statusLabelMap: Record<RequestStatus, string> = {
 export interface RequestDetailLineItem {
   no: number;
   requestLineId?: number;
+  inventoryId?: number;
   image?: string;
   imageId?: string;
   productId: string;
@@ -206,13 +207,37 @@ const resolveRequestLineSourceWarehouse = (
   return String(locationWithStock?.warehouseCode || detail?.warehouse || '').trim() || undefined;
 };
 
+const normalizeDetailBusinessUnit = (item: RequestDetailLineItem) => {
+  const businessUnit = String(item.businessUnit || '').trim();
+  const uom = String(item.uom || '').trim();
+  if (!businessUnit || businessUnit === '-') return undefined;
+  if (uom && businessUnit.toUpperCase() === uom.toUpperCase()) return undefined;
+  if (['PC', 'PCS', 'PIECE', 'PIECES', 'EA', 'EACH', 'BOX', 'PACK', 'SET'].includes(businessUnit.toUpperCase())) {
+    return undefined;
+  }
+  return businessUnit;
+};
+
+const buildSparePartDetailParams = (item: RequestDetailLineItem) => {
+  const warehouseCode = String(item.fromWarehouse || '').trim();
+  const businessUnit = normalizeDetailBusinessUnit(item);
+
+  return {
+    productId: item.productId,
+    inventoryId: item.inventoryId,
+    warehouseCode: warehouseCode || undefined,
+    businessUnit,
+  };
+};
+
 const getActivityRank = (label?: string): number => {
   const normalized = String(label || '').trim().toLowerCase();
 
   if (normalized === 'requested') return 1;
-  if (normalized === 'approved') return 2;
-  if (normalized === 'rejected') return 2;
-  if (normalized === 'in progress' || normalized === 'confirmed') return 3;
+  if (normalized === 'item rejected') return 2;
+  if (normalized === 'approved') return 3;
+  if (normalized === 'rejected') return 3;
+  if (normalized === 'in progress' || normalized === 'confirmed') return 4;
   if (normalized === 'draft saved') return 4;
   if (normalized === 'draft updated') return 4;
   if (normalized === 'draft deleted') return 4;
@@ -230,7 +255,7 @@ const getMaxVisibleActivityRank = (status: RequestStatus): number => {
     case 'approved':
     case 'in-progress':
     case 'rejected':
-      return 2;
+      return 3;
     case 'ready_to_Pickup':
       return 4;
     case 'partial':
@@ -338,10 +363,13 @@ export default function RequestedBatchWareHouse({
   const data: RequestDetailData = useMemo(() => {
     if (propData) return propData;
     const req = request as any;
-    const realItems: any[] = req?.items ?? [];
+    const realItems: any[] = (req?.items ?? []).filter((it: any) =>
+      Number(it.quantity ?? it.approvedQty ?? 0) > 0,
+    );
     const items: RequestDetailLineItem[] = realItems.map((it: any, i: number) => ({
       no: i + 1,
       requestLineId: Number(it.requestLineId || it.id || 0) || undefined,
+      inventoryId: Number(it.inventoryId || it.inventory_id || 0) || undefined,
       imageId: Array.isArray(it.imageId) ? it.imageId[0] : it.imageId,
       productId: it.productId ?? it.sparePartId ?? it.sparePartCode ?? '',
       requestId: req?.requestId ?? '',
@@ -361,7 +389,7 @@ export default function RequestedBatchWareHouse({
       level: it.level,
       company: it.company,
       category: it.category,
-      businessUnit: it.businessUnit ?? it.unit,
+      businessUnit: it.businessUnit ?? it.business_unit ?? it.bu ?? undefined,
       uom: it.uom ?? it.unit,
     }));
     return {
@@ -537,21 +565,23 @@ export default function RequestedBatchWareHouse({
       return;
     }
 
-    const productIds = Array.from(new Set((data.items || []).map((item) => item.productId).filter(Boolean)));
-    if (!productIds.length) {
+    const detailItems = Array.from(
+      new Map((data.items || []).filter((item) => item.productId).map((item) => [item.productId, item])).values(),
+    );
+    if (!detailItems.length) {
       setItemDetailMap({});
       return;
     }
 
     let active = true;
 
-    Promise.allSettled(productIds.map((productId) => sparePartServices.detail({ productId }))).then((results) => {
+    Promise.allSettled(detailItems.map((item) => sparePartServices.detail(buildSparePartDetailParams(item)))).then((results) => {
       if (!active) return;
 
       const nextMap: Record<string, any> = {};
       results.forEach((result, index) => {
         if (result.status !== 'fulfilled') return;
-        nextMap[productIds[index]] = result.value;
+        nextMap[detailItems[index].productId] = result.value;
       });
       setItemDetailMap(nextMap);
     });
@@ -611,7 +641,7 @@ export default function RequestedBatchWareHouse({
     setSpfLoading(true);
     setSpfOpen(true);
     try {
-      const detail = await sparePartServices.detail({ productId: record.productId });
+      const detail = await sparePartServices.detail(buildSparePartDetailParams(record));
       if (productDetailRequestRef.current !== requestId) return;
       setSelectedProductDetail(detail);
     } catch (_error) {

@@ -19,6 +19,7 @@ type BackendIssueStatus =
 
 type IssueLineDto = {
   requestLineId: number;
+  inventoryId?: number | null;
   sparePartId: string;
   sparePartCode: string;
   sparePartName: string;
@@ -28,6 +29,11 @@ type IssueLineDto = {
   issuedQty: number;
   remainingQty: number;
   unit: string;
+  businessUnit?: string | null;
+  business_unit?: string | null;
+  bu?: string | null;
+  fromWarehouseCode?: string | null;
+  fromWarehouse?: string | null;
   toWarehouseCode?: string | null;
   forLine?: string | null;
   remark?: string | null;
@@ -322,8 +328,11 @@ const mapIssueLineToWarehouseLine = (item: IssueLineDto) => ({
   uom: item.unit || 'pcs',
 });
 
+const isApprovedIssueLine = (item: IssueLineDto) => Number(item.approvedQty || 0) > 0;
+
 const mapIssueRequestRecord = (item: IssueRequestDto): WarehouseRequestRecord => {
-  const items = (item.items || []).map(mapIssueLineToWarehouseLine);
+  const visibleIssueLines = (item.items || []).filter(isApprovedIssueLine);
+  const items = visibleIssueLines.map(mapIssueLineToWarehouseLine);
   const totalIssuedQty = items.reduce((sum, entry) => sum + Number(entry.receivedQuantity || 0), 0);
 
   return {
@@ -342,6 +351,7 @@ const mapIssueRequestRecord = (item: IssueRequestDto): WarehouseRequestRecord =>
 const mapIssueLineDetail = (item: IssueLineDto, requestId: string, index: number): RequestDetailLineItem => ({
   no: index + 1,
   requestLineId: Number(item.requestLineId || 0),
+  inventoryId: Number(item.inventoryId || 0) || undefined,
   productId: item.sparePartId || item.sparePartCode,
   requestId,
   itemName: item.sparePartName,
@@ -350,12 +360,12 @@ const mapIssueLineDetail = (item: IssueLineDto, requestId: string, index: number
   total: Number(item.approvedQty || 0),
   warehouseSentQuantity: Number(item.issuedQty || 0),
   description: item.remark || undefined,
-  fromWarehouse: undefined,
+  fromWarehouse: item.fromWarehouseCode || item.fromWarehouse || undefined,
   toWarehouse: item.toWarehouseCode || undefined,
   productionLine: item.forLine || undefined,
   warehouse: item.toWarehouseCode || undefined,
   category: resolveCategoryName(item.category),
-  businessUnit: item.unit || 'pcs',
+  businessUnit: item.businessUnit || item.business_unit || item.bu || undefined,
   uom: item.unit || 'pcs',
   imageId: Array.isArray(item.imageId) ? item.imageId[0] : item.imageId || undefined,
 });
@@ -494,7 +504,9 @@ const buildActivities = (
 };
 
 const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
-  const detailCategory = (item.items || [])
+  const visibleIssueLines = (item.items || []).filter(isApprovedIssueLine);
+  const visibleRequestLineIds = new Set(visibleIssueLines.map((line) => Number(line.requestLineId || 0)));
+  const detailCategory = visibleIssueLines
     .map((line) => resolveCategoryName(line.category))
     .find((value): value is string => Boolean(value));
   const normalizedStatus = deriveDetailStatus(item.requestStatus, item.pickupStatus, item.history || []);
@@ -506,13 +518,13 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
     status: normalizedStatus,
     priority: normalizePriority(item.priority).toLowerCase() as RequestDetailData['priority'],
     category: detailCategory,
-    totalItems: (item.items || []).length,
+    totalItems: visibleIssueLines.length,
     receivedItems: Number(item.totalIssuedQty || 0),
     remark: item.remark || '',
     requestedBy: item.requesterId || 'Requester',
     approvedBy: item.approverId || undefined,
     warehouseBy: item.history?.[item.history.length - 1]?.warehouseStaffId || 'Warehouse',
-    items: (item.items || []).map((line, index) => mapIssueLineDetail(line, item.requestNo || '', index)),
+    items: visibleIssueLines.map((line, index) => mapIssueLineDetail(line, item.requestNo || '', index)),
     activities: (item.activities || []).map((activity) => ({
       label: String(activity.label || '').trim(),
       description: String(activity.description || '').trim(),
@@ -531,10 +543,12 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
     //       }))
     //     : buildActivities(item, normalizedStatus),
     shipments: buildShipments(item.history || []),
-    draftItems: (item.draftItems || []).map((entry) => ({
-      requestLineId: Number(entry.requestLineId || 0),
-      draftQty: Number(entry.draftQty || 0),
-    })),
+    draftItems: (item.draftItems || [])
+      .filter((entry) => visibleRequestLineIds.has(Number(entry.requestLineId || 0)))
+      .map((entry) => ({
+        requestLineId: Number(entry.requestLineId || 0),
+        draftQty: Number(entry.draftQty || 0),
+      })),
     pickupStatus: item.pickupStatus || undefined,
     rawStatus: item.requestStatus,
     pickupQrToken: (item as any).pickupQrToken || undefined,

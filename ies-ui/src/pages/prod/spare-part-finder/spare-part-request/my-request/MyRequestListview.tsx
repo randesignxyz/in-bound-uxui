@@ -232,7 +232,7 @@ export default function MyRequestListview({
                   style={{ minWidth: 180 }}
                   value={filters.status}
                   options={statusFilterOptions}
-                  onChange={(value) => {
+                  onChange={(value: 'ALL' | RequestStatus) => {
                     setFilters((prev) => ({ ...prev, status: value }));
                     reloadTable();
                   }}
@@ -242,7 +242,7 @@ export default function MyRequestListview({
                   style={{ minWidth: 140 }}
                   value={filters.priority}
                   options={priorityOptions}
-                  onChange={(value) => {
+                  onChange={(value: 'ALL' | RequestPriority) => {
                     setFilters((prev) => ({ ...prev, priority: value }));
                     reloadTable();
                   }}
@@ -252,7 +252,7 @@ export default function MyRequestListview({
                   allowClear
                   style={{ width: 180 }}
                   value={filters.dateRange ? dayjs(filters.dateRange[0]) : null}
-                  onChange={(value) => {
+                  onChange={(value: dayjs.Dayjs | null) => {
                     if (value) {
                       setFilters((prev) => ({
                         ...prev,
@@ -450,10 +450,13 @@ export default function MyRequestListview({
         request={selectedRequest}
         data={selectedRequestDetail || (selectedRequest ? buildRequestDetailData(selectedRequest) : undefined)}
         onApprove={async (payload) => {
+          const nextStatus = payload.lines.length > 0 && payload.lines.every((line) => line.rejected)
+            ? 'rejected'
+            : 'approved';
           await services.approveRequest(payload);
           setSelectedRequest((prev) =>
             prev && prev.id === payload.id
-              ? { ...prev, requestStatus: 'approved' }
+              ? { ...prev, requestStatus: nextStatus }
               : prev,
           );
           if (selectedRequest?.id === payload.id) {

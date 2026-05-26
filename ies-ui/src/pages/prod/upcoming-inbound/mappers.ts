@@ -85,6 +85,8 @@ export function mapInboundPurchaseOrder(api: InboundPurchaseOrderApi): UpcomingI
     supplier: readString(api, 'supplier'),
     expectedDate: readString(api, 'expectedDate', 'expected_date'),
     expectedTime: readString(api, 'expectedTime', 'expected_time'),
+    receiverWarehouse:
+      readValue<string | null>(api, 'receiverWarehouse', 'receiver_warehouse') ?? undefined,
     deliveryNoteNumber: readValue<string | null>(api, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
     items: items.map(mapInboundPurchaseOrderItem),
     totalItems: readNumber(api, 'totalItems', 'total_items') ?? items.length,

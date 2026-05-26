@@ -1,6 +1,6 @@
 import { CheckOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
-import { Button, Progress, Space, Tag, Typography } from 'antd';
+import { Button, Modal, Progress, Space, Tag, Typography } from 'antd';
 import { formatSpfDateTime } from '../shared/dateTime';
 import {
   calcRequestTotals,
@@ -121,7 +121,13 @@ export const buildSummaryColumns = (options: {
               icon={<CheckOutlined />}
               onClick={(event) => {
                 event.stopPropagation();
-                options.onAcceptRequest?.(record);
+                Modal.confirm({
+                  title: 'Accept request',
+                  content: 'Are you sure you want to accept this spare part request?',
+                  okText: 'Accept',
+                  cancelText: 'Cancel',
+                  onOk: () => options.onAcceptRequest?.(record),
+                });
               }}
               style={{ color: '#52c41a' }}
             />

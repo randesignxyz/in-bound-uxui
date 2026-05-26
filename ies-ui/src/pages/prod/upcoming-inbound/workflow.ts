@@ -118,6 +118,15 @@ export interface PurchaseOrder {
   receiptLogs?: POReceiptLog[];
 }
 
+export interface PurchaseOrderReceiptState {
+  hasOutstandingQty: boolean;
+  hasLinkedReceipts: boolean;
+  hasBlockingReceipt: boolean;
+  isFullyReceived: boolean;
+  canCreateInboundReceiving: boolean;
+  displayStatus: 'Fully Received' | 'In Progress' | 'Ready to Receive';
+}
+
 export function getCombinedPurchaseOrderVendor(purchaseOrders: PurchaseOrder[]) {
   const normalizedSuppliers = Array.from(
     new Set(
@@ -146,6 +155,111 @@ export function canCombinePurchaseOrders(purchaseOrders: PurchaseOrder[]) {
     businessUnits.length <= 1 &&
     (purchaseOrders.length <= 1 || Boolean(getCombinedPurchaseOrderVendor(purchaseOrders)))
   );
+}
+
+const ACTIVE_PO_RECEIPT_STATES = new Set<InboundProcessState>([
+  'GRPO_DRAFT',
+  'QC_PENDING',
+  'QC_PASSED',
+  'PENDING_SUPERVISOR_REVIEW',
+  'MERGED_TO_SUPERVISOR_REVIEW',
+  'CORRECTION_REQUIRED',
+  'MISMATCH_EXCEPTION',
+]);
+
+function isApprovedPoReceiptLogStatus(statusLabel?: string) {
+  const label = statusLabel?.toLowerCase() || '';
+  return (
+    (label.includes('approved') ||
+      label.includes('posted') ||
+      label.includes('synced') ||
+      label.includes('complete')) &&
+    !label.includes('rejected') &&
+    !label.includes('correction') &&
+    !label.includes('pending') &&
+    !label.includes('draft')
+  );
+}
+
+function isBlockingPoReceiptLogStatus(statusLabel?: string) {
+  const label = statusLabel?.toLowerCase() || '';
+  if (!label) {
+    return false;
+  }
+
+  return (
+    label.includes('draft') ||
+    label.includes('pending') ||
+    label.includes('rejected') ||
+    label.includes('correction') ||
+    label.includes('exception')
+  );
+}
+
+function getLinkedPurchaseOrderReceipts(
+  purchaseOrder: PurchaseOrder,
+  goodsReceipts: GoodsReceipt[],
+) {
+  return goodsReceipts.filter((receipt) => {
+    if (receipt.poNumber === purchaseOrder.poNumber) return true;
+    return receipt.poReferences?.some((reference) => reference.poNumber === purchaseOrder.poNumber);
+  });
+}
+
+function isBlockingPurchaseOrderReceipt(receipt: GoodsReceipt) {
+  return (
+    ACTIVE_PO_RECEIPT_STATES.has(receipt.processState) ||
+    receipt.qcResult === 'Rejected' ||
+    isRejectedReceipt(receipt)
+  );
+}
+
+export function getPurchaseOrderReceiptState(
+  purchaseOrder: PurchaseOrder,
+  goodsReceipts: GoodsReceipt[] = [],
+): PurchaseOrderReceiptState {
+  const linkedReceipts = getLinkedPurchaseOrderReceipts(purchaseOrder, goodsReceipts);
+  const hasLinkedReceipts =
+    linkedReceipts.length > 0 || (purchaseOrder.receiptLogs?.some((log) => typeof log.receiptId === 'number') ?? false);
+  const hasBlockingReceipt =
+    linkedReceipts.length > 0
+      ? linkedReceipts.some((receipt) => isBlockingPurchaseOrderReceipt(receipt))
+      : purchaseOrder.receiptLogs?.some((log) => isBlockingPoReceiptLogStatus(log.statusLabel)) ?? false;
+
+  const hasOutstandingQty =
+    purchaseOrder.items?.some((item) => {
+      if (item.remainingQty > 0) {
+        return true;
+      }
+
+      const approvedQty =
+        purchaseOrder.receiptLogs?.reduce((sum, log) => {
+          if (!isApprovedPoReceiptLogStatus(log.statusLabel)) {
+            return sum;
+          }
+
+          const matchedItem = log.approvedItems?.find((approvedItem) => approvedItem.code === item.code);
+          return sum + (matchedItem ? matchedItem.qty : 0);
+        }, 0) ?? 0;
+
+      return approvedQty < item.poQty;
+    }) ?? false;
+
+  const isFullyReceived = !hasOutstandingQty && !hasBlockingReceipt;
+  const canCreateInboundReceiving = hasOutstandingQty && !hasBlockingReceipt;
+
+  return {
+    hasOutstandingQty,
+    hasLinkedReceipts,
+    hasBlockingReceipt,
+    isFullyReceived,
+    canCreateInboundReceiving,
+    displayStatus: isFullyReceived
+      ? 'Fully Received'
+      : hasBlockingReceipt
+        ? 'In Progress'
+        : 'Ready to Receive',
+  };
 }
 
 export type GoodsReceiptSourceType = 'PLANNED' | 'UNPLANNED_WITH_PO' | 'TEMP_NO_PO';

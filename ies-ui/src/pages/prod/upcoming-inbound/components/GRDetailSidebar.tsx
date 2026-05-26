@@ -43,7 +43,7 @@ import {
   getReceiptPOReferences,
   getReceiptSapStatus,
   groupReceiptItemsByPO,
-  summarizePOReferences,
+  // summarizePOReferences,
   summarizeSuppliers,
 } from '../workflow';
 import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
@@ -119,6 +119,7 @@ interface GRDetailSidebarProps {
     receipt: GoodsReceipt,
     payload: SupervisorReviewSubmitPayload,
   ) => Promise<boolean> | boolean;
+  onViewPODetails?: (poNumber: string, businessUnit?: string) => void;
 }
 
 function deriveQcOutcome(
@@ -171,6 +172,7 @@ export function GRDetailSidebar({
   onOpenLinkPO,
   onSubmitQCVerification,
   onSubmitSupervisorReview,
+  onViewPODetails,
 }: GRDetailSidebarProps) {
   const [items, setItems] = useState<GRItem[]>([]);
   const [errors, setErrors] = useState<Record<string, boolean>>({});
@@ -282,9 +284,32 @@ export function GRDetailSidebar({
   const reviewerDateLabel = reviewerLabel === 'QC Reviewed By' ? 'QC Reviewed Date' : 'Approved Date';
   const displayedStatus = getReceiptSapStatus(receipt) || getReceiptDisplayStatus(receipt);
   const approvedGrNumber = getReceiptApprovedGrNumber(receipt);
+  const poReferences = getReceiptPOReferences(receipt);
   const poReferenceValue =
-    getReceiptPOReferences(receipt).length > 0 ? (
-      summarizePOReferences(receipt)
+    poReferences.length > 0 ? (
+      <Space size={[4, 4]} wrap>
+        {poReferences.map((ref, idx) => (
+          <span key={ref.poNumber}>
+            <a
+              onClick={() => {
+                if (onViewPODetails) {
+                  onViewPODetails(ref.poNumber, ref.businessUnit);
+                }
+              }}
+              style={{
+                color: '#1890ff',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              {ref.poNumber}
+            </a>
+            {idx < poReferences.length - 1 && <span style={{ color: '#8c8c8c' }}>, </span>}
+          </span>
+        ))}
+      </Space>
+    ) : receipt.receiptSourceType === 'TEMP_NO_PO' ? (
+      <Text type="secondary">Waiting SAP PO</Text>
     ) : (
       <Text style={{ color: '#ff4d4f', fontWeight: 600 }}>No PO</Text>
     );

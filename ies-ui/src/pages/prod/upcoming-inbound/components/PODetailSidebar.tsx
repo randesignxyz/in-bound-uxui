@@ -6,7 +6,7 @@ import type { ProColumns } from '@ant-design/pro-table';
 import { ExportOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
-import type { PurchaseOrder, POItem } from '../workflow';
+import { getPurchaseOrderReceiptState, type PurchaseOrder, type POItem, type GoodsReceipt } from '../workflow';
 import type { InboundWarehouseMasterApi } from '../data';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -25,6 +25,7 @@ interface PODetailSidebarProps {
   onCreateGR: (po: PurchaseOrder) => void;
   onOpenReceiptInNewTab: (receiptId: number) => void;
   warehouseOptions?: InboundWarehouseMasterApi[];
+  goodsReceipts?: GoodsReceipt[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -86,6 +87,7 @@ export function PODetailSidebar({
   onCreateGR,
   onOpenReceiptInNewTab,
   warehouseOptions = [],
+  goodsReceipts = [],
 }: PODetailSidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(open);
   const [renderedPO, setRenderedPO] = useState<PurchaseOrder | null>(po);
@@ -124,6 +126,15 @@ export function PODetailSidebar({
     })
     .map((warehouse) => warehouse.warehouse_code?.trim())
     .filter((warehouseCode): warehouseCode is string => Boolean(warehouseCode));
+
+  const receiptState = getPurchaseOrderReceiptState(currentPO, goodsReceipts);
+  const shouldShowCreateInboundReceiving = receiptState.canCreateInboundReceiving;
+  const poStatusTagColor =
+    receiptState.displayStatus === 'Fully Received'
+      ? 'success'
+      : receiptState.displayStatus === 'In Progress'
+        ? 'warning'
+        : 'processing';
 
   // ─── Table Columns ──────────────────────────────────────────────────────────
 
@@ -191,10 +202,14 @@ export function PODetailSidebar({
       width={880}
       drawerProps={{
         destroyOnClose: false,
-        extra: (
+        extra: shouldShowCreateInboundReceiving ? (
           <Button type="primary" onClick={() => onCreateGR(currentPO)}>
             Create Inbound Receiving
           </Button>
+        ) : (
+          <Tag color={poStatusTagColor} style={{ fontSize: '13px', padding: '4px 10px', fontWeight: 600 }}>
+            {receiptState.displayStatus}
+          </Tag>
         ),
         afterOpenChange: (visible) => {
           if (!visible) {
@@ -232,8 +247,21 @@ export function PODetailSidebar({
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="SAP PO Status">
-                  <Tag color={currentPO.docStatus?.toLowerCase() === 'closed' ? 'success' : 'processing'}>
-                    {currentPO.docStatus || 'Open'}
+                  <Tag
+                    color={
+                      currentPO.docStatus?.toUpperCase() === 'C' ||
+                      currentPO.docStatus?.toLowerCase() === 'closed'
+                        ? 'success'
+                        : 'processing'
+                    }
+                  >
+                    {currentPO.docStatus?.toUpperCase() === 'C' ||
+                    currentPO.docStatus?.toLowerCase() === 'closed'
+                      ? 'Complete'
+                      : currentPO.docStatus?.toUpperCase() === 'O' ||
+                        currentPO.docStatus?.toLowerCase() === 'open'
+                      ? 'Open'
+                      : currentPO.docStatus || 'Open'}
                   </Tag>
                 </Descriptions.Item>
 

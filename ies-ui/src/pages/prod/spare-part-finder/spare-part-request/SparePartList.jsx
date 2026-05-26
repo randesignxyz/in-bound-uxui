@@ -645,6 +645,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       const detail = await services.detail({
         id: item.id,
         productId: item.productId,
+        inventoryId: item.locations?.[0]?.inventoryId,
         warehouseCode: item.warehouse || item.locations?.[0]?.warehouseCode,
         businessUnit: businessUnit && businessUnit !== '-' ? businessUnit : undefined,
       });
@@ -743,9 +744,21 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const handleUpdateProductDetail = async (payload) => {
     const updatedDetail = await services.updateDetail(payload);
     setDetailsItem(updatedDetail);
-    setCurrentRows((previous) =>
-      previous.map((row) => (row.id === updatedDetail.id ? { ...row, ...updatedDetail } : row)),
-    );
+    const updatedWarehouse = payload.warehouseCode || updatedDetail.warehouse || updatedDetail.locations?.[0]?.warehouseCode;
+    setCurrentRows((previous) => {
+      const nextRows = previous.map((row) => {
+        const rowLocation = row.locations?.[0];
+        const matchesInventory = payload.inventoryId && rowLocation?.inventoryId === payload.inventoryId;
+        const matchesWarehouse =
+          !payload.inventoryId &&
+          row.id === updatedDetail.id &&
+          String(row.warehouse || rowLocation?.warehouseCode || '').trim() === String(updatedWarehouse || '').trim();
+
+        return matchesInventory || matchesWarehouse ? { ...row, ...updatedDetail } : row;
+      });
+      currentRowsRef.current = nextRows;
+      return nextRows;
+    });
     setSelectedItemsById((previous) => ({
       ...previous,
       [getSparePartRowKey(updatedDetail)]: updatedDetail,

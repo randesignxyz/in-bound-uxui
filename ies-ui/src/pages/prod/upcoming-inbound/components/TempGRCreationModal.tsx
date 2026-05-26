@@ -176,7 +176,12 @@ export function TempGRCreationModal({
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
       setBusinessUnit(initialReceipt.businessUnit || availableBusinessUnits[0] || '');
       setSelectedWarehouseCode(initialReceipt.receiverWarehouseName || '');
-      setSupplier(initialReceipt.supplier || '');
+      
+      const matchingSupplier = supplierOptions.find(
+        (s) => s.supplier_name?.trim() === initialReceipt.supplier?.trim()
+      );
+      setSupplier(matchingSupplier?.supplier_code || initialReceipt.supplier || '');
+
       setDeliveryNoteNumber(initialReceipt.deliveryNoteNumber || '');
       setItems(
         initialReceipt.items.map((item) => ({
@@ -198,16 +203,21 @@ export function TempGRCreationModal({
     setItems([buildEmptyItem()]);
     setUploadedFiles([]);
     setErrors({});
-  }, [availableBusinessUnits, initialReceipt, open]);
+  }, [availableBusinessUnits, initialReceipt, open, supplierOptions]);
 
   const visibleSupplierOptions = useMemo(
     () =>
       supplierOptions
         .filter((option) => !businessUnit || !option.business_unit || option.business_unit === businessUnit)
-        .map((option) => ({
-          label: `${option.supplier_code} - ${option.supplier_name}`,
-          value: option.supplier_name,
-        })),
+        .map((option) => {
+          const code = option.supplier_code?.trim() || '';
+          const name = option.supplier_name?.trim() || '';
+          return {
+            label: code ? `${code} - ${name}` : name,
+            value: code,
+          };
+        })
+        .filter((option) => Boolean(option.value)),
     [businessUnit, supplierOptions],
   );
 
@@ -483,9 +493,14 @@ export function TempGRCreationModal({
     submissionMode: 'draft' | 'submit',
     supportingDocs = uploadFilesToSupportingDocs(uploadedFiles, 'WAREHOUSE'),
   ) => {
+    const selectedSupplier = supplierOptions.find(
+      (s) => s.supplier_code === supplier
+    );
+    const supplierName = selectedSupplier?.supplier_name || supplier;
+
     const normalizedItems = items.map((item) => ({
       ...item,
-      supplier: supplier.trim(),
+      supplier: supplierName.trim(),
     }));
     const supplierNames = initialReceipt?.supplierNames ?? [];
 
@@ -495,9 +510,9 @@ export function TempGRCreationModal({
       receivingNumber: initialReceipt?.receivingNumber || initialReceipt?.grNumber,
       businessUnit: businessUnit.trim(),
       poNumber: '',
-      supplier: supplier.trim(),
+      supplier: supplierName.trim(),
       poReferences: initialReceipt?.poReferences || [],
-      supplierNames: supplierNames.length > 0 ? supplierNames : [supplier.trim()],
+      supplierNames: supplierNames.length > 0 ? supplierNames : [supplierName.trim()],
       receiptType: 'Unplanned',
       receiptSourceType: initialReceipt?.receiptSourceType || 'TEMP_NO_PO',
       poLinkStatus: initialReceipt?.poLinkStatus || 'WAITING_PO',

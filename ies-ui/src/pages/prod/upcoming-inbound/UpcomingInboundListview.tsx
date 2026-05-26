@@ -2769,6 +2769,7 @@ export default function UpcomingInboundListview({
                       selectedRowKeys={selectedWarehousePONumbers}
                       lockedSupplier={selectedWarehousePOVendor}
                       onSelectionChange={handleWarehousePOSelectionChange}
+                      goodsReceipts={receipts}
                       pagination={{
                         current: poPagination.current,
                         pageSize: poPagination.pageSize,
@@ -2971,6 +2972,7 @@ export default function UpcomingInboundListview({
             onCreateGR={(po) => void handleCreateGR([po])}
             onOpenReceiptInNewTab={handleOpenReceiptInNewTab}
             warehouseOptions={warehouseMasterOptions}
+            goodsReceipts={receipts}
           />
 
           <GRDetailSidebar
@@ -2986,6 +2988,24 @@ export default function UpcomingInboundListview({
             onOpenLinkPO={(receipt) => setLinkPOReceipt(receipt)}
             onSubmitQCVerification={handleSubmitQCVerification}
             onSubmitSupervisorReview={handleSubmitSupervisorReview}
+            onViewPODetails={async (poNumber, businessUnit) => {
+              try {
+                const skeletonPO: PurchaseOrder = {
+                  poNumber,
+                  businessUnit,
+                  supplier: '',
+                  expectedDate: '',
+                  expectedTime: '',
+                  items: [],
+                  totalItems: 0,
+                  totalQty: 0,
+                  type: 'Planned',
+                };
+                await handleViewPODetail(skeletonPO);
+              } catch (err: any) {
+                message.error('Failed to view purchase order details.');
+              }
+            }}
           />
 
           <SupervisorApprovalSuccessModal

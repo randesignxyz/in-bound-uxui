@@ -108,6 +108,7 @@ export interface PurchaseOrder {
   supplier: string;
   expectedDate: string;
   expectedTime: string;
+  receiverWarehouse?: string;
   deliveryNoteNumber?: string;
   items: POItem[];
   totalItems: number;

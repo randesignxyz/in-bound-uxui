@@ -96,6 +96,43 @@ function getUomOptionLabel(option: InboundUomMasterApi) {
   return `${code} - ${name}`;
 }
 
+function renderRequiredLabel(label: string) {
+  return (
+    <span>
+      <span style={{ color: '#ff4d4f', marginInlineEnd: 4 }}>*</span>
+      {label}
+    </span>
+  );
+}
+
+function parseWholeNumberInput(value: string | undefined) {
+  const digitsOnly = (value || '').replace(/[^\d]/g, '');
+  return digitsOnly ? Number(digitsOnly) : 0;
+}
+
+function preventNonNumericKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+  const allowedKeys = new Set([
+    'Backspace',
+    'Delete',
+    'Tab',
+    'Enter',
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowUp',
+    'ArrowDown',
+    'Home',
+    'End',
+  ]);
+
+  if (allowedKeys.has(event.key)) {
+    return;
+  }
+
+  if (!/^\d$/.test(event.key)) {
+    event.preventDefault();
+  }
+}
+
 export function TempGRCreationModal({
   open,
   onClose,
@@ -119,6 +156,10 @@ export function TempGRCreationModal({
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [warehouseSearch, setWarehouseSearch] = useState('');
+  const [supplierSearch, setSupplierSearch] = useState('');
+  const [itemSearch, setItemSearch] = useState('');
   const [previewState, setPreviewState] = useState<{
     fileName?: string;
     url?: string;
@@ -127,6 +168,9 @@ export function TempGRCreationModal({
 
   useEffect(() => {
     if (!open) return;
+    setWarehouseSearch('');
+    setSupplierSearch('');
+    setItemSearch('');
     if (initialReceipt) {
       setPostingDate(initialReceipt.postingDate || dayjs().format('YYYY-MM-DD'));
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
@@ -223,14 +267,99 @@ export function TempGRCreationModal({
     [businessUnit, warehouseOptions],
   );
 
+  const displayedWarehouseOptions = useMemo(() => {
+    const normalizedSearch = warehouseSearch.trim().toLowerCase();
+    const filtered = normalizedSearch
+      ? visibleWarehouseOptions.filter((option) =>
+          option.label.toLowerCase().includes(normalizedSearch)
+        )
+      : visibleWarehouseOptions;
+
+    const sliced = filtered.slice(0, 20);
+
+    if (
+      selectedWarehouseCode &&
+      !sliced.some((opt) => opt.value === selectedWarehouseCode)
+    ) {
+      const selectedOption = visibleWarehouseOptions.find(
+        (opt) => opt.value === selectedWarehouseCode
+      );
+      if (selectedOption) {
+        sliced.push(selectedOption);
+      }
+    }
+
+    return sliced;
+  }, [visibleWarehouseOptions, warehouseSearch, selectedWarehouseCode]);
+
+  const displayedSupplierOptions = useMemo(() => {
+    const normalizedSearch = supplierSearch.trim().toLowerCase();
+    const filtered = normalizedSearch
+      ? visibleSupplierOptions.filter((option) =>
+          option.label.toLowerCase().includes(normalizedSearch)
+        )
+      : visibleSupplierOptions;
+
+    const sliced = filtered.slice(0, 20);
+
+    if (
+      supplier &&
+      !sliced.some((opt) => opt.value === supplier)
+    ) {
+      const selectedOption = visibleSupplierOptions.find(
+        (opt) => opt.value === supplier
+      );
+      if (selectedOption) {
+        sliced.push(selectedOption);
+      }
+    }
+
+    return sliced;
+  }, [visibleSupplierOptions, supplierSearch, supplier]);
+
+  const displayedItemOptions = useMemo(() => {
+    const normalizedSearch = itemSearch.trim().toLowerCase();
+    const filtered = normalizedSearch
+      ? visibleItemOptions.filter((option) =>
+          option.label.toLowerCase().includes(normalizedSearch) ||
+          (option.itemName && option.itemName.toLowerCase().includes(normalizedSearch))
+        )
+      : visibleItemOptions;
+
+    const sliced = filtered.slice(0, 20);
+
+    const selectedCodes = new Set(items.map((item) => item.code).filter(Boolean));
+    selectedCodes.forEach((code) => {
+      if (!sliced.some((opt) => opt.value === code)) {
+        const selectedOption = visibleItemOptions.find(
+          (opt) => opt.value === code
+        );
+        if (selectedOption) {
+          sliced.push(selectedOption);
+        }
+      }
+    });
+
+    return sliced;
+  }, [visibleItemOptions, itemSearch, items]);
+
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     setItems((prev) =>
       prev.map((item, itemIndex) => {
         if (itemIndex !== index) return item;
 
-        if (field === 'poQty' || field === 'receiveQty') {
-          const nextValue = Math.max(0, Number(value) || 0);
-          return { ...item, [field]: nextValue } as GRItem;
+        if (field === 'poQty') {
+          const nextQty = Math.max(0, Math.trunc(Number(value) || 0));
+          return {
+            ...item,
+            poQty: nextQty,
+            receiveQty: Math.min(item.receiveQty, nextQty),
+          };
+        }
+
+        if (field === 'receiveQty') {
+          const nextValue = Math.max(0, Math.trunc(Number(value) || 0));
+          return { ...item, receiveQty: Math.min(nextValue, item.poQty) };
         }
 
         return { ...item, [field]: value } as GRItem;
@@ -243,6 +372,11 @@ export function TempGRCreationModal({
         [`${String(field)}-${index}`]: false,
         [`duplicate-${index}`]: false,
       };
+
+      if (field === 'poQty' || field === 'receiveQty') {
+        delete nextErrors[`poQty-${index}`];
+        delete nextErrors[`receiveQty-${index}`];
+      }
 
       if (field === 'productDate' || field === 'expiryDate') {
         delete nextErrors[`productDate-${index}`];
@@ -324,6 +458,10 @@ export function TempGRCreationModal({
       if (item.poQty <= 0) nextErrors[`poQty-${index}`] = true;
 
       if (item.receiveQty <= 0) nextErrors[`receiveQty-${index}`] = true;
+      if (item.receiveQty > item.poQty) {
+        nextErrors[`poQty-${index}`] = true;
+        nextErrors[`receiveQty-${index}`] = true;
+      }
       if (!item.productDate) nextErrors[`productDate-${index}`] = true;
       if (!item.expiryDate) nextErrors[`expiryDate-${index}`] = true;
       if (hasInvalidDateOrder(item.productDate, item.expiryDate)) {
@@ -349,7 +487,6 @@ export function TempGRCreationModal({
       ...item,
       supplier: supplier.trim(),
     }));
-    const hasDiscrepancy = hasReceiptDiscrepancy(normalizedItems);
     const supplierNames = initialReceipt?.supplierNames ?? [];
 
     return {
@@ -375,16 +512,11 @@ export function TempGRCreationModal({
       items: normalizedItems,
       uploadedFiles: supportingDocs,
       specMatch: true,
-      qtyMatch: !hasDiscrepancy,
+      qtyMatch: !hasReceiptDiscrepancy(normalizedItems),
       qualityCheckRequired: true,
       qcResult: 'Pending',
       exceptionReason: buildReceiptExceptionReason(normalizedItems),
-      processState:
-        correctionMode || submissionMode === 'draft'
-          ? 'GRPO_DRAFT'
-          : hasDiscrepancy
-            ? 'MISMATCH_EXCEPTION'
-            : 'QC_PENDING',
+      processState: correctionMode || submissionMode === 'draft' ? 'GRPO_DRAFT' : 'QC_PENDING',
       documentChecklist: {
         vendorDN: deliveryNoteNumber.trim().length > 0,
         goodsReceiptPOForm: true,
@@ -415,9 +547,9 @@ export function TempGRCreationModal({
     if (!validate()) return;
     const currentHasDiscrepancy = items.some((item) => item.poQty > item.receiveQty);
     Modal.confirm({
-      title: currentHasDiscrepancy ? 'Submit inbound exception?' : 'Submit to QC?',
+      title: 'Submit to QC?',
       content: currentHasDiscrepancy
-        ? 'This receipt has discrepancies and will be submitted with exception details.'
+        ? 'This receipt has discrepancies and will still be submitted to QC with exception details.'
         : 'This will submit the inbound receiving to QC for review.',
       okText: 'Confirm',
       cancelText: 'Cancel',
@@ -455,12 +587,10 @@ export function TempGRCreationModal({
     message.error('Preview is not available for this file.');
   };
 
-  const hasDiscrepancy = items.some((item) => item.poQty > item.receiveQty);
-
   const itemColumns: ColumnsType<GRItem & { index: number }> = useMemo(
     () => [
       {
-        title: 'Item',
+        title: renderRequiredLabel('Item'),
         key: 'item',
         width: 240,
         render: (_, record) => (
@@ -471,10 +601,19 @@ export function TempGRCreationModal({
             <Select
               showSearch
               value={record.code || undefined}
-              onChange={(value) => handleSelectItemCode(record.index, value)}
+              onChange={(value) => {
+                handleSelectItemCode(record.index, value);
+                setItemSearch('');
+              }}
+              onSearch={setItemSearch}
+              onDropdownVisibleChange={(visible) => {
+                if (!visible) {
+                  setItemSearch('');
+                }
+              }}
+              filterOption={false}
               placeholder="Item code"
-              options={visibleItemOptions}
-              optionFilterProp="label"
+              options={displayedItemOptions}
               notFoundContent="No item master data"
               status={
                 errors[`code-${record.index}`] || errors[`duplicate-${record.index}`]
@@ -494,35 +633,46 @@ export function TempGRCreationModal({
         ),
       },
       {
-        title: 'Qty',
+        title: renderRequiredLabel('Qty'),
         key: 'poQty',
         width: 92,
         render: (_, record) => (
           <InputNumber
-            min={0}
+            min={1}
+            precision={0}
+            step={1}
+            parser={parseWholeNumberInput}
             value={record.poQty}
             onChange={(value) => updateItem(record.index, 'poQty', value ?? 0)}
+            onKeyDown={preventNonNumericKeyDown}
             status={errors[`poQty-${record.index}`] ? 'error' : undefined}
             style={{ width: '100%' }}
+            inputMode="numeric"
           />
         ),
       },
       {
-        title: 'Received',
+        title: renderRequiredLabel('Received'),
         key: 'receiveQty',
         width: 92,
         render: (_, record) => (
           <InputNumber
-            min={0}
+            min={1}
+            max={record.poQty > 0 ? record.poQty : undefined}
+            precision={0}
+            step={1}
+            parser={parseWholeNumberInput}
             value={record.receiveQty}
             onChange={(value) => updateItem(record.index, 'receiveQty', value ?? 0)}
+            onKeyDown={preventNonNumericKeyDown}
             status={errors[`receiveQty-${record.index}`] ? 'error' : undefined}
             style={{ width: '100%' }}
+            inputMode="numeric"
           />
         ),
       },
       {
-        title: 'UoM',
+        title: renderRequiredLabel('UoM'),
         key: 'uom',
         width: 140,
         render: (_, record) => (
@@ -578,7 +728,7 @@ export function TempGRCreationModal({
         ),
       },
       {
-        title: 'Batch',
+        title: renderRequiredLabel('Batch Number'),
         key: 'batchNumber',
         width: 140,
         render: (_, record) => (
@@ -586,7 +736,7 @@ export function TempGRCreationModal({
             value={record.batchNumber}
             onChange={(event) => updateItem(record.index, 'batchNumber', event.target.value)}
             status={errors[`batchNumber-${record.index}`] ? 'error' : undefined}
-            placeholder="Batch"
+            placeholder="Batch number"
           />
         ),
       },
@@ -605,7 +755,7 @@ export function TempGRCreationModal({
         ),
       },
     ],
-    [errors, handleSelectItemCode, items.length, visibleItemOptions, visibleUomOptions, updateItem],
+    [errors, handleSelectItemCode, items.length, displayedItemOptions, visibleUomOptions, updateItem],
   );
 
   return (
@@ -663,10 +813,19 @@ export function TempGRCreationModal({
                   <Select
                     showSearch
                     value={supplier || undefined}
-                    onChange={setSupplier}
+                    onChange={(value) => {
+                      setSupplier(value);
+                      setSupplierSearch('');
+                    }}
+                    onSearch={setSupplierSearch}
+                    onDropdownVisibleChange={(visible) => {
+                      if (!visible) {
+                        setSupplierSearch('');
+                      }
+                    }}
+                    filterOption={false}
                     placeholder="Supplier name"
-                    options={visibleSupplierOptions}
-                    optionFilterProp="label"
+                    options={displayedSupplierOptions}
                     notFoundContent="No supplier master data"
                   />
                 </Form.Item>
@@ -696,10 +855,17 @@ export function TempGRCreationModal({
                     onChange={(value) => {
                       setSelectedWarehouseCode(value);
                       setErrors((prev) => ({ ...prev, warehouseCode: false }));
+                      setWarehouseSearch('');
                     }}
+                    onSearch={setWarehouseSearch}
+                    onDropdownVisibleChange={(visible) => {
+                      if (!visible) {
+                        setWarehouseSearch('');
+                      }
+                    }}
+                    filterOption={false}
                     placeholder="Select warehouse"
-                    options={visibleWarehouseOptions}
-                    optionFilterProp="label"
+                    options={displayedWarehouseOptions}
                     notFoundContent="No warehouse master data"
                   />
                 </Form.Item>
@@ -817,7 +983,7 @@ export function TempGRCreationModal({
             </Button>
             {!correctionMode && (
               <Button type="primary" onClick={handleSubmit} disabled={isSubmitting} loading={isSubmitting}>
-                {hasDiscrepancy ? 'Submit Exception' : 'Submit for QC'}
+                Submit for QC
               </Button>
             )}
           </Space>

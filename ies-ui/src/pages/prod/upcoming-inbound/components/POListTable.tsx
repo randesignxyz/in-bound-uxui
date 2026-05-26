@@ -3,7 +3,7 @@ import ProTable from '@ant-design/pro-table';
 import { Flex, Progress, Tag, Tooltip } from 'antd';
 import type { TablePaginationConfig } from 'antd/es/table';
 import { type MouseEvent, type ReactNode } from 'react';
-import type { PurchaseOrder } from '../workflow';
+import { getPurchaseOrderReceiptState, type PurchaseOrder, type GoodsReceipt } from '../workflow';
 
 interface POListTableProps {
   purchaseOrders: PurchaseOrder[];
@@ -14,6 +14,7 @@ interface POListTableProps {
   lockedSupplier?: string;
   onSelectionChange?: (selectedRowKeys: string[]) => void;
   pagination?: TablePaginationConfig;
+  goodsReceipts?: GoodsReceipt[];
 }
 
 export function POListTable({
@@ -25,6 +26,7 @@ export function POListTable({
   lockedSupplier,
   onSelectionChange,
   pagination,
+  goodsReceipts = [],
 }: POListTableProps) {
   const hasActiveSelection = selectedRowKeys.length > 0;
   const getRowKey = (purchaseOrder: PurchaseOrder) =>
@@ -173,12 +175,16 @@ export function POListTable({
               onChange: (nextSelectedRowKeys) =>
                 onSelectionChange(nextSelectedRowKeys.map((key) => String(key))),
               preserveSelectedRowKeys: false,
-              getCheckboxProps: (record) => ({
-                disabled:
+              getCheckboxProps: (record) => {
+                const receiptState = getPurchaseOrderReceiptState(record, goodsReceipts);
+                const isLockedSupplier =
                   Boolean(lockedSupplier) &&
                   record.supplier !== lockedSupplier &&
-                  !selectedRowKeys.includes(getRowKey(record)),
-              }),
+                  !selectedRowKeys.includes(getRowKey(record));
+                return {
+                  disabled: isLockedSupplier || !receiptState.canCreateInboundReceiving,
+                };
+              },
             }
           : undefined
       }

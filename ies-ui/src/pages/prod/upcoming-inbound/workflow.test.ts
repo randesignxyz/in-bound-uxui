@@ -1,6 +1,7 @@
 import {
   buildReceiptTimelineActivities,
   getExceptionQueueReceipts,
+  getPurchaseOrderReceiptState,
   type GoodsReceipt,
   type GRItem,
   getPurchaseOrderVendorOptions,
@@ -231,6 +232,186 @@ describe('groupReceiptItemsByPO', () => {
       totalReceiveQty: 5000,
     });
     expect(groups[0].items.map((item) => item.batchNumber)).toEqual(['BATCH-001', 'BATCH-002']);
+  });
+});
+
+describe('getPurchaseOrderReceiptState', () => {
+  it('marks a PO as fully received only when approved qty covers every item', () => {
+    const purchaseOrder = createPurchaseOrder({
+      items: [
+        {
+          code: 'ITEM-001',
+          name: 'Item 001',
+          poQty: 5,
+          receivedQty: 5,
+          remainingQty: 0,
+          uom: 'EA',
+          supplier: 'Vendor A',
+        },
+      ],
+      totalItems: 1,
+      totalQty: 5,
+      receiptLogs: [
+        {
+          receiptId: 1,
+          receivingNumber: 'IR-001',
+          statusLabel: 'Approved',
+          totalReceivedQty: 5,
+          receivedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 5 }],
+          approvedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 5 }],
+          rejectedItems: [],
+        },
+      ],
+    });
+
+    expect(getPurchaseOrderReceiptState(purchaseOrder)).toMatchObject({
+      isFullyReceived: true,
+      canCreateInboundReceiving: false,
+      displayStatus: 'Fully Received',
+    });
+  });
+
+  it('keeps a fully received-but-rejected PO in progress and blocks creating a new IR', () => {
+    const purchaseOrder = createPurchaseOrder({
+      items: [
+        {
+          code: 'ITEM-001',
+          name: 'Item 001',
+          poQty: 5,
+          receivedQty: 5,
+          remainingQty: 0,
+          uom: 'EA',
+          supplier: 'Vendor A',
+        },
+      ],
+      totalItems: 1,
+      totalQty: 5,
+      receiptLogs: [
+        {
+          receiptId: 1,
+          receivingNumber: 'IR-001',
+          statusLabel: 'QC Rejected',
+          totalReceivedQty: 5,
+          receivedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 5 }],
+          approvedItems: [],
+          rejectedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 5 }],
+        },
+      ],
+    });
+    const receipt = createReceipt({
+      grNumber: 'IR-001',
+      receivingNumber: 'IR-001',
+      poNumber: 'PO-001',
+      items: [createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 5, receiveQty: 5 })],
+      processState: 'CORRECTION_REQUIRED',
+      qcResult: 'Rejected',
+    });
+
+    expect(getPurchaseOrderReceiptState(purchaseOrder, [receipt])).toMatchObject({
+      hasOutstandingQty: true,
+      hasBlockingReceipt: true,
+      isFullyReceived: false,
+      canCreateInboundReceiving: false,
+      displayStatus: 'In Progress',
+    });
+  });
+
+  it('shows in progress when approved qty is fully covered but the linked IR is still in rejected correction flow', () => {
+    const purchaseOrder = createPurchaseOrder({
+      items: [
+        {
+          code: 'ITEM-001',
+          name: 'Item 001',
+          poQty: 2,
+          receivedQty: 2,
+          remainingQty: 0,
+          uom: 'EA',
+          supplier: 'Vendor A',
+        },
+      ],
+      totalItems: 1,
+      totalQty: 2,
+      receiptLogs: [
+        {
+          receiptId: 2,
+          receivingNumber: 'IR-002',
+          statusLabel: 'Approved',
+          totalReceivedQty: 2,
+          receivedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 2 }],
+          approvedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 2 }],
+          rejectedItems: [],
+        },
+      ],
+    });
+    const rejectedCorrectionReceipt = createReceipt({
+      grNumber: 'IR-002',
+      receivingNumber: 'IR-002',
+      poNumber: 'PO-001',
+      items: [createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 2, receiveQty: 2 })],
+      processState: 'CORRECTION_REQUIRED',
+      qcResult: 'Rejected',
+      activities: [
+        {
+          title: 'Supervisor Rejected',
+          description: 'Supervisor rejected correction and returned it for recheck',
+          timestamp: '2026-04-02 10:00:00',
+          state: 'active',
+          processState: 'CORRECTION_REQUIRED',
+        },
+      ],
+    });
+
+    expect(getPurchaseOrderReceiptState(purchaseOrder, [rejectedCorrectionReceipt])).toMatchObject({
+      hasOutstandingQty: false,
+      hasBlockingReceipt: true,
+      isFullyReceived: false,
+      canCreateInboundReceiving: false,
+      displayStatus: 'In Progress',
+    });
+  });
+
+  it('allows creating the next IR when an earlier linked receipt is completed and qty is still outstanding', () => {
+    const purchaseOrder = createPurchaseOrder({
+      items: [
+        {
+          code: 'ITEM-001',
+          name: 'Item 001',
+          poQty: 10,
+          receivedQty: 4,
+          remainingQty: 6,
+          uom: 'EA',
+          supplier: 'Vendor A',
+        },
+      ],
+      totalItems: 1,
+      totalQty: 10,
+      receiptLogs: [
+        {
+          receiptId: 1,
+          receivingNumber: 'IR-001',
+          statusLabel: 'Approved',
+          totalReceivedQty: 4,
+          receivedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 4 }],
+          approvedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 4 }],
+          rejectedItems: [],
+        },
+      ],
+    });
+    const completedReceipt = createReceipt({
+      grNumber: 'IR-001',
+      receivingNumber: 'IR-001',
+      poNumber: 'PO-001',
+      items: [createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 10, receiveQty: 4 })],
+      processState: 'SAP_SYNCED',
+      qcResult: 'Pass',
+    });
+
+    expect(getPurchaseOrderReceiptState(purchaseOrder, [completedReceipt])).toMatchObject({
+      hasOutstandingQty: true,
+      hasBlockingReceipt: false,
+      canCreateInboundReceiving: true,
+      displayStatus: 'Ready to Receive',
+    });
   });
 });
 

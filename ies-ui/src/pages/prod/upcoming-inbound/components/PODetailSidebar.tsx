@@ -232,8 +232,21 @@ export function PODetailSidebar({
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="SAP PO Status">
-                  <Tag color={currentPO.docStatus?.toLowerCase() === 'closed' ? 'success' : 'processing'}>
-                    {currentPO.docStatus || 'Open'}
+                  <Tag
+                    color={
+                      currentPO.docStatus?.toUpperCase() === 'C' ||
+                      currentPO.docStatus?.toLowerCase() === 'closed'
+                        ? 'success'
+                        : 'processing'
+                    }
+                  >
+                    {currentPO.docStatus?.toUpperCase() === 'C' ||
+                    currentPO.docStatus?.toLowerCase() === 'closed'
+                      ? 'Complete'
+                      : currentPO.docStatus?.toUpperCase() === 'O' ||
+                        currentPO.docStatus?.toLowerCase() === 'open'
+                      ? 'Open'
+                      : currentPO.docStatus || 'Open'}
                   </Tag>
                 </Descriptions.Item>
 

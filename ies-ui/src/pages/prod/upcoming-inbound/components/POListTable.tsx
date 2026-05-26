@@ -101,12 +101,12 @@ export function POListTable({
       sorter: (a: PurchaseOrder, b: PurchaseOrder) =>
         (a.expectedDate || '9999-12-31').localeCompare(b.expectedDate || '9999-12-31'),
     },
-    {
-      width: 80,
-      key: 'totalItems',
-      title: 'Items',
-      dataIndex: 'totalItems',
-    },
+    // {
+    //   width: 80,
+    //   key: 'totalItems',
+    //   title: 'Items',
+    //   dataIndex: 'totalItems',
+    // },
     {
       key: 'totalQty',
       title: 'Total Qty',

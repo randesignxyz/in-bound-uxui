@@ -13,7 +13,7 @@ import {
   Modal,
   InputNumber,
 } from 'antd';
-import { DownOutlined, EditOutlined, RightOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DownOutlined, EditOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus } from './data';
@@ -26,6 +26,37 @@ import { SparePartRequestAPI } from './service.api';
 import { simpleRequestActions } from '@/services/model';
 
 const { Title, Text } = Typography;
+
+const toDisplayText = (value: unknown): string | undefined => {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    return toDisplayText(record.category_name ?? record.name ?? record.label ?? record.id);
+  }
+  return undefined;
+};
+
+const normalizeLineItem = (item: RequestDetailLineItem, index: number): RequestDetailLineItem => ({
+  ...item,
+  no: Number(item.no || index + 1),
+  productId: toDisplayText(item.productId) || '',
+  requestId: toDisplayText(item.requestId) || '',
+  itemName: toDisplayText(item.itemName) || '',
+  description: toDisplayText(item.description),
+  fromWarehouse: toDisplayText(item.fromWarehouse),
+  toWarehouse: toDisplayText(item.toWarehouse),
+  productionLine: toDisplayText(item.productionLine),
+  warehouse: toDisplayText(item.warehouse),
+  zone: toDisplayText(item.zone),
+  shelf: toDisplayText(item.shelf),
+  level: toDisplayText(item.level),
+  company: toDisplayText(item.company),
+  category: toDisplayText(item.category),
+  businessUnit: toDisplayText(item.businessUnit),
+  uom: toDisplayText(item.uom),
+});
 
 const formatDateTime = (iso?: string) => {
   if (!iso) return '—';
@@ -90,8 +121,9 @@ const getActivityRank = (label?: string): number => {
   const normalized = String(label || '').trim().toLowerCase();
 
   if (normalized === 'requested') return 1;
-  if (normalized === 'approved') return 2;
-  if (normalized === 'rejected') return 2;
+  if (normalized === 'item rejected') return 2;
+  if (normalized === 'approved') return 3;
+  if (normalized === 'rejected') return 3;
   if (normalized === 'item edited') return 3;
   if (normalized === 'in progress') return 3;
   if (normalized === 'draft updated') return 4;
@@ -139,14 +171,16 @@ const isLocalPersistedActivity = (activity?: RequestDetailActivity | null): bool
   return (
     normalized === 'item edited' ||
     normalized === 'item deleted' ||
-    normalized === 'item canceled'
+    normalized === 'item canceled' ||
+    normalized === 'item rejected'
   );
 };
 
 interface PersistedRequestDrawerState {
   activityLogs?: RequestDetailActivity[];
   quantityOverrides?: Record<string, number>;
-  itemMarks?: Record<string, 'deleted' | 'canceled'>;
+  itemMarks?: Record<string, 'deleted' | 'canceled' | 'rejected'>;
+  itemRejectRemarks?: Record<string, string>;
   editedItems?: Record<string, boolean>;
   editedAtByRequestLineId?: Record<string, string>;
 }
@@ -254,7 +288,7 @@ export interface DrawerBatchReturnItemsProps {
   onClose?: () => void;
   onApprove?: (payload: {
     id: number;
-    lines: Array<{ requestLineId: number; approvedQty: number; editedAt?: string }>;
+    lines: Array<{ requestLineId: number; approvedQty: number; editedAt?: string; rejected?: boolean; rejectRemark?: string }>;
     remark?: string;
   }) => Promise<void>;
   onReject?: (payload: { id: number; remark?: string }) => Promise<void>;
@@ -269,7 +303,6 @@ export default function RequestedBatchDrawer({
   onClose,
   onApprove,
   onReject,
-  onConfirmPickup,
   onResubmitRequest,
 }: DrawerBatchReturnItemsProps) {
   const currentUser = useModel('@@initialState');
@@ -289,11 +322,13 @@ export default function RequestedBatchDrawer({
   const [actionPopup, setActionPopup] = useState<null | 'approve' | 'reject' | 'confirm-pickup'>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [quantityOverrides, setQuantityOverrides] = useState<Record<string, number>>({});
-  const [itemMarks, setItemMarks] = useState<Record<string, 'deleted' | 'canceled'>>({});
+  const [itemMarks, setItemMarks] = useState<Record<string, 'deleted' | 'canceled' | 'rejected'>>({});
+  const [itemRejectRemarks, setItemRejectRemarks] = useState<Record<string, string>>({});
   const [editedItems, setEditedItems] = useState<Record<string, boolean>>({});
   const [editedAtByRequestLineId, setEditedAtByRequestLineId] = useState<Record<string, string>>({});
   const [editingItem, setEditingItem] = useState<RequestDetailLineItem | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<number>(1);
+  const [rejectingItem, setRejectingItem] = useState<RequestDetailLineItem | null>(null);
   const lastServerStatusRef = useRef<RequestStatus | null>(null);
   const lastShipmentNoticeRef = useRef<number>(0);
   const initKeyRef = useRef<string>('');
@@ -301,7 +336,32 @@ export default function RequestedBatchDrawer({
   const resetPersistRef = useRef(false);
   const access = useAccess();
   const data: RequestDetailData = useMemo(() => {
-    if (propData) return propData;
+    if (propData) {
+      const items = Array.isArray(propData.items)
+        ? propData.items.map((item, index) => normalizeLineItem(item, index))
+        : [];
+      const activities = Array.isArray(propData.activities) ? propData.activities : [];
+      const pickupBatches = Array.isArray(propData.pickupBatches)
+        ? propData.pickupBatches.map((batch, index) => ({
+          ...batch,
+          batchNo: Number(batch.batchNo || index + 1),
+          items: Array.isArray(batch.items)
+            ? batch.items.map((item, itemIndex) => normalizeLineItem(item, itemIndex))
+            : [],
+        }))
+        : [];
+
+      return {
+        ...propData,
+        items,
+        activities,
+        pickupBatches,
+        category: toDisplayText(propData.category),
+        totalItems: Number(propData.totalItems ?? items.length),
+        receivedItems: Number(propData.receivedItems ?? 0),
+        status: propData.status || 'pending',
+      };
+    }
 
     const fallbackRequest: MyRequestItem = request ?? {
       id: 0,
@@ -316,7 +376,7 @@ export default function RequestedBatchDrawer({
     };
 
     const items: RequestDetailLineItem[] =
-      fallbackRequest.items?.map((item, index) => ({
+      fallbackRequest.items?.map((item, index) => normalizeLineItem({
         no: index + 1,
         requestLineId: item.requestLineId,
         imageId: Array.isArray(item.imageId) ? item.imageId[0] : item.imageId,
@@ -330,12 +390,12 @@ export default function RequestedBatchDrawer({
         fromWarehouse: undefined,
         toWarehouse: item.toWarehouseCode || undefined,
         productionLine: item.forLine || undefined,
-        warehouse: item.toWarehouseCode || fallbackRequest.category,
-        category: item.category || fallbackRequest.category,
+        warehouse: toDisplayText(item.toWarehouseCode) || toDisplayText(fallbackRequest.category),
+        category: toDisplayText(item.category) || toDisplayText(fallbackRequest.category),
         businessUnit: item.unit,
         uom: item.unit,
         description: item.remark,
-      })) ||
+      }, index)) ||
       [];
 
     return {
@@ -344,7 +404,7 @@ export default function RequestedBatchDrawer({
       requestDate: fallbackRequest.requestDate,
       status: fallbackRequest.requestStatus,
       priority: fallbackRequest.priority,
-      category: fallbackRequest.category,
+      category: toDisplayText(fallbackRequest.category),
       totalItems: fallbackRequest.totalItems,
       receivedItems: fallbackRequest.receivedItems,
       remark: fallbackRequest.remark,
@@ -366,7 +426,7 @@ export default function RequestedBatchDrawer({
   }, [data.receivedItems, data.status, data.totalItems, statusOverride]);
   const currentStep = statusToCurrentStep(effectiveStatus);
   const currentActor =
-    currentUser.initialState?.currentUser?.login ||
+    currentUser?.initialState?.currentUser?.login ||
     (access.canSpfApprover ? data.approvedBy : data.requestedBy) ||
     (access.canSpfApprover ? 'Approver' : 'Requester');
 
@@ -505,6 +565,7 @@ export default function RequestedBatchDrawer({
     setPickupBatches(nextPickupBatches);
     setQuantityOverrides(persistedState?.quantityOverrides || {});
     setItemMarks(persistedState?.itemMarks || {});
+    setItemRejectRemarks(persistedState?.itemRejectRemarks || {});
     setEditedItems(persistedState?.editedItems || {});
     setEditedAtByRequestLineId(persistedState?.editedAtByRequestLineId || {});
 
@@ -641,10 +702,11 @@ export default function RequestedBatchDrawer({
       activityLogs: activityLogs.filter((activity) => isLocalPersistedActivity(activity)),
       quantityOverrides,
       itemMarks,
+      itemRejectRemarks,
       editedItems,
       editedAtByRequestLineId,
     });
-  }, [activityLogs, data.requestId, editedAtByRequestLineId, editedItems, itemMarks, open, quantityOverrides]);
+  }, [activityLogs, data.requestId, editedAtByRequestLineId, editedItems, itemMarks, itemRejectRemarks, open, quantityOverrides]);
 
   useEffect(() => {
     if (!open) {
@@ -688,6 +750,7 @@ export default function RequestedBatchDrawer({
       activityLogs: activityLogs.filter((activity) => isLocalPersistedActivity(activity)),
       quantityOverrides,
       itemMarks,
+      itemRejectRemarks,
       editedItems,
       editedAtByRequestLineId,
     });
@@ -703,8 +766,10 @@ export default function RequestedBatchDrawer({
     setActivityLogs([]);
     setQuantityOverrides({});
     setItemMarks({});
+    setItemRejectRemarks({});
     setEditedItems({});
     setEditingItem(null);
+    setRejectingItem(null);
     setEditingQuantity(1);
     lastServerStatusRef.current = null;
     lastShipmentNoticeRef.current = 0;
@@ -719,22 +784,30 @@ export default function RequestedBatchDrawer({
   //   effectiveStatus === 'partial';
   const canCancel = false;
 
+  const getRequestLineKey = (record: RequestDetailLineItem) => String(record.requestLineId || record.productId);
+
   const requestItems = useMemo(
     () =>
       data.items.map((it) => ({
         ...it,
-        quantityToReturn: quantityOverrides[it.productId] ?? it.quantityToReturn,
+        quantityToReturn: quantityOverrides[getRequestLineKey(it)] ?? it.quantityToReturn,
       })),
     [data.items, quantityOverrides],
   );
 
   const activeRequestItems = useMemo(
-    () => requestItems.filter((it) => !itemMarks[it.productId]),
+    () => requestItems.filter((it) => !itemMarks[getRequestLineKey(it)]),
     [itemMarks, requestItems],
   );
   const hasEditedAmount = useMemo(
     () => Object.values(editedItems).some(Boolean),
     [editedItems],
+  );
+  const hasAllRequestItemsRejected = useMemo(
+    () =>
+      requestItems.length > 0 &&
+      requestItems.every((item) => itemMarks[getRequestLineKey(item)] === 'rejected'),
+    [itemMarks, requestItems],
   );
 
   const availablePickupQty = (record: RequestDetailLineItem, status: RequestStatus): number => {
@@ -766,8 +839,10 @@ export default function RequestedBatchDrawer({
   );
 
   const openEditQuantity = (record: RequestDetailLineItem) => {
+    const requestedQty = Number(record.requestedQty ?? record.total ?? 0);
+    const currentQty = Math.max(1, Number(record.quantityToReturn) || 1);
     setEditingItem(record);
-    setEditingQuantity(Math.max(1, Number(record.quantityToReturn) || 1));
+    setEditingQuantity(requestedQty > 0 ? Math.min(currentQty, requestedQty) : currentQty);
   };
 
   const openProductDetails = async (record: RequestDetailLineItem) => {
@@ -794,26 +869,32 @@ export default function RequestedBatchDrawer({
   const confirmEditQuantity = () => {
     if (!editingItem) return;
     const productId = editingItem.productId;
+    const lineKey = getRequestLineKey(editingItem);
+    const requestedQty = Number(editingItem.requestedQty ?? editingItem.total ?? 0);
     const nextQty = Math.max(1, Number(editingQuantity) || 1);
-    const originalQty = Number(data.items.find((item) => item.productId === productId)?.quantityToReturn || 0);
+    if (requestedQty > 0 && nextQty > requestedQty) {
+      message.warning('Approved quantity cannot be higher than requested quantity.');
+      return;
+    }
+    const originalQty = Number(data.items.find((item) => getRequestLineKey(item) === lineKey)?.quantityToReturn || 0);
     const isEdited = nextQty !== originalQty;
     const editedAt = new Date().toISOString();
 
     setQuantityOverrides((prev) => {
       const next = { ...prev };
       if (isEdited) {
-        next[productId] = nextQty;
+        next[lineKey] = nextQty;
       } else {
-        delete next[productId];
+        delete next[lineKey];
       }
       return next;
     });
     setEditedItems((prev) => {
       const next = { ...prev };
       if (isEdited) {
-        next[productId] = true;
+        next[lineKey] = true;
       } else {
-        delete next[productId];
+        delete next[lineKey];
       }
       return next;
     });
@@ -837,37 +918,13 @@ export default function RequestedBatchDrawer({
     );
   };
 
-  const confirmDeleteItem = (record: RequestDetailLineItem) => {
-    Modal.confirm({
-      title: 'Delete this item?',
-      content: `Are you sure to delete ${record.productId}? This will mark the item as deleted.`,
-      okText: 'Yes, Delete',
-      cancelText: 'No',
-      okButtonProps: { danger: true },
-      onOk: () => {
-        markItem(record, 'deleted');
-      },
-    });
-  };
-
-  const confirmCancelItem = (record: RequestDetailLineItem) => {
-    Modal.confirm({
-      title: 'Cancel this item?',
-      content: `Are you sure to cancel ${record.productId}? This will mark the item as canceled.`,
-      okText: 'Yes, Cancel',
-      cancelText: 'No',
-      onOk: () => {
-        markItem(record, 'canceled');
-      },
-    });
-  };
-
-  const markItem = (record: RequestDetailLineItem, mark: 'deleted' | 'canceled') => {
-    if (itemMarks[record.productId]) return;
+  function markItem(record: RequestDetailLineItem, mark: 'deleted' | 'canceled') {
+    const lineKey = getRequestLineKey(record);
+    if (itemMarks[lineKey]) return;
 
     setItemMarks((prev) => ({
       ...prev,
-      [record.productId]: mark,
+      [lineKey]: mark,
     }));
 
     // Keep pickup selection and picked state consistent when an item is marked.
@@ -890,6 +947,126 @@ export default function RequestedBatchDrawer({
         ? `${record.productId} marked as deleted.`
         : `${record.productId} marked as canceled.`,
     );
+  }
+
+  const confirmCancelItem = (record: RequestDetailLineItem) => {
+    Modal.confirm({
+      title: 'Cancel this item?',
+      content: `Are you sure to cancel ${record.productId}? This will mark the item as canceled.`,
+      okText: 'Yes, Cancel',
+      cancelText: 'No',
+      onOk: () => {
+        markItem(record, 'canceled');
+      },
+    });
+  };
+
+  const rejectItem = async (record: RequestDetailLineItem, remark?: string) => {
+    const normalizedRemark = remark?.trim();
+    if (!normalizedRemark) {
+      message.warning('Reject remark is required.');
+      return;
+    }
+    const lineKey = getRequestLineKey(record);
+    const nextItemMarks = {
+      ...itemMarks,
+      [lineKey]: 'rejected' as const,
+    };
+    const nextItemRejectRemarks = {
+      ...itemRejectRemarks,
+      [lineKey]: normalizedRemark,
+    };
+    const shouldRejectWholeRequest =
+      requestItems.length > 0 &&
+      requestItems.every((item) => nextItemMarks[getRequestLineKey(item)] === 'rejected') &&
+      typeof record.requestLineId === 'number';
+    const rejectRequestRemark = requestItems
+      .filter((item) => nextItemMarks[getRequestLineKey(item)] === 'rejected')
+      .map((item) => {
+        const itemRemark = nextItemRejectRemarks[getRequestLineKey(item)]?.trim();
+        return `${item.productId}: ${itemRemark || 'Rejected by approver'}`;
+      })
+      .join('; ');
+
+    setItemMarks(nextItemMarks);
+    setItemRejectRemarks(nextItemRejectRemarks);
+    setQuantityOverrides((prev) => ({
+      ...prev,
+      [lineKey]: 0,
+    }));
+    setEditedItems((prev) => ({
+      ...prev,
+      [lineKey]: true,
+    }));
+    setRejectingItem(null);
+
+    if (!shouldRejectWholeRequest) {
+      setActivityLogs((prev) => [
+        ...prev,
+        {
+          label: 'Item Rejected',
+          description: `${record.productId} rejected: ${normalizedRemark}`,
+          date: new Date().toISOString(),
+          by: currentActor,
+          dot: 'done',
+        },
+      ]);
+      message.success(`${record.productId} marked as rejected.`);
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (onReject && data.id) {
+        await onReject({
+          id: data.id,
+          remark: rejectRequestRemark || normalizedRemark,
+        });
+      }
+      setStatusOverride('rejected');
+      setActivityLogs((prev) => [
+        ...prev,
+        {
+          label: 'Item Rejected',
+          description: `${record.productId} rejected: ${normalizedRemark}`,
+          date: new Date().toISOString(),
+          by: currentActor,
+          dot: 'done',
+        },
+        {
+          label: 'Rejected',
+          description: 'All request items rejected',
+          date: new Date().toISOString(),
+          by: currentActor,
+          dot: 'done',
+        },
+      ]);
+      message.success('Request rejected successfully.');
+    } catch (_error) {
+      setItemMarks((prev) => {
+        const next = { ...prev };
+        delete next[lineKey];
+        return next;
+      });
+      setItemRejectRemarks((prev) => {
+        const next = { ...prev };
+        delete next[lineKey];
+        return next;
+      });
+      setQuantityOverrides((prev) => {
+        const next = { ...prev };
+        delete next[lineKey];
+        return next;
+      });
+      setEditedItems((prev) => {
+        const next = { ...prev };
+        delete next[lineKey];
+        return next;
+      });
+      message.error('Failed to reject request.');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const columns: ColumnsType<RequestDetailLineItem> = [
@@ -913,8 +1090,8 @@ export default function RequestedBatchDrawer({
       width: 160,
       ellipsis: true,
       render: (_: unknown, record) => {
-        const mark = itemMarks[record.productId];
-        const isEdited = Boolean(editedItems[record.productId]);
+        const mark = itemMarks[getRequestLineKey(record)];
+        const isEdited = Boolean(editedItems[getRequestLineKey(record)]);
         const content = mark ? (
           <Text delete={mark === 'deleted'} type={mark === 'deleted' ? 'danger' : 'secondary'}>
             {record.productId}
@@ -934,8 +1111,8 @@ export default function RequestedBatchDrawer({
           <Space size={6}>
             {content}
             {mark ? (
-              <Tag color={mark === 'deleted' ? 'red' : 'gold'} bordered={false}>
-                {mark === 'deleted' ? 'Deleted' : 'Canceled'}
+              <Tag color={mark === 'canceled' ? 'gold' : 'red'} bordered={false}>
+                {mark === 'canceled' ? 'Canceled' : mark === 'rejected' ? 'Rejected' : 'Deleted'}
               </Tag>
             ) : isEdited ? (
               <Tag color="blue" bordered={false}>
@@ -952,12 +1129,12 @@ export default function RequestedBatchDrawer({
       width: 220,
       ellipsis: true,
       render: (_: unknown, record) => {
-        const mark = itemMarks[record.productId];
-        const isEdited = Boolean(editedItems[record.productId]);
+        const mark = itemMarks[getRequestLineKey(record)];
+        const isEdited = Boolean(editedItems[getRequestLineKey(record)]);
         return (
           <Text
             delete={mark === 'deleted'}
-            type={mark === 'deleted' ? 'danger' : mark === 'canceled' ? 'secondary' : isEdited ? 'warning' : undefined}
+            type={mark === 'deleted' || mark === 'rejected' ? 'danger' : mark === 'canceled' ? 'secondary' : isEdited ? 'warning' : undefined}
           >
             {record.itemName || '—'}
           </Text>
@@ -1026,11 +1203,11 @@ export default function RequestedBatchDrawer({
             width: 56,
             ellipsis: true,
             render: (_: unknown, record: RequestDetailLineItem) => {
-              const marked = itemMarks[record.productId];
+              const marked = itemMarks[getRequestLineKey(record)];
               const isPicked = pickedProductIds.has(record.productId);
 
               if (marked) {
-                return <Text type="secondary">{marked === 'deleted' ? 'Deleted' : 'Canceled'}</Text>;
+                return <Text type="secondary">{marked === 'canceled' ? 'Canceled' : marked === 'rejected' ? 'Rejected' : 'Deleted'}</Text>;
               }
 
               if (canEditOrDelete) {
@@ -1044,15 +1221,14 @@ export default function RequestedBatchDrawer({
                       title="Edit Amount"
                     >
                     </Button>
-                    {/* <Button
+                    <Button
                       danger
-                      type="link"
-                      onClick={() => {
-                        confirmDeleteItem(record);
-                      }}
-                    >
-                      Delete
-                    </Button> */}
+                      type="text"
+                      size="small"
+                      icon={<DeleteOutlined />}
+                      onClick={() => setRejectingItem(record)}
+                      title="Reject Item"
+                    />
                   </Space>
                 );
               }
@@ -1102,18 +1278,33 @@ export default function RequestedBatchDrawer({
   const spfData = useMemo(() => {
     if (!selectedProductDetail) return undefined;
 
+    const stock = Number(selectedProductDetail.stock ?? 0);
     return {
+      id: Number(selectedProductDetail.id || 0),
       image: selectedProductDetail.image,
-      imageId: selectedProductDetail.imageId,
+      imageId: Array.isArray(selectedProductDetail.imageId)
+        ? selectedProductDetail.imageId
+        : selectedProductDetail.imageId
+          ? [selectedProductDetail.imageId]
+          : [],
       locations: selectedProductDetail.locations,
+      productId: selectedProductDetail.productId || '',
+      partName: selectedProductDetail.partName || selectedProductDetail.productId || '',
+      category: selectedProductDetail.category || '',
+      stock,
+      businessUnit: selectedProductDetail.businessUnit || '',
+      status: stock > 0 ? ('available' as const) : ('no-stock' as const),
+      warehouse: selectedProductDetail.warehouse || '',
+      tab: 'spare-list' as const,
+      uom: selectedProductDetail.uom,
+      createdDate: selectedProductDetail.createdDate,
+      updatedDate: selectedProductDetail.updatedDate,
       spare_part_name: selectedProductDetail.partName,
       part_number: selectedProductDetail.productId,
       description: selectedProductDetail.description,
       stock_quantity: selectedProductDetail.stock,
       receiving_from_warehouse: selectedProductDetail.warehouse,
       company: selectedProductDetail.company,
-      category: selectedProductDetail.category,
-      uom: selectedProductDetail.uom,
       business_unit: selectedProductDetail.businessUnit,
       requested_date: selectedProductDetail.createdDate,
       updated_date: selectedProductDetail.updatedDate,
@@ -1125,141 +1316,71 @@ export default function RequestedBatchDrawer({
   //   return formatDateTime(data.receivedItems) ?? '—';
   // }, [data.receivedItems, pickedItems.length, receivedQtyTotal, requestedQtyTotal, statusOverride]);
 
-  const confirmPickup = () => {
-    if (onConfirmPickup && data.id) {
-      onConfirmPickup(data.id)
-        .then(() => {
-          const nextStatus =
-            requestedQtyTotal > 0 && receivedQtyTotal >= requestedQtyTotal ? 'completed' : 'partial';
-          setStatusOverride(nextStatus);
-          setActivityLogs((prev) => [
-            ...prev,
-            {
-              label: 'Confirm Pick up',
-              description: 'Requester confirmed pickup',
-              date: new Date().toISOString(),
-              by: currentActor,
-              dot: 'done',
-            },
-            {
-              label:
-                nextStatus === 'partial'
-                  ? `Partial Pick up #${Math.max(1, pickupBatches.length)}`
-                  : 'Completed',
-              description:
-                nextStatus === 'partial'
-                  ? 'Pickup confirmed for the latest shipment'
-                  : 'Pickup confirmed for all issued items',
-              date: new Date().toISOString(),
-              by: currentActor,
-              dot: 'done',
-            },
-          ]);
-          message.success('Pickup confirmed successfully.');
-        })
-        .catch(() => {
-          message.error('Failed to confirm pickup.');
-        });
-      return;
-    }
-
-    if (!pickupSelection.length) return;
-
-    const selected = new Set(pickupSelection);
-    const newlyPicked = remainingItems.filter((it) => selected.has(it.productId));
-    if (newlyPicked.length === 0) return;
-    const nextPicked = [...pickedItems, ...newlyPicked];
-    const nextPickedIds = new Set(nextPicked.map((it) => it.productId));
-
-    setPickedItems(nextPicked);
-    setPickupSelection([]);
-
-    const nextBatchNo = pickupBatches.length + 1;
-    setPickupBatches((prev) => [
-      ...prev,
-      {
-        batchNo: nextBatchNo,
-        createdAt: new Date().toISOString(),
-        pickedBy: data.requestedBy ?? 'Requester',
-        items: newlyPicked,
-      },
-    ]);
-
-    const nextReceivedQtyTotal = nextPicked.reduce((sum, it) => sum + (Number(it.quantityToReturn) || 0), 0);
-    const hasMorePickableNow = activeRequestItems.some(
-      (it) => !nextPickedIds.has(it.productId) && availablePickupQty(it, effectiveStatus) > 0,
-    );
-
-    if (nextReceivedQtyTotal >= requestedQtyTotal && requestedQtyTotal > 0) {
-      setStatusOverride('completed');
-      setActivityLogs((prev) => [
-        ...prev,
-        {
-          label: 'Completed',
-          description: 'Picked up all requested items',
-          date: new Date().toISOString(),
-          by: currentActor,
-          dot: 'done',
-        },
-      ]);
-    } else {
-      setStatusOverride(hasMorePickableNow ? 'ready_to_Pickup' : 'partial');
-      setActivityLogs((prev) => [
-        ...prev,
-        {
-          label: `Partial Pick up #${nextBatchNo}`,
-          description: `Picked ${newlyPicked.length} item(s)`,
-          date: new Date().toISOString(),
-          by: currentActor,
-          dot: 'done',
-        },
-      ]);
-    }
-  };
-
   const handleApproveRequest = async (remark?: string) => {
-    const lines = activeRequestItems
+    const lines = requestItems
       .filter((item) => typeof item.requestLineId === 'number')
-      .map((item) => ({
-        requestLineId: Number(item.requestLineId),
-        approvedQty: Number(item.quantityToReturn || 0),
-        editedAt: editedAtByRequestLineId[String(item.requestLineId)] || undefined,
-      }));
+      .map((item) => {
+        const isRejected = itemMarks[getRequestLineKey(item)] === 'rejected';
+        return {
+          requestLineId: Number(item.requestLineId),
+          approvedQty: isRejected ? 0 : Number(item.quantityToReturn || 0),
+          editedAt: editedAtByRequestLineId[String(item.requestLineId)] || undefined,
+          rejected: isRejected || undefined,
+          rejectRemark: isRejected ? itemRejectRemarks[getRequestLineKey(item)] : undefined,
+        };
+      });
     const hasAnyApprovedQty = lines.some((item) => item.approvedQty > 0);
+    const allLinesRejected = lines.length > 0 && lines.every((item) => item.rejected);
 
-    if (!hasAnyApprovedQty) {
+    if (!hasAnyApprovedQty && !allLinesRejected) {
       message.warning('At least one item must have approved quantity greater than 0. Otherwise, reject the request.');
       return;
     }
+    const nextStatus = allLinesRejected ? 'rejected' : 'approved';
+    const nextLabel = allLinesRejected ? 'Rejected' : 'Approved';
+    const nextDescription = allLinesRejected ? 'All request items rejected' : 'Request approved';
+    const rejectRemark =
+      remark?.trim() ||
+      requestItems
+        .filter((item) => itemMarks[getRequestLineKey(item)] === 'rejected')
+        .map((item) => {
+          const lineRemark = itemRejectRemarks[getRequestLineKey(item)]?.trim();
+          return `${item.productId}: ${lineRemark || 'Rejected by approver'}`;
+        })
+        .join('; ');
 
     setActionLoading(true);
     try {
       if (!onApprove || !data.id) {
-        setStatusOverride('approved');
+        setStatusOverride(nextStatus);
         setActivityLogs((prev) => [
           ...prev,
           {
-            label: 'Approved',
-            description: 'Request approved',
+            label: nextLabel,
+            description: nextDescription,
             date: new Date().toISOString(),
             by: currentActor,
             dot: 'done',
           },
         ]);
       } else {
-        await onApprove({ id: data.id, lines, remark });
-        setStatusOverride('approved');
+        if (allLinesRejected && onReject) {
+          await onReject({ id: data.id, remark: rejectRemark || 'All request items rejected' });
+        } else {
+          await onApprove({ id: data.id, lines, remark });
+        }
+        setStatusOverride(nextStatus);
         setActivityLogs((prev) => [
           ...prev,
           {
-            label: 'Approved',
-            description: 'Request approved',
+            label: nextLabel,
+            description: nextDescription,
             date: new Date().toISOString(),
             by: currentActor,
             dot: 'done',
           },
         ]);
-        message.success('Request approved successfully.');
+        message.success(allLinesRejected ? 'Request rejected successfully.' : 'Request approved successfully.');
       }
       setActionPopup(null);
     } catch (_error) {
@@ -1573,14 +1694,14 @@ export default function RequestedBatchDrawer({
         </Title>
         <Table<RequestDetailLineItem>
           size="small"
-          rowKey="no"
+          rowKey={getRequestLineKey}
           tableLayout="auto"
           pagination={false}
           columns={columns}
           dataSource={requestItems}
           onRow={(record) => {
-            const mark = itemMarks[record.productId];
-            const isEdited = Boolean(editedItems[record.productId]);
+            const mark = itemMarks[getRequestLineKey(record)];
+            const isEdited = Boolean(editedItems[getRequestLineKey(record)]);
             if (mark === 'deleted') {
               return { style: { backgroundColor: '#fff1f0' } };
             }
@@ -1670,7 +1791,7 @@ export default function RequestedBatchDrawer({
                       <br />
                       <Text type="secondary">By: {a.by || '-'}</Text>
                     </div>
-                    <Text type="secondary">{formatSpfDateTime(a.date)}</Text>
+                    <Text type="secondary">{formatDateTime(a.date)}</Text>
                   </div>
                   {pickupItemsTable}
                 </div>
@@ -1682,7 +1803,7 @@ export default function RequestedBatchDrawer({
         
       </Drawer>
 
-      {/* <SpfDetails
+      <SpfDetails
         open={open && spfOpen}
         data={spfData}
         loading={spfLoading}
@@ -1694,13 +1815,18 @@ export default function RequestedBatchDrawer({
           setSpfLoading(false);
           setSpfError(null);
         }}
-      /> */}
+      />
 
       <ValidationPopup
         open={actionPopup === 'approve'}
-        title="Approve Request"
-        description="Approve this spare part request?"
-        confirmText="Approve"
+        title={hasAllRequestItemsRejected ? 'Reject Request' : 'Approve Request'}
+        description={
+          hasAllRequestItemsRejected
+            ? 'All request items are rejected. Reject this spare part request?'
+            : 'Approve this spare part request?'
+        }
+        confirmText={hasAllRequestItemsRejected ? 'Reject' : 'Approve'}
+        danger={hasAllRequestItemsRejected}
         showRemark
         requireRemark={hasEditedAmount}
         remarkLabel="Remark"
@@ -1738,14 +1864,42 @@ export default function RequestedBatchDrawer({
           <Text>
             Product: <Text strong>{editingItem?.productId}</Text>
           </Text>
+          <Text type="secondary">
+            Requested quantity: {Number(editingItem?.requestedQty ?? editingItem?.total ?? 0)}
+          </Text>
           <InputNumber
             min={1}
+            max={Number(editingItem?.requestedQty ?? editingItem?.total ?? 0) || undefined}
             style={{ width: '100%' }}
             value={editingQuantity}
-            onChange={(value) => setEditingQuantity(Math.max(1, Number(value) || 1))}
+            onChange={(value) => {
+              const requestedQty = Number(editingItem?.requestedQty ?? editingItem?.total ?? 0);
+              const nextValue = Math.max(1, Number(value) || 1);
+              setEditingQuantity(requestedQty > 0 ? Math.min(nextValue, requestedQty) : nextValue);
+            }}
           />
         </Space>
       </Modal>
+
+      <ValidationPopup
+        open={Boolean(rejectingItem)}
+        title="Reject Item"
+        description={`Reject ${rejectingItem?.productId || 'this item'} from this request?`}
+        confirmText="Reject Item"
+        danger
+        showRemark
+        requireRemark
+        remarkLabel="Reject Remark"
+        remarkPlaceholder="Please enter item rejection remark"
+        remarkRequiredMessage="Remark is required when rejecting an item."
+        loading={actionLoading}
+        onCancel={() => setRejectingItem(null)}
+        onConfirm={async (payload) => {
+          if (rejectingItem) {
+            await rejectItem(rejectingItem, payload?.remark);
+          }
+        }}
+      />
     </>
   );
 }

@@ -318,7 +318,7 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
               style={{ width: 260 }}
               value={dateRangeFilter}
               placeholder={['Requested from', 'Requested to']}
-              onChange={(dates) => {
+              onChange={(dates: null | [Dayjs | null, Dayjs | null]) => {
                 setDateRangeFilter(dates?.[0] && dates?.[1] ? [dates[0], dates[1]] : null);
               }}
             />

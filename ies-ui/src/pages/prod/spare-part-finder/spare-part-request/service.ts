@@ -99,6 +99,8 @@ type IssueDetailLineDto = {
   issuedQty: number;
   remainingQty: number;
   unit: string;
+  fromWarehouseCode?: string | null;
+  fromWarehouse?: string | null;
   toWarehouseCode?: string | null;
   forLine?: string | null;
   remark?: string | null;
@@ -611,7 +613,10 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     requestId: request.requestId,
     itemName: item.sparePartName,
     requestedQty: Number(item.requestedQty || 0),
-    quantityToReturn: Number(item.approvedQty || item.requestedQty || 0),
+    quantityToReturn:
+      request.requestStatus === 'pending'
+        ? Number(item.requestedQty || 0)
+        : Number(item.approvedQty ?? 0),
     usedQuantity: 0,
     total: Number(item.requestedQty || 0),
     warehouseSentQuantity: 0,
@@ -623,6 +628,10 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     businessUnit: item.unit,
     uom: item.unit,
     description: item.remark,
+    approvalState:
+      request.requestStatus !== 'pending' && Number(item.approvedQty ?? 0) === 0
+        ? 'rejected'
+        : undefined,
   }));
 
   return {
@@ -646,6 +655,38 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
 const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailData => {
   const rawStatus = String(item.requestStatus || '').trim().toUpperCase();
   const normalizedPickupStatus = String(item.pickupStatus || '').trim().toLowerCase();
+  const activityDtos = item.activities || [];
+  const rejectedActivityByProductId = new Map<string, { by?: string; remark?: string }>();
+  const editedActivityByProductId = new Map<string, { by?: string; remark?: string }>();
+
+  activityDtos.forEach((activity) => {
+    const label = String(activity.label || '').trim().toLowerCase();
+    const description = String(activity.description || '').trim();
+
+    if (label === 'item rejected') {
+      const match = description.match(/^(.+?)\s+rejected(?::\s*(.*))?$/i);
+      const productId = match?.[1]?.trim();
+      if (productId) {
+        rejectedActivityByProductId.set(productId, {
+          by: activity.by?.trim() || undefined,
+          remark: match?.[2]?.trim() || description,
+        });
+      }
+    }
+
+    if (label === 'item edited') {
+      const match =
+        description.match(/edited\s+(.+?)\s+approved quantity/i) ||
+        description.match(/^(.+?)\s+requested quantity updated/i);
+      const productId = match?.[1]?.trim();
+      if (productId) {
+        editedActivityByProductId.set(productId, {
+          by: activity.by?.trim() || undefined,
+          remark: description,
+        });
+      }
+    }
+  });
   const confirmedPickedQtyByLineId = new Map<number, number>();
   (item.history || []).forEach((entry) => {
     if (!entry.pickupConfirmedAt) return;
@@ -665,30 +706,39 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     0,
   );
 
-  const items: RequestDetailLineItem[] = (item.items || []).map((line, index) => ({
-    no: index + 1,
-    requestLineId: Number(line.requestLineId || 0),
-    imageId: Array.isArray(line.imageId) ? line.imageId[0] : line.imageId || undefined,
-    productId: line.sparePartId || line.sparePartCode,
-    requestId: item.requestNo || '',
-    itemName: line.sparePartName,
-    requestedQty: Number(line.requestedQty || line.approvedQty || 0),
-    quantityToReturn:
-      rawStatus === 'PENDING'
-        ? Number(line.requestedQty || line.approvedQty || 0)
-        : Number(line.approvedQty || line.requestedQty || 0),
-    usedQuantity: confirmedPickedQtyByLineId.get(Number(line.requestLineId || 0)) || 0,
-    total: Number(line.requestedQty || line.approvedQty || 0),
-    warehouseSentQuantity: Number(line.issuedQty || 0),
-    fromWarehouse: undefined,
-    toWarehouse: line.toWarehouseCode || undefined,
-    productionLine: line.forLine || undefined,
-    warehouse: line.toWarehouseCode || undefined,
-    category: resolveCategoryName(line.category),
-    businessUnit: line.unit || 'pcs',
-    uom: line.unit || 'pcs',
-    description: line.remark || undefined,
-  }));
+  const items: RequestDetailLineItem[] = (item.items || []).map((line, index) => {
+    const productId = line.sparePartId || line.sparePartCode;
+    const requestedQty = Number(line.requestedQty ?? line.approvedQty ?? 0);
+    const approvedQty = Number(line.approvedQty ?? 0);
+    const rejectedActivity = rejectedActivityByProductId.get(productId);
+    const editedActivity = editedActivityByProductId.get(productId);
+    const isRejectedLine = rawStatus !== 'PENDING' && approvedQty === 0;
+
+    return {
+      no: index + 1,
+      requestLineId: Number(line.requestLineId || 0),
+      imageId: Array.isArray(line.imageId) ? line.imageId[0] : line.imageId || undefined,
+      productId,
+      requestId: item.requestNo || '',
+      itemName: line.sparePartName,
+      requestedQty,
+      quantityToReturn: rawStatus === 'PENDING' ? requestedQty : approvedQty,
+      usedQuantity: confirmedPickedQtyByLineId.get(Number(line.requestLineId || 0)) || 0,
+      total: requestedQty,
+      warehouseSentQuantity: Number(line.issuedQty || 0),
+      fromWarehouse: line.fromWarehouseCode || line.fromWarehouse || undefined,
+      toWarehouse: line.toWarehouseCode || undefined,
+      productionLine: line.forLine || undefined,
+      warehouse: line.toWarehouseCode || undefined,
+      category: resolveCategoryName(line.category),
+      businessUnit: line.unit || 'pcs',
+      uom: line.unit || 'pcs',
+      description: line.remark || undefined,
+      approvalState: isRejectedLine ? 'rejected' : editedActivity ? 'edited' : undefined,
+      approvalBy: rejectedActivity?.by || editedActivity?.by,
+      approvalRemark: rejectedActivity?.remark || editedActivity?.remark,
+    };
+  });
   const detailCategory = items.find((entry) => entry.category)?.category;
 
   const status: RequestStatus = deriveIssueDetailStatus(
@@ -860,7 +910,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     approverRemark: extractApproverRemark(item.managerRemark),
     warehouseBy: history[history.length - 1]?.warehouseStaffId || history[0]?.warehouseStaffId || undefined,
     items,
-    activities: (item.activities || []).map((activity) => ({
+    activities: activityDtos.map((activity) => ({
       label: String(activity.label || '').trim(),
       description: String(activity.description || '').trim(),
       date: activity.date || item.requestedDate,

@@ -903,6 +903,17 @@ export default function RequestedBatchWareHouse({
     }
   };
 
+  const confirmAcceptRequest = () => {
+    Modal.confirm({
+      title: 'Accept request',
+      content: 'Are you sure you want to accept this spare part request?',
+      okText: 'Accept',
+      cancelText: 'Cancel',
+      okButtonProps: { loading: acceptLoading },
+      onOk: handleAcceptRequest,
+    });
+  };
+
   const handleConfirmRequester = () => {
     if (!canWarehouseOperate) {
       message.error('You are not allowed to confirm requester.');
@@ -1386,7 +1397,7 @@ export default function RequestedBatchWareHouse({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
             <span>Request Details</span>
             {showAcceptRequest ? (
-              <Button type="primary" loading={acceptLoading} onClick={handleAcceptRequest}>
+              <Button type="primary" loading={acceptLoading} onClick={confirmAcceptRequest}>
                 Accept
               </Button>
             ) : null}

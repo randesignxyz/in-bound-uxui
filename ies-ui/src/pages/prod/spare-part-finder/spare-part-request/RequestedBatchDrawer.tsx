@@ -157,7 +157,10 @@ const mergeActivities = (
       return;
     }
 
-    const key = `${normalized.label}|${normalized.description}|${normalized.date ?? ''}|${normalized.by ?? ''}`;
+    const key =
+      normalizedLabel === 'item rejected' || normalizedLabel === 'item edited'
+        ? `${normalized.label}|${normalized.description}|${normalized.by ?? ''}`
+        : `${normalized.label}|${normalized.description}|${normalized.date ?? ''}|${normalized.by ?? ''}`;
     if (seen.has(key)) return;
     seen.add(key);
     merged.push(normalized);
@@ -243,6 +246,9 @@ export interface RequestDetailLineItem {
   category?: string;
   businessUnit?: string;
   uom?: string;
+  approvalState?: 'edited' | 'rejected';
+  approvalBy?: string;
+  approvalRemark?: string;
 }
 
 export interface RequestDetailActivity {
@@ -560,13 +566,34 @@ export default function RequestedBatchDrawer({
     }
 
     const persistedState = readPersistedDrawerState(data.requestId);
+    const serverItemMarks = data.items.reduce<Record<string, 'deleted' | 'canceled' | 'rejected'>>(
+      (acc, item) => {
+        if (item.approvalState === 'rejected') {
+          acc[getRequestLineKey(item)] = 'rejected';
+        }
+        return acc;
+      },
+      {},
+    );
+    const serverEditedItems = data.items.reduce<Record<string, boolean>>((acc, item) => {
+      if (item.approvalState === 'edited') {
+        acc[getRequestLineKey(item)] = true;
+      }
+      return acc;
+    }, {});
+    const serverRejectRemarks = data.items.reduce<Record<string, string>>((acc, item) => {
+      if (item.approvalState === 'rejected' && item.approvalRemark) {
+        acc[getRequestLineKey(item)] = item.approvalRemark;
+      }
+      return acc;
+    }, {});
 
     setPickedItems(nextPickedItems);
     setPickupBatches(nextPickupBatches);
     setQuantityOverrides(persistedState?.quantityOverrides || {});
-    setItemMarks(persistedState?.itemMarks || {});
-    setItemRejectRemarks(persistedState?.itemRejectRemarks || {});
-    setEditedItems(persistedState?.editedItems || {});
+    setItemMarks({ ...serverItemMarks, ...(persistedState?.itemMarks || {}) });
+    setItemRejectRemarks({ ...serverRejectRemarks, ...(persistedState?.itemRejectRemarks || {}) });
+    setEditedItems({ ...serverEditedItems, ...(persistedState?.editedItems || {}) });
     setEditedAtByRequestLineId(persistedState?.editedAtByRequestLineId || {});
 
     const seen = new Set<string>();
@@ -1112,11 +1139,15 @@ export default function RequestedBatchDrawer({
             {content}
             {mark ? (
               <Tag color={mark === 'canceled' ? 'gold' : 'red'} bordered={false}>
-                {mark === 'canceled' ? 'Canceled' : mark === 'rejected' ? 'Rejected' : 'Deleted'}
+                {mark === 'canceled'
+                  ? 'Canceled'
+                  : mark === 'rejected'
+                    ? `Rejected${record.approvalBy ? ` by ${record.approvalBy}` : ''}`
+                    : 'Deleted'}
               </Tag>
             ) : isEdited ? (
               <Tag color="blue" bordered={false}>
-                Edited
+                {`Edited${record.approvalBy ? ` by ${record.approvalBy}` : ''}`}
               </Tag>
             ) : null}
           </Space>

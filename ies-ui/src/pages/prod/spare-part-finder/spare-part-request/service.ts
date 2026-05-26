@@ -195,6 +195,8 @@ type ApproveRequestPayload = {
     requestLineId: number;
     approvedQty: number;
     editedAt?: string;
+    rejected?: boolean;
+    rejectRemark?: string;
   }>;
   remark?: string;
 };

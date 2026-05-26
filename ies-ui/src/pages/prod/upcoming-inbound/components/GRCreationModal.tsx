@@ -280,8 +280,7 @@ export function GRCreationModal({
             ...item,
             isDeferred: false,
             isMissing: false,
-            missingRemark: '',
-            receiveQty: item.receiveQty > 0 ? item.receiveQty : item.poQty,
+            receiveQty: item.receiveQty,
           };
         }
 
@@ -867,10 +866,9 @@ export function GRCreationModal({
       render: (_, record) => (
         <Input.TextArea
           autoSize={{ minRows: 1, maxRows: 3 }}
-          placeholder={record.isMissing ? 'Add remark' : 'Remark not required'}
+          placeholder= 'Add remark'
           value={record.missingRemark}
           onChange={(event) => updateItem(record.index, 'missingRemark', event.target.value)}
-          disabled={!record.isMissing}
           status={errors[`missingRemark-${record.index}`] ? 'error' : undefined}
         />
       ),

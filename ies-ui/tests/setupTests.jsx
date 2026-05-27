@@ -59,6 +59,9 @@ Object.defineProperty(global.window.console, 'error', {
     if (logStr.includes('Warning: An update to %s inside a test was not wrapped in act(...)')) {
       return;
     }
+    if (logStr.includes('Warning: `ReactDOMTestUtils.act` is deprecated in favor of `React.act`')) {
+      return;
+    }
     errorLog(...rest);
   },
 });

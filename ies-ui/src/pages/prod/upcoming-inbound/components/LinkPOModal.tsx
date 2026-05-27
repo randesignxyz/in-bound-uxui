@@ -210,8 +210,21 @@ export function LinkPOModal({
                       </Tag>
                     </Descriptions.Item>
                     <Descriptions.Item label="SAP PO Status">
-                      <Tag color={searchResult.docStatus?.toLowerCase() === 'closed' ? 'green' : 'blue'}>
-                        {searchResult.docStatus || 'Open'}
+                      <Tag
+                        color={
+                          searchResult.docStatus?.toUpperCase() === 'C' ||
+                          searchResult.docStatus?.toLowerCase() === 'closed'
+                            ? 'green'
+                            : 'blue'
+                        }
+                      >
+                        {searchResult.docStatus?.toUpperCase() === 'C' ||
+                        searchResult.docStatus?.toLowerCase() === 'closed'
+                          ? 'Complete'
+                          : searchResult.docStatus?.toUpperCase() === 'O' ||
+                            searchResult.docStatus?.toLowerCase() === 'open'
+                          ? 'Open'
+                          : searchResult.docStatus || 'Open'}
                       </Tag>
                     </Descriptions.Item>
                   </Descriptions>

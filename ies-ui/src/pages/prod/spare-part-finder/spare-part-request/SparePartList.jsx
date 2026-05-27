@@ -28,8 +28,10 @@ const normalizeResubmitPriority = (value) => {
   return normalized === 'urgent' || normalized === 'high' ? normalized : 'normal';
 };
 
+const getInventoryId = (record) => record?.locations?.[0]?.inventoryId ?? record?.inventoryId;
+
 const getSparePartRowKey = (record) =>
-  `${record?.id ?? ''}-${record?.productId || ''}-${normalizeBusinessUnit(record?.businessUnit) || 'no-bu'}-${record?.warehouse || record?.locations?.[0]?.warehouseCode || 'no-warehouse'}`;
+  `${record?.id ?? ''}-${record?.productId || ''}-${normalizeBusinessUnit(record?.businessUnit) || 'no-bu'}-${record?.warehouse || record?.locations?.[0]?.warehouseCode || 'no-warehouse'}-${getInventoryId(record) ?? 'no-inventory'}`;
 
 const normalizeBusinessUnit = (value) => String(value || '').trim().toUpperCase();
 
@@ -378,6 +380,17 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       .map((key) => selectedItemsById[String(key)] || currentRowsRef.current.find((row) => getSparePartRowKey(row) === String(key)))
       .filter(Boolean);
 
+  const syncRequestModalItems = (items = []) => {
+    const keys = items.map(getSparePartRowKey).filter(Boolean);
+    setRequestItems(items);
+    syncSelection(keys, items);
+    setRequestInitialRows((previous) => {
+      if (!previous.length) return previous;
+      const keySet = new Set(keys);
+      return previous.filter((row) => keySet.has(getSparePartRowKey(row.item)));
+    });
+  };
+
   const updateBusinessUnitFilters = (nextBusinessUnits) => {
     const normalizedBusinessUnits = normalizeBusinessUnitFilters(nextBusinessUnits);
     applyFiltersAndReload((previous) => ({
@@ -645,6 +658,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
       const detail = await services.detail({
         id: item.id,
         productId: item.productId,
+        inventoryId: item.locations?.[0]?.inventoryId,
         warehouseCode: item.warehouse || item.locations?.[0]?.warehouseCode,
         businessUnit: businessUnit && businessUnit !== '-' ? businessUnit : undefined,
       });
@@ -743,9 +757,21 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
   const handleUpdateProductDetail = async (payload) => {
     const updatedDetail = await services.updateDetail(payload);
     setDetailsItem(updatedDetail);
-    setCurrentRows((previous) =>
-      previous.map((row) => (row.id === updatedDetail.id ? { ...row, ...updatedDetail } : row)),
-    );
+    const updatedWarehouse = payload.warehouseCode || updatedDetail.warehouse || updatedDetail.locations?.[0]?.warehouseCode;
+    setCurrentRows((previous) => {
+      const nextRows = previous.map((row) => {
+        const rowLocation = row.locations?.[0];
+        const matchesInventory = payload.inventoryId && rowLocation?.inventoryId === payload.inventoryId;
+        const matchesWarehouse =
+          !payload.inventoryId &&
+          row.id === updatedDetail.id &&
+          String(row.warehouse || rowLocation?.warehouseCode || '').trim() === String(updatedWarehouse || '').trim();
+
+        return matchesInventory || matchesWarehouse ? { ...row, ...updatedDetail } : row;
+      });
+      currentRowsRef.current = nextRows;
+      return nextRows;
+    });
     setSelectedItemsById((previous) => ({
       ...previous,
       [getSparePartRowKey(updatedDetail)]: updatedDetail,
@@ -1042,6 +1068,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         initialRows={requestInitialRows}
         initialWarehousesByBusinessUnit={requestWarehousesByBusinessUnit}
         onViewProduct={openDetails}
+        onItemsChange={syncRequestModalItems}
         onCancel={() => {
           setRequestModalOpen(false);
           setRequestInitialRows([]);

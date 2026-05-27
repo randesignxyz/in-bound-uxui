@@ -245,7 +245,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   const checkReadOnly = (record: ReturnItem) => {
     if (isGlobalReadOnly) return true;
     if (workflowStatus === 'Receiving') {
-      return (record.receivedQty ?? 0) >= record.qtyToReturn;
+      return (record.receivedQty ?? 0) >= getExpectedReceiptQty(record);
     }
     return false;
   };
@@ -565,15 +565,19 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
   const clampQty = (value: string | number | null | undefined, max: number) =>
     Math.min(Math.max(normalizeQty(value), 0), Math.max(max, 0));
 
+  const getExpectedReceiptQty = (record: ReturnItem) =>
+    Math.max((record.qtyToReturn ?? 0) + (record.usedQty ?? 0), 0);
+
   const getRemainingQty = (record: ReturnItem) =>
-    Math.max(record.qtyToReturn - (record.receivedQty ?? 0), 0);
+    Math.max(getExpectedReceiptQty(record) - (record.receivedQty ?? 0), 0);
 
   const getReceiptQuantities = (record: ReturnItem) => {
     const key = String(record.id);
     const remaining = getRemainingQty(record);
     const hasGoodInput = Object.prototype.hasOwnProperty.call(goodQtyMap, key);
     const requestedGoodQty = goodQtyMap[key];
-    const requestedDamagedQty = damagedQtyMap[key] ?? 0;
+    const defaultDamagedQty = Math.max((record.usedQty ?? 0) - (record.damagedQty ?? 0), 0);
+    const requestedDamagedQty = damagedQtyMap[key] ?? defaultDamagedQty;
 
     if (hasGoodInput) {
       const goodQty = clampQty(requestedGoodQty ?? 0, remaining);
@@ -786,7 +790,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       render: (_: unknown, record: ReturnItem) => {
         const isPartial = workflowStatus === 'Receiving';
         const received = record.receivedQty ?? 0;
-        const total = record.qtyToReturn;
+        const total = getExpectedReceiptQty(record);
 
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

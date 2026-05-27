@@ -215,6 +215,7 @@ export interface InboundPurchaseOrderApi {
   supplier: string;
   expected_date: string;
   expected_time: string;
+  receiver_warehouse?: string | null;
   delivery_note_number?: string | null;
   items: InboundPoItemApi[];
   total_items: number;

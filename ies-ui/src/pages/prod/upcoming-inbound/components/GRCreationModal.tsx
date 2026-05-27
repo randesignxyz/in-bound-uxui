@@ -131,6 +131,7 @@ function buildInitialPoDeliveryNotes(
   }, {});
 }
 
+
 function buildInitialPoUploadFiles(
   purchaseOrders: PurchaseOrder[],
   initialReceipt?: UpcomingInboundGoodsReceipt | null,
@@ -214,11 +215,37 @@ export function GRCreationModal({
   const [actualReceiptDate, setActualReceiptDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [deliveryNoteNumber, setDeliveryNoteNumber] = useState('');
   const [selectedWarehouseCode, setSelectedWarehouseCode] = useState('');
+  const [warehouseSearch, setWarehouseSearch] = useState('');
   const [poDeliveryNotes, setPoDeliveryNotes] = useState<Record<string, string>>({});
   const [items, setItems] = useState<GRItem[]>(() => buildInitialItems(purchaseOrders));
   const [uploadedFiles, setUploadedFiles] = useState<UploadFile[]>([]);
   const [poUploadedFiles, setPoUploadedFiles] = useState<Record<string, UploadFile[]>>({});
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+
+  const displayedWarehouseOptions = useMemo(() => {
+    const normalizedSearch = warehouseSearch.trim().toLowerCase();
+    const filtered = normalizedSearch
+      ? warehouseOptions.filter((option) =>
+          option.label.toLowerCase().includes(normalizedSearch)
+        )
+      : warehouseOptions;
+
+    const sliced = filtered.slice(0, 20);
+
+    if (
+      selectedWarehouseCode &&
+      !sliced.some((opt) => opt.value === selectedWarehouseCode)
+    ) {
+      const selectedOption = warehouseOptions.find(
+        (opt) => opt.value === selectedWarehouseCode
+      );
+      if (selectedOption) {
+        sliced.push(selectedOption);
+      }
+    }
+
+    return sliced;
+  }, [warehouseOptions, warehouseSearch, selectedWarehouseCode]);
 
   const [previewState, setPreviewState] = useState<{
     fileName?: string;
@@ -632,6 +659,7 @@ export function GRCreationModal({
 
   useEffect(() => {
     if (!open) return;
+    setWarehouseSearch('');
     if (initialReceipt) {
       setPostingDate(initialReceipt.postingDate || dayjs().format('YYYY-MM-DD'));
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
@@ -762,6 +790,18 @@ export function GRCreationModal({
           value={record.receiveQty === 0 ? null : record.receiveQty}
           placeholder='0'
           onChange={(value) => updateItem(record.index, 'receiveQty', value ?? 0)}
+          parser={(value) => {
+            const parsed = Number(value?.replace(/[^\d]/g, ''));
+            return isNaN(parsed) ? 0 : parsed;
+          }}
+          formatter={(value) => (value !== undefined && value !== null ? String(Math.floor(Number(value))) : '')}
+          precision={0}
+          onKeyDown={(e) => {
+            const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+            if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+              e.preventDefault();
+            }
+          }}
           style={{ width: '100%' }}
           controls
           disabled={record.isMissing || record.isDeferred}
@@ -959,12 +999,21 @@ export function GRCreationModal({
                     help={errors.warehouseCode ? 'Required' : undefined}
                   >
                     <Select
+                      showSearch
                       placeholder="Select warehouse"
                       value={selectedWarehouseCode || undefined}
-                      options={warehouseOptions}
+                      options={displayedWarehouseOptions}
+                      filterOption={false}
+                      onSearch={setWarehouseSearch}
+                      onDropdownVisibleChange={(visible) => {
+                        if (!visible) {
+                          setWarehouseSearch('');
+                        }
+                      }}
                       onChange={(value) => {
                         setSelectedWarehouseCode(value);
                         setErrors((prev) => ({ ...prev, warehouseCode: false }));
+                        setWarehouseSearch('');
                       }}
                       style={{ width: '100%' }}
                     />
@@ -985,12 +1034,21 @@ export function GRCreationModal({
                     help={errors.warehouseCode ? 'Required' : undefined}
                   >
                     <Select
+                      showSearch
                       placeholder="Select warehouse"
                       value={selectedWarehouseCode || undefined}
-                      options={warehouseOptions}
+                      options={displayedWarehouseOptions}
+                      filterOption={false}
+                      onSearch={setWarehouseSearch}
+                      onDropdownVisibleChange={(visible) => {
+                        if (!visible) {
+                          setWarehouseSearch('');
+                        }
+                      }}
                       onChange={(value) => {
                         setSelectedWarehouseCode(value);
                         setErrors((prev) => ({ ...prev, warehouseCode: false }));
+                        setWarehouseSearch('');
                       }}
                       style={{ width: '100%' }}
                     />

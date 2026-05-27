@@ -54,6 +54,7 @@ export interface SparePartRequestListApiItem {
 }
 
 interface Location {
+  inventoryId?: number | null;
   warehouseCode: string;
   warehouseName?: string;
   level: string;
@@ -72,6 +73,7 @@ interface Location {
 type SparePartDetailParams = {
   id?: number;
   productId?: string;
+  inventoryId?: number;
   warehouseCode?: string;
   businessUnit?: string;
 };
@@ -79,12 +81,13 @@ type SparePartDetailParams = {
 export type UpdateSparePartDetailPayload = {
   id?: number;
   productId?: string;
+  inventoryId?: number;
   partName: string;
   description?: string;
   uom: string[];
   kind?: string;
   categoryId?: number;
-  isActive: boolean;
+  isActive?: boolean;
   warehouseCode?: string;
   rack?: string;
   shelve?: string;
@@ -138,6 +141,7 @@ const SparePartRequestTestAction = {
     payload: {
       id: params.id,
       productId: params.productId,
+      inventoryId: params.inventoryId,
       warehouseCode: params.warehouseCode,
       businessUnit: params.businessUnit,
     },
@@ -215,9 +219,10 @@ const resolveCategoryName = (category?: SparePartRequestListApiItem['category'])
 const resolveCategoryId = (item: SparePartRequestListApiItem): number | undefined =>
   item.category_id ?? (typeof item.category === 'object' ? item.category?.id ?? undefined : undefined);
 
-export const mapItem = (item: SparePartRequestListApiItem): SparePartRequestItem => {
+export const mapItem = (item: SparePartRequestListApiItem, preferredInventoryId?: number): SparePartRequestItem => {
   const locations = Array.isArray(item.locations) ? item.locations : [];
   const firstLocation =
+    (preferredInventoryId ? locations.find((location) => location?.inventoryId === preferredInventoryId) : undefined) ||
     locations.find((location) => Number(location?.availableQty ?? 0) > 0) || locations[0];
   const stock = item.avalailableStock ?? item.stock ?? item.availableQty ?? firstLocation?.availableQty ?? 0;
   const reorderLevel = firstLocation?.reorderLevel;
@@ -313,7 +318,7 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
     const response = await singleRequest<SparePartRequestListApiItem>(SparePartRequestTestAction.detail(params))(
       requestAction,
     );
-    return mapItem(response as SparePartRequestListApiItem);
+    return mapItem(response as SparePartRequestListApiItem, params.inventoryId);
   },
   updateImages: async (productId: string, images: string[]): Promise<SparePartRequestItem> => {
     const response = await singleRequest<any>(SparePartRequestTestAction.updateImages({ productId, images }))(
@@ -325,7 +330,15 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
   updateDetail: async (payload: UpdateSparePartDetailPayload): Promise<SparePartRequestItem> => {
     const response = await singleRequest<any>(SparePartRequestTestAction.updateDetail(payload))(requestAction);
     const nextPayload = response?.data ?? response;
-    return mapItem(nextPayload as SparePartRequestListApiItem);
+    const responseItem = nextPayload as SparePartRequestListApiItem;
+    if (payload.inventoryId && Array.isArray(responseItem.locations)) {
+      responseItem.locations = [...responseItem.locations].sort((left, right) => {
+        if (left?.inventoryId === payload.inventoryId) return -1;
+        if (right?.inventoryId === payload.inventoryId) return 1;
+        return 0;
+      });
+    }
+    return mapItem(responseItem, payload.inventoryId);
   },
   deleteImages: async (productId: string, images: string[]): Promise<SparePartRequestItem> => {
     const response = await singleRequest<any>(SparePartRequestTestAction.deleteImages({ productId, images }))(

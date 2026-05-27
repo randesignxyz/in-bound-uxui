@@ -75,6 +75,7 @@ import {
   getCombinedPurchaseOrderVendor,
   getGoodsReceiptSourceColor,
   getInboundHistoryStatus,
+  getPurchaseOrderReceiptState,
   getQcQueueStatus,
   getReceiptDisplayStatus,
   getReceiptDisplayStatusColor,
@@ -87,6 +88,13 @@ import {
 } from './workflow';
 
 const { Text } = Typography;
+
+function getClosedPurchaseOrdersForCreate(
+  purchaseOrders: PurchaseOrder[],
+  receipts: GoodsReceipt[],
+) {
+  return purchaseOrders.filter((purchaseOrder) => getPurchaseOrderReceiptState(purchaseOrder, receipts).isClosedPo);
+}
 
 type InboundViewMode = 'operations' | 'history';
 type InboundRouteView = 'list' | 'create' | 'receive-without-po';
@@ -1277,7 +1285,7 @@ export default function UpcomingInboundListview({
     setReceipts((prev) => {
       const exists = prev.some((row) => row.grNumber === normalized.grNumber);
       if (!exists) {
-        return prev;  
+        return prev;
       }
       return prev.map((row) => (row.grNumber === normalized.grNumber ? normalized : row));
     });
@@ -1528,6 +1536,15 @@ export default function UpcomingInboundListview({
 
   const handleCreateGR = async (purchaseOrders: PurchaseOrder[]) => {
     if (!purchaseOrders.length) return;
+    const closedPurchaseOrders = getClosedPurchaseOrdersForCreate(purchaseOrders, receipts);
+    if (closedPurchaseOrders.length > 0) {
+      message.error(
+        `Cannot create inbound receiving for closed PO: ${closedPurchaseOrders
+          .map((purchaseOrder) => purchaseOrder.poNumber)
+          .join(', ')}`,
+      );
+      return;
+    }
     if (!canCombinePurchaseOrders(purchaseOrders)) {
       message.error(
         'You can only combine purchase orders from the same business unit and vendor into one IR/GR.',
@@ -1590,6 +1607,20 @@ export default function UpcomingInboundListview({
           return;
         }
 
+        const closedPurchaseOrders = getClosedPurchaseOrdersForCreate(
+          purchaseOrdersFromRoute,
+          receipts,
+        );
+        if (closedPurchaseOrders.length > 0) {
+          message.error(
+            `Cannot create inbound receiving for closed PO: ${closedPurchaseOrders
+              .map((purchaseOrder) => purchaseOrder.poNumber)
+              .join(', ')}`,
+          );
+          closeInboundEntryRoute();
+          return;
+        }
+
         setSelectedPODetail(null);
         setSelectedPOs(
           [...purchaseOrdersFromRoute].sort((left, right) =>
@@ -1609,7 +1640,7 @@ export default function UpcomingInboundListview({
     return () => {
       isCancelled = true;
     };
-  }, [closeInboundEntryRoute, isCreateInboundRoute, location.search, parsePurchaseOrderRowKey]);
+  }, [closeInboundEntryRoute, isCreateInboundRoute, location.search, parsePurchaseOrderRowKey, receipts]);
 
   useEffect(() => {
     if (!isReceiveWithoutPoRoute) {
@@ -1907,6 +1938,7 @@ export default function UpcomingInboundListview({
         batchNumber: item.batchNumber || undefined,
         barcode: item.barcode || undefined,
         qcDecision: item.qcDecision || undefined,
+        qcRejectedQty: item.qcRejectedQty ?? undefined,
         qcRemark: item.qcRemark || undefined,
       })),
       spec_match: data.specMatch ?? true,
@@ -2024,6 +2056,7 @@ export default function UpcomingInboundListview({
           code: item.code,
           poNumber: item.poNumber || undefined,
           qcDecision: item.qcDecision || 'Pass',
+          qcRejectedQty: item.qcRejectedQty ?? undefined,
           qcRemark: item.qcRemark || undefined,
         })),
         documentChecklist: {
@@ -2658,7 +2691,7 @@ export default function UpcomingInboundListview({
                     allowClear
                     style={{ width: 220 }}
                     placeholder={['Start date', 'End date']}
-                    onChange={(values) => {
+                    onChange={(values: any) => {
                       if (!values?.[0] || !values?.[1]) {
                         setDashboardPeriodFilter(null);
                         setDashboardSummaryRange('OVERALL');

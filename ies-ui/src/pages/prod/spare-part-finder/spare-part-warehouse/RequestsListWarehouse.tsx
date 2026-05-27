@@ -2,7 +2,7 @@ import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import { FileExcelOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
-import { useAccess } from '@umijs/max';
+import { useAccess, useModel } from '@umijs/max';
 import { Button, DatePicker, Input, Select, Space, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -29,6 +29,8 @@ interface RequestsListWarehouseProps {
 export default function RequestsListWarehouse({ onDataChanged }: RequestsListWarehouseProps) {
   const { RangePicker } = DatePicker;
   const access = useAccess();
+  const { initialState } = useModel('@@initialState');
+  const currentUserLogin = initialState?.currentUser?.login;
   const requestActions = simpleRequestActions();
   const services = SparePartWarehouseService(requestActions);
   const canExportExcel = access.canSpfWarehouseStaff || access.canAdmin;
@@ -167,8 +169,12 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
   const exportRequests = useCallback(
     async ({ dateRange, businessUnits }: RequestsWarehouseExportValues) => {
       if (exportInFlightRef.current) return;
-        if (!dateRange?.[0] || !dateRange?.[1]) {
+      if (!dateRange?.[0] || !dateRange?.[1]) {
         message.error('Please select a date range.');
+        return;
+      }
+      if (!currentUserLogin) {
+        message.error('Current user login is missing. Please sign in again before exporting.');
         return;
       }
       exportInFlightRef.current = true;
@@ -182,13 +188,18 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
             reportPath: getUrlReporting('prod'),
             data: [
               {
+                key: 'login',
+                value: currentUserLogin,
+                type: 'string',
+              },
+              {
                 key: 'StartDate',
                 value: dateRange[0].startOf('day').toISOString(),
                 type: 'dateTime',
               },
               {
                 key: 'EndDate',
-                value: dateRange[1].endOf('day').toISOString(),
+                value: dateRange[1].add(1, 'day').endOf('day').toISOString(),
                 type: 'dateTime',
               },
               {
@@ -207,7 +218,7 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
         setExportLoading(false);
       }
     },
-    [requestActions],
+    [currentUserLogin, requestActions],
   );
 
   const filteredRequests = useMemo(

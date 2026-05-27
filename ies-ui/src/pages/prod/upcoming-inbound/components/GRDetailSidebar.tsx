@@ -9,6 +9,7 @@ import {
   Collapse,
   Divider,
   Input,
+  InputNumber,
   Modal,
   Select,
   Space,
@@ -133,7 +134,10 @@ function deriveQcOutcome(
       processState: 'CORRECTION_REQUIRED',
       qcResult: 'Rejected',
       exceptionReason: rejected
-        .map((item) => `${item.code}: ${item.qcRemark?.trim() || 'Rejected during QC'}`)
+        .map((item) => {
+          const rejectedQty = item.qcRejectedQty || item.receiveQty;
+          return `${item.code}: rejected ${rejectedQty} - ${item.qcRemark?.trim() || 'Rejected during QC'}`;
+        })
         .join('; '),
       stepTitle:
         passedCount > 0
@@ -160,6 +164,14 @@ function renderMetadataValue(value: ReactNode) {
 
 function isRejectedActivityTitle(title: string) {
   return title === 'QC Rejected' || title === 'Supervisor Rejected';
+}
+
+function getRejectedQtyForRow(item: GRItem) {
+  if (item.qcDecision !== 'Reject') {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(item.qcRejectedQty ?? item.receiveQty, item.receiveQty));
 }
 
 export function GRDetailSidebar({
@@ -208,6 +220,10 @@ export function GRDetailSidebar({
       receipt.items.map((item) => ({
         ...item,
         qcDecision: item.qcDecision,
+        qcRejectedQty:
+          item.qcDecision === 'Reject'
+            ? item.qcRejectedQty
+            : undefined,
         qcRemark: item.qcRemark || '',
       })),
     );
@@ -341,13 +357,18 @@ export function GRDetailSidebar({
     ...(receipt.pendingPOReason ? [{ label: 'Pending PO Note', value: receipt.pendingPOReason }] : []),
   ];
 
-  const updateItem = (index: number, field: 'qcDecision' | 'qcRemark', value: string) => {
+  const updateItem = (
+    index: number,
+    field: 'qcDecision' | 'qcRemark' | 'qcRejectedQty',
+    value: string | number | undefined,
+  ) => {
     setItems((prev) =>
       prev.map((item, itemIndex) => (itemIndex === index ? { ...item, [field]: value } : item)),
     );
     setErrors((prev) => ({
       ...prev,
       [`decision-${index}`]: false,
+      [`rejectedQty-${index}`]: false,
       [`remark-${index}`]: false,
     }));
   };
@@ -376,9 +397,18 @@ export function GRDetailSidebar({
 
   const handleDecisionChange = (index: number, value: QcDecision) => {
     updateItem(index, 'qcDecision', value);
+    if (value === 'Reject') {
+      updateItem(index, 'qcRejectedQty', items[index]?.qcRejectedQty ?? undefined);
+    } else {
+      updateItem(index, 'qcRejectedQty', undefined);
+    }
     if (value === 'Reject' && !items[index]?.qcRemark?.trim()) {
       openQcRemarkEditor(index, true);
     }
+  };
+
+  const handleRejectedQtyChange = (index: number, value: number | null) => {
+    updateItem(index, 'qcRejectedQty', value ?? undefined);
   };
 
   const isRemarkModalCancelDisabled =
@@ -402,16 +432,26 @@ export function GRDetailSidebar({
     const nextErrors: Record<string, boolean> = {};
     let hasMissingDecision = false;
     let firstMissingRemarkIndex: number | null = null;
+    let hasInvalidRejectedQty = false;
 
     items.forEach((item, index) => {
       if (!item.qcDecision) {
         nextErrors[`decision-${index}`] = true;
         hasMissingDecision = true;
       }
-      if (
-        item.qcDecision === 'Reject' &&
-        !item.qcRemark?.trim()
-      ) {
+      if (item.qcDecision === 'Reject') {
+        const rejectedQty = item.qcRejectedQty;
+        if (
+          typeof rejectedQty !== 'number' ||
+          !Number.isInteger(rejectedQty) ||
+          rejectedQty <= 0 ||
+          rejectedQty > item.receiveQty
+        ) {
+          nextErrors[`rejectedQty-${index}`] = true;
+          hasInvalidRejectedQty = true;
+        }
+      }
+      if (item.qcDecision === 'Reject' && !item.qcRemark?.trim()) {
         nextErrors[`remark-${index}`] = true;
         if (firstMissingRemarkIndex === null) {
           firstMissingRemarkIndex = index;
@@ -422,6 +462,9 @@ export function GRDetailSidebar({
     setErrors(nextErrors);
     if (hasMissingDecision) {
       message.error('Please select a decision for every item before submitting.');
+    }
+    if (hasInvalidRejectedQty) {
+      message.error('Enter a rejected quantity greater than 0 and not more than the received quantity.');
     }
     if (firstMissingRemarkIndex !== null) {
       openQcRemarkEditor(
@@ -773,7 +816,7 @@ export function GRDetailSidebar({
         width: 180,
         render: (_: unknown, row: EditableSidebarItem) => (
           <Input.TextArea
-            autoSize={{ minRows: 1, maxRows: 3 }}
+            rows={1}
             placeholder="Add QC inspection note"
             value={row.qcRemark}
             onChange={(event) => updateItem(row.index, 'qcRemark', event.target.value)}
@@ -799,6 +842,43 @@ export function GRDetailSidebar({
           />
         ),
       },
+      {
+        title: 'Reject Qty',
+        key: 'qcRejectedQty',
+        width: 140,
+        render: (_: unknown, row: EditableSidebarItem) => {
+          const isReject = row.qcDecision === 'Reject';
+
+          return (
+            <InputNumber
+              style={{ width: '100%' }}
+              min={1}
+              max={row.receiveQty}
+              precision={0}
+              controls={false}
+              placeholder="-"
+              disabled={!isReject}
+              value={isReject ? row.qcRejectedQty : undefined}
+              status={errors[`rejectedQty-${row.index}`] ? 'error' : undefined}
+              parser={(value) => {
+                const parsed = parseInt(value?.replace(/[^\d]/g, '') ?? '', 10);
+                return isNaN(parsed) ? '' : parsed;
+              }}
+              onKeyDown={(e) => {
+                const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+                if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              onChange={(value) => {
+                const num = typeof value === 'number' ? value : null;
+                const clamped = num !== null ? Math.min(num, row.receiveQty) : null;
+                handleRejectedQtyChange(row.index, clamped);
+              }}
+            />
+          );
+        },
+      },
     );
   } else if (showQcReadOnly) {
     columns.push(
@@ -823,6 +903,14 @@ export function GRDetailSidebar({
               {decision || 'Pending'}
             </Tag>
           );
+        },
+      },
+      {
+        title: 'Reject Qty',
+        key: 'qcRejectedQty',
+        width: 120,
+        render: (_: unknown, row: EditableSidebarItem) => {
+          return row.qcDecision === 'Reject' ? getRejectedQtyForRow(row).toLocaleString() : '-';
         },
       },
     );

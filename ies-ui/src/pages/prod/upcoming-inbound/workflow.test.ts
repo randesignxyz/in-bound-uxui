@@ -413,6 +413,48 @@ describe('getPurchaseOrderReceiptState', () => {
       displayStatus: 'Ready to Receive',
     });
   });
+
+  it('allows creating the next IR when an earlier linked receipt is still in supervisor flow and qty is still outstanding', () => {
+    const purchaseOrder = createPurchaseOrder({
+      items: [
+        {
+          code: 'ITEM-001',
+          name: 'Item 001',
+          poQty: 500,
+          receivedQty: 100,
+          remainingQty: 400,
+          uom: 'EA',
+          supplier: 'Supplier A',
+        },
+      ],
+      receiptLogs: [
+        {
+          receiptId: 1,
+          receivingNumber: 'IR-001',
+          statusLabel: 'Pending Supervisor Review',
+          totalReceivedQty: 100,
+          receivedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 100 }],
+          approvedItems: [{ code: 'ITEM-001', name: 'Item 001', qty: 100 }],
+          rejectedItems: [],
+        },
+      ],
+    });
+    const pendingSupervisorReceipt = createReceipt({
+      grNumber: 'IR-001',
+      receivingNumber: 'IR-001',
+      poNumber: 'PO-001',
+      items: [createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 500, receiveQty: 100 })],
+      processState: 'PENDING_SUPERVISOR_REVIEW',
+      qcResult: 'Pass',
+    });
+
+    expect(getPurchaseOrderReceiptState(purchaseOrder, [pendingSupervisorReceipt])).toMatchObject({
+      hasOutstandingQty: true,
+      hasBlockingReceipt: false,
+      canCreateInboundReceiving: true,
+      displayStatus: 'Ready to Receive',
+    });
+  });
 });
 
 describe('buildReceiptTimelineActivities', () => {

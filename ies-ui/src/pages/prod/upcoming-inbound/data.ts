@@ -257,6 +257,7 @@ export interface InboundGrItemApi {
   barcode?: string | null;
   deliveryNoteNumber?: string | null;
   qcDecision?: string | null;
+  qcRejectedQty?: number | null;
   qcRemark?: string | null;
 }
 
@@ -397,6 +398,7 @@ export interface InboundSaveGoodsReceiptItemInput {
   batchNumber?: string | null;
   barcode?: string | null;
   qcDecision?: QcDecision | null;
+  qcRejectedQty?: number | null;
   qcRemark?: string | null;
 }
 
@@ -458,6 +460,7 @@ export interface InboundQcReviewItemInput {
   code: string;
   poNumber?: string | null;
   qcDecision: QcDecision;
+  qcRejectedQty?: number | null;
   qcRemark?: string | null;
 }
 

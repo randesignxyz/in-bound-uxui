@@ -96,7 +96,9 @@ export function PODetailSidebar({
       ? 'success'
       : receiptState.displayStatus === 'In Progress'
         ? 'warning'
-        : 'processing';
+        : receiptState.displayStatus === 'Closed'
+          ? 'default'
+          : 'processing';
 
   // ─── Table Columns ──────────────────────────────────────────────────────────
 

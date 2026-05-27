@@ -123,9 +123,10 @@ export interface PurchaseOrderReceiptState {
   hasOutstandingQty: boolean;
   hasLinkedReceipts: boolean;
   hasBlockingReceipt: boolean;
+  isClosedPo: boolean;
   isFullyReceived: boolean;
   canCreateInboundReceiving: boolean;
-  displayStatus: 'Fully Received' | 'In Progress' | 'Ready to Receive';
+  displayStatus: 'Fully Received' | 'In Progress' | 'Ready to Receive' | 'Closed';
 }
 
 export function getCombinedPurchaseOrderVendor(purchaseOrders: PurchaseOrder[]) {
@@ -158,12 +159,8 @@ export function canCombinePurchaseOrders(purchaseOrders: PurchaseOrder[]) {
   );
 }
 
-const ACTIVE_PO_RECEIPT_STATES = new Set<InboundProcessState>([
+const BLOCKING_PO_RECEIPT_STATES = new Set<InboundProcessState>([
   'GRPO_DRAFT',
-  'QC_PENDING',
-  'QC_PASSED',
-  'PENDING_SUPERVISOR_REVIEW',
-  'MERGED_TO_SUPERVISOR_REVIEW',
   'CORRECTION_REQUIRED',
   'MISMATCH_EXCEPTION',
 ]);
@@ -209,7 +206,7 @@ function getLinkedPurchaseOrderReceipts(
 
 function isBlockingPurchaseOrderReceipt(receipt: GoodsReceipt) {
   return (
-    ACTIVE_PO_RECEIPT_STATES.has(receipt.processState) ||
+    BLOCKING_PO_RECEIPT_STATES.has(receipt.processState) ||
     receipt.qcResult === 'Rejected' ||
     isRejectedReceipt(receipt)
   );
@@ -219,6 +216,7 @@ export function getPurchaseOrderReceiptState(
   purchaseOrder: PurchaseOrder,
   goodsReceipts: GoodsReceipt[] = [],
 ): PurchaseOrderReceiptState {
+  const isClosedPo = ['C', 'CLOSE', 'CLOSED'].includes(purchaseOrder.docStatus?.trim().toUpperCase() || '');
   const linkedReceipts = getLinkedPurchaseOrderReceipts(purchaseOrder, goodsReceipts);
   const hasLinkedReceipts =
     linkedReceipts.length > 0 || (purchaseOrder.receiptLogs?.some((log) => typeof log.receiptId === 'number') ?? false);
@@ -247,15 +245,18 @@ export function getPurchaseOrderReceiptState(
     }) ?? false;
 
   const isFullyReceived = !hasOutstandingQty && !hasBlockingReceipt;
-  const canCreateInboundReceiving = hasOutstandingQty && !hasBlockingReceipt;
+  const canCreateInboundReceiving = hasOutstandingQty && !hasBlockingReceipt && !isClosedPo;
 
   return {
     hasOutstandingQty,
     hasLinkedReceipts,
     hasBlockingReceipt,
+    isClosedPo,
     isFullyReceived,
     canCreateInboundReceiving,
-    displayStatus: isFullyReceived
+    displayStatus: isClosedPo
+      ? 'Closed'
+      : isFullyReceived
       ? 'Fully Received'
       : hasBlockingReceipt
         ? 'In Progress'
@@ -286,6 +287,7 @@ export interface GRItem {
   isMissing?: boolean;
   missingRemark?: string;
   qcDecision?: QcDecision;
+  qcRejectedQty?: number;
   qcRemark?: string;
 }
 
@@ -921,6 +923,40 @@ function getActivitySecondaryText(performedBy?: string) {
   return normalizedActor ? `by ${normalizedActor}` : undefined;
 }
 
+function shouldUsePassBranchTimeline(receipt: GoodsReceipt) {
+  if (!receipt.qcResult?.trim().toLowerCase().includes('pass')) {
+    return false;
+  }
+
+  return [
+    'PENDING_SUPERVISOR_REVIEW',
+    'SUPERVISOR_APPROVED',
+    'SAP_SYNCED',
+    'SAP_STAGED',
+  ].includes(receipt.processState);
+}
+
+function isRejectedBranchActivity(activity: GRActivity) {
+  const activityText = getActivityText(activity).toLowerCase();
+
+  return (
+    activity.processState === 'CORRECTION_REQUIRED' ||
+    activity.processState === 'MISMATCH_EXCEPTION' ||
+    activityText.includes('qc rejected') ||
+    activityText.includes('rejected during qc') ||
+    activityText.includes('returned for correction') ||
+    activityText.includes('correction required')
+  );
+}
+
+function getTimelineSourceActivities(receipt: GoodsReceipt) {
+  if (!shouldUsePassBranchTimeline(receipt)) {
+    return receipt.activities;
+  }
+
+  return receipt.activities.filter((activity) => !isRejectedBranchActivity(activity));
+}
+
 function isSkipQcActivityText(activityText: string) {
   const normalizedText = activityText.toLowerCase();
   return normalizedText.includes('skip qc') || normalizedText.includes('skipped qc');
@@ -1263,6 +1299,7 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
     );
   }
 
+  const timelineSourceActivities = getTimelineSourceActivities(receipt);
   const timelineStates: TimelineState[] = [];
 
   for (const baseState of ['RECEIVED_CHECKING', 'RECEIPT_CONFIRMED', 'STORED_ON_HOLD'] as InboundProcessState[]) {
@@ -1275,7 +1312,7 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
     );
   }
 
-  receipt.activities.forEach((activity) => {
+  timelineSourceActivities.forEach((activity) => {
     const activityText = getActivityText(activity);
     const isSkipQcActivity =
       activity.processState === 'PENDING_SUPERVISOR_REVIEW' && isSkipQcActivityText(activityText);
@@ -1332,7 +1369,7 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
     });
   });
 
-  const hasSkipQcMergeHistory = receipt.activities.some((activity) => {
+  const hasSkipQcMergeHistory = timelineSourceActivities.some((activity) => {
     const activityText = getActivityText(activity);
     return (
       (activity.processState === 'PENDING_SUPERVISOR_REVIEW' ||

@@ -1672,7 +1672,7 @@ export default function RequestedBatchDrawer({
             {headerActions}
           </div>
         }
-          width="60%"
+          width="70%"
           placement="right"
           onClose={handleClose}
           open={open}

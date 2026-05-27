@@ -13,7 +13,6 @@ import {
   message,
   Badge,
   Modal,
-  Popconfirm,
   QRCode,
   Radio,
 } from 'antd';
@@ -364,6 +363,7 @@ export default function RequestedBatchWareHouse({
   const [confirmPickupLoading, setConfirmPickupLoading] = useState(false);
   const [confirmPickupShipmentId, setConfirmPickupShipmentId] = useState<string | null>(null);
   const [confirmPickupRemark, setConfirmPickupRemark] = useState('');
+  const [saveAndPickupModalOpen, setSaveAndPickupModalOpen] = useState(false);
   const [pickupQrModalOpen, setPickupQrModalOpen] = useState(false);
   const [pickupQrLoading, setPickupQrLoading] = useState(false);
   const [pickupQrShipmentId, setPickupQrShipmentId] = useState<string | null>(null);
@@ -623,6 +623,7 @@ export default function RequestedBatchWareHouse({
     setPickupQrShipmentId(null);
     setConfirmPickupShipmentId(null);
     setConfirmPickupRemark('');
+    setSaveAndPickupModalOpen(false);
     onClose?.();
   };
 
@@ -1420,20 +1421,13 @@ export default function RequestedBatchWareHouse({
                 <Button danger onClick={handleDeleteDraft} loading={draftDeleteLoading}>
                   Delete
                 </Button>
-                <Popconfirm
-                  title="Are you sure to save and pick up?"
-                  okText="Yes"
-                  cancelText="No"
-                  onConfirm={handleSaveAndPickUp}
+                <Button
+                  type="primary"
                   disabled={draftDeleteLoading || hasIssueQtyValidationError}
+                  onClick={() => setSaveAndPickupModalOpen(true)}
                 >
-                  <Button
-                    type="primary"
-                    disabled={draftDeleteLoading || hasIssueQtyValidationError}
-                  >
-                    Save &amp; Pick up
-                  </Button>
-                </Popconfirm>
+                  Save &amp; Pick up
+                </Button>
               </Space>
             </div>
           ) : null
@@ -1475,7 +1469,7 @@ export default function RequestedBatchWareHouse({
             ) : null}
           </div>
         }
-        width="100%"
+        width="70%"
         placement="right"
         onClose={handleClose}
         open={open}
@@ -1492,20 +1486,13 @@ export default function RequestedBatchWareHouse({
             </Space>
             <Space>
               {showSaveAndPickUp ? (
-                <Popconfirm
-                  title="Are you sure to save and pick up?"
-                  okText="Yes"
-                  cancelText="No"
-                  onConfirm={handleSaveAndPickUp}
+                <Button
+                  type="primary"
                   disabled={draftDeleteLoading || hasIssueQtyValidationError}
+                  onClick={() => setSaveAndPickupModalOpen(true)}
                 >
-                  <Button
-                    type="primary"
-                    disabled={draftDeleteLoading || hasIssueQtyValidationError}
-                  >
-                    Save &amp; Pick up
-                  </Button>
-                </Popconfirm>
+                  Save &amp; Pick up
+                </Button>
               ) : null}
             </Space>
           </div>
@@ -1708,6 +1695,26 @@ export default function RequestedBatchWareHouse({
         initialRemark={confirmPickupRemark}
         onConfirm={(payload) => handleConfirmPickupRequest(payload?.remark)}
       />
+
+      <Modal
+        title="Save and pick up"
+        open={saveAndPickupModalOpen}
+        width={360}
+        // centered
+        closable={false}
+        okText="Yes"
+        cancelText="No"
+        okButtonProps={{
+          disabled: draftDeleteLoading || hasIssueQtyValidationError,
+        }}
+        onOk={() => {
+          setSaveAndPickupModalOpen(false);
+          handleSaveAndPickUp();
+        }}
+        onCancel={() => setSaveAndPickupModalOpen(false)}
+      >
+        <Text>Are you sure to save and pick up?</Text>
+      </Modal>
 
       <Modal
         title="Pickup QR Code"

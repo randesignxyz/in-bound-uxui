@@ -1,6 +1,6 @@
 import { EyeOutlined, FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ActionType, ProColumns, ProTable } from '@ant-design/pro-components';
-import { useAccess } from '@umijs/max';
+import { useAccess, useModel } from '@umijs/max';
 import { Button, Card, DatePicker, Input, Select, Tag, Typography, message } from 'antd';
 import { Space } from 'antd/lib';
 import dayjs from 'dayjs';
@@ -84,6 +84,8 @@ interface ReturnsListWarehouseProps {
 
 export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseProps = {}) {
   const access = useAccess();
+  const { initialState } = useModel('@@initialState');
+  const currentUserLogin = initialState?.currentUser?.login;
   const canExportExcel = access.canSpfWarehouseStaff || access.canAdmin;
   const actionRef = useRef<ActionType>();
   const [selectedReturn, setSelectedReturn] = useState<WarehouseReturnRow | null>(null);
@@ -135,6 +137,10 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
         message.error('Please select a date range.');
         return;
       }
+      if (!currentUserLogin) {
+        message.error('Current user login is missing. Please sign in again before exporting.');
+        return;
+      }
 
       exportInFlightRef.current = true;
       setExportLoading(true);
@@ -147,6 +153,11 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
             reportPath: getUrlReporting('prod'),
             data: [
               {
+                key: 'login',
+                value: currentUserLogin,
+                type: 'string',
+              },
+              {
                 key: 'StartDate',
                 value: dateRange[0].startOf('day').toISOString(),
                 type: 'dateTime',
@@ -154,7 +165,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
               },
               {
                 key: 'EndDate',
-                value: dateRange[1].endOf('day').toISOString(),
+                value: dateRange[1].add(1, 'day').endOf('day').toISOString(),
                 type: 'dateTime',
               },
               {
@@ -173,7 +184,7 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
         setExportLoading(false);
       }
     },
-    [requestAction],
+    [currentUserLogin, requestAction],
   );
 
   const fetchData = async (params: { current?: number; pageSize?: number }) => {

@@ -1091,11 +1091,11 @@ export function GRDetailSidebar({
                     fileList={uploadedFiles}
                     showUploadList={false}
                     onChange={handleUploadChange}
-                    onRemove={(file) => {
+                    onRemove={(file: UploadFile) => {
                       removeFile(file.uid);
                       return true;
                     }}
-                    onPreview={(file) => void handlePreviewFile(file)}
+                    onPreview={(file: UploadFile) => void handlePreviewFile(file)}
                     accept=".pdf,.doc,.docx,image/*"
                     listType="text"
                   >

@@ -14,8 +14,6 @@ import type { InboundWarehouseMasterApi } from '../data';
 const { Text } = Typography;
 
 const PR_PROCESS_PATH_PREFIX = '/external/data-form/requisition_request_process/';
-const WAREHOUSE_COLLAPSE_LIMIT = 6;
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PODetailSidebarProps {
@@ -51,33 +49,6 @@ function isAgingPOItem(item: POItem, poExpectedDate?: string) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function WarehouseTagList({ warehouses }: { warehouses: string[] }) {
-  const [expanded, setExpanded] = useState(false);
-
-  const hasMore = warehouses.length > WAREHOUSE_COLLAPSE_LIMIT;
-  const visible = expanded ? warehouses : warehouses.slice(0, WAREHOUSE_COLLAPSE_LIMIT);
-
-  return (
-    <Space size={[6, 6]} wrap>
-      {visible.map((warehouseCode) => (
-        <Tag key={warehouseCode} bordered={false}>
-          {warehouseCode}
-        </Tag>
-      ))}
-      {hasMore && (
-        <Button
-          type="link"
-          size="small"
-          style={{ padding: 0, height: 'auto', lineHeight: '1.2' }}
-          onClick={() => setExpanded((prev) => !prev)}
-        >
-          {expanded ? 'See Less' : `+${warehouses.length - WAREHOUSE_COLLAPSE_LIMIT} See More`}
-        </Button>
-      )}
-    </Space>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PODetailSidebar({
@@ -86,7 +57,6 @@ export function PODetailSidebar({
   po,
   onCreateGR,
   onOpenReceiptInNewTab,
-  warehouseOptions = [],
   goodsReceipts = [],
 }: PODetailSidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(open);
@@ -117,15 +87,7 @@ export function PODetailSidebar({
     .filter(Boolean) || [];
 
   const prLinks = currentPO.prLinks || [];
-
-  const poBusinessUnit = currentPO.businessUnit?.trim().toUpperCase();
-  const receiverWarehouses = warehouseOptions
-    .filter((warehouse) => {
-      const warehouseBusinessUnit = warehouse.business_unit?.trim().toUpperCase();
-      return !poBusinessUnit || !warehouseBusinessUnit || warehouseBusinessUnit === poBusinessUnit;
-    })
-    .map((warehouse) => warehouse.warehouse_code?.trim())
-    .filter((warehouseCode): warehouseCode is string => Boolean(warehouseCode));
+  const receiverWarehouse = currentPO.receiverWarehouse?.trim();
 
   const receiptState = getPurchaseOrderReceiptState(currentPO, goodsReceipts);
   const shouldShowCreateInboundReceiving = receiptState.canCreateInboundReceiving;
@@ -266,10 +228,12 @@ export function PODetailSidebar({
                 </Descriptions.Item>
 
                 <Descriptions.Item label="Receiver Warehouse">
-                  {receiverWarehouses.length > 0 ? (
-                    <WarehouseTagList warehouses={receiverWarehouses} />
+                  {receiverWarehouse ? (
+                    <Tag bordered={false} color="processing">
+                      {receiverWarehouse}
+                    </Tag>
                   ) : (
-                    <Text type="secondary">Selected when creating IR</Text>
+                    <Text type="secondary">-</Text>
                   )}
                 </Descriptions.Item>
 

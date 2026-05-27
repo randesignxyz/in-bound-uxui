@@ -314,6 +314,7 @@ function mapInboundGoodsReceiptItem(item: InboundGrItemApi): UpcomingInboundGood
     isMissing: readBoolean(item, 'isMissing', 'is_missing'),
     missingRemark: readValue<string | null>(item, 'missingRemark', 'missing_remark') ?? undefined,
     qcDecision: normalizeQcDecision(readValue<string | null>(item, 'qcDecision', 'qc_decision')),
+    qcRejectedQty: readNumber(item, 'qcRejectedQty', 'qc_rejected_qty') ?? undefined,
     qcRemark: readValue<string | null>(item, 'qcRemark', 'qc_remark') ?? undefined,
   };
 }

@@ -13,6 +13,7 @@ import {
   message,
   Badge,
   Modal,
+  Popconfirm,
   QRCode,
 } from 'antd';
 import { DownOutlined, RightOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
@@ -180,6 +181,9 @@ const clampInt = (v: unknown) => {
   return Math.max(0, Math.floor(n));
 };
 
+const getRequestLineKey = (item: Pick<RequestDetailLineItem, 'requestLineId' | 'no' | 'productId'>) =>
+  `${item.requestLineId || item.productId}:${item.no || ''}`;
+
 const resolveSourceWarehouseCode = (items: RequestDetailLineItem[], itemDetailMap: Record<string, any>) => {
   const sourceWarehouses = new Set(
     items
@@ -343,9 +347,9 @@ export default function RequestedBatchWareHouse({
   const [itemDetailMap, setItemDetailMap] = useState<Record<string, any>>({});
   const [statusOverride, setStatusOverride] = useState<RequestStatus | null>(null);
   const [activityLogs, setActivityLogs] = useState<RequestDetailActivity[]>([]);
-  // Current input quantities (what user is typing right now, not yet saved)
+  // Current input quantities keyed by request line, so duplicate product rows stay independent.
   const [sendingByProductId, setSendingByProductId] = useState<SendingMap>({});
-  // Accumulated draft across multiple Save clicks (not yet committed to a shipment)
+  // Accumulated draft keyed by request line across multiple Save clicks (not yet committed to a shipment).
   const [draftByProductId, setDraftByProductId] = useState<SendingMap>({});
   const [workingItems, setWorkingItems] = useState<RequestDetailLineItem[]>([]);
   // Committed shipment batches (each one is a Save & Pick up result)
@@ -511,9 +515,10 @@ export default function RequestedBatchWareHouse({
     const nextDraft: SendingMap = {};
     setWorkingItems(data.items);
     data.items.forEach((it) => {
-      nextSending[it.productId] = 0;
+      const lineKey = getRequestLineKey(it);
+      nextSending[lineKey] = 0;
       const savedDraft = data.draftItems?.find((draft) => draft.requestLineId === it.requestLineId)?.draftQty ?? 0;
-      nextDraft[it.productId] = clampInt(savedDraft);
+      nextDraft[lineKey] = clampInt(savedDraft);
     });
     setSendingByProductId(nextSending);
     setDraftByProductId(nextDraft);
@@ -765,7 +770,7 @@ export default function RequestedBatchWareHouse({
       uom: it.uom,
     }));
 
-  const getMaxSelectableQty = (item: RequestDetailLineItem, currentDraftQty = clampInt(draftByProductId[item.productId])) => {
+  const getMaxSelectableQty = (item: RequestDetailLineItem, currentDraftQty = clampInt(draftByProductId[getRequestLineKey(item)])) => {
     const requested = clampInt(item.quantityToReturn);
     const sent = clampInt(item.warehouseSentQuantity);
     const remaining = Math.max(0, requested - sent - currentDraftQty);
@@ -782,14 +787,15 @@ export default function RequestedBatchWareHouse({
   const hasIssueQtyValidationError = useMemo(
     () =>
       workingItems.some((item) => {
-        const current = clampInt(sendingByProductId[item.productId]);
+        const lineKey = getRequestLineKey(item);
+        const current = clampInt(sendingByProductId[lineKey]);
         if (current <= 0) return false;
 
         const stock = Number(itemDetailMap[item.productId]?.stock);
         const hasKnownStock = Number.isFinite(stock);
         const requestedQty = clampInt(item.quantityToReturn);
         const sentQty = clampInt(item.warehouseSentQuantity);
-        const draftedQty = clampInt(draftByProductId[item.productId]);
+        const draftedQty = clampInt(draftByProductId[lineKey]);
         const remainingRequestQty = Math.max(0, requestedQty - sentQty - draftedQty);
 
         if (current > remainingRequestQty) return true;
@@ -962,13 +968,14 @@ export default function RequestedBatchWareHouse({
     }
 
     const nextDraft = { ...draftByProductId };
-    Object.entries(sendingByProductId).forEach(([pid, qty]) => {
-      nextDraft[pid] = (nextDraft[pid] || 0) + qty;
+    Object.entries(sendingByProductId).forEach(([lineKey, qty]) => {
+      nextDraft[lineKey] = (nextDraft[lineKey] || 0) + qty;
     });
     const hasUnavailableQty = workingItems.some((item) => {
+      const lineKey = getRequestLineKey(item);
       const stock = Number(itemDetailMap[item.productId]?.stock);
       const hasKnownStock = Number.isFinite(stock);
-      return hasKnownStock && clampInt(nextDraft[item.productId]) > Math.max(0, stock);
+      return hasKnownStock && clampInt(nextDraft[lineKey]) > Math.max(0, stock);
     });
     if (hasUnavailableQty) {
       message.error('Unavailable quantity.');
@@ -977,7 +984,7 @@ export default function RequestedBatchWareHouse({
     const lines = workingItems
       .map((item) => ({
         requestLineId: Number(item.requestLineId || 0),
-        issueQty: Math.min(clampInt(nextDraft[item.productId]), getMaxSelectableQty(item, 0)),
+        issueQty: Math.min(clampInt(nextDraft[getRequestLineKey(item)]), getMaxSelectableQty(item, 0)),
       }))
       .filter((item) => item.requestLineId > 0 && item.issueQty > 0);
 
@@ -1064,13 +1071,14 @@ export default function RequestedBatchWareHouse({
       return;
     }
     const mergedDraft = { ...draftByProductId };
-    Object.entries(sendingByProductId).forEach(([pid, qty]) => {
-      mergedDraft[pid] = (mergedDraft[pid] || 0) + qty;
+    Object.entries(sendingByProductId).forEach(([lineKey, qty]) => {
+      mergedDraft[lineKey] = (mergedDraft[lineKey] || 0) + qty;
     });
     const hasUnavailableQty = workingItems.some((item) => {
+      const lineKey = getRequestLineKey(item);
       const stock = Number(itemDetailMap[item.productId]?.stock);
       const hasKnownStock = Number.isFinite(stock);
-      return hasKnownStock && clampInt(mergedDraft[item.productId]) > Math.max(0, stock);
+      return hasKnownStock && clampInt(mergedDraft[lineKey]) > Math.max(0, stock);
     });
     if (hasUnavailableQty) {
       message.error('Unavailable quantity. Please keep Select Amount within available stock.');
@@ -1080,7 +1088,7 @@ export default function RequestedBatchWareHouse({
       const lines = workingItems
         .map((item) => ({
           requestLineId: Number(item.requestLineId || 0),
-          issueQty: Math.min(clampInt(mergedDraft[item.productId]), getMaxSelectableQty(item, 0)),
+          issueQty: Math.min(clampInt(mergedDraft[getRequestLineKey(item)]), getMaxSelectableQty(item, 0)),
         }))
         .filter((item) => item.requestLineId > 0 && item.issueQty > 0);
       if (lines.length === 0) {
@@ -1164,7 +1172,7 @@ export default function RequestedBatchWareHouse({
       width: 'auto',
       align: 'right' as const,
       render: (_: unknown, record) => {
-        const d = clampInt(draftByProductId[record.productId]);
+        const d = clampInt(draftByProductId[getRequestLineKey(record)]);
         return d > 0 ? <Text type="warning">{d}</Text> : <Text type="secondary">0</Text>;
       },
     },
@@ -1180,7 +1188,8 @@ export default function RequestedBatchWareHouse({
       key: 'selectAmount',
       width: 'auto',
       render: (_: unknown, record) => {
-        const current = clampInt(sendingByProductId[record.productId]);
+        const lineKey = getRequestLineKey(record);
+        const current = clampInt(sendingByProductId[lineKey]);
         const stock = Number(itemDetailMap[record.productId]?.stock);
         const hasKnownStock = Number.isFinite(stock);
         const maxSelectableQty = getMaxSelectableQty(record);
@@ -1189,7 +1198,7 @@ export default function RequestedBatchWareHouse({
         const exceedsAvailableQty = hasKnownStock && current > Math.max(0, stock);
         const requestedQty = clampInt(record.quantityToReturn);
         const sentQty = clampInt(record.warehouseSentQuantity);
-        const draftedQty = clampInt(draftByProductId[record.productId]);
+        const draftedQty = clampInt(draftByProductId[lineKey]);
         const remainingRequestQty = Math.max(0, requestedQty - sentQty - draftedQty);
         const exceedsRemainingRequestQty = current > remainingRequestQty;
         return (
@@ -1204,7 +1213,7 @@ export default function RequestedBatchWareHouse({
               onChange={(v) =>
                 setSendingByProductId((prev) => ({
                   ...prev,
-                  [record.productId]: clampInt(v),
+                  [lineKey]: clampInt(v),
                 }))
               }
             />
@@ -1314,7 +1323,7 @@ export default function RequestedBatchWareHouse({
         </div>
         <Table
           size="small"
-          rowKey="productId"
+          rowKey={(record, index) => `${record.productId}-${record.quantity}-${record.uom || ''}-${index ?? 0}`}
           pagination={false}
           dataSource={shipment.lines}
           columns={[
@@ -1331,7 +1340,7 @@ export default function RequestedBatchWareHouse({
   // ─── Draft Preview Card ──────────────────────────────────────────────────────
   // Shows when there are accumulated draft quantities not yet committed
   const draftLines = workingItems
-    .map((it) => ({ ...it, draftQty: clampInt(draftByProductId[it.productId]) }))
+    .map((it) => ({ ...it, draftQty: clampInt(draftByProductId[getRequestLineKey(it)]) }))
     .filter((it) => it.draftQty > 0);
 
   const draftPreviewCard =
@@ -1355,13 +1364,20 @@ export default function RequestedBatchWareHouse({
                 <Button danger onClick={handleDeleteDraft} loading={draftDeleteLoading}>
                   Delete
                 </Button>
-                <Button
-                  type="primary"
-                  onClick={handleSaveAndPickUp}
+                <Popconfirm
+                  title="Are you sure to save and pick up?"
+                  okText="Yes"
+                  cancelText="No"
+                  onConfirm={handleSaveAndPickUp}
                   disabled={draftDeleteLoading || hasIssueQtyValidationError}
                 >
-                  Save &amp; Pick up
-                </Button>
+                  <Button
+                    type="primary"
+                    disabled={draftDeleteLoading || hasIssueQtyValidationError}
+                  >
+                    Save &amp; Pick up
+                  </Button>
+                </Popconfirm>
               </Space>
             </div>
           ) : null
@@ -1369,7 +1385,7 @@ export default function RequestedBatchWareHouse({
       >
         <Table
           size="small"
-          rowKey="productId"
+          rowKey={(record) => getRequestLineKey(record)}
           pagination={false}
           dataSource={draftLines}
           columns={[
@@ -1403,7 +1419,7 @@ export default function RequestedBatchWareHouse({
             ) : null}
           </div>
         }
-        width="60%"
+        width="100%"
         placement="right"
         onClose={handleClose}
         open={open}
@@ -1420,13 +1436,20 @@ export default function RequestedBatchWareHouse({
             </Space>
             <Space>
               {showSaveAndPickUp ? (
-                <Button
-                  type="primary"
-                  onClick={handleSaveAndPickUp}
+                <Popconfirm
+                  title="Are you sure to save and pick up?"
+                  okText="Yes"
+                  cancelText="No"
+                  onConfirm={handleSaveAndPickUp}
                   disabled={draftDeleteLoading || hasIssueQtyValidationError}
                 >
-                  Save &amp; Pick up
-                </Button>
+                  <Button
+                    type="primary"
+                    disabled={draftDeleteLoading || hasIssueQtyValidationError}
+                  >
+                    Save &amp; Pick up
+                  </Button>
+                </Popconfirm>
               ) : null}
             </Space>
           </div>
@@ -1490,7 +1513,7 @@ export default function RequestedBatchWareHouse({
         </Title>
   <Table<RequestDetailLineItem>
     size="small"
-    rowKey="no"
+    rowKey={(record) => getRequestLineKey(record)}
     tableLayout="auto"
     pagination={false}
     columns={columns}

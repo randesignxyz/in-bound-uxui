@@ -257,6 +257,7 @@ export interface RequestDetailActivity {
   date?: string;
   by?: string;
   dot?: 'pending' | 'done';
+  requestLineId?: number;
 }
 
 interface PickupBatch {
@@ -297,6 +298,10 @@ export interface DrawerBatchReturnItemsProps {
     lines: Array<{ requestLineId: number; approvedQty: number; editedAt?: string; rejected?: boolean; rejectRemark?: string }>;
     remark?: string;
   }) => Promise<void>;
+  onEditPendingRequestLines?: (payload: {
+    id: number;
+    lines: Array<{ requestLineId: number; requestedQty: number; editedAt?: string }>;
+  }) => Promise<void>;
   onReject?: (payload: { id: number; remark?: string }) => Promise<void>;
   onConfirmPickup?: (id: number) => Promise<void>;
   onResubmitRequest?: (detail: RequestDetailData) => void;
@@ -308,6 +313,7 @@ export default function RequestedBatchDrawer({
   data: propData,
   onClose,
   onApprove,
+  onEditPendingRequestLines,
   onReject,
   onResubmitRequest,
 }: DrawerBatchReturnItemsProps) {
@@ -893,19 +899,35 @@ export default function RequestedBatchDrawer({
     }
   };
 
-  const confirmEditQuantity = () => {
+  const confirmEditQuantity = async () => {
     if (!editingItem) return;
     const productId = editingItem.productId;
     const lineKey = getRequestLineKey(editingItem);
-    const requestedQty = Number(editingItem.requestedQty ?? editingItem.total ?? 0);
     const nextQty = Math.max(1, Number(editingQuantity) || 1);
-    if (requestedQty > 0 && nextQty > requestedQty) {
-      message.warning('Approved quantity cannot be higher than requested quantity.');
-      return;
-    }
     const originalQty = Number(data.items.find((item) => getRequestLineKey(item) === lineKey)?.quantityToReturn || 0);
     const isEdited = nextQty !== originalQty;
     const editedAt = new Date().toISOString();
+
+    if (isEdited && effectiveStatus === 'pending' && onEditPendingRequestLines && data.id && editingItem.requestLineId) {
+      setActionLoading(true);
+      try {
+        await onEditPendingRequestLines({
+          id: data.id,
+          lines: [
+            {
+              requestLineId: editingItem.requestLineId,
+              requestedQty: nextQty,
+              editedAt,
+            },
+          ],
+        });
+      } catch (_error) {
+        message.error('Failed to save edited amount.');
+        setActionLoading(false);
+        return;
+      }
+      setActionLoading(false);
+    }
 
     setQuantityOverrides((prev) => {
       const next = { ...prev };
@@ -936,7 +958,6 @@ export default function RequestedBatchDrawer({
       }
       return next;
     });
-    // Dynamic audit stays backend-driven; this drawer only stores editedAt for the later approve payload.
     setEditingItem(null);
     message.success(
       isEdited
@@ -1235,6 +1256,7 @@ export default function RequestedBatchDrawer({
             ellipsis: true,
             render: (_: unknown, record: RequestDetailLineItem) => {
               const marked = itemMarks[getRequestLineKey(record)];
+              const isEdited = Boolean(editedItems[getRequestLineKey(record)]);
               const isPicked = pickedProductIds.has(record.productId);
 
               if (marked) {
@@ -1247,9 +1269,10 @@ export default function RequestedBatchDrawer({
                     <Button
                       type="text"
                       size="small"
-                      icon={<EditOutlined />}
+                      icon={<EditOutlined style={{ color: isEdited ? '#faad14' : undefined }} />}
+                      style={isEdited ? { color: '#faad14', backgroundColor: '#fff7e6' } : undefined}
                       onClick={() => openEditQuantity(record)}
-                      title="Edit Amount"
+                      title={isEdited ? 'Edit Amount (edited)' : 'Edit Amount'}
                     >
                     </Button>
                     <Button
@@ -1888,25 +1911,24 @@ export default function RequestedBatchDrawer({
         title="Edit Requested Amount"
         open={Boolean(editingItem)}
         onCancel={() => setEditingItem(null)}
-        onOk={confirmEditQuantity}
+        onOk={() => void confirmEditQuantity()}
         okText="Save"
+        confirmLoading={actionLoading}
       >
         <Space direction="vertical" style={{ width: '100%' }}>
           <Text>
             Product: <Text strong>{editingItem?.productId}</Text>
           </Text>
           <Text type="secondary">
-            Requested quantity: {Number(editingItem?.requestedQty ?? editingItem?.total ?? 0)}
+            Current requested quantity: {Number(editingItem?.requestedQty ?? editingItem?.total ?? 0)}
           </Text>
           <InputNumber
             min={1}
-            max={Number(editingItem?.requestedQty ?? editingItem?.total ?? 0) || undefined}
             style={{ width: '100%' }}
             value={editingQuantity}
             onChange={(value) => {
-              const requestedQty = Number(editingItem?.requestedQty ?? editingItem?.total ?? 0);
               const nextValue = Math.max(1, Number(value) || 1);
-              setEditingQuantity(requestedQty > 0 ? Math.min(nextValue, requestedQty) : nextValue);
+              setEditingQuantity(nextValue);
             }}
           />
         </Space>

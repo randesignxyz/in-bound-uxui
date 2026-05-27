@@ -23,7 +23,7 @@ export interface SparePart {
 export interface SparePartPickedLine {
   itemId: string;
   requestLineId: number;
-  fulfillmentLineId: number;
+  fulfillmentLineId: number | string;
   isClosed: boolean;
   partName: string;
   uom: string;
@@ -104,7 +104,7 @@ export interface SparePartReturnListItem {
   requestedBy?: string;
   approvedBy?: string;
   fulfillmentNo?: string;
-  fulfillmentLineId?: number;
+  fulfillmentLineId?: number | string;
   warehouseCode?: string;
   warehouseName?: string;
   pickupLocation?: string;
@@ -330,45 +330,47 @@ export const mapToFlattenedRowsMySparePartList = (
 ): SparePartReturnListItem[] => {
   return items.flatMap((request) =>
     request.shipping.flatMap((shipment) =>
-      shipment.lines.map((line) => ({
-        // unique row key
-        id: `${request.requestId}-${shipment.fulfillmentNo}-${line.fulfillmentLineId}`,
-        // mapped to old field names to match existing table columns
-        part_number:              line.itemId,
-        spare_part_name:          line.partName,
-        request_id:               request.requestNo,
-        quantity:                 line.requestedQty,
-        UoM:                      line.uom,
-        receiving_from_warehouseName : shipment.warehouseName,
-        receiving_from_warehouse:   shipment.warehouseCode,
-        businessUnit:             line.businessUnit,
-        requested_date:           formatDate(request.requestedAt),
-        requested_pickup_date:    formatDate(shipment.pickedUpAt),
-        // extra fields for drawer/modal
-        requestId:                request.requestId,
-        requestLineId:            line.requestLineId,
-        requestNo:                request.requestNo,
-        requestedBy:              request.requestedBy,
-        approvedBy:               request.approvedBy,
-        fulfillmentNo:            shipment.fulfillmentNo,
-        fulfillmentLineId:        line.fulfillmentLineId,
-        isClosed:                 line.isClosed,
-        warehouseCode:            shipment.warehouseCode,
-        warehouseName:            shipment.warehouseName,
-        pickupLocation:           shipment.pickupLocation,
-        itemId:                   line.itemId,
-        imageId:                   line.imageId,
-        deliveredQty:             line.deliveredQty,
-        category:                 typeof line.category === 'string' ? line.category : line.category?.category_name || '-',
-        pendingReturnQty:         line.pendingReturnQty ?? 0,
-        returnedQty:              line.returnedQty ?? 0,
-        remainingQty:             line.remainingQty,
-        availableQty:             Math.max(
-          0,
-          (line.remainingQty ?? Math.max(0, line.deliveredQty - (line.pendingReturnQty ?? 0) - (line.returnedQty ?? 0))) -
-            (line.pendingReturnQty ?? 0),
-        ),
-      }))
+      shipment.lines.map((line) => {
+        const pendingReturnQty = line.pendingReturnQty ?? 0;
+        const returnedQty = line.returnedQty ?? 0;
+        const remainingQty = line.remainingQty ?? Math.max(0, line.deliveredQty - returnedQty);
+
+        return {
+          // unique row key
+          id: `${request.requestId}-${shipment.fulfillmentNo}-${line.fulfillmentLineId}`,
+          // mapped to old field names to match existing table columns
+          part_number:              line.itemId,
+          spare_part_name:          line.partName,
+          request_id:               request.requestNo,
+          quantity:                 line.requestedQty,
+          UoM:                      line.uom,
+          receiving_from_warehouseName : shipment.warehouseName,
+          receiving_from_warehouse:   shipment.warehouseCode,
+          businessUnit:             line.businessUnit,
+          requested_date:           formatDate(request.requestedAt),
+          requested_pickup_date:    formatDate(shipment.pickedUpAt),
+          // extra fields for drawer/modal
+          requestId:                request.requestId,
+          requestLineId:            line.requestLineId,
+          requestNo:                request.requestNo,
+          requestedBy:              request.requestedBy,
+          approvedBy:               request.approvedBy,
+          fulfillmentNo:            shipment.fulfillmentNo,
+          fulfillmentLineId:        line.fulfillmentLineId,
+          isClosed:                 line.isClosed,
+          warehouseCode:            shipment.warehouseCode,
+          warehouseName:            shipment.warehouseName,
+          pickupLocation:           shipment.pickupLocation,
+          itemId:                   line.itemId,
+          imageId:                   line.imageId,
+          deliveredQty:             line.deliveredQty,
+          category:                 typeof line.category === 'string' ? line.category : line.category?.category_name || '-',
+          pendingReturnQty,
+          returnedQty,
+          remainingQty,
+          availableQty:             Math.max(0, remainingQty - pendingReturnQty),
+        };
+      })
     )
   );
 };

@@ -134,6 +134,7 @@ type IssueDetailDto = {
     date?: string | null;
     by?: string | null;
     dot?: 'pending' | 'done' | string | null;
+    requestLineId?: number | null;
   }>;
 };
 
@@ -203,6 +204,15 @@ type ApproveRequestPayload = {
   remark?: string;
 };
 
+type UpdatePendingRequestLinesPayload = {
+  id: number;
+  lines: Array<{
+    requestLineId: number;
+    requestedQty: number;
+    editedAt?: string;
+  }>;
+};
+
 type RejectRequestPayload = {
   id: number;
   remark?: string;
@@ -263,6 +273,12 @@ const SparePartRequestAction = {
   approveRequest: (payload: ApproveRequestPayload): ServiceApiType<any> => ({
     type: 'EXEC',
     actionName: 'approve-spare-part-request',
+    endpoint: 'PROD',
+    payload,
+  }),
+  updatePendingRequestLines: (payload: UpdatePendingRequestLinesPayload): ServiceApiType<any> => ({
+    type: 'EXEC',
+    actionName: 'update-pending-spare-part-request-lines',
     endpoint: 'PROD',
     payload,
   }),
@@ -615,7 +631,7 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     requestedQty: Number(item.requestedQty || 0),
     quantityToReturn:
       request.requestStatus === 'pending'
-        ? Number(item.requestedQty || 0)
+        ? Number(item.approvedQty || item.requestedQty || 0)
         : Number(item.approvedQty ?? 0),
     usedQuantity: 0,
     total: Number(item.requestedQty || 0),
@@ -631,7 +647,11 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     approvalState:
       request.requestStatus !== 'pending' && Number(item.approvedQty ?? 0) === 0
         ? 'rejected'
-        : undefined,
+        : request.requestStatus === 'pending' &&
+            Number(item.approvedQty || 0) > 0 &&
+            Number(item.approvedQty || 0) !== Number(item.requestedQty || 0)
+          ? 'edited'
+          : undefined,
   }));
 
   return {
@@ -656,6 +676,13 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
   const rawStatus = String(item.requestStatus || '').trim().toUpperCase();
   const normalizedPickupStatus = String(item.pickupStatus || '').trim().toLowerCase();
   const activityDtos = item.activities || [];
+  const productRowCount = new Map<string, number>();
+  (item.items || []).forEach((line) => {
+    const productId = line.sparePartId || line.sparePartCode;
+    productRowCount.set(productId, (productRowCount.get(productId) || 0) + 1);
+  });
+  const rejectedActivityByLineId = new Map<number, { by?: string; remark?: string }>();
+  const editedActivityByLineId = new Map<number, { by?: string; remark?: string }>();
   const rejectedActivityByProductId = new Map<string, { by?: string; remark?: string }>();
   const editedActivityByProductId = new Map<string, { by?: string; remark?: string }>();
 
@@ -666,6 +693,13 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     if (label === 'item rejected') {
       const match = description.match(/^(.+?)\s+rejected(?::\s*(.*))?$/i);
       const productId = match?.[1]?.trim();
+      const requestLineId = Number(activity.requestLineId || 0);
+      if (requestLineId) {
+        rejectedActivityByLineId.set(requestLineId, {
+          by: activity.by?.trim() || undefined,
+          remark: match?.[2]?.trim() || description,
+        });
+      }
       if (productId) {
         rejectedActivityByProductId.set(productId, {
           by: activity.by?.trim() || undefined,
@@ -677,8 +711,16 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     if (label === 'item edited') {
       const match =
         description.match(/edited\s+(.+?)\s+approved quantity/i) ||
+        description.match(/edited\s+(.+?)\s+requested quantity/i) ||
         description.match(/^(.+?)\s+requested quantity updated/i);
       const productId = match?.[1]?.trim();
+      const requestLineId = Number(activity.requestLineId || 0);
+      if (requestLineId) {
+        editedActivityByLineId.set(requestLineId, {
+          by: activity.by?.trim() || undefined,
+          remark: description,
+        });
+      }
       if (productId) {
         editedActivityByProductId.set(productId, {
           by: activity.by?.trim() || undefined,
@@ -708,21 +750,29 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
 
   const items: RequestDetailLineItem[] = (item.items || []).map((line, index) => {
     const productId = line.sparePartId || line.sparePartCode;
+    const requestLineId = Number(line.requestLineId || 0);
     const requestedQty = Number(line.requestedQty ?? line.approvedQty ?? 0);
     const approvedQty = Number(line.approvedQty ?? 0);
-    const rejectedActivity = rejectedActivityByProductId.get(productId);
-    const editedActivity = editedActivityByProductId.get(productId);
+    const canFallbackToProductActivity = (productRowCount.get(productId) || 0) === 1;
+    const rejectedActivity =
+      rejectedActivityByLineId.get(requestLineId) ||
+      (canFallbackToProductActivity ? rejectedActivityByProductId.get(productId) : undefined);
+    const editedActivity =
+      editedActivityByLineId.get(requestLineId) ||
+      (canFallbackToProductActivity ? editedActivityByProductId.get(productId) : undefined);
     const isRejectedLine = rawStatus !== 'PENDING' && approvedQty === 0;
+    const hasQuantityEdit = approvedQty > 0 && approvedQty !== requestedQty;
+    const pendingEditedQty = rawStatus === 'PENDING' && hasQuantityEdit ? approvedQty : requestedQty;
 
     return {
       no: index + 1,
-      requestLineId: Number(line.requestLineId || 0),
+      requestLineId,
       imageId: Array.isArray(line.imageId) ? line.imageId[0] : line.imageId || undefined,
       productId,
       requestId: item.requestNo || '',
       itemName: line.sparePartName,
       requestedQty,
-      quantityToReturn: rawStatus === 'PENDING' ? requestedQty : approvedQty,
+      quantityToReturn: rawStatus === 'PENDING' ? pendingEditedQty : approvedQty,
       usedQuantity: confirmedPickedQtyByLineId.get(Number(line.requestLineId || 0)) || 0,
       total: requestedQty,
       warehouseSentQuantity: Number(line.issuedQty || 0),
@@ -734,7 +784,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       businessUnit: line.unit || 'pcs',
       uom: line.unit || 'pcs',
       description: line.remark || undefined,
-      approvalState: isRejectedLine ? 'rejected' : editedActivity ? 'edited' : undefined,
+      approvalState: isRejectedLine ? 'rejected' : editedActivity || hasQuantityEdit ? 'edited' : undefined,
       approvalBy: rejectedActivity?.by || editedActivity?.by,
       approvalRemark: rejectedActivity?.remark || editedActivity?.remark,
     };
@@ -916,6 +966,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       date: activity.date || item.requestedDate,
       by: activity.by?.trim() ? activity.by.trim() : undefined,
       dot: activity.dot === 'pending' ? 'pending' : 'done',
+      requestLineId: Number(activity.requestLineId || 0) || undefined,
     })),
     // activities:
     //   (item.activities || []).length > 0
@@ -965,6 +1016,13 @@ export const SparePartRequestService = (requestAction: RequestActions) => ({
   approveRequest: async (payload: ApproveRequestPayload): Promise<MyRequestItem> => {
     const response = (await singleRequest<MyRequestDto>(
       SparePartRequestAction.approveRequest(payload),
+    )(requestAction)) as MyRequestDto;
+
+    return mapMyRequestItem(response);
+  },
+  updatePendingRequestLines: async (payload: UpdatePendingRequestLinesPayload): Promise<MyRequestItem> => {
+    const response = (await singleRequest<MyRequestDto>(
+      SparePartRequestAction.updatePendingRequestLines(payload),
     )(requestAction)) as MyRequestDto;
 
     return mapMyRequestItem(response);

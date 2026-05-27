@@ -80,16 +80,18 @@ export default function FormModalSelectItems({
       const availableQty = toSafeInt(item.availableQty);
       const totalHandled = qtyToReturn + qtyUsed;
 
-      // Handle comma-separated fulfillmentLineIds (e.g., "1018,1019")
-      const fulfillmentLineIdStr = String(item.fulfillmentLineId).trim();
+      const fulfillmentLineIdStr = String(item.fulfillmentLineId ?? "").trim();
       if (fulfillmentLineIdStr) {
-        const firstId = fulfillmentLineIdStr.split(',')[0].trim();
-        if (Number.isFinite(Number(firstId))) {
-          if (seenFulfillmentLineIds.has(fulfillmentLineIdStr)) {
-            return `Duplicate fulfillment line selected: ${fulfillmentLineIdStr}.`;
-          }
-          seenFulfillmentLineIds.add(fulfillmentLineIdStr);
+        if (fulfillmentLineIdStr.includes(",")) {
+          return "Selected item contains multiple picked lines. Please refresh and select the picked line again.";
         }
+        if (!Number.isFinite(Number(fulfillmentLineIdStr))) {
+          return "Invalid fulfillment line id in selected items.";
+        }
+        if (seenFulfillmentLineIds.has(fulfillmentLineIdStr)) {
+          return `Duplicate fulfillment line selected: ${fulfillmentLineIdStr}.`;
+        }
+        seenFulfillmentLineIds.add(fulfillmentLineIdStr);
       }
 
       if (totalHandled <= 0) {

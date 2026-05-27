@@ -465,6 +465,14 @@ export default function MyRequestListview({
           reloadTable();
           onDataChanged?.();
         }}
+        onEditPendingRequestLines={async (payload) => {
+          await services.updatePendingRequestLines(payload);
+          if (selectedRequest?.id === payload.id) {
+            setSelectedRequestDetail(await services.getRequestDetail(payload.id));
+          }
+          reloadTable();
+          onDataChanged?.();
+        }}
         onReject={async ({ id, remark }) => {
           await services.rejectRequest({ id, remark });
           setSelectedRequest((prev) =>

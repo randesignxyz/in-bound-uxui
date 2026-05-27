@@ -47,7 +47,7 @@ export default function MySparePartList() {
   }>({ visible: false });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<SparePartReturnListItem | null>(null);
-  const [updatingFulfillmentLineId, setUpdatingFulfillmentLineId] = useState<number | null>(null);
+  const [updatingFulfillmentLineId, setUpdatingFulfillmentLineId] = useState<string | null>(null);
   const radioOptions = SPARE_PART_RETURN_RADIO_OPTIONS;
   const selectedWarehouseLabel =
     radioValue.length === 0
@@ -73,19 +73,29 @@ export default function MySparePartList() {
     setDrawerOpen(true);
   };
 
+  const parseSingleFulfillmentLineId = (value: unknown): number | null => {
+    const rawValue = String(value ?? '').trim();
+    if (!rawValue || rawValue.includes(',')) {
+      return null;
+    }
+    const lineId = Number(rawValue);
+    return Number.isInteger(lineId) && lineId > 0 ? lineId : null;
+  };
+
   const handleTogglePickedItemState = async (record: SparePartReturnListItem) => {
-    if (!record.fulfillmentLineId) {
+    const fulfillmentLineId = parseSingleFulfillmentLineId(record.fulfillmentLineId);
+    if (!fulfillmentLineId) {
       message.error('Fulfillment line id is missing');
       return;
     }
 
-    setUpdatingFulfillmentLineId(record.fulfillmentLineId);
+    setUpdatingFulfillmentLineId(String(record.fulfillmentLineId));
     try {
       if (record.isClosed) {
-        await SparePartReturnAPI(requestAction).open_picked_item([record.fulfillmentLineId]);
+        await SparePartReturnAPI(requestAction).open_picked_item([fulfillmentLineId]);
         message.success('Picked item opened successfully');
       } else {
-        await SparePartReturnAPI(requestAction).close_picked_item([record.fulfillmentLineId]);
+        await SparePartReturnAPI(requestAction).close_picked_item([fulfillmentLineId]);
         message.success('Picked item closed successfully');
       }
 
@@ -136,13 +146,12 @@ export default function MySparePartList() {
 
     const seenFulfillmentLineIds = new Set<string>();
     for (const item of normalizedItems) {
-      // Handle comma-separated fulfillmentLineIds (e.g., "1018,1019")
-      const fulfillmentLineIdStr = String(item.source.fulfillmentLineId).trim();
-      const fulfillmentLineId = fulfillmentLineIdStr.split(',')[0].trim(); // Get first ID for validation
+      const fulfillmentLineIdStr = String(item.source.fulfillmentLineId ?? '').trim();
+      const fulfillmentLineId = parseSingleFulfillmentLineId(fulfillmentLineIdStr);
       const totalHandled = item.quantity + item.quantityUsed;
 
-      if (!fulfillmentLineId || isNaN(Number(fulfillmentLineId))) {
-        message.error('Invalid fulfillment line id in selected items');
+      if (!fulfillmentLineId) {
+        message.error('Invalid fulfillment line id in selected items. Please refresh and select the picked line again.');
         return;
       }
 
@@ -168,9 +177,10 @@ export default function MySparePartList() {
     const requestPayload = {
       remark: payload.remark,
       items: normalizedItems.map((item) => {
-        // Parse comma-separated fulfillmentLineIds and send the first one
-        const fulfillmentLineIdStr = String(item.source.fulfillmentLineId).trim();
-        const fulfillmentLineId = Number(fulfillmentLineIdStr.split(',')[0].trim());
+        const fulfillmentLineId = parseSingleFulfillmentLineId(item.source.fulfillmentLineId);
+        if (!fulfillmentLineId) {
+          throw new Error('Invalid fulfillment line id in selected items');
+        }
         return {
           productId: item.source.itemId ?? item.source.part_number,
           originalRequestId: item.source.requestId,
@@ -483,8 +493,8 @@ export default function MySparePartList() {
                         checked={!record.isClosed}
                         checkedChildren="Open"
                         unCheckedChildren="Closed"
-                        loading={updatingFulfillmentLineId === record.fulfillmentLineId}
-                        disabled={updatingFulfillmentLineId === record.fulfillmentLineId}
+                        loading={updatingFulfillmentLineId === String(record.fulfillmentLineId)}
+                        disabled={updatingFulfillmentLineId === String(record.fulfillmentLineId)}
                       />
                     </Tooltip>
                   </Popconfirm>

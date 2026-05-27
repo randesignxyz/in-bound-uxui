@@ -72,6 +72,7 @@ type IssueHistoryLineDto = {
   sparePartName: string;
   deliveredQty: number;
   unit: string;
+  itemCondition?: string | null;
 };
 
 type IssueHistoryDto = {
@@ -119,6 +120,7 @@ type IssueDetailDto = {
   requestedDate?: string;
   requestStatus: BackendRequestStatus;
   remark?: string | null;
+  warehouseRemark?: string | null;
   totalRequestedQty?: number;
   totalApprovedQty?: number;
   totalIssuedQty?: number;
@@ -878,6 +880,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
         description: 'Requester confirmed pickup',
         date: entry.pickupConfirmedAt,
         by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+        remark: entry.note?.trim() || undefined,
         dot: 'done',
       });
 
@@ -890,6 +893,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
           description: `Picked ${Number(entry.totalIssuedQty || 0)} item(s)`,
           date: entry.pickupConfirmedAt,
           by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+          remark: entry.note?.trim() || undefined,
           dot: 'done',
         });
       }
@@ -902,6 +906,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       description: 'Picked up all requested items',
       date: finalConfirmedEntry.pickupConfirmedAt || finalConfirmedEntry.issuedAt || item.requestedDate,
       by: finalConfirmedEntry.pickupConfirmedBy || finalConfirmedEntry.warehouseStaffId || undefined,
+      remark: finalConfirmedEntry.note?.trim() || undefined,
       dot: 'done',
     });
   }
@@ -912,6 +917,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       batchNo: index + 1,
       createdAt: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate || '',
       pickedBy: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+      remark: entry.note?.trim() || undefined,
       pickedItemsCount: Number(entry.totalIssuedQty || 0),
       items: (entry.items || []).map((historyLine, historyIndex) => {
         const requestLineId = Number(historyLine.requestLineId || 0);
@@ -944,6 +950,29 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
         };
       }),
     }));
+  const getPickupActivityRemark = (activity: {
+    label?: string | null;
+    description?: string | null;
+    date?: string | null;
+  }) => {
+    const label = String(activity.label || '').toLowerCase();
+    const description = String(activity.description || '').toLowerCase();
+    const isPickupActivity =
+      label.includes('pick') ||
+      label.includes('partial') ||
+      label.includes('complete') ||
+      description.includes('pick');
+
+    if (!isPickupActivity) return undefined;
+
+    const activityTime = activity.date ? new Date(activity.date).getTime() : Number.NaN;
+    const matchedEntry = confirmedHistory.find((entry) => {
+      const confirmedTime = entry.pickupConfirmedAt ? new Date(entry.pickupConfirmedAt).getTime() : Number.NaN;
+      return Number.isFinite(activityTime) && Number.isFinite(confirmedTime) && activityTime === confirmedTime;
+    });
+
+    return matchedEntry?.note?.trim() || (confirmedHistory.length === 1 ? confirmedHistory[0].note?.trim() : undefined);
+  };
 
   return {
     id: Number(item.id || 0),
@@ -955,6 +984,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     totalItems: Number(item.totalRequestedQty || items.length),
     receivedItems: confirmedPickedQty,
     remark: item.remark || '',
+    warehouseRemark: item.warehouseRemark || undefined,
     requestedBy: item.requesterId || undefined,
     approvedBy: item.approverId || undefined,
     approverRemark: extractApproverRemark(item.managerRemark),
@@ -965,6 +995,10 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       description: String(activity.description || '').trim(),
       date: activity.date || item.requestedDate,
       by: activity.by?.trim() ? activity.by.trim() : undefined,
+      remark:
+        (activity as RequestDetailActivity).remark?.trim() ||
+        getPickupActivityRemark(activity) ||
+        undefined,
       dot: activity.dot === 'pending' ? 'pending' : 'done',
       requestLineId: Number(activity.requestLineId || 0) || undefined,
     })),

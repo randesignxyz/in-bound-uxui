@@ -256,6 +256,7 @@ export interface RequestDetailActivity {
   description: string;
   date?: string;
   by?: string;
+  remark?: string;
   dot?: 'pending' | 'done';
   requestLineId?: number;
 }
@@ -264,6 +265,7 @@ interface PickupBatch {
   batchNo: number;
   createdAt: string;
   pickedBy?: string;
+  remark?: string;
   items: RequestDetailLineItem[];
   pickedItemsCount?: number;
 }
@@ -278,6 +280,7 @@ export interface RequestDetailData {
   totalItems: number;
   receivedItems?: number;
   remark?: string;
+  warehouseRemark?: string;
   approverRemark?: string;
   requestedBy?: string;
   approvedBy?: string;
@@ -530,6 +533,7 @@ export default function RequestedBatchDrawer({
             batchNo,
             createdAt: a.date ?? data.requestDate,
             pickedBy: a.by ?? data.requestedBy ?? 'Requester',
+            remark: a.remark,
             items: [],
             pickedItemsCount: pickedItemsCount ?? undefined,
           });
@@ -1805,6 +1809,12 @@ export default function RequestedBatchDrawer({
                     rowKey="productId"
                     tableLayout="fixed"
                     pagination={false}
+                    title={() => (
+                      <Text type="secondary">
+                        Confirmed by: {pickupBatch.pickedBy || '-'}
+                        {pickupBatch.remark?.trim() ? ` ("${pickupBatch.remark.trim()}")` : ''}
+                      </Text>
+                    )}
                     dataSource={pickupBatch.items}
                     columns={[
                       { title: 'Product ID', dataIndex: 'productId' },
@@ -1843,7 +1853,10 @@ export default function RequestedBatchDrawer({
                       <br />
                       <Text type="secondary">{a.description}</Text>
                       <br />
-                      <Text type="secondary">By: {a.by || '-'}</Text>
+                      <Text type="secondary">
+                        By: {a.by || '-'}
+                        {a.remark?.trim() ? ` ("${a.remark.trim()}")` : ''}
+                      </Text>
                     </div>
                     <Text type="secondary">{formatDateTime(a.date)}</Text>
                   </div>

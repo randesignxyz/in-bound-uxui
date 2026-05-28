@@ -309,7 +309,7 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
                 { value: 'Ready To Pick Up', label: 'Ready To Pick Up' },
                 { value: 'Partial', label: 'Partial' },
                 { value: 'Completed', label: 'Completed' },
-                { value: 'Rejected', label: 'Rejected' },
+                // { value: 'Rejected', label: 'Rejected' },
               ]}
             />
             <Select

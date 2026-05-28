@@ -1221,6 +1221,9 @@ export default function RequestedBatchWareHouse({
         const draftedQty = clampInt(draftByProductId[lineKey]);
         const remainingRequestQty = Math.max(0, requestedQty - sentQty - draftedQty);
         const exceedsRemainingRequestQty = current > remainingRequestQty;
+        if (isFullySent) {
+          return <Text type="secondary">-</Text>;
+        }
         return (
           <div style={{ width: '100%', maxWidth: 100 }}>
             <InputNumber
@@ -1270,6 +1273,11 @@ export default function RequestedBatchWareHouse({
       render: (_: unknown, record) => {
         const lineKey = getRequestLineKey(record);
         const current = conditionByProductId[lineKey] || 'NEW';
+        const isFullySent = getMaxSelectableQty(record) <= 0;
+
+        if (isFullySent) {
+          return <Text type="secondary">-</Text>;
+        }
 
         return (
           <Radio.Group

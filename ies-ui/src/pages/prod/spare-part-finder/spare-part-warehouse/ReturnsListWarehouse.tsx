@@ -310,9 +310,9 @@ export default function ReturnsListWarehouse({ onUpdate }: ReturnsListWarehouseP
             onChange={(v) => { setStatusFilter(v); actionRef.current?.reloadAndRest?.(); }}
             style={{ width: 180 }}
             options={[
-              { value: 'PENDING', label: 'Pending' },
+              { value: 'APPROVED', label: 'Pending' },
               { value: 'all',       label: 'All Status' },
-              { value: 'APPROVED',  label: 'Approved' },
+              // { value: 'APPROVED',  label: 'Approved' },
               { value: 'PARTIAL_RETURN', label: 'Partially Returned' },
               { value: 'COMPLETED', label: 'Completed' },
             ]}

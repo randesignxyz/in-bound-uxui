@@ -22,6 +22,10 @@ export const ProdPaths = {
 
 export default () => {
   const access = useAccess();
+  const inboundLink =
+    access.canAccessInboundProcurement && !access.canAccessUpcomingInboundOperationsMenuItem
+      ? `${ProdPaths.upcomingInbound}/procurement/list`
+      : `${ProdPaths.upcomingInbound}/list`;
 
   const itemList = [
     {
@@ -45,7 +49,7 @@ export default () => {
       name: 'Inventory Inbound',
       description: 'Upcoming Inbound Receipt & PO Tracking',
       icon: transferIcon,
-      link: `${ProdPaths.upcomingInbound}/list`,
+      link: inboundLink,
       visible: access.canAccessUpcomingInboundMenuItem,
     },
     // {

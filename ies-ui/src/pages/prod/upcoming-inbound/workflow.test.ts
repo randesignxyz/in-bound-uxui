@@ -1,7 +1,9 @@
 import {
   buildReceiptTimelineActivities,
+  buildReceiptExceptionReason,
   getExceptionQueueReceipts,
   getPurchaseOrderReceiptState,
+  hasReceiptDiscrepancy,
   type GoodsReceipt,
   type GRItem,
   getPurchaseOrderVendorOptions,
@@ -232,6 +234,28 @@ describe('groupReceiptItemsByPO', () => {
       totalReceiveQty: 5000,
     });
     expect(groups[0].items.map((item) => item.batchNumber)).toEqual(['BATCH-001', 'BATCH-002']);
+  });
+});
+
+describe('receipt discrepancy helpers', () => {
+  it('sums split batch rows before deciding whether a PO line is short', () => {
+    const items = [
+      createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 300, receiveQty: 100, batchNumber: 'BATCH-001' }),
+      createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 300, receiveQty: 200, batchNumber: 'BATCH-002' }),
+    ];
+
+    expect(hasReceiptDiscrepancy(items)).toBe(false);
+    expect(buildReceiptExceptionReason(items)).toBe('');
+  });
+
+  it('reports the remaining short qty across split batch rows', () => {
+    const items = [
+      createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 300, receiveQty: 100, batchNumber: 'BATCH-001' }),
+      createItem({ poNumber: 'PO-001', code: 'ITEM-001', poQty: 300, receiveQty: 120, batchNumber: 'BATCH-002' }),
+    ];
+
+    expect(hasReceiptDiscrepancy(items)).toBe(true);
+    expect(buildReceiptExceptionReason(items)).toBe('ITEM-001: short by 80 KG');
   });
 });
 

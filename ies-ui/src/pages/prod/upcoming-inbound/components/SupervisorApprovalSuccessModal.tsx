@@ -1,5 +1,5 @@
-import { CheckCircleFilled } from '@ant-design/icons';
-import { Descriptions, Modal, Tag, Typography } from 'antd';
+import { CheckOutlined, InboxOutlined, UserOutlined } from '@ant-design/icons';
+import { Button, Modal, Tag, Typography } from 'antd';
 import type { GoodsReceipt } from '../workflow';
 
 const { Text, Title } = Typography;
@@ -46,47 +46,152 @@ export function SupervisorApprovalSuccessModal({
       title={null}
       open={open}
       onCancel={onClose}
-      onOk={onClose}
-      okText="OK"
-      cancelButtonProps={{ style: { display: 'none' } }}
-      width={620}
+      footer={null}
+      width={640}
       centered
       destroyOnClose
+      bodyStyle={{ padding: 0 }}
+      modalRender={(node) => (
+        <div style={{ borderRadius: 12, overflow: 'hidden' }}>{node}</div>
+      )}
     >
-      <div style={{ textAlign: 'center', padding: '8px 0 24px' }}>
-        <CheckCircleFilled style={{ fontSize: 72, color: '#52c41a', marginBottom: 16 }} />
-        <Title level={4} style={{ margin: 0 }}>
+      {/* Success Result Header */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 40px 16px', textAlign: 'center' }}>
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            backgroundColor: '#52c41a',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 16,
+            boxShadow: '0 10px 15px -3px rgba(82, 196, 26, 0.2)',
+          }}
+        >
+          <CheckOutlined style={{ fontSize: 32, color: '#ffffff', fontWeight: 700 }} />
+        </div>
+        <Title level={3} style={{ margin: '0 0 4px', fontWeight: 600, color: '#1b1c1c' }}>
           Approval Successful
         </Title>
-        <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
-          Inbound receiving {data.receivingNumber || '-'} has been approved and is ready to post to SAP.
+        <Text style={{ color: '#5f5e5e', fontSize: 14, display: 'block', maxWidth: 440, margin: 0 }}>
+          Inbound receiving <Text strong style={{ color: '#1b1c1c' }}>{data.receivingNumber || '-'}</Text> has been approved and is ready to post to SAP.
         </Text>
       </div>
 
-      <Descriptions bordered size="small" column={2}>
-        <Descriptions.Item label="IR Number">
-          {data.receivingNumber || '-'}
-        </Descriptions.Item>
-        <Descriptions.Item label="SAP GR Number">
-          {data.approvedGrNumber || <Text type="secondary">Waiting SAP GR</Text>}
-        </Descriptions.Item>
-        <Descriptions.Item label="PO Reference">{poReferenceSummary}</Descriptions.Item>
-        <Descriptions.Item label="Supplier">{supplierSummary}</Descriptions.Item>
-        <Descriptions.Item label="Receipt Type">
-          <Tag color={data.receiptType === 'Planned' ? 'blue' : 'orange'}>{data.receiptType}</Tag>
-        </Descriptions.Item>
-        <Descriptions.Item label="Approved By">{data.approvedBy}</Descriptions.Item>
-        <Descriptions.Item label="Approved Date">{data.approvedDate}</Descriptions.Item>
-        <Descriptions.Item label="Receiver Warehouse" span={2}>
-          {data.receiverWarehouseName}
-        </Descriptions.Item>
-        <Descriptions.Item label="PO List" span={2}>
-          {poReferences.map((reference) => `${reference.poNumber} (${reference.supplier})`).join(', ')}
-        </Descriptions.Item>
-        <Descriptions.Item label="Supervisor Note" span={2}>
-          {data.note?.trim() ? data.note : <Text type="secondary">No additional note.</Text>}
-        </Descriptions.Item>
-      </Descriptions>
+      {/* Grid Content */}
+      <div style={{ padding: '0 40px 24px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            columnGap: 40,
+            rowGap: 16,
+            maxWidth: 540,
+            margin: '0 auto',
+          }}
+        >
+          {/* IR Number */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>IR Number</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#1b1c1c', fontFamily: 'monospace' }}>{data.receivingNumber || '-'}</span>
+          </div>
+
+          {/* SAP GR Number */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>SAP GR Number</span>
+            {data.approvedGrNumber ? (
+              <span style={{ fontSize: 16, fontWeight: 600, color: '#1b1c1c', fontFamily: 'monospace' }}>{data.approvedGrNumber}</span>
+            ) : (
+              <span style={{ fontSize: 14, color: '#8c8c8c', fontStyle: 'italic' }}>Waiting SAP GR</span>
+            )}
+          </div>
+
+          {/* PO Reference */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>PO Reference</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#1b1c1c', fontFamily: 'monospace' }}>{poReferenceSummary}</span>
+          </div>
+
+          {/* Supplier */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>Supplier</span>
+            <span style={{ fontSize: 14, color: '#1b1c1c', fontWeight: 600 }}>{supplierSummary}</span>
+          </div>
+
+          {/* Receipt Type */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>Receipt Type</span>
+            <div style={{ display: 'flex', marginTop: 2 }}>
+              <Tag color={data.receiptType === 'Planned' ? 'blue' : 'orange'} style={{ margin: 0, fontWeight: 600 }}>
+                {data.receiptType}
+              </Tag>
+            </div>
+          </div>
+
+          {/* Approved By */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>Approved By</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <UserOutlined style={{ fontSize: 14, color: '#5f5e5e' }} />
+              <span style={{ fontSize: 14, color: '#1b1c1c' }}>{data.approvedBy}</span>
+            </div>
+          </div>
+
+          {/* Approved Date */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>Approved Date</span>
+            <span style={{ fontSize: 14, color: '#1b1c1c', fontFamily: 'monospace' }}>{data.approvedDate}</span>
+          </div>
+
+          {/* Warehouse */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>Warehouse</span>
+            <span style={{ fontSize: 14, color: '#1b1c1c', fontWeight: 700 }}>{data.receiverWarehouseName}</span>
+          </div>
+
+          {/* PO List - Full Width */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: 'span 2', paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>PO List</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+              <InboxOutlined style={{ fontSize: 14, color: '#1677ff' }} />
+              <span style={{ fontSize: 14, color: '#1b1c1c' }}>
+                {poReferences.map((ref) => `${ref.poNumber} (${ref.supplier})`).join(', ')}
+              </span>
+            </div>
+          </div>
+
+          {/* Supervisor Note - Full Width */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, gridColumn: 'span 2', backgroundColor: '#f5f5f5', padding: 12, borderRadius: 8, marginTop: 4 }}>
+            <span style={{ fontSize: 11, color: '#5f5e5e', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500, marginBottom: 4 }}>Supervisor Note</span>
+            {data.note?.trim() ? (
+              <span style={{ fontSize: 14, color: '#4c4635', fontStyle: 'italic' }}>{data.note}</span>
+            ) : (
+              <span style={{ fontSize: 14, color: '#8c8c8c', fontStyle: 'italic' }}>No additional notes provided for this transaction.</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div style={{ padding: '16px 40px 20px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+        <Button
+          type="primary"
+          onClick={onClose}
+          style={{
+            height: 32,
+            paddingInline: 24,
+            borderRadius: 8,
+            fontWeight: 600,
+            fontSize: 14,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+          }}
+        >
+          OK
+        </Button>
+      </div>
+
     </Modal>
   );
 }

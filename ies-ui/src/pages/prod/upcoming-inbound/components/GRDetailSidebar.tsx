@@ -50,11 +50,13 @@ import {
 import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
 import { SupportingDocsList } from './SupportingDocsList';
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 type EditableSidebarItem = GRItem & {
   index: number;
   key: string;
+  isChild?: boolean;
+  childPosition?: number;
 };
 
 function splitDeliveryNotes(value?: string) {
@@ -245,14 +247,27 @@ export function GRDetailSidebar({
     [receipt],
   );
   const editableItems = useMemo(
-    () =>
-      receipt
-        ? items.map((item, index) => ({
-            ...item,
-            index,
-            key: `${item.poNumber || receipt.linkedPoNumber || receipt.poNumber || 'TEMP'}-${item.code}-${item.batchNumber || index}`,
-          }))
-        : [],
+    () => {
+      if (!receipt) return [];
+      const baseItems = items.map((item, index) => ({
+        ...item,
+        index,
+        key: `${item.poNumber || receipt.linkedPoNumber || receipt.poNumber || 'TEMP'}-${item.code}-${item.batchNumber || index}`,
+      }));
+      return baseItems.map((item, idx) => {
+        const itemPo = item.poNumber || receipt.linkedPoNumber || receipt.poNumber;
+        const siblings = baseItems.slice(0, idx).filter(
+          (x) =>
+            (x.poNumber || receipt.linkedPoNumber || receipt.poNumber) === itemPo &&
+            x.code === item.code
+        );
+        return {
+          ...item,
+          isChild: siblings.length > 0,
+          childPosition: siblings.length,
+        };
+      });
+    },
     [items, receipt?.linkedPoNumber, receipt?.poNumber],
   );
   const groupedReceiptItems = useMemo(
@@ -717,35 +732,66 @@ export function GRDetailSidebar({
     {
       title: 'No',
       width: 48,
-      render: (_: unknown, _row: EditableSidebarItem, index: number) => index + 1,
+      render: (_: unknown, row: EditableSidebarItem, index: number) => {
+        if (row.isChild) {
+          return <span style={{ color: '#bfbfbf' }}>-</span>;
+        }
+        return index + 1;
+      },
     },
     {
       title: 'Item',
       key: 'item',
       width: 180,
-      render: (_: unknown, row: EditableSidebarItem) => (
-        <div style={{ minWidth: 0 }}>
-          <Badge dot={isQcEditable && !row.qcDecision} color="#faad14" offset={[4, 2]}>
-            <div style={{ fontWeight: 500, display: 'inline-block' }}>{row.code}</div>
-          </Badge>
-          <div
-            style={{
-              fontSize: 12,
-              color: '#666',
-              whiteSpace: 'normal',
-              wordBreak: 'break-word',
-            }}
-          >
-            {row.name}
+      render: (_: unknown, row: EditableSidebarItem) => {
+        if (row.isChild) {
+          return (
+            <div
+              style={{
+                minHeight: 34,
+                display: 'flex',
+                alignItems: 'center',
+                borderLeft: '2px solid #d6e4ff',
+                paddingLeft: 12,
+                color: '#8c8c8c',
+                fontSize: 12,
+              }}
+            >
+              Batch {row.childPosition ? row.childPosition + 1 : ''}
+            </div>
+          );
+        }
+
+        return (
+          <div style={{ minWidth: 0 }}>
+            <Badge dot={isQcEditable && !row.qcDecision} color="#faad14" offset={[4, 2]}>
+              <div style={{ fontWeight: 500, display: 'inline-block' }}>{row.code}</div>
+            </Badge>
+            <div
+              style={{
+                fontSize: 12,
+                color: '#666',
+                whiteSpace: 'normal',
+                wordBreak: 'break-word',
+              }}
+            >
+              {row.name}
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: 'PO Qty',
       dataIndex: 'poQty',
       valueType: 'digit',
       width: 70,
+      render: (val: any, row: EditableSidebarItem) => {
+        if (row.isChild) {
+          return <span style={{ color: '#bfbfbf' }}>-</span>;
+        }
+        return typeof val === 'number' ? val.toLocaleString() : val || '-';
+      },
     },
     {
       title: 'Received',
@@ -786,16 +832,16 @@ export function GRDetailSidebar({
         </div>
       ),
     },
-    {
-      title: 'Receipt Status',
-      key: 'receiptStatus',
-      width: 110,
-      render: (_: unknown, row: EditableSidebarItem) => {
-        if (row.isMissing) return <Tag color="error">Missing</Tag>;
-        if (row.receiveQty < row.poQty) return <Tag color="warning">Short</Tag>;
-        return <Tag color="success">Matched</Tag>;
-      },
-    },
+    // {
+    //   title: 'Receipt Status',
+    //   key: 'receiptStatus',
+    //   width: 110,
+    //   render: (_: unknown, row: EditableSidebarItem) => {
+    //     if (row.isMissing) return <Tag color="error">Missing</Tag>;
+    //     if (row.receiveQty < row.poQty) return <Tag color="warning">Short</Tag>;
+    //     return <Tag color="success">Matched</Tag>;
+    //   },
+    // },
     {
       title: 'Receipt Remark',
       key: 'missingRemark',
@@ -955,6 +1001,14 @@ export function GRDetailSidebar({
         bodyStyle: { paddingInline: 16, paddingTop: 16, paddingBottom: 16 },
       }}
     >
+      <style>
+        {`
+          .inbound-batch-child-row > td {
+            background: #fcfdff !important;
+            border-top: 0 !important;
+          }
+        `}
+      </style>
       <Spin spinning={isSubmitting}>
         <ProCard bodyStyle={{ paddingInline: 8, paddingTop: 8, paddingBottom: 8 }}>
           <div
@@ -1141,6 +1195,10 @@ export function GRDetailSidebar({
                       options={{ density: false, fullScreen: false, reload: false, setting: false }}
                       pagination={false}
                       tableLayout="fixed"
+                      scroll={{ x: 'max-content' }}
+                      rowClassName={(record) => {
+                        return record.isChild ? 'inbound-batch-child-row' : '';
+                      }}
                       columns={columns}
                     />
                   </div>
@@ -1157,7 +1215,9 @@ export function GRDetailSidebar({
 
           <Divider />
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, marginBottom: 12 }}>Supporting Documents</div>
+            <Title level={4} style={{ marginTop: 0, marginBottom: 16 }}>
+              Supporting Documents
+            </Title>
             {isQcEditable ? (
               <>
                 {!isMultiPOReceipt && (

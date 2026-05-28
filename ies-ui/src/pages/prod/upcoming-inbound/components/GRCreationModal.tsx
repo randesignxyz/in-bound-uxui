@@ -14,6 +14,7 @@ import {
   Space,
   Table,
   Tag,
+  Tooltip,
   Typography,
   Upload,
   message,
@@ -22,7 +23,11 @@ import type { UploadFile, UploadProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   CloseCircleFilled,
+  DeleteOutlined,
+  DownOutlined,
   InboxOutlined,
+  PlusOutlined,
+  RightOutlined,
   WarningFilled,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -57,6 +62,21 @@ interface GRCreationModalProps {
   initialReceipt?: UpcomingInboundGoodsReceipt | null;
   correctionMode?: boolean;
   warehouseOptions?: InboundWarehouseMasterApi[];
+}
+
+type ReceiptItemTableRow =
+  | (GRItem & { index: number; key: string; rowType?: 'item' })
+  | {
+      key: string;
+      rowType: 'batchAction';
+      splitKey: string;
+      sourceIndex: number;
+      batchRowCount: number;
+      disabled: boolean;
+    };
+
+function isBatchActionRow(row: ReceiptItemTableRow): row is Extract<ReceiptItemTableRow, { rowType: 'batchAction' }> {
+  return row.rowType === 'batchAction';
 }
 
 function canDeferPoLine(expectedDate?: string) {
@@ -114,6 +134,46 @@ function renderRequiredLabel(label: string) {
       {label}
     </span>
   );
+}
+
+function getItemSplitKey(item: Pick<GRItem, 'poNumber' | 'poLineNumber' | 'code'>) {
+  return `${item.poNumber || 'NO_PO'}::${item.poLineNumber ?? item.code}::${item.code}`;
+}
+
+function getSplitQuantityErrorIndexes(items: GRItem[]) {
+  const splitQtyByItem = new Map<string, { totalQty: number; maxQty: number; indexes: number[] }>();
+
+  items.forEach((item, index) => {
+    if (item.isDeferred || item.isMissing) return;
+    const splitKey = getItemSplitKey(item);
+    const current = splitQtyByItem.get(splitKey) || { totalQty: 0, maxQty: item.poQty, indexes: [] };
+    current.totalQty += item.receiveQty;
+    current.maxQty = Math.max(current.maxQty, item.poQty);
+    current.indexes.push(index);
+    splitQtyByItem.set(splitKey, current);
+  });
+
+  return Array.from(splitQtyByItem.values())
+    .filter(({ totalQty, maxQty }) => totalQty > maxQty)
+    .flatMap(({ indexes }) => indexes);
+}
+
+function getSplitReceivedQty(items: GRItem[], targetItem: Pick<GRItem, 'poNumber' | 'poLineNumber' | 'code'>) {
+  const splitKey = getItemSplitKey(targetItem);
+  return items
+    .filter((item) => !item.isDeferred && !item.isMissing && getItemSplitKey(item) === splitKey)
+    .reduce((sum, item) => sum + item.receiveQty, 0);
+}
+
+function getShortSplitLineCount(items: GRItem[], poNumber: string) {
+  const seenKeys = new Set<string>();
+  return items.filter((item) => {
+    if (item.poNumber !== poNumber || item.isDeferred || item.isMissing) return false;
+    const splitKey = getItemSplitKey(item);
+    if (seenKeys.has(splitKey)) return false;
+    seenKeys.add(splitKey);
+    return getSplitReceivedQty(items, item) < item.poQty;
+  }).length;
 }
 
 function buildInitialPoDeliveryNotes(
@@ -254,6 +314,7 @@ export function GRCreationModal({
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeItemPanels, setActiveItemPanels] = useState<string[]>([]);
+  const [collapsedSplitKeys, setCollapsedSplitKeys] = useState<Record<string, boolean>>({});
 
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     let nextItem: GRItem | null = null;
@@ -347,6 +408,49 @@ export function GRCreationModal({
     }));
   }, []);
 
+  const addBatchRow = useCallback((index: number) => {
+    setItems((prev) => {
+      const sourceItem = prev[index];
+      if (!sourceItem) return prev;
+
+      const nextBatchRow: GRItem = {
+        ...sourceItem,
+        receiveQty: 0,
+        productDate: '',
+        expiryDate: '',
+        batchNumber: '',
+        barcode: '',
+        isDeferred: false,
+        isMissing: false,
+        missingRemark: '',
+      };
+
+      return [
+        ...prev.slice(0, index + 1),
+        nextBatchRow,
+        ...prev.slice(index + 1),
+      ];
+    });
+    const sourceItem = items[index];
+    if (sourceItem) {
+      setCollapsedSplitKeys((prev) => ({ ...prev, [getItemSplitKey(sourceItem)]: false }));
+    }
+    setErrors({});
+  }, [items]);
+
+  const removeBatchRow = useCallback((index: number) => {
+    setItems((prev) => {
+      const sourceItem = prev[index];
+      if (!sourceItem) return prev;
+
+      const splitRowCount = prev.filter((item) => getItemSplitKey(item) === getItemSplitKey(sourceItem)).length;
+      if (splitRowCount <= 1) return prev;
+
+      return prev.filter((_, itemIndex) => itemIndex !== index);
+    });
+    setErrors({});
+  }, []);
+
   const handleUploadChange: UploadProps['onChange'] = (info) => {
     setUploadedFiles(normalizeUploadFileList(info.fileList, 10, 'WAREHOUSE'));
   };
@@ -397,6 +501,12 @@ export function GRCreationModal({
     if (!items.some((item) => !item.isDeferred)) {
       nextErrors.receivableItems = true;
     }
+
+    const splitQuantityErrorIndexes = getSplitQuantityErrorIndexes(items);
+    splitQuantityErrorIndexes.forEach((index) => {
+      nextErrors[`receiveQty-${index}`] = true;
+    });
+
     items.forEach((item, index) => {
       if (item.isDeferred) {
         return;
@@ -424,12 +534,15 @@ export function GRCreationModal({
     setErrors(nextErrors);
     if (nextErrors.receivableItems) {
       message.error('Select at least one PO line to receive or mark missing.');
+    } else if (splitQuantityErrorIndexes.length > 0) {
+      message.error('Split batch received quantity cannot exceed the PO line quantity.');
     }
     return Object.keys(nextErrors).length === 0;
   };
 
   const validateDraftDateOrder = () => {
     const nextDateErrors: Record<string, boolean> = {};
+    const splitQuantityErrorIndexes = getSplitQuantityErrorIndexes(items);
 
     items.forEach((item, index) => {
       if (!requiresTraceabilityFields(item)) {
@@ -441,11 +554,15 @@ export function GRCreationModal({
         nextDateErrors[`expiryDate-${index}`] = true;
       }
     });
+    splitQuantityErrorIndexes.forEach((index) => {
+      nextDateErrors[`receiveQty-${index}`] = true;
+    });
 
     setErrors((prev) => {
       const next = { ...prev };
 
       items.forEach((_, index) => {
+        delete next[`receiveQty-${index}`];
         delete next[`productDate-${index}`];
         delete next[`expiryDate-${index}`];
       });
@@ -455,6 +572,10 @@ export function GRCreationModal({
         ...nextDateErrors,
       };
     });
+
+    if (splitQuantityErrorIndexes.length > 0) {
+      message.error('Split batch received quantity cannot exceed the PO line quantity.');
+    }
 
     return Object.keys(nextDateErrors).length === 0;
   };
@@ -677,6 +798,7 @@ export function GRCreationModal({
       setPoUploadedFiles(buildInitialPoUploadFiles(purchaseOrders, initialReceipt));
       setErrors({});
       setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
+      setCollapsedSplitKeys({});
 
       return;
     }
@@ -691,6 +813,7 @@ export function GRCreationModal({
     setPoUploadedFiles(buildInitialPoUploadFiles(purchaseOrders));
     setErrors({});
     setActiveItemPanels(purchaseOrders.map((purchaseOrder) => purchaseOrder.poNumber));
+    setCollapsedSplitKeys({});
   }, [correctionMode, initialReceipt, open, purchaseOrders]);
 
   const groupedItems = purchaseOrders.map((purchaseOrder) => ({
@@ -701,9 +824,7 @@ export function GRCreationModal({
     type: purchaseOrder.type,
     missingCount: items.filter((item) => item.poNumber === purchaseOrder.poNumber && item.isMissing)
       .length,
-    shortCount: items.filter(
-      (item) => item.poNumber === purchaseOrder.poNumber && !item.isDeferred && !item.isMissing && item.receiveQty < item.poQty,
-    ).length,
+    shortCount: getShortSplitLineCount(items, purchaseOrder.poNumber),
     deferredCount: items.filter(
       (item) => item.poNumber === purchaseOrder.poNumber && item.isDeferred,
     ).length,
@@ -716,25 +837,166 @@ export function GRCreationModal({
       .filter((item) => item.poNumber === purchaseOrder.poNumber),
   }));
 
-  const missingItemsCount = items.filter((item) => item.isMissing).length;
-  const shortItemsCount = items.filter((item) => !item.isDeferred && !item.isMissing && item.receiveQty < item.poQty)
-    .length;
-  const hasDiscrepancy = missingItemsCount > 0 || shortItemsCount > 0;
+  const hasDiscrepancy = hasReceiptDiscrepancy(items);
   const hasMissingItems = items.some((item) => item.isMissing);
   const hasAvailableItems = items.some((item) => !item.isDeferred && !item.isMissing);
+  const getSplitMeta = (record: GRItem & { index: number }) => {
+    const splitKey = getItemSplitKey(record);
+    const splitIndexes = items
+      .map((item, index) => ({ key: getItemSplitKey(item), index }))
+      .filter((item) => item.key === splitKey)
+      .map((item) => item.index);
+    const firstIndex = Math.min(...splitIndexes);
+    const lastIndex = Math.max(...splitIndexes);
+    const childPosition = splitIndexes.indexOf(record.index);
 
-  const itemColumns: ColumnsType<GRItem & { index: number }> = [
+    return {
+      splitKey,
+      rowCount: splitIndexes.length,
+      isParent: record.index === firstIndex,
+      isChild: record.index !== firstIndex,
+      isLast: record.index === lastIndex,
+      childPosition,
+      collapsed: Boolean(collapsedSplitKeys[splitKey]),
+    };
+  };
+
+  const getVisibleItemRows = (rows: Array<GRItem & { index: number; key: string }>): ReceiptItemTableRow[] => {
+    const visibleRows: ReceiptItemTableRow[] = [];
+
+    rows.forEach((record) => {
+      const meta = getSplitMeta(record);
+      const isVisibleItemRow = meta.isParent || !meta.collapsed;
+
+      if (isVisibleItemRow) {
+        visibleRows.push(record);
+      }
+
+      const shouldShowBatchActionRow = meta.isLast || (meta.isParent && meta.collapsed);
+      if (isVisibleItemRow && shouldShowBatchActionRow) {
+        visibleRows.push({
+          key: `${meta.splitKey}-batch-action`,
+          rowType: 'batchAction',
+          splitKey: meta.splitKey,
+          sourceIndex: meta.isParent && meta.collapsed ? Math.max(...items
+            .map((item, index) => ({ key: getItemSplitKey(item), index }))
+            .filter((item) => item.key === meta.splitKey)
+            .map((item) => item.index)) : record.index,
+          batchRowCount: meta.rowCount,
+          disabled: Boolean(record.isMissing || record.isDeferred),
+        });
+      }
+    });
+
+    return visibleRows;
+  };
+
+  const toggleSplitRows = (splitKey: string) => {
+    setCollapsedSplitKeys((prev) => ({ ...prev, [splitKey]: !prev[splitKey] }));
+  };
+
+  const itemColumns: ColumnsType<ReceiptItemTableRow> = [
+    {
+      title: '',
+      key: 'expandCollapse',
+      width: 50,
+      align: 'center',
+      render: (_, record) => {
+        if (isBatchActionRow(record)) {
+          return {
+            children: (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  padding: '6px 10px',
+                }}
+              >
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={() => addBatchRow(record.sourceIndex)}
+                  disabled={record.disabled}
+                  style={{ height: 22, padding: 0, fontSize: 12, fontWeight: 600 }}
+                >
+                  {record.batchRowCount > 1 ? 'Add Batch Row' : 'Add Batch'}
+                </Button>
+              </div>
+            ),
+            props: { colSpan: 11 },
+          };
+        }
+
+        const meta = getSplitMeta(record);
+        if (meta.isChild) {
+          return null;
+        }
+
+        if (meta.rowCount > 1) {
+          return (
+            <Button
+              type={meta.collapsed ? 'primary' : 'default'}
+              size="small"
+              icon={meta.collapsed ? <RightOutlined /> : <DownOutlined />}
+              onClick={() => toggleSplitRows(meta.splitKey)}
+              style={{
+                width: 26,
+                minWidth: 26,
+                height: 24,
+                padding: 0,
+                borderColor: '#1677ff',
+                boxShadow: '0 0 0 2px rgba(22, 119, 255, 0.08)',
+              }}
+            />
+          );
+        }
+
+        return null;
+      },
+    },
     {
       title: 'Item',
       dataIndex: 'code',
       key: 'code',
-      width: 124,
+      width: 154,
       render: (_, record) => {
-        const shortQty = record.isDeferred ? 0 : Math.max(0, record.poQty - record.receiveQty);
+        if (isBatchActionRow(record)) {
+          return { props: { colSpan: 0 } };
+        }
+
+        const meta = getSplitMeta(record);
+        const splitReceivedQty = getSplitReceivedQty(items, record);
+        const shortQty = record.isDeferred ? 0 : Math.max(0, record.poQty - splitReceivedQty);
+
+        if (meta.isChild) {
+          return (
+            <div
+              style={{
+                minHeight: 34,
+                display: 'flex',
+                alignItems: 'center',
+                borderLeft: '2px solid #d6e4ff',
+                paddingLeft: 12,
+                color: '#8c8c8c',
+                fontSize: 12,
+              }}
+            >
+              Batch {meta.childPosition + 1}
+            </div>
+          );
+        }
 
         return (
           <div>
-            <div style={{ fontWeight: 500 }}>{record.code}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontWeight: 500 }}>{record.code}</span>
+              {meta.rowCount > 1 && (
+                <Tag color="processing" style={{ marginInlineEnd: 0 }}>
+                  {meta.rowCount} rows
+                </Tag>
+              )}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
               {record.isDeferred ? (
                 <Tag color="default" style={{ marginInlineEnd: 0 }}>Not arrived</Tag>
@@ -754,7 +1016,8 @@ export function GRCreationModal({
       dataIndex: 'expectedDate',
       key: 'expectedDate',
       width: 112,
-      render: (value: string | undefined) => value || '-',
+      render: (value: string | undefined, record) =>
+        isBatchActionRow(record) ? { props: { colSpan: 0 } } : getSplitMeta(record).isChild ? '-' : value || '-',
     },
     {
       title: 'PO Qty',
@@ -763,7 +1026,16 @@ export function GRCreationModal({
       width: 76,
       align: 'right',
       render: (value: number, record) => {
-        const shortQty = Math.max(0, record.poQty - record.receiveQty);
+        if (isBatchActionRow(record)) {
+          return { props: { colSpan: 0 } };
+        }
+
+        if (getSplitMeta(record).isChild) {
+          return <span style={{ color: '#bfbfbf' }}>-</span>;
+        }
+
+        const splitReceivedQty = getSplitReceivedQty(items, record);
+        const shortQty = Math.max(0, record.poQty - splitReceivedQty);
 
         return (
           <div style={{ textAlign: 'right' }}>
@@ -782,92 +1054,124 @@ export function GRCreationModal({
     {
       title: hasAvailableItems ? renderRequiredLabel('Receive Qty') : 'Receive Qty',
       key: 'receiveQty',
-      width: 104,
-      render: (_, record) => (
-        <InputNumber
-          min={0}
-          max={record.poQty}
-          value={record.receiveQty === 0 ? null : record.receiveQty}
-          placeholder='0'
-          onChange={(value) => updateItem(record.index, 'receiveQty', value ?? 0)}
-          parser={(value) => {
-            const parsed = Number(value?.replace(/[^\d]/g, ''));
-            return isNaN(parsed) ? 0 : parsed;
-          }}
-          formatter={(value) => (value !== undefined && value !== null ? String(Math.floor(Number(value))) : '')}
-          precision={0}
-          onKeyDown={(e) => {
-            const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
-            if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
-              e.preventDefault();
-            }
-          }}
-          style={{ width: '100%' }}
-          controls
-          disabled={record.isMissing || record.isDeferred}
-          status={errors[`receiveQty-${record.index}`] ? 'error' : undefined}
-        />
-      ),
+      width: 124,
+      render: (_, record) => {
+        if (isBatchActionRow(record)) {
+          return { props: { colSpan: 0 } };
+        }
+
+        const splitReceivedQty = getSplitReceivedQty(items, record);
+        const hasExceeded = !record.isDeferred && !record.isMissing && splitReceivedQty > record.poQty;
+        const exceededAmount = splitReceivedQty - record.poQty;
+
+        return (
+          <Space direction="vertical" size={2} style={{ width: '100%' }}>
+            <InputNumber
+              min={0}
+              max={record.poQty}
+              value={record.receiveQty === 0 ? null : record.receiveQty}
+              placeholder='0'
+              onChange={(value) => updateItem(record.index, 'receiveQty', value ?? 0)}
+              parser={(value) => {
+                const parsed = Number(value?.replace(/[^\d]/g, ''));
+                return isNaN(parsed) ? 0 : parsed;
+              }}
+              formatter={(value) => (value !== undefined && value !== null ? String(Math.floor(Number(value))) : '')}
+              precision={0}
+              onKeyDown={(e) => {
+                const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+                if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              style={{ width: '100%' }}
+              controls
+              disabled={record.isMissing || record.isDeferred}
+              status={(errors[`receiveQty-${record.index}`] || hasExceeded) ? 'error' : undefined}
+            />
+            {hasExceeded && (
+              <span style={{ display: 'block', fontSize: 11, color: '#ff4d4f', lineHeight: '1.2', marginTop: 2 }}>
+                Exceeds limit of {record.poQty.toLocaleString()} by {exceededAmount.toLocaleString()}
+              </span>
+            )}
+          </Space>
+        );
+      },
     },
-    { title: 'UoM', dataIndex: 'uom', key: 'uom', width: 48 },
+    {
+      title: 'UoM',
+      dataIndex: 'uom',
+      key: 'uom',
+      width: 48,
+      render: (value: string | undefined, record) =>
+        isBatchActionRow(record) ? { props: { colSpan: 0 } } : value,
+    },
     {
       title: hasAvailableItems ? renderRequiredLabel('Product Date') : 'Product Date',
       key: 'productDate',
       width: 132,
-      render: (_, record) => (
-        <DatePicker
-          style={{ width: '100%' }}
-          value={record.productDate ? dayjs(record.productDate) : null}
-          onChange={(date) =>
-            updateItem(record.index, 'productDate', date ? date.format('YYYY-MM-DD') : '')
-          }
-          disabledDate={(current) =>
-            Boolean(record.expiryDate) && current.isAfter(dayjs(record.expiryDate), 'day')
-          }
-          disabled={record.isMissing || record.isDeferred}
-          status={errors[`productDate-${record.index}`] ? 'error' : undefined}
-        />
-      ),
+      render: (_, record) =>
+        isBatchActionRow(record) ? { props: { colSpan: 0 } } : (
+          <DatePicker
+            style={{ width: '100%' }}
+            value={record.productDate ? dayjs(record.productDate) : null}
+            onChange={(date: any) =>
+              updateItem(record.index, 'productDate', date ? date.format('YYYY-MM-DD') : '')
+            }
+            disabledDate={(current: any) =>
+              Boolean(record.expiryDate) && current.isAfter(dayjs(record.expiryDate), 'day')
+            }
+            disabled={record.isMissing || record.isDeferred}
+            status={errors[`productDate-${record.index}`] ? 'error' : undefined}
+          />
+        ),
     },
     {
       title: hasAvailableItems ? renderRequiredLabel('Expiry') : 'Expiry',
       key: 'expiryDate',
       width: 132,
-      render: (_, record) => (
-        <DatePicker
-          style={{ width: '100%' }}
-          value={record.expiryDate ? dayjs(record.expiryDate) : null}
-          onChange={(date) =>
-            updateItem(record.index, 'expiryDate', date ? date.format('YYYY-MM-DD') : '')
-          }
-          disabledDate={(current) =>
-            Boolean(record.productDate) && current.isBefore(dayjs(record.productDate), 'day')
-          }
-          disabled={record.isMissing || record.isDeferred}
-          status={errors[`expiryDate-${record.index}`] ? 'error' : undefined}
-        />
-      ),
+      render: (_, record) =>
+        isBatchActionRow(record) ? { props: { colSpan: 0 } } : (
+          <DatePicker
+            style={{ width: '100%' }}
+            value={record.expiryDate ? dayjs(record.expiryDate) : null}
+            onChange={(date: any) =>
+              updateItem(record.index, 'expiryDate', date ? date.format('YYYY-MM-DD') : '')
+            }
+            disabledDate={(current: any) =>
+              Boolean(record.productDate) && current.isBefore(dayjs(record.productDate), 'day')
+            }
+            disabled={record.isMissing || record.isDeferred}
+            status={errors[`expiryDate-${record.index}`] ? 'error' : undefined}
+          />
+        ),
     },
     {
       title: hasAvailableItems ? renderRequiredLabel('Batch Number') : 'Batch Number',
       key: 'batchNumber',
       width: 136,
-      render: (_, record) => (
-        <Input
-          value={record.batchNumber}
-          onChange={(event) => updateItem(record.index, 'batchNumber', event.target.value)}
-          disabled={record.isMissing || record.isDeferred}
-          status={errors[`batchNumber-${record.index}`] ? 'error' : undefined}
-          placeholder="Batch no."
-        />
-      ),
+      render: (_, record) =>
+        isBatchActionRow(record) ? { props: { colSpan: 0 } } : (
+          <Input
+            value={record.batchNumber}
+            onChange={(event) => updateItem(record.index, 'batchNumber', event.target.value)}
+            disabled={record.isMissing || record.isDeferred}
+            status={errors[`batchNumber-${record.index}`] ? 'error' : undefined}
+            placeholder="Batch no."
+          />
+        ),
     },
     {
       title: hasAvailableItems ? renderRequiredLabel('Receipt Status') : 'Receipt Status',
       key: 'receiptStatus',
       width: 150,
       render: (_, record) => {
-        const shortQty = record.isDeferred ? 0 : Math.max(0, record.poQty - record.receiveQty);
+        if (isBatchActionRow(record)) {
+          return { props: { colSpan: 0 } };
+        }
+
+        const splitReceivedQty = getSplitReceivedQty(items, record);
+        const shortQty = record.isDeferred ? 0 : Math.max(0, record.poQty - splitReceivedQty);
         const hasShortQty = !record.isDeferred && !record.isMissing && shortQty > 0;
         const deferAllowed = canDeferPoLine(record.expectedDate);
         const receiptStatus = record.isDeferred && deferAllowed ? 'NotArrived' : record.isMissing ? 'Missing' : 'Good';
@@ -902,16 +1206,51 @@ export function GRCreationModal({
     {
       title: hasMissingItems ? renderRequiredLabel('Remark') : 'Remark',
       key: 'remark',
-      width: 180,
-      render: (_, record) => (
-        <Input.TextArea
-          autoSize={{ minRows: 1, maxRows: 3 }}
-          placeholder= 'Add remark'
-          value={record.missingRemark}
-          onChange={(event) => updateItem(record.index, 'missingRemark', event.target.value)}
-          status={errors[`missingRemark-${record.index}`] ? 'error' : undefined}
-        />
-      ),
+      width: 176,
+      render: (_, record) => {
+        if (isBatchActionRow(record)) {
+          return { props: { colSpan: 0 } };
+        }
+
+        return (
+          <Input.TextArea
+            autoSize={{ minRows: 1, maxRows: 3 }}
+            placeholder='Add remark'
+            value={record.missingRemark}
+            onChange={(event) => updateItem(record.index, 'missingRemark', event.target.value)}
+            status={errors[`missingRemark-${record.index}`] ? 'error' : undefined}
+          />
+        );
+      },
+    },
+    {
+      title: '',
+      key: 'batchActions',
+      width: 48,
+      fixed: 'right',
+      render: (_, record) => {
+        if (isBatchActionRow(record)) {
+          return {
+            children: null,
+            props: { colSpan: 1 },
+          };
+        }
+
+        const meta = getSplitMeta(record);
+        const canRemove = meta.rowCount > 1 && meta.isChild;
+
+        return canRemove ? (
+          <Tooltip title="Remove batch row">
+            <Button
+              type="text"
+              size="small"
+              className="delete-btn-gray"
+              icon={<DeleteOutlined />}
+              onClick={() => removeBatchRow(record.index)}
+            />
+          </Tooltip>
+        ) : null;
+      },
     },
   ];
 
@@ -919,6 +1258,27 @@ export function GRCreationModal({
 
   return (
     <>
+      <style>
+        {`
+          .inbound-batch-child-row > td {
+            background: #fcfdff;
+            border-top: 0;
+          }
+          .inbound-batch-action-row > td {
+            padding: 0 !important;
+            background: #f8fbff !important;
+            border-top: 1px solid #d6e4ff !important;
+            border-bottom: 1px dashed #1677ff !important;
+          }
+          .delete-btn-gray {
+            color: #8c8c8c !important;
+          }
+          .delete-btn-gray:hover {
+            color: #ff4d4f !important;
+            background-color: #fff1f0 !important;
+          }
+        `}
+      </style>
       <FullscreenModal
         title={correctionMode ? 'Warehouse Recheck Inbound Receiving' : 'Create Inbound Receiving'}
         open={open}
@@ -963,7 +1323,7 @@ export function GRCreationModal({
                         index === 0 ? (
                           <DatePicker
                             value={postingDate ? dayjs(postingDate) : null}
-                            onChange={(_, dateStr) => {
+                            onChange={(_: any, dateStr: any) => {
                               setPostingDate(dateStr as string);
                               setErrors((prev) => ({ ...prev, postingDate: false }));
                             }}
@@ -1095,8 +1455,8 @@ export function GRCreationModal({
                           fileList={uploadedFiles}
                           showUploadList={false}
                           onChange={handleUploadChange}
-                          onRemove={(file) => removeFile(file.uid)}
-                          onPreview={(file) => void handlePreviewFile(file)}
+                          onRemove={(file: any) => removeFile(file.uid)}
+                          onPreview={(file: any) => void handlePreviewFile(file)}
                           accept=".pdf,.doc,.docx,image/*"
                           listType="text"
                         >
@@ -1263,8 +1623,8 @@ export function GRCreationModal({
                                     fileList={poUploadedFiles[group.poNumber] || []}
                                     showUploadList={false}
                                     onChange={handlePoUploadChange(group.poNumber)}
-                                    onRemove={(file) => removePoFile(group.poNumber, file.uid)}
-                                    onPreview={(file) => void handlePreviewFile(file)}
+                                    onRemove={(file: any) => removePoFile(group.poNumber, file.uid)}
+                                    onPreview={(file: any) => void handlePreviewFile(file)}
                                     accept=".pdf,.doc,.docx,image/*"
                                     listType="text"
                                   >
@@ -1303,9 +1663,14 @@ export function GRCreationModal({
                     <Table
                       size="small"
                       columns={itemColumns}
-                      dataSource={group.rows}
+                      dataSource={getVisibleItemRows(group.rows)}
                       pagination={false}
-                      scroll={{ x: 1420 }}
+                      rowKey="key"
+                      rowClassName={(record) => {
+                        if (isBatchActionRow(record)) return 'inbound-batch-action-row';
+                        return getSplitMeta(record).isChild ? 'inbound-batch-child-row' : '';
+                      }}
+                      scroll={{ x: 'max-content' }}
                       tableLayout="auto"
                     />
                   </div>

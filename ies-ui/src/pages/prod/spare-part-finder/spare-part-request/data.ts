@@ -17,6 +17,8 @@ export interface MyRequestLineItem {
   requestedQty: number;
   approvedQty: number;
   unit: string;
+  fromWarehouse?: string;
+  fromWarehouseCode?: string;
   toWarehouseCode?: string;
   forLine?: string;
   remark?: string;

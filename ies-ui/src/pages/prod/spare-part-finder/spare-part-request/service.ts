@@ -41,6 +41,12 @@ type MyRequestLineDto = {
   requestedQty: number;
   approvedQty?: number;
   unit: string;
+  fromWarehouse?: string | null;
+  from_warehouse?: string | null;
+  fromWarehouseCode?: string | null;
+  from_warehouse_code?: string | null;
+  issuedFromWarehouseCode?: string | null;
+  issued_from_warehouse_code?: string | null;
   toWarehouseCode?: string | null;
   forLine?: string | null;
   remark?: string | null;
@@ -72,6 +78,7 @@ type IssueHistoryLineDto = {
   sparePartName: string;
   deliveredQty: number;
   unit: string;
+  itemCondition?: string | null;
 };
 
 type IssueHistoryDto = {
@@ -119,6 +126,7 @@ type IssueDetailDto = {
   requestedDate?: string;
   requestStatus: BackendRequestStatus;
   remark?: string | null;
+  warehouseRemark?: string | null;
   totalRequestedQty?: number;
   totalApprovedQty?: number;
   totalIssuedQty?: number;
@@ -149,6 +157,11 @@ type CreateRequestPayload = {
   }>;
   remark: string;
   priority: 'normal' | 'high' | 'urgent';
+};
+
+const toDecimalPayload = (value: number | string): string => {
+  const normalized = String(value ?? '').trim();
+  return normalized || '0';
 };
 
 type SparePartWarehouseOption = {
@@ -196,7 +209,7 @@ type ApproveRequestPayload = {
   id: number;
   lines: Array<{
     requestLineId: number;
-    approvedQty: number;
+    approvedQty: number | string;
     editedAt?: string;
     rejected?: boolean;
     rejectRemark?: string;
@@ -208,7 +221,7 @@ type UpdatePendingRequestLinesPayload = {
   id: number;
   lines: Array<{
     requestLineId: number;
-    requestedQty: number;
+    requestedQty: number | string;
     editedAt?: string;
   }>;
 };
@@ -259,7 +272,7 @@ const SparePartRequestAction = {
     endpoint: 'PROD',
     payload: {
       items: payload.items.map((line) => ({
-        requestedQty: line.quantity,
+        requestedQty: toDecimalPayload(line.quantity),
         purpose: line.purpose,
         toWarehouseCode: line.toWarehouseCode,
         forLine: line.forLine,
@@ -274,13 +287,25 @@ const SparePartRequestAction = {
     type: 'EXEC',
     actionName: 'approve-spare-part-request',
     endpoint: 'PROD',
-    payload,
+    payload: {
+      ...payload,
+      lines: payload.lines.map((line) => ({
+        ...line,
+        approvedQty: toDecimalPayload(line.approvedQty),
+      })),
+    },
   }),
   updatePendingRequestLines: (payload: UpdatePendingRequestLinesPayload): ServiceApiType<any> => ({
     type: 'EXEC',
     actionName: 'update-pending-spare-part-request-lines',
     endpoint: 'PROD',
-    payload,
+    payload: {
+      ...payload,
+      lines: payload.lines.map((line) => ({
+        ...line,
+        requestedQty: toDecimalPayload(line.requestedQty),
+      })),
+    },
   }),
   getRequestDetail: (id: number): ServiceApiType<{ id: number }> => ({
     type: 'FETCH_QUERY',
@@ -521,6 +546,22 @@ const mapRequestLine = (item: MyRequestLineDto): MyRequestLineItem => ({
   requestedQty: Number(item.requestedQty || 0),
   approvedQty: Number(item.approvedQty || 0),
   unit: item.unit || 'pcs',
+  fromWarehouse:
+    item.fromWarehouse ||
+    item.from_warehouse ||
+    item.fromWarehouseCode ||
+    item.from_warehouse_code ||
+    item.issuedFromWarehouseCode ||
+    item.issued_from_warehouse_code ||
+    undefined,
+  fromWarehouseCode:
+    item.fromWarehouseCode ||
+    item.from_warehouse_code ||
+    item.fromWarehouse ||
+    item.from_warehouse ||
+    item.issuedFromWarehouseCode ||
+    item.issued_from_warehouse_code ||
+    undefined,
   toWarehouseCode: item.toWarehouseCode || undefined,
   forLine: item.forLine || undefined,
   remark: item.remark || undefined,
@@ -878,6 +919,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
         description: 'Requester confirmed pickup',
         date: entry.pickupConfirmedAt,
         by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+        remark: entry.note?.trim() || undefined,
         dot: 'done',
       });
 
@@ -890,6 +932,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
           description: `Picked ${Number(entry.totalIssuedQty || 0)} item(s)`,
           date: entry.pickupConfirmedAt,
           by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+          remark: entry.note?.trim() || undefined,
           dot: 'done',
         });
       }
@@ -902,6 +945,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       description: 'Picked up all requested items',
       date: finalConfirmedEntry.pickupConfirmedAt || finalConfirmedEntry.issuedAt || item.requestedDate,
       by: finalConfirmedEntry.pickupConfirmedBy || finalConfirmedEntry.warehouseStaffId || undefined,
+      remark: finalConfirmedEntry.note?.trim() || undefined,
       dot: 'done',
     });
   }
@@ -912,6 +956,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       batchNo: index + 1,
       createdAt: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate || '',
       pickedBy: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+      remark: entry.note?.trim() || undefined,
       pickedItemsCount: Number(entry.totalIssuedQty || 0),
       items: (entry.items || []).map((historyLine, historyIndex) => {
         const requestLineId = Number(historyLine.requestLineId || 0);
@@ -944,6 +989,29 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
         };
       }),
     }));
+  const getPickupActivityRemark = (activity: {
+    label?: string | null;
+    description?: string | null;
+    date?: string | null;
+  }) => {
+    const label = String(activity.label || '').toLowerCase();
+    const description = String(activity.description || '').toLowerCase();
+    const isPickupActivity =
+      label.includes('pick') ||
+      label.includes('partial') ||
+      label.includes('complete') ||
+      description.includes('pick');
+
+    if (!isPickupActivity) return undefined;
+
+    const activityTime = activity.date ? new Date(activity.date).getTime() : Number.NaN;
+    const matchedEntry = confirmedHistory.find((entry) => {
+      const confirmedTime = entry.pickupConfirmedAt ? new Date(entry.pickupConfirmedAt).getTime() : Number.NaN;
+      return Number.isFinite(activityTime) && Number.isFinite(confirmedTime) && activityTime === confirmedTime;
+    });
+
+    return matchedEntry?.note?.trim() || (confirmedHistory.length === 1 ? confirmedHistory[0].note?.trim() : undefined);
+  };
 
   return {
     id: Number(item.id || 0),
@@ -955,6 +1023,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     totalItems: Number(item.totalRequestedQty || items.length),
     receivedItems: confirmedPickedQty,
     remark: item.remark || '',
+    warehouseRemark: item.warehouseRemark || undefined,
     requestedBy: item.requesterId || undefined,
     approvedBy: item.approverId || undefined,
     approverRemark: extractApproverRemark(item.managerRemark),
@@ -965,6 +1034,10 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       description: String(activity.description || '').trim(),
       date: activity.date || item.requestedDate,
       by: activity.by?.trim() ? activity.by.trim() : undefined,
+      remark:
+        (activity as RequestDetailActivity).remark?.trim() ||
+        getPickupActivityRemark(activity) ||
+        undefined,
       dot: activity.dot === 'pending' ? 'pending' : 'done',
       requestLineId: Number(activity.requestLineId || 0) || undefined,
     })),

@@ -26,6 +26,20 @@ import { SparePartRequestAPI } from './service.api';
 import { simpleRequestActions } from '@/services/model';
 
 const { Title, Text } = Typography;
+const MIN_DECIMAL_QTY = 0.01;
+const WHOLE_QTY_MIN = 1;
+const DECIMAL_QTY_STEP = 0.01;
+const DECIMAL_QUANTITY_UOMS = new Set(['LITER', 'LITRE', 'L', 'M3', 'KILIOGRAM', 'KILOGRAM', 'KG', 'M', 'METER', 'METRE']);
+
+const normalizeUomCode = (value?: string | null) => String(value || '').trim().toUpperCase();
+const allowsDecimalQuantity = (uom?: string | null) => DECIMAL_QUANTITY_UOMS.has(normalizeUomCode(uom));
+const sanitizeQuantityForUom = (value: number, uom?: string | null) => {
+  if (allowsDecimalQuantity(uom)) {
+    return Math.max(MIN_DECIMAL_QTY, Number(value) || MIN_DECIMAL_QTY);
+  }
+
+  return Math.max(WHOLE_QTY_MIN, Math.round(Number(value) || WHOLE_QTY_MIN));
+};
 
 const toDisplayText = (value: unknown): string | undefined => {
   if (value === null || value === undefined) return undefined;
@@ -45,6 +59,7 @@ const normalizeLineItem = (item: RequestDetailLineItem, index: number): RequestD
   requestId: toDisplayText(item.requestId) || '',
   itemName: toDisplayText(item.itemName) || '',
   description: toDisplayText(item.description),
+  fromWarehouseCode: toDisplayText(item.fromWarehouseCode),
   fromWarehouse: toDisplayText(item.fromWarehouse),
   toWarehouse: toDisplayText(item.toWarehouse),
   productionLine: toDisplayText(item.productionLine),
@@ -235,6 +250,7 @@ export interface RequestDetailLineItem {
   warehouseSentQuantity?: number;
   description?: string;
   stockQuantity?: number;
+  fromWarehouseCode?: string;
   fromWarehouse?: string;
   toWarehouse?: string;
   productionLine?: string;
@@ -256,6 +272,7 @@ export interface RequestDetailActivity {
   description: string;
   date?: string;
   by?: string;
+  remark?: string;
   dot?: 'pending' | 'done';
   requestLineId?: number;
 }
@@ -264,6 +281,7 @@ interface PickupBatch {
   batchNo: number;
   createdAt: string;
   pickedBy?: string;
+  remark?: string;
   items: RequestDetailLineItem[];
   pickedItemsCount?: number;
 }
@@ -278,6 +296,7 @@ export interface RequestDetailData {
   totalItems: number;
   receivedItems?: number;
   remark?: string;
+  warehouseRemark?: string;
   approverRemark?: string;
   requestedBy?: string;
   approvedBy?: string;
@@ -399,7 +418,8 @@ export default function RequestedBatchDrawer({
         usedQuantity: 0,
         total: Number(item.requestedQty || 0),
         warehouseSentQuantity: 0,
-        fromWarehouse: undefined,
+        fromWarehouseCode: toDisplayText(item.fromWarehouseCode),
+        fromWarehouse: toDisplayText(item.fromWarehouseCode) || toDisplayText(item.fromWarehouse),
         toWarehouse: item.toWarehouseCode || undefined,
         productionLine: item.forLine || undefined,
         warehouse: toDisplayText(item.toWarehouseCode) || toDisplayText(fallbackRequest.category),
@@ -444,6 +464,7 @@ export default function RequestedBatchDrawer({
 
   const resolveRequestLineSourceWarehouse = useCallback(
     (item: RequestDetailLineItem) => {
+      if (item.fromWarehouseCode) return item.fromWarehouseCode;
       if (item.fromWarehouse) return item.fromWarehouse;
 
       const detail = itemDetailMap[item.productId];
@@ -530,6 +551,7 @@ export default function RequestedBatchDrawer({
             batchNo,
             createdAt: a.date ?? data.requestDate,
             pickedBy: a.by ?? data.requestedBy ?? 'Requester',
+            remark: a.remark,
             items: [],
             pickedItemsCount: pickedItemsCount ?? undefined,
           });
@@ -828,6 +850,24 @@ export default function RequestedBatchDrawer({
     [data.items, quantityOverrides],
   );
 
+  const buildApprovalLines = (
+    marks: Record<string, 'deleted' | 'canceled' | 'rejected'> = itemMarks,
+    rejectRemarks: Record<string, string> = itemRejectRemarks,
+  ) =>
+    requestItems
+      .filter((item) => typeof item.requestLineId === 'number')
+      .map((item) => {
+        const lineKey = getRequestLineKey(item);
+        const isRejected = marks[lineKey] === 'rejected';
+        return {
+          requestLineId: Number(item.requestLineId),
+          approvedQty: isRejected ? 0 : Number(item.quantityToReturn || 0),
+          editedAt: editedAtByRequestLineId[String(item.requestLineId)] || undefined,
+          rejected: isRejected || undefined,
+          rejectRemark: isRejected ? rejectRemarks[lineKey] : undefined,
+        };
+      });
+
   const activeRequestItems = useMemo(
     () => requestItems.filter((it) => !itemMarks[getRequestLineKey(it)]),
     [itemMarks, requestItems],
@@ -873,7 +913,7 @@ export default function RequestedBatchDrawer({
 
   const openEditQuantity = (record: RequestDetailLineItem) => {
     const requestedQty = Number(record.requestedQty ?? record.total ?? 0);
-    const currentQty = Math.max(1, Number(record.quantityToReturn) || 1);
+    const currentQty = sanitizeQuantityForUom(Number(record.quantityToReturn), record.uom);
     setEditingItem(record);
     setEditingQuantity(requestedQty > 0 ? Math.min(currentQty, requestedQty) : currentQty);
   };
@@ -903,7 +943,7 @@ export default function RequestedBatchDrawer({
     if (!editingItem) return;
     const productId = editingItem.productId;
     const lineKey = getRequestLineKey(editingItem);
-    const nextQty = Math.max(1, Number(editingQuantity) || 1);
+    const nextQty = sanitizeQuantityForUom(Number(editingQuantity), editingItem.uom);
     const originalQty = Number(data.items.find((item) => getRequestLineKey(item) === lineKey)?.quantityToReturn || 0);
     const isEdited = nextQty !== originalQty;
     const editedAt = new Date().toISOString();
@@ -1027,14 +1067,7 @@ export default function RequestedBatchDrawer({
     const shouldRejectWholeRequest =
       requestItems.length > 0 &&
       requestItems.every((item) => nextItemMarks[getRequestLineKey(item)] === 'rejected') &&
-      typeof record.requestLineId === 'number';
-    const rejectRequestRemark = requestItems
-      .filter((item) => nextItemMarks[getRequestLineKey(item)] === 'rejected')
-      .map((item) => {
-        const itemRemark = nextItemRejectRemarks[getRequestLineKey(item)]?.trim();
-        return `${item.productId}: ${itemRemark || 'Rejected by approver'}`;
-      })
-      .join('; ');
+      requestItems.every((item) => typeof item.requestLineId === 'number');
 
     setItemMarks(nextItemMarks);
     setItemRejectRemarks(nextItemRejectRemarks);
@@ -1065,10 +1098,16 @@ export default function RequestedBatchDrawer({
 
     setActionLoading(true);
     try {
-      if (onReject && data.id) {
+      if (onApprove && data.id) {
+        await onApprove({
+          id: data.id,
+          lines: buildApprovalLines(nextItemMarks, nextItemRejectRemarks),
+          remark: normalizedRemark,
+        });
+      } else if (onReject && data.id) {
         await onReject({
           id: data.id,
-          remark: rejectRequestRemark || normalizedRemark,
+          remark: normalizedRemark,
         });
       }
       setStatusOverride('rejected');
@@ -1313,6 +1352,24 @@ export default function RequestedBatchDrawer({
     () => activeRequestItems.reduce((sum, item) => sum + (Number(item.usedQuantity) || 0), 0),
     [activeRequestItems],
   );
+  const requestFromWarehouse = useMemo(
+    () => activeRequestItems.map((item) => resolveRequestLineSourceWarehouse(item)).find(Boolean) || '—',
+    [activeRequestItems, resolveRequestLineSourceWarehouse],
+  );
+  const requestToWarehouse = useMemo(
+    () =>
+      activeRequestItems
+        .map((item) => item.toWarehouse || item.warehouse)
+        .find((value) => String(value || '').trim()) || '—',
+    [activeRequestItems],
+  );
+  const requestProductionLine = useMemo(
+    () =>
+      activeRequestItems
+        .map((item) => item.productionLine)
+        .find((value) => String(value || '').trim()) || '—',
+    [activeRequestItems],
+  );
 
   const columnsForPickupTable: ColumnsType<RequestDetailLineItem> = [
     { title: 'Product ID', dataIndex: 'productId' },
@@ -1371,18 +1428,7 @@ export default function RequestedBatchDrawer({
   // }, [data.receivedItems, pickedItems.length, receivedQtyTotal, requestedQtyTotal, statusOverride]);
 
   const handleApproveRequest = async (remark?: string) => {
-    const lines = requestItems
-      .filter((item) => typeof item.requestLineId === 'number')
-      .map((item) => {
-        const isRejected = itemMarks[getRequestLineKey(item)] === 'rejected';
-        return {
-          requestLineId: Number(item.requestLineId),
-          approvedQty: isRejected ? 0 : Number(item.quantityToReturn || 0),
-          editedAt: editedAtByRequestLineId[String(item.requestLineId)] || undefined,
-          rejected: isRejected || undefined,
-          rejectRemark: isRejected ? itemRejectRemarks[getRequestLineKey(item)] : undefined,
-        };
-      });
+    const lines = buildApprovalLines();
     const hasAnyApprovedQty = lines.some((item) => item.approvedQty > 0);
     const allLinesRejected = lines.length > 0 && lines.every((item) => item.rejected);
 
@@ -1393,15 +1439,7 @@ export default function RequestedBatchDrawer({
     const nextStatus = allLinesRejected ? 'rejected' : 'approved';
     const nextLabel = allLinesRejected ? 'Rejected' : 'Approved';
     const nextDescription = allLinesRejected ? 'All request items rejected' : 'Request approved';
-    const rejectRemark =
-      remark?.trim() ||
-      requestItems
-        .filter((item) => itemMarks[getRequestLineKey(item)] === 'rejected')
-        .map((item) => {
-          const lineRemark = itemRejectRemarks[getRequestLineKey(item)]?.trim();
-          return `${item.productId}: ${lineRemark || 'Rejected by approver'}`;
-        })
-        .join('; ');
+    const rejectRemark = remark?.trim() || 'All request items rejected';
 
     setActionLoading(true);
     try {
@@ -1418,11 +1456,11 @@ export default function RequestedBatchDrawer({
           },
         ]);
       } else {
-        if (allLinesRejected && onReject) {
-          await onReject({ id: data.id, remark: rejectRemark || 'All request items rejected' });
-        } else {
-          await onApprove({ id: data.id, lines, remark });
-        }
+        await onApprove({
+          id: data.id,
+          lines,
+          remark: allLinesRejected ? rejectRemark || 'All request items rejected' : remark,
+        });
         setStatusOverride(nextStatus);
         setActivityLogs((prev) => [
           ...prev,
@@ -1668,7 +1706,7 @@ export default function RequestedBatchDrawer({
             {headerActions}
           </div>
         }
-          width="60%"
+          width="70%"
           placement="right"
           onClose={handleClose}
           open={open}
@@ -1693,6 +1731,9 @@ export default function RequestedBatchDrawer({
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
           <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label="From WH">{requestFromWarehouse}</Descriptions.Item>
+          <Descriptions.Item label="To WH">{requestToWarehouse}</Descriptions.Item>
+          <Descriptions.Item label="Line">{requestProductionLine}</Descriptions.Item>
           <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
           <Descriptions.Item label="Received Items">{displayedReceivedItems}</Descriptions.Item>
           {/* <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item> */}
@@ -1805,6 +1846,12 @@ export default function RequestedBatchDrawer({
                     rowKey="productId"
                     tableLayout="fixed"
                     pagination={false}
+                    title={() => (
+                      <Text type="secondary">
+                        Confirmed by: {pickupBatch.pickedBy || '-'}
+                        {pickupBatch.remark?.trim() ? ` ("${pickupBatch.remark.trim()}")` : ''}
+                      </Text>
+                    )}
                     dataSource={pickupBatch.items}
                     columns={[
                       { title: 'Product ID', dataIndex: 'productId' },
@@ -1843,7 +1890,10 @@ export default function RequestedBatchDrawer({
                       <br />
                       <Text type="secondary">{a.description}</Text>
                       <br />
-                      <Text type="secondary">By: {a.by || '-'}</Text>
+                      <Text type="secondary">
+                        By: {a.by || '-'}
+                        {a.remark?.trim() ? ` ("${a.remark.trim()}")` : ''}
+                      </Text>
                     </div>
                     <Text type="secondary">{formatDateTime(a.date)}</Text>
                   </div>
@@ -1923,11 +1973,14 @@ export default function RequestedBatchDrawer({
             Current requested quantity: {Number(editingItem?.requestedQty ?? editingItem?.total ?? 0)}
           </Text>
           <InputNumber
-            min={1}
+            min={allowsDecimalQuantity(editingItem?.uom) ? MIN_DECIMAL_QTY : WHOLE_QTY_MIN}
+            max={Number(editingItem?.requestedQty ?? editingItem?.total ?? 0) || undefined}
+            step={allowsDecimalQuantity(editingItem?.uom) ? DECIMAL_QTY_STEP : WHOLE_QTY_MIN}
+            precision={allowsDecimalQuantity(editingItem?.uom) ? 2 : 0}
             style={{ width: '100%' }}
             value={editingQuantity}
             onChange={(value) => {
-              const nextValue = Math.max(1, Number(value) || 1);
+              const nextValue = sanitizeQuantityForUom(Number(value), editingItem?.uom);
               setEditingQuantity(nextValue);
             }}
           />

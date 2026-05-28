@@ -9,6 +9,7 @@ export interface ShipmentLine {
   itemName: string;
   quantity: number;
   uom?: string;
+  itemCondition?: string;
 }
 
 export type ShipmentStatus = 'pending' | 'qr_generated' | 'confirmed_pickup' | 'completed';
@@ -27,6 +28,7 @@ export interface Shipment {
   /** ISO timestamp when warehouse confirmed the requester picked this up */
   confirmedAt?: string;
   confirmedBy?: string;
+  remark?: string;
 }
 
 export interface RequestShipmentState {

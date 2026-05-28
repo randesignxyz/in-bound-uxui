@@ -77,6 +77,10 @@ const priorityOptions: { label: string; value: PriorityLevel; color: string; bor
 ];
 
 const TABLE_MIN_WIDTH = '90vw';
+const MIN_DECIMAL_QTY = 0.01;
+const WHOLE_QTY_MIN = 1;
+const DECIMAL_QTY_STEP = 0.01;
+const DECIMAL_QUANTITY_UOMS = new Set(['LITER', 'LITRE', 'L', 'M3', 'KILIOGRAM', 'KILOGRAM', 'KG', 'M', 'METER', 'METRE']);
 
 const normalizeUomOptions = (value?: string | string[]) => {
   if (Array.isArray(value)) {
@@ -111,6 +115,18 @@ const getItemUomOptions = (item: SparePartRequestItem) => {
   }
 
   return normalizeUomOptions(item.uom);
+};
+
+const normalizeUomCode = (value?: string | null) => String(value || '').trim().toUpperCase();
+
+const allowsDecimalQuantity = (uom?: string | null) => DECIMAL_QUANTITY_UOMS.has(normalizeUomCode(uom));
+
+const sanitizeQuantityForUom = (value: number, uom?: string | null) => {
+  if (allowsDecimalQuantity(uom)) {
+    return Math.max(MIN_DECIMAL_QTY, Number(value) || MIN_DECIMAL_QTY);
+  }
+
+  return Math.max(WHOLE_QTY_MIN, Math.round(Number(value) || WHOLE_QTY_MIN));
 };
 
 const normalizeBusinessUnit = (value?: string | null) =>
@@ -340,7 +356,11 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   }, [lineOptions, open, rows.length, warehousesByBusinessUnit]);
 
   const handleQuantityChange = (key: number, value: number) => {
-    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, quantity: value } : r)));
+    setRows((prev) =>
+      prev.map((r) =>
+        r.key === key ? { ...r, quantity: sanitizeQuantityForUom(value, r.uom) } : r,
+      ),
+    );
   };
 
   const handlePurposeChange = (key: number, value: string) => {
@@ -348,7 +368,19 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   };
 
   const updateRow = (key: number, patch: Partial<RequestRowItem>) => {
-    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.key !== key) return r;
+        const nextRow = { ...r, ...patch };
+        if (patch.uom !== undefined) {
+          return {
+            ...nextRow,
+            quantity: sanitizeQuantityForUom(nextRow.quantity, nextRow.uom),
+          };
+        }
+        return nextRow;
+      }),
+    );
   };
 
   const handleDeleteRow = (key: number) => {
@@ -365,6 +397,13 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     const zeroQty = rows.some((r) => r.quantity <= 0);
     if (zeroQty) {
       message.warning('Quantity must be greater than 0 for all items.');
+      return;
+    }
+    const invalidWholeQty = rows.some(
+      (r) => !allowsDecimalQuantity(r.uom) && !Number.isInteger(Number(r.quantity)),
+    );
+    if (invalidWholeQty) {
+      message.warning('This UOM requires whole-number quantity.');
       return;
     }
     if (!remark.trim()) {
@@ -555,10 +594,13 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
         const availableStock = Number(record.item.stock || 0);
         const exceedsStock = availableStock > 0 && record.quantity > availableStock;
         const isOutOfStock = availableStock <= 0;
+        const decimalQtyAllowed = allowsDecimalQuantity(record.uom);
         return (
           <div style={{ width: '100%' }}>
             <InputNumber
-              min={1}
+              min={decimalQtyAllowed ? MIN_DECIMAL_QTY : WHOLE_QTY_MIN}
+              step={decimalQtyAllowed ? DECIMAL_QTY_STEP : WHOLE_QTY_MIN}
+              precision={decimalQtyAllowed ? 2 : 0}
               value={record.quantity}
               onChange={(val) => handleQuantityChange(record.key, val ?? 0)}
               style={{ width: '100%' }}

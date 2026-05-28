@@ -13,8 +13,8 @@ import {
   message,
   Badge,
   Modal,
-  Popconfirm,
   QRCode,
+  Radio,
 } from 'antd';
 import { DownOutlined, RightOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -116,6 +116,7 @@ export interface RequestDetailLineItem {
   category?: string;
   businessUnit?: string;
   uom?: string;
+  itemCondition?: string;
 }
 
 export interface RequestDetailActivity {
@@ -123,6 +124,7 @@ export interface RequestDetailActivity {
   description: string;
   date?: string;
   by?: string;
+  remark?: string;
   dot?: 'pending' | 'done';
 }
 
@@ -136,13 +138,14 @@ export interface RequestDetailData {
   totalItems: number;
   receivedItems?: number;
   remark?: string;
+  warehouseRemark?: string;
   requestedBy?: string;
   approvedBy?: string;
   rejectedBy?: string;
   warehouseBy?: string;
   items: RequestDetailLineItem[];
   activities: RequestDetailActivity[];
-  draftItems?: Array<{ requestLineId: number; draftQty: number }>;
+  draftItems?: Array<{ requestLineId: number; draftQty: number; itemCondition?: string }>;
   shipments?: Shipment[];
   pickupStatus?: string;
   rawStatus?: string;
@@ -160,20 +163,21 @@ export interface DrawerBatchReturnItemsProps {
   onIssueRequest?: (payload: {
     id: number;
     warehouseCode?: string;
-    lines: Array<{ requestLineId: number; issueQty: number }>;
+    lines: Array<{ requestLineId: number; issueQty: number; itemCondition?: string }>;
   }) => Promise<void>;
   onSaveDraft?: (payload: {
     id: number;
     warehouseCode?: string;
-    lines: Array<{ requestLineId: number; issueQty: number }>;
+    lines: Array<{ requestLineId: number; issueQty: number; itemCondition?: string }>;
   }) => Promise<void>;
   onDeleteDraft?: (id: number) => Promise<void>;
   onAcceptRequest?: (id: number) => Promise<void>;
-  onConfirmPickup?: (payload: { id: number; fulfillmentId?: string }) => Promise<void>;
+  onConfirmPickup?: (payload: { id: number; fulfillmentId?: string; note?: string }) => Promise<void>;
   onGeneratePickupQr?: (payload: { id: number; fulfillmentId?: string }) => Promise<void>;
 }
 
 type SendingMap = Record<string, number>;
+type ConditionMap = Record<string, 'NEW' | 'USED'>;
 
 const clampInt = (v: unknown) => {
   const n = Number(v);
@@ -351,12 +355,15 @@ export default function RequestedBatchWareHouse({
   const [sendingByProductId, setSendingByProductId] = useState<SendingMap>({});
   // Accumulated draft keyed by request line across multiple Save clicks (not yet committed to a shipment).
   const [draftByProductId, setDraftByProductId] = useState<SendingMap>({});
+  const [conditionByProductId, setConditionByProductId] = useState<ConditionMap>({});
   const [workingItems, setWorkingItems] = useState<RequestDetailLineItem[]>([]);
   // Committed shipment batches (each one is a Save & Pick up result)
   const [shipmentBatches, setShipmentBatches] = useState<Shipment[]>([]);
   const [confirmPickupPopupOpen, setConfirmPickupPopupOpen] = useState(false);
   const [confirmPickupLoading, setConfirmPickupLoading] = useState(false);
   const [confirmPickupShipmentId, setConfirmPickupShipmentId] = useState<string | null>(null);
+  const [confirmPickupRemark, setConfirmPickupRemark] = useState('');
+  const [saveAndPickupModalOpen, setSaveAndPickupModalOpen] = useState(false);
   const [pickupQrModalOpen, setPickupQrModalOpen] = useState(false);
   const [pickupQrLoading, setPickupQrLoading] = useState(false);
   const [pickupQrShipmentId, setPickupQrShipmentId] = useState<string | null>(null);
@@ -513,15 +520,19 @@ export default function RequestedBatchWareHouse({
 
     const nextSending: SendingMap = {};
     const nextDraft: SendingMap = {};
+    const nextConditions: ConditionMap = {};
     setWorkingItems(data.items);
     data.items.forEach((it) => {
       const lineKey = getRequestLineKey(it);
       nextSending[lineKey] = 0;
-      const savedDraft = data.draftItems?.find((draft) => draft.requestLineId === it.requestLineId)?.draftQty ?? 0;
+      const savedDraftLine = data.draftItems?.find((draft) => draft.requestLineId === it.requestLineId);
+      const savedDraft = savedDraftLine?.draftQty ?? 0;
       nextDraft[lineKey] = clampInt(savedDraft);
+      nextConditions[lineKey] = savedDraftLine?.itemCondition === 'USED' ? 'USED' : 'NEW';
     });
     setSendingByProductId(nextSending);
     setDraftByProductId(nextDraft);
+    setConditionByProductId(nextConditions);
 
     const baseLogs: RequestDetailActivity[] =
       (data.activities || []).length > 0
@@ -611,6 +622,8 @@ export default function RequestedBatchWareHouse({
     setPickupQrModalOpen(false);
     setPickupQrShipmentId(null);
     setConfirmPickupShipmentId(null);
+    setConfirmPickupRemark('');
+    setSaveAndPickupModalOpen(false);
     onClose?.();
   };
 
@@ -824,7 +837,7 @@ export default function RequestedBatchWareHouse({
     });
   };
 
-  const handleConfirmPickupRequest = async () => {
+  const handleConfirmPickupRequest = async (remark?: string) => {
     if (!canWarehouseOperate) {
       message.error('You are not allowed to confirm pickup.');
       return;
@@ -837,9 +850,14 @@ export default function RequestedBatchWareHouse({
 
     setConfirmPickupLoading(true);
     try {
-      await onConfirmPickup({ id: data.id, fulfillmentId: confirmPickupShipmentId });
+      await onConfirmPickup({
+        id: data.id,
+        fulfillmentId: confirmPickupShipmentId,
+        note: remark?.trim() || undefined,
+      });
       setConfirmPickupPopupOpen(false);
       setConfirmPickupShipmentId(null);
+      setConfirmPickupRemark('');
       message.success('Pickup confirmed successfully.');
     } catch (_error) {
       message.error('Failed to confirm pickup.');
@@ -985,6 +1003,7 @@ export default function RequestedBatchWareHouse({
       .map((item) => ({
         requestLineId: Number(item.requestLineId || 0),
         issueQty: Math.min(clampInt(nextDraft[getRequestLineKey(item)]), getMaxSelectableQty(item, 0)),
+        itemCondition: conditionByProductId[getRequestLineKey(item)] || 'NEW',
       }))
       .filter((item) => item.requestLineId > 0 && item.issueQty > 0);
 
@@ -1086,10 +1105,11 @@ export default function RequestedBatchWareHouse({
     }
     if (onIssueRequest && data.id) {
       const lines = workingItems
-        .map((item) => ({
-          requestLineId: Number(item.requestLineId || 0),
-          issueQty: Math.min(clampInt(mergedDraft[getRequestLineKey(item)]), getMaxSelectableQty(item, 0)),
-        }))
+      .map((item) => ({
+        requestLineId: Number(item.requestLineId || 0),
+        issueQty: Math.min(clampInt(mergedDraft[getRequestLineKey(item)]), getMaxSelectableQty(item, 0)),
+        itemCondition: conditionByProductId[getRequestLineKey(item)] || 'NEW',
+      }))
         .filter((item) => item.requestLineId > 0 && item.issueQty > 0);
       if (lines.length === 0) {
         message.warning('No valid request lines were found to issue.');
@@ -1243,6 +1263,34 @@ export default function RequestedBatchWareHouse({
         );
       },
     },
+    {
+      title: 'Condition',
+      key: 'itemCondition',
+      width: 'auto',
+      render: (_: unknown, record) => {
+        const lineKey = getRequestLineKey(record);
+        const current = conditionByProductId[lineKey] || 'NEW';
+
+        return (
+          <Radio.Group
+            size="small"
+            optionType="button"
+            buttonStyle="solid"
+            value={current}
+            disabled={!canSelectAmount || draftDeleteLoading}
+            onChange={(event) =>
+              setConditionByProductId((prev) => ({
+                ...prev,
+                [lineKey]: event.target.value === 'USED' ? 'USED' : 'NEW',
+              }))
+            }
+          >
+            <Radio.Button value="NEW">New</Radio.Button>
+            <Radio.Button value="USED">Used</Radio.Button>
+          </Radio.Group>
+        );
+      },
+    },
   ];
 
   // ─── Shipment Batch Cards ────────────────────────────────────────────────────
@@ -1316,11 +1364,19 @@ export default function RequestedBatchWareHouse({
         title={cardTitle}
         extra={cardExtra}
       >
-        <div style={{ marginBottom: 6 }}>
+        {/* <div style={{ marginBottom: 6 }}>
           <Text type="secondary" style={{ fontSize: 12 }}>
             Created by {shipment.createdBy} · {formatSpfDateTime(shipment.createdAt)}
           </Text>
-        </div>
+        </div> */}
+        {isCompleted ? (
+          <div style={{ marginBottom: 8 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Confirmed by: {shipment.confirmedBy || '-'}
+              {shipment.remark?.trim() ? ` ("${shipment.remark.trim()}")` : ''}
+            </Text>
+          </div>
+        ) : null}
         <Table
           size="small"
           rowKey={(record, index) => `${record.productId}-${record.quantity}-${record.uom || ''}-${index ?? 0}`}
@@ -1330,6 +1386,7 @@ export default function RequestedBatchWareHouse({
             { title: 'Product ID', dataIndex: 'productId', width: 140 },
             { title: 'Item Name', dataIndex: 'itemName', ellipsis: true },
             { title: 'UoM', dataIndex: 'uom', width: 90 },
+            { title: 'Condition', dataIndex: 'itemCondition', width: 110, render: (value: string | undefined) => value || 'New' },
             { title: 'Qty Sent', dataIndex: 'quantity', width: 90, align: 'right' as const },
           ]}
         />
@@ -1364,20 +1421,13 @@ export default function RequestedBatchWareHouse({
                 <Button danger onClick={handleDeleteDraft} loading={draftDeleteLoading}>
                   Delete
                 </Button>
-                <Popconfirm
-                  title="Are you sure to save and pick up?"
-                  okText="Yes"
-                  cancelText="No"
-                  onConfirm={handleSaveAndPickUp}
+                <Button
+                  type="primary"
                   disabled={draftDeleteLoading || hasIssueQtyValidationError}
+                  onClick={() => setSaveAndPickupModalOpen(true)}
                 >
-                  <Button
-                    type="primary"
-                    disabled={draftDeleteLoading || hasIssueQtyValidationError}
-                  >
-                    Save &amp; Pick up
-                  </Button>
-                </Popconfirm>
+                  Save &amp; Pick up
+                </Button>
               </Space>
             </div>
           ) : null
@@ -1419,7 +1469,7 @@ export default function RequestedBatchWareHouse({
             ) : null}
           </div>
         }
-        width="100%"
+        width="70%"
         placement="right"
         onClose={handleClose}
         open={open}
@@ -1436,20 +1486,13 @@ export default function RequestedBatchWareHouse({
             </Space>
             <Space>
               {showSaveAndPickUp ? (
-                <Popconfirm
-                  title="Are you sure to save and pick up?"
-                  okText="Yes"
-                  cancelText="No"
-                  onConfirm={handleSaveAndPickUp}
+                <Button
+                  type="primary"
                   disabled={draftDeleteLoading || hasIssueQtyValidationError}
+                  onClick={() => setSaveAndPickupModalOpen(true)}
                 >
-                  <Button
-                    type="primary"
-                    disabled={draftDeleteLoading || hasIssueQtyValidationError}
-                  >
-                    Save &amp; Pick up
-                  </Button>
-                </Popconfirm>
+                  Save &amp; Pick up
+                </Button>
               ) : null}
             </Space>
           </div>
@@ -1612,7 +1655,10 @@ export default function RequestedBatchWareHouse({
                       <br />
                       <Text type="secondary">{a.description}</Text>
                       <br />
-                      <Text type="secondary">By: {a.by || '-'}</Text>
+                      <Text type="secondary">
+                        By: {a.by || '-'}
+                        {a.remark?.trim() ? ` ("${a.remark.trim()}")` : ''}
+                      </Text>
                     </div>
                     <Text type="secondary">{formatSpfDateTime(a.date)}</Text>
                   </div>
@@ -1639,9 +1685,36 @@ export default function RequestedBatchWareHouse({
         onCancel={() => {
           setConfirmPickupPopupOpen(false);
           setConfirmPickupShipmentId(null);
+          setConfirmPickupRemark('');
         }}
-        onConfirm={() => handleConfirmPickupRequest()}
+        showRemark
+        requireRemark
+        remarkLabel="Warehouse Remark"
+        remarkPlaceholder="Please enter pickup confirmation remark"
+        remarkRequiredMessage="Warehouse remark is required when confirming pickup."
+        initialRemark={confirmPickupRemark}
+        onConfirm={(payload) => handleConfirmPickupRequest(payload?.remark)}
       />
+
+      <Modal
+        title="Save and pick up"
+        open={saveAndPickupModalOpen}
+        width={360}
+        // centered
+        closable={false}
+        okText="Yes"
+        cancelText="No"
+        okButtonProps={{
+          disabled: draftDeleteLoading || hasIssueQtyValidationError,
+        }}
+        onOk={() => {
+          setSaveAndPickupModalOpen(false);
+          handleSaveAndPickUp();
+        }}
+        onCancel={() => setSaveAndPickupModalOpen(false)}
+      >
+        <Text>Are you sure to save and pick up?</Text>
+      </Modal>
 
       <Modal
         title="Pickup QR Code"

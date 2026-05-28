@@ -38,6 +38,7 @@ type IssueLineDto = {
   forLine?: string | null;
   remark?: string | null;
   imageId?: string | string[] | null;
+  itemCondition?: string | null;
 };
 
 type IssueHistoryLineDto = {
@@ -47,6 +48,7 @@ type IssueHistoryLineDto = {
   sparePartName: string;
   deliveredQty: number;
   unit: string;
+  itemCondition?: string | null;
 };
 
 type IssueHistoryDto = {
@@ -76,6 +78,7 @@ type IssueRequestDto = {
   requestedDate?: string;
   requestStatus: BackendIssueStatus;
   remark?: string | null;
+  warehouseRemark?: string | null;
   totalRequestedQty: number;
   totalApprovedQty: number;
   totalIssuedQty: number;
@@ -83,7 +86,7 @@ type IssueRequestDto = {
   priority?: string | null;
   items?: IssueLineDto[];
   history?: IssueHistoryDto[];
-  draftItems?: Array<{ requestLineId: number; draftQty: number }>;
+  draftItems?: Array<{ requestLineId: number; draftQty: number; itemCondition?: string | null }>;
   pickupStatus?: string | null;
   activities?: Array<{
     label?: string | null;
@@ -116,6 +119,7 @@ type IssueRequestPayload = {
   lines: Array<{
     requestLineId: number;
     issueQty: number;
+    itemCondition?: string;
   }>;
 };
 
@@ -123,7 +127,7 @@ type SaveDraftPayload = IssueRequestPayload;
 type DeleteDraftPayload = { id: number };
 type AcceptIssuePayload = { id: number };
 type GeneratePickupQrPayload = { id: number; fulfillmentId?: string };
-type ConfirmPickupPayload = { id: number; fulfillmentId?: string };
+type ConfirmPickupPayload = { id: number; fulfillmentId?: string; note?: string };
 type IssueDashboardDto = {
   pendingCount: number;
   readyCount: number;
@@ -368,6 +372,7 @@ const mapIssueLineDetail = (item: IssueLineDto, requestId: string, index: number
   businessUnit: item.businessUnit || item.business_unit || item.bu || undefined,
   uom: item.unit || 'pcs',
   imageId: Array.isArray(item.imageId) ? item.imageId[0] : item.imageId || undefined,
+  itemCondition: item.itemCondition || undefined,
 });
 
 const buildShipments = (
@@ -394,11 +399,13 @@ const buildShipments = (
     pickupQrExpiredAt: entry.pickupQrExpiredAt || undefined,
     confirmedAt: entry.pickupConfirmedAt || undefined,
     confirmedBy: entry.pickupConfirmedBy || undefined,
+    remark: entry.note || undefined,
     lines: (entry.items || []).map((line) => ({
       productId: line.sparePartId || line.sparePartCode,
       itemName: line.sparePartName,
       quantity: Number(line.deliveredQty || 0),
       uom: line.unit || 'pcs',
+      itemCondition: line.itemCondition || undefined,
     })),
   }));
 };
@@ -472,6 +479,7 @@ const buildActivities = (
         description: `Shipment #${shipmentNo} pickup confirmed`,
         date: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate,
         by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+        remark: entry.note?.trim() || undefined,
         dot: 'done',
       });
 
@@ -481,6 +489,7 @@ const buildActivities = (
           description: `Shipment #${shipmentNo} was picked up, but the request is still partially issued.`,
           date: entry.pickupConfirmedAt || entry.issuedAt || item.requestedDate,
           by: entry.pickupConfirmedBy || entry.warehouseStaffId || undefined,
+          remark: entry.note?.trim() || undefined,
           dot: 'done',
         });
       }
@@ -496,6 +505,7 @@ const buildActivities = (
         finalConfirmedEntry.issuedAt ||
         item.requestedDate,
       by: finalConfirmedEntry.pickupConfirmedBy || finalConfirmedEntry.warehouseStaffId || undefined,
+      remark: finalConfirmedEntry.note?.trim() || undefined,
       dot: 'done',
     });
   }
@@ -510,6 +520,46 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
     .map((line) => resolveCategoryName(line.category))
     .find((value): value is string => Boolean(value));
   const normalizedStatus = deriveDetailStatus(item.requestStatus, item.pickupStatus, item.history || []);
+  const orderedHistory = [...(item.history || [])].sort((left, right) => {
+    const leftTime = new Date(left.issuedAt || item.requestedDate || '').getTime();
+    const rightTime = new Date(right.issuedAt || item.requestedDate || '').getTime();
+    return leftTime - rightTime;
+  });
+  const confirmedHistory = orderedHistory.filter((entry) => Boolean(entry.pickupConfirmedAt));
+  const getActivityShipmentNo = (label?: string | null, description?: string | null) => {
+    const text = `${label || ''} ${description || ''}`;
+    const match = text.match(/(?:shipment|issue|pick\s*up)\s*#?\s*(\d+)/i) || text.match(/#\s*(\d+)/);
+    return match?.[1] ? Number(match[1]) : undefined;
+  };
+  const getPickupActivityRemark = (activity: {
+    label?: string | null;
+    description?: string | null;
+    date?: string | null;
+  }) => {
+    const label = String(activity.label || '').toLowerCase();
+    const description = String(activity.description || '').toLowerCase();
+    if (label.includes('ready to pick')) return undefined;
+
+    const isPickupActivity =
+      label.includes('pick') ||
+      label.includes('partial') ||
+      label.includes('complete') ||
+      description.includes('pick');
+
+    if (!isPickupActivity) return undefined;
+
+    const shipmentNo = getActivityShipmentNo(activity.label, activity.description);
+    const remarkByShipmentNo = shipmentNo ? orderedHistory[shipmentNo - 1]?.note?.trim() : undefined;
+    if (remarkByShipmentNo) return remarkByShipmentNo;
+
+    const activityTime = activity.date ? new Date(activity.date).getTime() : Number.NaN;
+    const matchedEntry = confirmedHistory.find((entry) => {
+      const confirmedTime = entry.pickupConfirmedAt ? new Date(entry.pickupConfirmedAt).getTime() : Number.NaN;
+      return Number.isFinite(activityTime) && Number.isFinite(confirmedTime) && activityTime === confirmedTime;
+    });
+
+    return matchedEntry?.note?.trim() || (confirmedHistory.length === 1 ? confirmedHistory[0].note?.trim() : undefined);
+  };
 
   return {
     id: Number(item.id || 0),
@@ -521,6 +571,7 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
     totalItems: visibleIssueLines.length,
     receivedItems: Number(item.totalIssuedQty || 0),
     remark: item.remark || '',
+    warehouseRemark: item.warehouseRemark || undefined,
     requestedBy: item.requesterId || 'Requester',
     approvedBy: item.approverId || undefined,
     warehouseBy: item.history?.[item.history.length - 1]?.warehouseStaffId || 'Warehouse',
@@ -530,6 +581,7 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
       description: String(activity.description || '').trim(),
       date: activity.date || item.requestedDate,
       by: activity.by?.trim() ? activity.by.trim() : undefined,
+      remark: getPickupActivityRemark(activity),
       dot: activity.dot === 'pending' ? 'pending' : 'done',
     })),
     // activities:
@@ -548,6 +600,7 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
       .map((entry) => ({
         requestLineId: Number(entry.requestLineId || 0),
         draftQty: Number(entry.draftQty || 0),
+        itemCondition: entry.itemCondition || undefined,
       })),
     pickupStatus: item.pickupStatus || undefined,
     rawStatus: item.requestStatus,

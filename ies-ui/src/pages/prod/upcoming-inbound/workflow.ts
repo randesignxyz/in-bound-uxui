@@ -520,8 +520,39 @@ export function getReceiptSapStatus(receipt: Pick<GoodsReceipt, 'sapGrStatus' | 
   return receipt.processState === 'SUPERVISOR_APPROVED' ? 'Pending SAP' : undefined;
 }
 
+function getReceiptItemQuantityKey(item: Pick<GRItem, 'poNumber' | 'poLineNumber' | 'code'>) {
+  return `${item.poNumber || 'NO_PO'}::${item.poLineNumber ?? item.code}::${item.code}`;
+}
+
+function getReceiptItemQuantityGroups(items: GRItem[]) {
+  const groups = new Map<
+    string,
+    { code: string; poQty: number; receiveQty: number; uom: string }
+  >();
+
+  items.forEach((item) => {
+    if (item.isDeferred || item.isMissing) return;
+    const key = getReceiptItemQuantityKey(item);
+    const current = groups.get(key) || {
+      code: item.code,
+      poQty: item.poQty,
+      receiveQty: 0,
+      uom: item.uom,
+    };
+    current.poQty = Math.max(current.poQty, item.poQty);
+    current.receiveQty += item.receiveQty;
+    groups.set(key, current);
+  });
+
+  return Array.from(groups.values());
+}
+
 export function hasReceiptDiscrepancy(items: GRItem[]) {
-  return items.some((item) => !item.isDeferred && (item.isMissing || item.receiveQty < item.poQty));
+  if (items.some((item) => !item.isDeferred && item.isMissing)) {
+    return true;
+  }
+
+  return getReceiptItemQuantityGroups(items).some((item) => item.receiveQty < item.poQty);
 }
 
 function normalizeReceiptItemPoNumber(
@@ -537,25 +568,17 @@ function normalizeReceiptItemPoNumber(
 }
 
 export function buildReceiptExceptionReason(items: GRItem[]) {
-  return items
-    .flatMap((item) => {
-      if (item.isMissing) {
-        return [
-          `${item.code}: missing item${item.missingRemark?.trim() ? ` - ${item.missingRemark.trim()}` : ''}`,
-        ];
-      }
+  const missingReasons = items
+    .filter((item) => !item.isDeferred && item.isMissing)
+    .map((item) => `${item.code}: missing item${item.missingRemark?.trim() ? ` - ${item.missingRemark.trim()}` : ''}`);
+  const shortReasons = getReceiptItemQuantityGroups(items)
+    .filter((item) => item.receiveQty < item.poQty)
+    .map((item) => {
+      const shortage = item.poQty - item.receiveQty;
+      return `${item.code}: short by ${shortage.toLocaleString()} ${item.uom}`;
+    });
 
-      if (item.isDeferred) {
-        return [];
-      }
-
-      if (item.receiveQty < item.poQty) {
-        const shortage = item.poQty - item.receiveQty;
-        return [`${item.code}: short by ${shortage.toLocaleString()} ${item.uom}`];
-      }
-
-      return [];
-    })
+  return [...missingReasons, ...shortReasons]
     .join('; ');
 }
 

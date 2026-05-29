@@ -29,11 +29,13 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
   const hasInboundSyncAdminRole = roles.some((role) => role === 'ROLE_INBOUND_ADMIN');
   const inboundWarehouseBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_WAREHOUSE_STAFF_');
+  const inboundProcurementBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_PROCUREMENT_');
   const inboundQcBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_QC_');
   const inboundSupervisorBusinessUnits = buildInboundBusinessUnits('ROLE_INBOUND_SUPERVISOR_');
   const inboundVisibleBusinessUnits = Array.from(
     new Set([
       ...inboundWarehouseBusinessUnits,
+      ...inboundProcurementBusinessUnits,
       ...inboundQcBusinessUnits,
       ...inboundSupervisorBusinessUnits,
     ]),
@@ -50,9 +52,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
   ];
 
   const hasInboundWarehouseRole = inboundWarehouseBusinessUnits.length > 0;
+  const hasInboundProcurementRole = inboundProcurementBusinessUnits.length > 0;
   const hasInboundQcRole = inboundQcBusinessUnits.length > 0;
   const hasInboundSupervisorRole = inboundSupervisorBusinessUnits.length > 0;
-  const hasInboundRole = hasInboundWarehouseRole || hasInboundQcRole || hasInboundSupervisorRole;
+  const hasInboundRole =
+    hasInboundWarehouseRole || hasInboundProcurementRole || hasInboundQcRole || hasInboundSupervisorRole;
 
   // Check if user has ANY super role (auto allow all)
   const isSuperAdmin = roles.some(r => SUPER_ROLES.includes(r));
@@ -185,12 +189,14 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessPurchaseMenuItem:
       currentUser?.authorities.some((item) => item === 'ROLE_PURCHASE_ADMIN') || false,
     canAccessInboundWarehouseStaff: hasInboundWarehouseRole || isSuperAdmin,
+    canAccessInboundProcurement: hasInboundProcurementRole || isSuperAdmin,
     canSyncInboundPurchaseOrders: hasInboundSyncAdminRole || hasInboundSupervisorRole || isSuperAdmin,
     canSyncInboundMasterData: hasInboundSyncAdminRole || hasInboundSupervisorRole || isSuperAdmin,
     canAccessInboundQc: hasInboundQcRole || isSuperAdmin,
     canAccessInboundSupervisor: hasInboundSupervisorRole || isSuperAdmin,
     inboundVisibleBusinessUnits: isSuperAdmin ? ['*'] : inboundVisibleBusinessUnits,
     inboundWarehouseBusinessUnits: isSuperAdmin ? ['*'] : inboundWarehouseBusinessUnits,
+    inboundProcurementBusinessUnits: isSuperAdmin ? ['*'] : inboundProcurementBusinessUnits,
     inboundQcBusinessUnits: isSuperAdmin ? ['*'] : inboundQcBusinessUnits,
     inboundSupervisorBusinessUnits: isSuperAdmin ? ['*'] : inboundSupervisorBusinessUnits,
     hasInboundSyncAdminRole: hasInboundSyncAdminRole || false,
@@ -654,6 +660,14 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         OUTBOUND_TRANSFER_ROLES.some((it) => it === item),
       ) || hasInboundRole || false,
+    canAccessUpcomingInboundOperationsMenuItem:
+      currentUser?.authorities.some((item) =>
+        OUTBOUND_TRANSFER_ROLES.some((it) => it === item),
+      ) ||
+      hasInboundWarehouseRole ||
+      hasInboundQcRole ||
+      hasInboundSupervisorRole ||
+      false,
 
     canAccessInventoryTranferRequestMenuItem:
       currentUser?.authorities.some((item) =>
@@ -1502,3 +1516,4 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
 
 }
+

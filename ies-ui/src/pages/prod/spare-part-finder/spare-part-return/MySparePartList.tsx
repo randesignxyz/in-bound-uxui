@@ -445,6 +445,12 @@ export default function MySparePartList() {
                 </Typography.Link>
               ),
             },
+            {
+              key: 'item_condition',
+              title: 'Condition',
+              dataIndex: 'item_condition',
+              render: (_, record) => record.item_condition || record.itemCondition || '-',
+            },
             { key: 'spare_part_name', title: 'Name', dataIndex: 'spare_part_name' },
             {
               key: 'quantity',

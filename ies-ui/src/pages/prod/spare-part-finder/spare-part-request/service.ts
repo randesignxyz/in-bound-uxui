@@ -41,6 +41,12 @@ type MyRequestLineDto = {
   requestedQty: number;
   approvedQty?: number;
   unit: string;
+  fromWarehouse?: string | null;
+  from_warehouse?: string | null;
+  fromWarehouseCode?: string | null;
+  from_warehouse_code?: string | null;
+  issuedFromWarehouseCode?: string | null;
+  issued_from_warehouse_code?: string | null;
   toWarehouseCode?: string | null;
   forLine?: string | null;
   remark?: string | null;
@@ -153,6 +159,11 @@ type CreateRequestPayload = {
   priority: 'normal' | 'high' | 'urgent';
 };
 
+const toDecimalPayload = (value: number | string): string => {
+  const normalized = String(value ?? '').trim();
+  return normalized || '0';
+};
+
 type SparePartWarehouseOption = {
   warehouseCode: string;
   warehouseName: string;
@@ -198,7 +209,7 @@ type ApproveRequestPayload = {
   id: number;
   lines: Array<{
     requestLineId: number;
-    approvedQty: number;
+    approvedQty: number | string;
     editedAt?: string;
     rejected?: boolean;
     rejectRemark?: string;
@@ -210,7 +221,7 @@ type UpdatePendingRequestLinesPayload = {
   id: number;
   lines: Array<{
     requestLineId: number;
-    requestedQty: number;
+    requestedQty: number | string;
     editedAt?: string;
   }>;
 };
@@ -261,7 +272,7 @@ const SparePartRequestAction = {
     endpoint: 'PROD',
     payload: {
       items: payload.items.map((line) => ({
-        requestedQty: line.quantity,
+        requestedQty: toDecimalPayload(line.quantity),
         purpose: line.purpose,
         toWarehouseCode: line.toWarehouseCode,
         forLine: line.forLine,
@@ -276,13 +287,25 @@ const SparePartRequestAction = {
     type: 'EXEC',
     actionName: 'approve-spare-part-request',
     endpoint: 'PROD',
-    payload,
+    payload: {
+      ...payload,
+      lines: payload.lines.map((line) => ({
+        ...line,
+        approvedQty: toDecimalPayload(line.approvedQty),
+      })),
+    },
   }),
   updatePendingRequestLines: (payload: UpdatePendingRequestLinesPayload): ServiceApiType<any> => ({
     type: 'EXEC',
     actionName: 'update-pending-spare-part-request-lines',
     endpoint: 'PROD',
-    payload,
+    payload: {
+      ...payload,
+      lines: payload.lines.map((line) => ({
+        ...line,
+        requestedQty: toDecimalPayload(line.requestedQty),
+      })),
+    },
   }),
   getRequestDetail: (id: number): ServiceApiType<{ id: number }> => ({
     type: 'FETCH_QUERY',
@@ -523,6 +546,22 @@ const mapRequestLine = (item: MyRequestLineDto): MyRequestLineItem => ({
   requestedQty: Number(item.requestedQty || 0),
   approvedQty: Number(item.approvedQty || 0),
   unit: item.unit || 'pcs',
+  fromWarehouse:
+    item.fromWarehouse ||
+    item.from_warehouse ||
+    item.fromWarehouseCode ||
+    item.from_warehouse_code ||
+    item.issuedFromWarehouseCode ||
+    item.issued_from_warehouse_code ||
+    undefined,
+  fromWarehouseCode:
+    item.fromWarehouseCode ||
+    item.from_warehouse_code ||
+    item.fromWarehouse ||
+    item.from_warehouse ||
+    item.issuedFromWarehouseCode ||
+    item.issued_from_warehouse_code ||
+    undefined,
   toWarehouseCode: item.toWarehouseCode || undefined,
   forLine: item.forLine || undefined,
   remark: item.remark || undefined,

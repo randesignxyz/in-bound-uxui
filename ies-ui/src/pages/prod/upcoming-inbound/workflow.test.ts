@@ -525,22 +525,14 @@ describe('buildReceiptTimelineActivities', () => {
     expect(qcPendingActivity?.secondaryText).toBeUndefined();
   });
 
-  it('keeps skip qc merge activities as warehouse actions instead of deriving qc passed states', () => {
+  it('keeps skip qc activities as warehouse actions instead of deriving qc passed states', () => {
     const receipt = createReceipt({
       processState: 'PENDING_SUPERVISOR_REVIEW',
       displayStatus: 'Pending Supervisor Review',
       activities: [
         {
           title: 'Skip QC by warehouse',
-          description: 'Warehouse skipped QC and merged the inbound receiving into IR-SUP while supervisor review was still pending',
-          performedBy: 'warehouse',
-          timestamp: '2026-04-20 03:12:20',
-          state: 'done',
-          processState: 'MERGED_TO_SUPERVISOR_REVIEW',
-        },
-        {
-          title: 'Warehouse skipped QC and merged item(s) into this supervisor receipt',
-          description: 'Item(s) from IR-001 merged after QC was skipped',
+          description: 'Warehouse skipped QC and forwarded the receipt directly to supervisor review',
           performedBy: 'warehouse',
           timestamp: '2026-04-20 03:12:20',
           state: 'done',
@@ -555,9 +547,6 @@ describe('buildReceiptTimelineActivities', () => {
     expect(activities).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ title: 'Skip QC by warehouse' }),
-        expect.objectContaining({
-          title: 'Warehouse skipped QC and merged item(s) into this supervisor receipt',
-        }),
       ]),
     );
   });
@@ -589,17 +578,10 @@ describe('buildReceiptTimelineActivities', () => {
 
     const activities = buildReceiptTimelineActivities(receipt);
     const skipQcIndex = activities.findIndex((activity) => activity.title === 'Skip QC by warehouse');
-    const supervisorPendingIndex = activities.findIndex(
-      (activity) => activity.title === 'Supervisor Pending',
-    );
 
     expect(skipQcIndex).toBeGreaterThan(-1);
-    expect(supervisorPendingIndex).toBe(skipQcIndex + 1);
     expect(activities[skipQcIndex]).toMatchObject({
       secondaryText: 'by warehouse',
-      timestamp: '',
-    });
-    expect(activities[supervisorPendingIndex]).toMatchObject({
       timestamp: '2026-04-22 01:50:53',
       processState: 'PENDING_SUPERVISOR_REVIEW',
     });

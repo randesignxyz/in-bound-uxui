@@ -2055,6 +2055,8 @@ export default function UpcomingInboundListview({
         items: payload.items.map((item) => ({
           code: item.code,
           poNumber: item.poNumber || undefined,
+          poLineNumber: item.poLineNumber ?? undefined,
+          batchNumber: item.batchNumber || undefined,
           qcDecision: item.qcDecision || 'Pass',
           qcRejectedQty: item.qcRejectedQty ?? undefined,
           qcRemark: item.qcRemark || undefined,

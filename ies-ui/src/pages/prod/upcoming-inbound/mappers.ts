@@ -67,7 +67,6 @@ const LEGACY_STATUS_VALUES: LegacyGRStatus[] = [
   'Approved',
   'Ready To Post SAP',
   'Posted',
-  'Merged',
   'Correction Required',
 ];
 

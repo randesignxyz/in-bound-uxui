@@ -459,6 +459,8 @@ export interface InboundLinkPoInput {
 export interface InboundQcReviewItemInput {
   code: string;
   poNumber?: string | null;
+  poLineNumber?: number | null;
+  batchNumber?: string | null;
   qcDecision: QcDecision;
   qcRejectedQty?: number | null;
   qcRemark?: string | null;

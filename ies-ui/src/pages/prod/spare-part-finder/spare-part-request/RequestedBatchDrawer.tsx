@@ -150,64 +150,6 @@ const getActivityRank = (label?: string): number => {
   return 10;
 };
 
-const getLineActivityKey = (activity: RequestDetailActivity): string | undefined => {
-  const normalizedLabel = String(activity.label || '').trim().toLowerCase();
-  if (normalizedLabel !== 'item rejected' && normalizedLabel !== 'item edited') return undefined;
-
-  if (typeof activity.requestLineId === 'number') {
-    return `${normalizedLabel}|line:${activity.requestLineId}`;
-  }
-
-  return undefined;
-};
-
-const mergeActivities = (
-  base: RequestDetailActivity[],
-  extra: RequestDetailActivity[] = [],
-): RequestDetailActivity[] => {
-  const seen = new Set<string>();
-  const merged: RequestDetailActivity[] = [];
-  const singletonLabels = new Set(['requested', 'approved', 'rejected', 'in progress', 'completed']);
-  const latestLineActivities = new Map<string, RequestDetailActivity>();
-
-  [...base, ...extra].forEach((activity) => {
-    const normalized: RequestDetailActivity = {
-      ...activity,
-      label: String(activity.label || '').trim(),
-      description: String(activity.description || '').trim(),
-    };
-    const normalizedLabel = normalized.label.toLowerCase();
-    const lineActivityKey = getLineActivityKey(normalized);
-
-    if (lineActivityKey) {
-      const previous = latestLineActivities.get(lineActivityKey);
-      const previousTime = new Date(previous?.date || 0).getTime();
-      const currentTime = new Date(normalized.date || 0).getTime();
-      if (!previous || currentTime >= previousTime) {
-        latestLineActivities.set(lineActivityKey, normalized);
-      }
-      return;
-    }
-
-    if (
-      singletonLabels.has(normalizedLabel) &&
-      merged.some((item) => String(item.label || '').trim().toLowerCase() === normalizedLabel)
-    ) {
-      return;
-    }
-
-    const key =
-      normalizedLabel === 'item rejected' || normalizedLabel === 'item edited'
-        ? `${normalized.label}|${normalized.description}|${normalized.by ?? ''}`
-        : `${normalized.label}|${normalized.description}|${normalized.date ?? ''}|${normalized.by ?? ''}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    merged.push(normalized);
-  });
-
-  return [...merged, ...Array.from(latestLineActivities.values())];
-};
-
 interface PersistedRequestDrawerState {
   activityLogs?: RequestDetailActivity[];
   quantityOverrides?: Record<string, number>;
@@ -634,24 +576,8 @@ export default function RequestedBatchDrawer({
     setEditedItems({ ...serverEditedItems, ...(persistedState?.editedItems || {}) });
     setEditedAtByRequestLineId(persistedState?.editedAtByRequestLineId || {});
 
-    const serverLogs = (data.activities || [])
-      .map((activity) => ({
-        ...activity,
-        date: activity.date ?? data.requestDate,
-        by: activity.by?.trim() ? activity.by.trim() : undefined,
-      }))
-      .filter((activity) => {
-        if (!access.canSpfApprover) return true;
-        const normalizedLabel = String(activity.label || '').trim().toLowerCase();
-        const normalizedDescription = String(activity.description || '').trim().toLowerCase();
-        return !(
-          normalizedLabel === 'item edited' &&
-          normalizedDescription === 'approver adjusted one or more approved quantities.'
-        );
-      });
-
-    setActivityLogs(mergeActivities(serverLogs));
-  }, [access.canSpfApprover, data.activities, data.items, data.pickupBatches, data.receivedItems, data.requestDate, data.status, data.requestId, open]);
+    setActivityLogs(data.activities || []);
+  }, [data.activities, data.items, data.pickupBatches, data.receivedItems, data.requestDate, data.status, data.requestId, open]);
 
   useEffect(() => {
     if (!open || !data.requestId || resetPersistRef.current) return;
@@ -1529,9 +1455,6 @@ export default function RequestedBatchDrawer({
   const shipmentNoForReady = pickupBatches.length > 0 ? pickupBatches.length + 1 : 1;
 
   const displayActivityLogs = useMemo(() => {
-    let readyCount = 0;
-    let partialPickupCount = 0;
-
     return [...activityLogs]
       .filter((activity) => {
         const normalizedLabel = String(activity.label || '').trim().toLowerCase();
@@ -1547,64 +1470,6 @@ export default function RequestedBatchDrawer({
 
         if (leftTime !== rightTime) return leftTime - rightTime;
         return getActivityRank(left.label) - getActivityRank(right.label);
-      })
-      .map((activity) => {
-        const rawLabel = String(activity.label || '').trim();
-        const normalizedLabel = rawLabel.toLowerCase();
-        const parsedBatchNo = parsePickupBatchNo(rawLabel);
-
-        if (normalizedLabel.includes('partial issue')) {
-          partialPickupCount += 1;
-          return {
-            ...activity,
-            label: `Partial Pick up #${parsedBatchNo ?? partialPickupCount}`,
-          };
-        }
-
-        if (normalizedLabel.includes('ready to pick')) {
-          readyCount += 1;
-          return {
-            ...activity,
-            label: 'Ready to Pick up',
-            description:
-              activity.description?.trim() || `Shipment #${readyCount} is ready to pick up`,
-          };
-        }
-
-        if (normalizedLabel.includes('partial pick up') || /^pick up #\d+$/i.test(rawLabel)) {
-          partialPickupCount += 1;
-          return {
-            ...activity,
-            label: `Partial Pick up #${parsedBatchNo ?? partialPickupCount}`,
-          };
-        }
-
-        if (normalizedLabel.includes('processing') || normalizedLabel === 'in progress') {
-          return {
-            ...activity,
-            label: 'In Progress',
-          };
-        }
-
-        if (normalizedLabel === 'draft updated') {
-          return {
-            ...activity,
-            label: 'Draft Updated',
-          };
-        }
-
-        if (normalizedLabel === 'completed') {
-          return {
-            ...activity,
-            label: 'Completed',
-          };
-        }
-
-        if (normalizedLabel === 'requested' || normalizedLabel === 'approved' || normalizedLabel === 'rejected') {
-          return activity;
-        }
-
-        return activity;
       });
   }, [activityLogs, data.requestDate]);
 

@@ -53,7 +53,7 @@ export const buildSummaryColumns = (options: {
   {
     title: 'Fulfillment Progress',
     key: 'progress',
-    width: "15%",
+    width: '20%',
     render: (_, record) => {
       const { total, received, percent } = calcRequestTotals(record);
       return (
@@ -88,6 +88,7 @@ export const buildSummaryColumns = (options: {
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
+    width: 150,
     render: (_, record) => {
       const status = deriveWarehouseDisplayStatus(record);
       return (
@@ -103,7 +104,8 @@ export const buildSummaryColumns = (options: {
   {
     title: 'Action',
     key: 'view',
-    width: 80,
+    width: 96,
+    align: 'center',
     render: (_, record) => (
       <Space size={16}>
         <Button

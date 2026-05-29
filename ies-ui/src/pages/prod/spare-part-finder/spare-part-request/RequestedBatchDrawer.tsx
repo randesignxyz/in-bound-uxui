@@ -12,13 +12,14 @@ import {
   message,
   Modal,
   InputNumber,
+  Popconfirm,
 } from 'antd';
 import { DeleteOutlined, DownOutlined, EditOutlined, RightOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MyRequestItem, RequestPriority, RequestStatus } from './data';
 import SpfDetails from './SpfDetails';
-import { useAccess, useModel } from '@umijs/max';
+import { useAccess } from '@umijs/max';
 import SparePartImage from './SparePartImage';
 import { formatSpfDateTime } from '../shared/dateTime';
 import ValidationPopup from './validatePopup';
@@ -137,16 +138,27 @@ const getActivityRank = (label?: string): number => {
 
   if (normalized === 'requested') return 1;
   if (normalized === 'item rejected') return 2;
-  if (normalized === 'approved') return 3;
-  if (normalized === 'rejected') return 3;
   if (normalized === 'item edited') return 3;
-  if (normalized === 'in progress') return 3;
-  if (normalized === 'draft updated') return 4;
-  if (normalized === 'ready to pick up') return 4;
-  if (normalized === 'confirm pick up') return 5;
-  if (/^partial pick up #\d+$/i.test(normalized)) return 6;
-  if (normalized === 'completed') return 7;
-  return 8;
+  if (normalized === 'approved') return 4;
+  if (normalized === 'rejected') return 4;
+  if (normalized === 'in progress') return 5;
+  if (normalized === 'draft updated') return 6;
+  if (normalized === 'ready to pick up') return 6;
+  if (normalized === 'confirm pick up') return 7;
+  if (/^partial pick up #\d+$/i.test(normalized)) return 8;
+  if (normalized === 'completed') return 9;
+  return 10;
+};
+
+const getLineActivityKey = (activity: RequestDetailActivity): string | undefined => {
+  const normalizedLabel = String(activity.label || '').trim().toLowerCase();
+  if (normalizedLabel !== 'item rejected' && normalizedLabel !== 'item edited') return undefined;
+
+  if (typeof activity.requestLineId === 'number') {
+    return `${normalizedLabel}|line:${activity.requestLineId}`;
+  }
+
+  return undefined;
 };
 
 const mergeActivities = (
@@ -156,6 +168,7 @@ const mergeActivities = (
   const seen = new Set<string>();
   const merged: RequestDetailActivity[] = [];
   const singletonLabels = new Set(['requested', 'approved', 'rejected', 'in progress', 'completed']);
+  const latestLineActivities = new Map<string, RequestDetailActivity>();
 
   [...base, ...extra].forEach((activity) => {
     const normalized: RequestDetailActivity = {
@@ -164,6 +177,17 @@ const mergeActivities = (
       description: String(activity.description || '').trim(),
     };
     const normalizedLabel = normalized.label.toLowerCase();
+    const lineActivityKey = getLineActivityKey(normalized);
+
+    if (lineActivityKey) {
+      const previous = latestLineActivities.get(lineActivityKey);
+      const previousTime = new Date(previous?.date || 0).getTime();
+      const currentTime = new Date(normalized.date || 0).getTime();
+      if (!previous || currentTime >= previousTime) {
+        latestLineActivities.set(lineActivityKey, normalized);
+      }
+      return;
+    }
 
     if (
       singletonLabels.has(normalizedLabel) &&
@@ -181,17 +205,7 @@ const mergeActivities = (
     merged.push(normalized);
   });
 
-  return merged;
-};
-
-const isLocalPersistedActivity = (activity?: RequestDetailActivity | null): boolean => {
-  const normalized = String(activity?.label || '').trim().toLowerCase();
-  return (
-    normalized === 'item edited' ||
-    normalized === 'item deleted' ||
-    normalized === 'item canceled' ||
-    normalized === 'item rejected'
-  );
+  return [...merged, ...Array.from(latestLineActivities.values())];
 };
 
 interface PersistedRequestDrawerState {
@@ -319,7 +333,7 @@ export interface DrawerBatchReturnItemsProps {
   }) => Promise<void>;
   onEditPendingRequestLines?: (payload: {
     id: number;
-    lines: Array<{ requestLineId: number; requestedQty: number; editedAt?: string }>;
+    lines: Array<{ requestLineId: number; requestedQty: number; editedAt?: string; rejected?: boolean; rejectRemark?: string }>;
   }) => Promise<void>;
   onReject?: (payload: { id: number; remark?: string }) => Promise<void>;
   onConfirmPickup?: (id: number) => Promise<void>;
@@ -336,7 +350,6 @@ export default function RequestedBatchDrawer({
   onReject,
   onResubmitRequest,
 }: DrawerBatchReturnItemsProps) {
-  const currentUser = useModel('@@initialState');
   const detailRequestActions = simpleRequestActions();
   const sparePartServices = SparePartRequestAPI(detailRequestActions);
   const [spfOpen, setSpfOpen] = useState(false);
@@ -358,10 +371,8 @@ export default function RequestedBatchDrawer({
   const [editedItems, setEditedItems] = useState<Record<string, boolean>>({});
   const [editedAtByRequestLineId, setEditedAtByRequestLineId] = useState<Record<string, string>>({});
   const [editingItem, setEditingItem] = useState<RequestDetailLineItem | null>(null);
-  const [editingQuantity, setEditingQuantity] = useState<number>(1);
+  const [editingQuantity, setEditingQuantity] = useState<number | null>(1);
   const [rejectingItem, setRejectingItem] = useState<RequestDetailLineItem | null>(null);
-  const lastServerStatusRef = useRef<RequestStatus | null>(null);
-  const lastShipmentNoticeRef = useRef<number>(0);
   const initKeyRef = useRef<string>('');
   const productDetailRequestRef = useRef(0);
   const resetPersistRef = useRef(false);
@@ -457,10 +468,6 @@ export default function RequestedBatchDrawer({
     return data.status;
   }, [data.receivedItems, data.status, data.totalItems, statusOverride]);
   const currentStep = statusToCurrentStep(effectiveStatus);
-  const currentActor =
-    currentUser?.initialState?.currentUser?.login ||
-    (access.canSpfApprover ? data.approvedBy : data.requestedBy) ||
-    (access.canSpfApprover ? 'Approver' : 'Requester');
 
   const resolveRequestLineSourceWarehouse = useCallback(
     (item: RequestDetailLineItem) => {
@@ -512,7 +519,7 @@ export default function RequestedBatchDrawer({
     setStatusOverride(null);
     setExpandedPickupBatchNos([]);
     setEditingItem(null);
-    setEditingQuantity(1);
+    setEditingQuantity(null);
 
     const seededPicked =
       data.pickupBatches?.flatMap((batch) => batch.items).filter((item) => Number(item.usedQuantity || item.quantityToReturn || 0) > 0) ||
@@ -615,149 +622,47 @@ export default function RequestedBatchDrawer({
       }
       return acc;
     }, {});
+    const persistedNonRejectedMarks = Object.fromEntries(
+      Object.entries(persistedState?.itemMarks || {}).filter(([, mark]) => mark !== 'rejected'),
+    ) as Record<string, 'deleted' | 'canceled' | 'rejected'>;
 
     setPickedItems(nextPickedItems);
     setPickupBatches(nextPickupBatches);
-    setQuantityOverrides(persistedState?.quantityOverrides || {});
-    setItemMarks({ ...serverItemMarks, ...(persistedState?.itemMarks || {}) });
-    setItemRejectRemarks({ ...serverRejectRemarks, ...(persistedState?.itemRejectRemarks || {}) });
+    setQuantityOverrides({});
+    setItemMarks({ ...persistedNonRejectedMarks, ...serverItemMarks });
+    setItemRejectRemarks(serverRejectRemarks);
     setEditedItems({ ...serverEditedItems, ...(persistedState?.editedItems || {}) });
     setEditedAtByRequestLineId(persistedState?.editedAtByRequestLineId || {});
 
-    const seen = new Set<string>();
-    const fallbackLogs: RequestDetailActivity[] = [];
-    const pushOnce = (next: RequestDetailActivity) => {
-      const normalized: RequestDetailActivity = {
-        ...next,
-        date: next.date ?? data.requestDate,
-        by: next.by?.trim() ? next.by.trim() : undefined,
-      };
-
-      const k = `${normalized.label}|${normalized.description}|${normalized.date ?? ''}|${normalized.by ?? ''}`;
-      if (seen.has(k)) return;
-      seen.add(k);
-      fallbackLogs.push(normalized);
-    };
-
-    pushOnce({
-      label: 'Requested',
-      description: 'Requester sent request (waiting for approval)',
-      date: data.requestDate,
-      by: data.requestedBy ?? 'Requester',
-      dot: 'done',
-    });
-
-    if (data.status === 'rejected') {
-      pushOnce({
-        label: 'Rejected',
-        description: 'Request rejected',
-        date: data.requestDate,
-        by: data.rejectedBy ?? data.approvedBy ?? 'Approver',
-        dot: 'done',
+    const serverLogs = (data.activities || [])
+      .map((activity) => ({
+        ...activity,
+        date: activity.date ?? data.requestDate,
+        by: activity.by?.trim() ? activity.by.trim() : undefined,
+      }))
+      .filter((activity) => {
+        if (!access.canSpfApprover) return true;
+        const normalizedLabel = String(activity.label || '').trim().toLowerCase();
+        const normalizedDescription = String(activity.description || '').trim().toLowerCase();
+        return !(
+          normalizedLabel === 'item edited' &&
+          normalizedDescription === 'approver adjusted one or more approved quantities.'
+        );
       });
-    } else {
-      if (data.status !== 'pending') {
-        pushOnce({
-          label: 'Approved',
-          description: 'Request approved',
-          date: data.requestDate,
-          by: data.approvedBy ?? 'Approver',
-          dot: 'done',
-        });
-      }
 
-      if (data.status === 'in-progress') {
-        pushOnce({
-          label: 'In Progress',
-          description: 'Warehouse processing request',
-          date: data.requestDate,
-          by: data.warehouseBy,
-          dot: data.status === 'in-progress' ? 'pending' : 'done',
-        });
-      }
-
-      if (data.status === 'ready_to_Pickup') {
-        pushOnce({
-          label: 'Ready to Pick up',
-          description: 'Shipment #1 is ready for pick up',
-          date: data.requestDate,
-          by: data.warehouseBy,
-          dot: 'pending',
-        });
-      }
-
-      if (data.status === 'partial') {
-        pushOnce({
-          label: 'Confirm Pick up',
-          description: 'Requester confirmed pickup',
-          date: data.requestDate,
-          by: data.requestedBy,
-          dot: 'done',
-        });
-        pushOnce({
-          label: 'Partial Pick up #1',
-          description: `Picked ${seededPicked.length || data.receivedItems || 0} item(s)`,
-          date: data.requestDate,
-          by: data.requestedBy,
-          dot: 'done',
-        });
-      }
-
-      if (data.status === 'completed') {
-        pushOnce({
-          label: 'Confirm Pick up',
-          description: 'Requester confirmed pickup',
-          date: data.requestDate,
-          by: data.requestedBy,
-          dot: 'done',
-        });
-        pushOnce({
-          label: 'Completed',
-          description: 'Picked up all requested items',
-          date: data.requestDate,
-          by: data.requestedBy,
-          dot: 'done',
-        });
-      }
-    }
-
-    const serverLogs =
-      (data.activities || []).length > 0
-        ? (data.activities || [])
-            .map((activity) => ({
-              ...activity,
-              date: activity.date ?? data.requestDate,
-              by: activity.by?.trim() ? activity.by.trim() : undefined,
-            }))
-            .filter((activity) => {
-              if (!access.canSpfApprover) return true;
-              const normalizedLabel = String(activity.label || '').trim().toLowerCase();
-              const normalizedDescription = String(activity.description || '').trim().toLowerCase();
-              return !(
-                normalizedLabel === 'item edited' &&
-                normalizedDescription === 'approver adjusted one or more approved quantities.'
-              );
-            })
-        : fallbackLogs;
-
-    setActivityLogs(
-      mergeActivities(
-        serverLogs,
-        (persistedState?.activityLogs || []).filter((activity) => isLocalPersistedActivity(activity)),
-      ),
-    );
-    lastServerStatusRef.current = data.status;
-    lastShipmentNoticeRef.current = data.status === 'ready_to_Pickup' && seededPicked.length > 0 ? 1 : 0;
+    setActivityLogs(mergeActivities(serverLogs));
   }, [access.canSpfApprover, data.activities, data.items, data.pickupBatches, data.receivedItems, data.requestDate, data.status, data.requestId, open]);
 
   useEffect(() => {
     if (!open || !data.requestId || resetPersistRef.current) return;
 
     writePersistedDrawerState(data.requestId, {
-      activityLogs: activityLogs.filter((activity) => isLocalPersistedActivity(activity)),
-      quantityOverrides,
-      itemMarks,
-      itemRejectRemarks,
+      activityLogs: [],
+      quantityOverrides: {},
+      itemMarks: Object.fromEntries(
+        Object.entries(itemMarks).filter(([, mark]) => mark !== 'rejected'),
+      ) as Record<string, 'deleted' | 'canceled' | 'rejected'>,
+      itemRejectRemarks: {},
       editedItems,
       editedAtByRequestLineId,
     });
@@ -802,10 +707,12 @@ export default function RequestedBatchDrawer({
   const handleClose = () => {
     resetPersistRef.current = true;
     writePersistedDrawerState(data.requestId, {
-      activityLogs: activityLogs.filter((activity) => isLocalPersistedActivity(activity)),
-      quantityOverrides,
-      itemMarks,
-      itemRejectRemarks,
+      activityLogs: [],
+      quantityOverrides: {},
+      itemMarks: Object.fromEntries(
+        Object.entries(itemMarks).filter(([, mark]) => mark !== 'rejected'),
+      ) as Record<string, 'deleted' | 'canceled' | 'rejected'>,
+      itemRejectRemarks: {},
       editedItems,
       editedAtByRequestLineId,
     });
@@ -825,9 +732,7 @@ export default function RequestedBatchDrawer({
     setEditedItems({});
     setEditingItem(null);
     setRejectingItem(null);
-    setEditingQuantity(1);
-    lastServerStatusRef.current = null;
-    lastShipmentNoticeRef.current = 0;
+    setEditingQuantity(null);
     initKeyRef.current = '';
     onClose?.();
   };
@@ -901,11 +806,6 @@ export default function RequestedBatchDrawer({
     [activeRequestItems, pickedProductIds],
   );
 
-  const requestedQtyTotal = useMemo(
-    () => activeRequestItems.reduce((sum, it) => sum + (Number(it.quantityToReturn) || 0), 0),
-    [activeRequestItems],
-  );
-
   const receivedQtyTotal = useMemo(
     () => pickedItems.reduce((sum, it) => sum + (Number(it.quantityToReturn) || 0), 0),
     [pickedItems],
@@ -917,6 +817,18 @@ export default function RequestedBatchDrawer({
     setEditingItem(record);
     setEditingQuantity(requestedQty > 0 ? Math.min(currentQty, requestedQty) : currentQty);
   };
+
+  const editingRequestedQty = Number(editingItem?.requestedQty ?? editingItem?.total ?? 0);
+  const editingMinimumQty = allowsDecimalQuantity(editingItem?.uom) ? MIN_DECIMAL_QTY : WHOLE_QTY_MIN;
+  const editingQuantityNumber = editingQuantity !== null ? Number(editingQuantity) : 0;
+  const editingQuantityError =
+    editingItem && editingQuantity === null
+      ? 'Approved quantity is required.'
+      : editingItem && (!Number.isFinite(editingQuantityNumber) || editingQuantityNumber < editingMinimumQty)
+        ? `Approved quantity must be at least ${editingMinimumQty}.`
+        : editingItem && editingRequestedQty > 0 && editingQuantityNumber > editingRequestedQty
+          ? `Approved quantity cannot be greater than requested quantity (${editingRequestedQty}).`
+          : undefined;
 
   const openProductDetails = async (record: RequestDetailLineItem) => {
     const requestId = productDetailRequestRef.current + 1;
@@ -943,10 +855,25 @@ export default function RequestedBatchDrawer({
     if (!editingItem) return;
     const productId = editingItem.productId;
     const lineKey = getRequestLineKey(editingItem);
-    const nextQty = sanitizeQuantityForUom(Number(editingQuantity), editingItem.uom);
+    const requestedQty = Number(editingItem.requestedQty ?? editingItem.total ?? 0);
+    const rawQty = editingQuantity !== null ? Number(editingQuantity) : 0;
+    if (!Number.isFinite(rawQty) || rawQty <= 0) {
+      message.error('Approved quantity must be greater than 0.');
+      return;
+    }
+    if (requestedQty > 0 && rawQty > requestedQty) {
+      message.error(`Approved quantity cannot be greater than requested quantity (${requestedQty}).`);
+      return;
+    }
+    const nextQty = sanitizeQuantityForUom(rawQty, editingItem.uom);
     const originalQty = Number(data.items.find((item) => getRequestLineKey(item) === lineKey)?.quantityToReturn || 0);
     const isEdited = nextQty !== originalQty;
     const editedAt = new Date().toISOString();
+
+    if (requestedQty > 0 && nextQty > requestedQty) {
+      message.error(`Approved quantity cannot be greater than requested quantity (${requestedQty}).`);
+      return;
+    }
 
     if (isEdited && effectiveStatus === 'pending' && onEditPendingRequestLines && data.id && editingItem.requestLineId) {
       setActionLoading(true);
@@ -971,11 +898,7 @@ export default function RequestedBatchDrawer({
 
     setQuantityOverrides((prev) => {
       const next = { ...prev };
-      if (isEdited) {
-        next[lineKey] = nextQty;
-      } else {
-        delete next[lineKey];
-      }
+      delete next[lineKey];
       return next;
     });
     setEditedItems((prev) => {
@@ -1018,17 +941,6 @@ export default function RequestedBatchDrawer({
     // Keep pickup selection and picked state consistent when an item is marked.
     setPickupSelection((prev) => prev.filter((id) => id !== record.productId));
     setPickedItems((prev) => prev.filter((it) => it.productId !== record.productId));
-
-    setActivityLogs((prev) => [
-      ...prev,
-      {
-        label: mark === 'deleted' ? 'Item Deleted' : 'Item Canceled',
-        description: `${record.productId} (${record.itemName}) was ${mark}`,
-        date: new Date().toISOString(),
-        by: currentActor,
-        dot: 'done',
-      },
-    ]);
 
     message.success(
       mark === 'deleted'
@@ -1082,17 +994,50 @@ export default function RequestedBatchDrawer({
     setRejectingItem(null);
 
     if (!shouldRejectWholeRequest) {
-      setActivityLogs((prev) => [
-        ...prev,
-        {
-          label: 'Item Rejected',
-          description: `${record.productId} rejected: ${normalizedRemark}`,
-          date: new Date().toISOString(),
-          by: currentActor,
-          dot: 'done',
-        },
-      ]);
-      message.success(`${record.productId} marked as rejected.`);
+      if (effectiveStatus === 'pending' && onEditPendingRequestLines && data.id && record.requestLineId) {
+        setActionLoading(true);
+        try {
+          await onEditPendingRequestLines({
+            id: data.id,
+            lines: [
+              {
+                requestLineId: record.requestLineId,
+                requestedQty: 0,
+                rejected: true,
+                rejectRemark: normalizedRemark,
+                editedAt: new Date().toISOString(),
+              },
+            ],
+          });
+          message.success(`${record.productId} rejected successfully.`);
+        } catch (_error) {
+          setItemMarks((prev) => {
+            const next = { ...prev };
+            delete next[lineKey];
+            return next;
+          });
+          setItemRejectRemarks((prev) => {
+            const next = { ...prev };
+            delete next[lineKey];
+            return next;
+          });
+          setQuantityOverrides((prev) => {
+            const next = { ...prev };
+            delete next[lineKey];
+            return next;
+          });
+          setEditedItems((prev) => {
+            const next = { ...prev };
+            delete next[lineKey];
+            return next;
+          });
+          message.error('Failed to reject item.');
+        } finally {
+          setActionLoading(false);
+        }
+      } else {
+        message.success(`${record.productId} marked as rejected.`);
+      }
       return;
     }
 
@@ -1111,23 +1056,6 @@ export default function RequestedBatchDrawer({
         });
       }
       setStatusOverride('rejected');
-      setActivityLogs((prev) => [
-        ...prev,
-        {
-          label: 'Item Rejected',
-          description: `${record.productId} rejected: ${normalizedRemark}`,
-          date: new Date().toISOString(),
-          by: currentActor,
-          dot: 'done',
-        },
-        {
-          label: 'Rejected',
-          description: 'All request items rejected',
-          date: new Date().toISOString(),
-          by: currentActor,
-          dot: 'done',
-        },
-      ]);
       message.success('Request rejected successfully.');
     } catch (_error) {
       setItemMarks((prev) => {
@@ -1153,6 +1081,94 @@ export default function RequestedBatchDrawer({
       message.error('Failed to reject request.');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const undoRejectItem = async (record: RequestDetailLineItem) => {
+    const lineKey = getRequestLineKey(record);
+    const restoreQty = Number(record.requestedQty ?? record.total ?? record.quantityToReturn ?? 0);
+
+    if (restoreQty <= 0) {
+      message.error('Unable to restore item because requested quantity is missing.');
+      return;
+    }
+
+    const previousMark = itemMarks[lineKey];
+    const previousRemark = itemRejectRemarks[lineKey];
+    const previousOverride = quantityOverrides[lineKey];
+    const previousEdited = editedItems[lineKey];
+
+    setItemMarks((prev) => {
+      const next = { ...prev };
+      delete next[lineKey];
+      return next;
+    });
+    setItemRejectRemarks((prev) => {
+      const next = { ...prev };
+      delete next[lineKey];
+      return next;
+    });
+    setQuantityOverrides((prev) => ({
+      ...prev,
+      [lineKey]: restoreQty,
+    }));
+    setEditedItems((prev) => {
+      const next = { ...prev };
+      delete next[lineKey];
+      return next;
+    });
+
+    if (effectiveStatus === 'pending' && onEditPendingRequestLines && data.id && record.requestLineId) {
+      setActionLoading(true);
+      try {
+        await onEditPendingRequestLines({
+          id: data.id,
+          lines: [
+            {
+              requestLineId: record.requestLineId,
+              requestedQty: restoreQty,
+              rejected: false,
+              editedAt: new Date().toISOString(),
+            },
+          ],
+        });
+        message.success(`${record.productId} rejection undone.`);
+      } catch (_error) {
+        setItemMarks((prev) => ({
+          ...prev,
+          [lineKey]: previousMark || 'rejected',
+        }));
+        setItemRejectRemarks((prev) => {
+          if (!previousRemark) return prev;
+          return {
+            ...prev,
+            [lineKey]: previousRemark,
+          };
+        });
+        setQuantityOverrides((prev) => {
+          const next = { ...prev };
+          if (typeof previousOverride === 'number') {
+            next[lineKey] = previousOverride;
+          } else {
+            delete next[lineKey];
+          }
+          return next;
+        });
+        setEditedItems((prev) => {
+          const next = { ...prev };
+          if (previousEdited) {
+            next[lineKey] = previousEdited;
+          } else {
+            delete next[lineKey];
+          }
+          return next;
+        });
+        message.error('Failed to undo rejected item.');
+      } finally {
+        setActionLoading(false);
+      }
+    } else {
+      message.success(`${record.productId} rejection undone.`);
     }
   };
 
@@ -1299,6 +1315,26 @@ export default function RequestedBatchDrawer({
               const isPicked = pickedProductIds.has(record.productId);
 
               if (marked) {
+                if (marked === 'rejected' && canEditOrDelete) {
+                  return (
+                    <Popconfirm
+                      title="Undo rejected item?"
+                      description={`Do you want to undo rejection for ${record.productId}?`}
+                      okText="Yes, Undo"
+                      cancelText="No"
+                      onConfirm={() => void undoRejectItem(record)}
+                    >
+                      <Button
+                        type="link"
+                        size="small"
+                        disabled={actionLoading}
+                      >
+                        Undo
+                      </Button>
+                    </Popconfirm>
+                  );
+                }
+
                 return <Text type="secondary">{marked === 'canceled' ? 'Canceled' : marked === 'rejected' ? 'Rejected' : 'Deleted'}</Text>;
               }
 
@@ -1431,30 +1467,30 @@ export default function RequestedBatchDrawer({
     const lines = buildApprovalLines();
     const hasAnyApprovedQty = lines.some((item) => item.approvedQty > 0);
     const allLinesRejected = lines.length > 0 && lines.every((item) => item.rejected);
+    const lineWithTooMuchApprovedQty = lines.find((line) => {
+      if (line.rejected) return false;
+      const requestItem = requestItems.find((item) => Number(item.requestLineId) === line.requestLineId);
+      const requestedQty = Number(requestItem?.requestedQty ?? requestItem?.total ?? 0);
+      return requestedQty > 0 && Number(line.approvedQty || 0) > requestedQty;
+    });
 
     if (!hasAnyApprovedQty && !allLinesRejected) {
       message.warning('At least one item must have approved quantity greater than 0. Otherwise, reject the request.');
       return;
     }
+    if (lineWithTooMuchApprovedQty) {
+      const requestItem = requestItems.find((item) => Number(item.requestLineId) === lineWithTooMuchApprovedQty.requestLineId);
+      const requestedQty = Number(requestItem?.requestedQty ?? requestItem?.total ?? 0);
+      message.error(`Approved quantity cannot be greater than requested quantity (${requestedQty}).`);
+      return;
+    }
     const nextStatus = allLinesRejected ? 'rejected' : 'approved';
-    const nextLabel = allLinesRejected ? 'Rejected' : 'Approved';
-    const nextDescription = allLinesRejected ? 'All request items rejected' : 'Request approved';
     const rejectRemark = remark?.trim() || 'All request items rejected';
 
     setActionLoading(true);
     try {
       if (!onApprove || !data.id) {
         setStatusOverride(nextStatus);
-        setActivityLogs((prev) => [
-          ...prev,
-          {
-            label: nextLabel,
-            description: nextDescription,
-            date: new Date().toISOString(),
-            by: currentActor,
-            dot: 'done',
-          },
-        ]);
       } else {
         await onApprove({
           id: data.id,
@@ -1462,16 +1498,6 @@ export default function RequestedBatchDrawer({
           remark: allLinesRejected ? rejectRemark || 'All request items rejected' : remark,
         });
         setStatusOverride(nextStatus);
-        setActivityLogs((prev) => [
-          ...prev,
-          {
-            label: nextLabel,
-            description: nextDescription,
-            date: new Date().toISOString(),
-            by: currentActor,
-            dot: 'done',
-          },
-        ]);
         message.success(allLinesRejected ? 'Request rejected successfully.' : 'Request approved successfully.');
       }
       setActionPopup(null);
@@ -1487,29 +1513,9 @@ export default function RequestedBatchDrawer({
     try {
       if (!onReject || !data.id) {
         setStatusOverride('rejected');
-        setActivityLogs((prev) => [
-          ...prev,
-          {
-            label: 'Rejected',
-            description: 'Request rejected',
-            date: new Date().toISOString(),
-            by: currentActor,
-            dot: 'done',
-          },
-        ]);
       } else {
         await onReject({ id: data.id, remark });
         setStatusOverride('rejected');
-        setActivityLogs((prev) => [
-          ...prev,
-          {
-            label: 'Rejected',
-            description: 'Request rejected',
-            date: new Date().toISOString(),
-            by: currentActor,
-            dot: 'done',
-          },
-        ]);
         message.success('Request rejected successfully.');
       }
       setActionPopup(null);
@@ -1520,34 +1526,6 @@ export default function RequestedBatchDrawer({
     }
   };
 
-  useEffect(() => {
-    if (!open) return;
-    if ((data.activities || []).length > 0 || (data.pickupBatches || []).length > 0) return;
-
-    const prev = lastServerStatusRef.current;
-    if (prev === data.status) return;
-    lastServerStatusRef.current = data.status;
-
-    const hasHistory = pickupBatches.length > 0;
-    if (data.status === 'ready_to_Pickup' && hasHistory) {
-      const shipmentNo = pickupBatches.length + 1;
-      if (lastShipmentNoticeRef.current !== shipmentNo) {
-        lastShipmentNoticeRef.current = shipmentNo;
-        message.info(`New items are ready to pick up (Shipment #${shipmentNo}).`);
-        setActivityLogs((logs) => [
-          ...logs,
-          {
-            label: 'Ready to Pick up',
-            description: `Shipment #${shipmentNo} is ready for pick up`,
-            date: new Date().toISOString(),
-            by: data.warehouseBy,
-            dot: 'pending',
-          },
-        ]);
-      }
-    }
-  }, [data.activities, data.pickupBatches, data.status, open, pickupBatches.length]);
-
   const shipmentNoForReady = pickupBatches.length > 0 ? pickupBatches.length + 1 : 1;
 
   const displayActivityLogs = useMemo(() => {
@@ -1557,7 +1535,11 @@ export default function RequestedBatchDrawer({
     return [...activityLogs]
       .filter((activity) => {
         const normalizedLabel = String(activity.label || '').trim().toLowerCase();
-        return !normalizedLabel.includes('confirm pick');
+        return (
+          normalizedLabel !== 'draft saved' &&
+          normalizedLabel !== 'draft deleted' &&
+          !normalizedLabel.includes('confirm pick')
+        );
       })
       .sort((left, right) => {
         const leftTime = new Date(left.date || data.requestDate).getTime();
@@ -1706,7 +1688,7 @@ export default function RequestedBatchDrawer({
             {headerActions}
           </div>
         }
-          width="70%"
+          width="100%"
           placement="right"
           onClose={handleClose}
           open={open}
@@ -1961,8 +1943,12 @@ export default function RequestedBatchDrawer({
         title="Edit Requested Amount"
         open={Boolean(editingItem)}
         onCancel={() => setEditingItem(null)}
-        onOk={() => void confirmEditQuantity()}
+        onOk={() => {
+          if (editingQuantityError) return;
+          void confirmEditQuantity();
+        }}
         okText="Save"
+        okButtonProps={{ disabled: Boolean(editingQuantityError) }}
         confirmLoading={actionLoading}
       >
         <Space direction="vertical" style={{ width: '100%' }}>
@@ -1972,18 +1958,22 @@ export default function RequestedBatchDrawer({
           <Text type="secondary">
             Current requested quantity: {Number(editingItem?.requestedQty ?? editingItem?.total ?? 0)}
           </Text>
+          <Text type="danger">
+            Approved quantity cannot be greater than the requested quantity.
+          </Text>
           <InputNumber
-            min={allowsDecimalQuantity(editingItem?.uom) ? MIN_DECIMAL_QTY : WHOLE_QTY_MIN}
-            max={Number(editingItem?.requestedQty ?? editingItem?.total ?? 0) || undefined}
             step={allowsDecimalQuantity(editingItem?.uom) ? DECIMAL_QTY_STEP : WHOLE_QTY_MIN}
             precision={allowsDecimalQuantity(editingItem?.uom) ? 2 : 0}
             style={{ width: '100%' }}
+            status={editingQuantityError ? 'error' : undefined}
             value={editingQuantity}
             onChange={(value) => {
-              const nextValue = sanitizeQuantityForUom(Number(value), editingItem?.uom);
-              setEditingQuantity(nextValue);
+              setEditingQuantity(value);
             }}
           />
+          {editingQuantityError ? (
+            <Text type="danger">{editingQuantityError}</Text>
+          ) : null}
         </Space>
       </Modal>
 

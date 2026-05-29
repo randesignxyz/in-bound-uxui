@@ -456,6 +456,12 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
           applyResponseUpdate(response);
           onDataChanged?.();
         }}
+        onCancelPickup={async (payload) => {
+          const response = await services.cancelPickup(payload);
+          applyResponseUpdate(response);
+          await reloadRequests();
+          onDataChanged?.();
+        }}
         onGeneratePickupQr={async (payload) => {
           const response = await services.generatePickupQr(payload);
           applyResponseUpdate(response);

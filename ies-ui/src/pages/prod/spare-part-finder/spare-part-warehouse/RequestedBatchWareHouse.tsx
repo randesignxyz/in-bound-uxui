@@ -15,6 +15,7 @@ import {
   Modal,
   QRCode,
   Radio,
+  Popconfirm,
 } from 'antd';
 import { DownOutlined, RightOutlined, CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -173,6 +174,7 @@ export interface DrawerBatchReturnItemsProps {
   onDeleteDraft?: (id: number) => Promise<void>;
   onAcceptRequest?: (id: number) => Promise<void>;
   onConfirmPickup?: (payload: { id: number; fulfillmentId?: string; note?: string }) => Promise<void>;
+  onCancelPickup?: (payload: { id: number; fulfillmentId: string }) => Promise<void>;
   onGeneratePickupQr?: (payload: { id: number; fulfillmentId?: string }) => Promise<void>;
 }
 
@@ -292,38 +294,6 @@ const parseActivityShipmentNo = (label?: string, description?: string): number |
   return undefined;
 };
 
-const mergeActivities = (
-  base: RequestDetailActivity[],
-  extra: RequestDetailActivity[] = [],
-): RequestDetailActivity[] => {
-  const seen = new Set<string>();
-  const merged: RequestDetailActivity[] = [];
-  const singletonLabels = new Set(['requested', 'approved', 'rejected', 'confirmed', 'completed']);
-
-  [...base, ...extra].forEach((activity) => {
-    const normalized: RequestDetailActivity = {
-      ...activity,
-      label: String(activity.label || '').trim(),
-      description: String(activity.description || '').trim(),
-    };
-    const normalizedLabel = normalized.label.toLowerCase();
-
-    if (
-      singletonLabels.has(normalizedLabel) &&
-      merged.some((item) => String(item.label || '').trim().toLowerCase() === normalizedLabel)
-    ) {
-      return;
-    }
-
-    const key = `${normalized.label}|${normalized.description}|${normalized.date ?? ''}|${normalized.by ?? ''}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    merged.push(normalized);
-  });
-
-  return merged;
-};
-
 export default function RequestedBatchWareHouse({
   open,
   request,
@@ -335,6 +305,7 @@ export default function RequestedBatchWareHouse({
   onDeleteDraft,
   onAcceptRequest,
   onConfirmPickup,
+  onCancelPickup,
   onGeneratePickupQr,
 }: DrawerBatchReturnItemsProps) {
   const access = useAccess();
@@ -361,6 +332,7 @@ export default function RequestedBatchWareHouse({
   const [shipmentBatches, setShipmentBatches] = useState<Shipment[]>([]);
   const [confirmPickupPopupOpen, setConfirmPickupPopupOpen] = useState(false);
   const [confirmPickupLoading, setConfirmPickupLoading] = useState(false);
+  const [cancelPickupLoadingId, setCancelPickupLoadingId] = useState<string | null>(null);
   const [confirmPickupShipmentId, setConfirmPickupShipmentId] = useState<string | null>(null);
   const [confirmPickupRemark, setConfirmPickupRemark] = useState('');
   const [saveAndPickupModalOpen, setSaveAndPickupModalOpen] = useState(false);
@@ -534,46 +506,11 @@ export default function RequestedBatchWareHouse({
     setDraftByProductId(nextDraft);
     setConditionByProductId(nextConditions);
 
-    const baseLogs: RequestDetailActivity[] =
-      (data.activities || []).length > 0
-        ? data.activities
-        : [
-            {
-              label: 'Requested',
-              description: `Requested by ${data.requestedBy || '-'}`,
-              date: data.requestDate,
-              by: data.requestedBy || undefined,
-              dot: 'done',
-            },
-            ...(data.approvedBy || data.status !== 'pending'
-              ? [
-                  {
-                    label: 'Approved',
-                    description: 'Request approved',
-                    date: data.requestDate,
-                    by: data.approvedBy ?? undefined,
-                    dot: 'done' as const,
-                  },
-                ]
-              : []),
-            ...(data.status === 'in-progress'
-              ? [
-                  {
-                    label: 'Accepted',
-                    description: 'Warehouse accepted and started processing this request',
-                    date: data.requestDate,
-                    by: currentActor,
-                    dot: 'done' as const,
-                  },
-                ]
-              : []),
-          ];
-
     const existingShipments = (data as any).shipments || [];
     setShipmentBatches(existingShipments);
 
-    setActivityLogs(baseLogs);
-  }, [data.activities, data.approvedBy, data.draftItems, data.items, data.requestDate, data.requestId, data.requestedBy, data.shipments, data.status, open]);
+    setActivityLogs(data.activities || []);
+  }, [data.activities, data.draftItems, data.items, data.pickupStatus, data.requestId, data.shipments, data.status, open]);
 
   useEffect(() => {
     if (!open) {
@@ -623,6 +560,7 @@ export default function RequestedBatchWareHouse({
     setPickupQrShipmentId(null);
     setConfirmPickupShipmentId(null);
     setConfirmPickupRemark('');
+    setCancelPickupLoadingId(null);
     setSaveAndPickupModalOpen(false);
     onClose?.();
   };
@@ -712,7 +650,13 @@ export default function RequestedBatchWareHouse({
     return [...activityLogs]
       .filter((activity) => {
         const normalizedLabel = String(activity.label || '').trim().toLowerCase();
-        return !normalizedLabel.includes('confirm pick');
+        return (
+          normalizedLabel !== 'item edited' &&
+          normalizedLabel !== 'item rejected' &&
+          normalizedLabel !== 'draft saved' &&
+          normalizedLabel !== 'draft deleted' &&
+          !normalizedLabel.includes('confirm pick')
+        );
       })
       .sort((left, right) => {
         const leftTime = new Date(left.date || data.requestDate).getTime();
@@ -771,6 +715,7 @@ export default function RequestedBatchWareHouse({
     canWarehouseOperate &&
     !!data.id &&
     (effectiveStatus === 'pending' || effectiveStatus === 'approved');
+  const showIssueInputColumns = effectiveStatus !== 'pending' && effectiveStatus !== 'approved';
 
   const mapToWarehouseItems = (items: RequestDetailLineItem[]) =>
     items.map((it) => ({
@@ -897,6 +842,28 @@ export default function RequestedBatchWareHouse({
       message.error('Failed to generate pickup QR.');
     } finally {
       setPickupQrLoading(false);
+    }
+  };
+
+  const handleCancelPickup = async (shipment: Shipment) => {
+    if (!canWarehouseOperate) {
+      message.error('You are not allowed to cancel pickup.');
+      return;
+    }
+
+    if (!onCancelPickup || !data.id) {
+      message.warning('Cancel pickup is not available.');
+      return;
+    }
+
+    setCancelPickupLoadingId(shipment.id);
+    try {
+      await onCancelPickup({ id: data.id, fulfillmentId: shipment.id });
+      message.success(`Shipment #${shipment.shipmentNo} cancelled successfully.`);
+    } catch (_error) {
+      message.error('Failed to cancel pickup.');
+    } finally {
+      setCancelPickupLoadingId(null);
     }
   };
 
@@ -1203,102 +1170,104 @@ export default function RequestedBatchWareHouse({
       ellipsis: true,
       width: 'auto'
     },
-    {
-      title: 'Amount',
-      key: 'selectAmount',
-      width: 'auto',
-      render: (_: unknown, record) => {
-        const lineKey = getRequestLineKey(record);
-        const current = clampInt(sendingByProductId[lineKey]);
-        const stock = Number(itemDetailMap[record.productId]?.stock);
-        const hasKnownStock = Number.isFinite(stock);
-        const maxSelectableQty = getMaxSelectableQty(record);
-        const isFullySent = maxSelectableQty <= 0;
-        const isOutOfStock = hasKnownStock && stock <= 0;
-        const exceedsAvailableQty = hasKnownStock && current > Math.max(0, stock);
-        const requestedQty = clampInt(record.quantityToReturn);
-        const sentQty = clampInt(record.warehouseSentQuantity);
-        const draftedQty = clampInt(draftByProductId[lineKey]);
-        const remainingRequestQty = Math.max(0, requestedQty - sentQty - draftedQty);
-        const exceedsRemainingRequestQty = current > remainingRequestQty;
-        if (isFullySent) {
-          return <Text type="secondary">-</Text>;
-        }
-        return (
-          <div style={{ width: '100%', maxWidth: 100 }}>
-            <InputNumber
-              style={{ width: '100%' }}
-              status={exceedsRemainingRequestQty || exceedsAvailableQty || isOutOfStock ? 'error' : undefined}
-              value={current}
-              min={1}
-              max={hasKnownStock ? Math.max(0, stock) : undefined}
-              disabled={!canSelectAmount || draftDeleteLoading || isFullySent}
-              onChange={(v) =>
-                setSendingByProductId((prev) => ({
-                  ...prev,
-                  [lineKey]: clampInt(v),
-                }))
+    ...(showIssueInputColumns
+      ? [
+          {
+            title: 'Amount',
+            key: 'selectAmount',
+            width: 'auto',
+            render: (_: unknown, record: RequestDetailLineItem) => {
+              const lineKey = getRequestLineKey(record);
+              const current = clampInt(sendingByProductId[lineKey]);
+              const stock = Number(itemDetailMap[record.productId]?.stock);
+              const hasKnownStock = Number.isFinite(stock);
+              const maxSelectableQty = getMaxSelectableQty(record);
+              const isFullySent = maxSelectableQty <= 0;
+              const isOutOfStock = hasKnownStock && stock <= 0;
+              const exceedsAvailableQty = hasKnownStock && current > Math.max(0, stock);
+              const requestedQty = clampInt(record.quantityToReturn);
+              const sentQty = clampInt(record.warehouseSentQuantity);
+              const draftedQty = clampInt(draftByProductId[lineKey]);
+              const remainingRequestQty = Math.max(0, requestedQty - sentQty - draftedQty);
+              const exceedsRemainingRequestQty = current > remainingRequestQty;
+              if (isFullySent) {
+                return <Text type="secondary">-</Text>;
               }
-            />
-            {exceedsRemainingRequestQty ? (
-              <Text
-                type="danger"
-                style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
-              >
-                {remainingRequestQty} Remaining.
-              </Text>
-            ) : isOutOfStock ? (
-              <Text
-                type="danger"
-                style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
-              >
-                No Stock
-              </Text>
-            ) : exceedsAvailableQty ? (
-              <Text
-                type="danger"
-                style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
-              >
-                {stock} In Stock.
-              </Text>
-            ) : null}
-          </div>
-        );
-      },
-    },
-    {
-      title: 'Condition',
-      key: 'itemCondition',
-      width: 'auto',
-      render: (_: unknown, record) => {
-        const lineKey = getRequestLineKey(record);
-        const current = conditionByProductId[lineKey] || 'NEW';
-        const isFullySent = getMaxSelectableQty(record) <= 0;
+              return (
+                <div style={{ width: '100%', maxWidth: 100 }}>
+                  <InputNumber
+                    style={{ width: '100%' }}
+                    status={exceedsRemainingRequestQty || exceedsAvailableQty || isOutOfStock ? 'error' : undefined}
+                    value={current}
+                    min={1}
+                    max={hasKnownStock ? Math.max(0, stock) : undefined}
+                    disabled={!canSelectAmount || draftDeleteLoading || isFullySent}
+                    onChange={(v) =>
+                      setSendingByProductId((prev) => ({
+                        ...prev,
+                        [lineKey]: clampInt(v),
+                      }))
+                    }
+                  />
+                  {exceedsRemainingRequestQty ? (
+                    <Text
+                      type="danger"
+                      style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
+                    >
+                      {remainingRequestQty} Remaining.
+                    </Text>
+                  ) : isOutOfStock ? (
+                    <Text
+                      type="danger"
+                      style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
+                    >
+                      No Stock
+                    </Text>
+                  ) : exceedsAvailableQty ? (
+                    <Text
+                      type="danger"
+                      style={{ display: 'block', width: '100%', fontSize: 12, whiteSpace: 'normal', wordBreak: 'break-word' }}
+                    >
+                      {stock} In Stock.
+                    </Text>
+                  ) : null}
+                </div>
+              );
+            },
+          },
+          {
+            title: 'Condition',
+            key: 'itemCondition',
+            width: 'auto',
+            render: (_: unknown, record: RequestDetailLineItem) => {
+              const lineKey = getRequestLineKey(record);
+              const current = conditionByProductId[lineKey] || 'NEW';
+              const isFullySent = getMaxSelectableQty(record) <= 0;
 
-        if (isFullySent) {
-          return <Text type="secondary">-</Text>;
-        }
+              if (isFullySent) {
+                return <Text type="secondary">-</Text>;
+              }
 
-        return (
-          <Radio.Group
-            size="small"
-            optionType="button"
-            buttonStyle="solid"
-            value={current}
-            disabled={!canSelectAmount || draftDeleteLoading}
-            onChange={(event) =>
-              setConditionByProductId((prev) => ({
-                ...prev,
-                [lineKey]: event.target.value === 'USED' ? 'USED' : 'NEW',
-              }))
-            }
-          >
-            <Radio.Button value="NEW">New</Radio.Button>
-            <Radio.Button value="USED">Used</Radio.Button>
-          </Radio.Group>
-        );
-      },
-    },
+              return (
+                <Radio.Group
+                  size="small"
+                  value={current}
+                  disabled={!canSelectAmount || draftDeleteLoading}
+                  onChange={(event) =>
+                    setConditionByProductId((prev) => ({
+                      ...prev,
+                      [lineKey]: event.target.value === 'USED' ? 'USED' : 'NEW',
+                    }))
+                  }
+                >
+                  <Radio value="NEW">New</Radio>
+                  <Radio value="USED">Used</Radio>
+                </Radio.Group>
+              );
+            },
+          },
+        ]
+      : []),
   ];
 
   // ─── Shipment Batch Cards ────────────────────────────────────────────────────
@@ -1356,6 +1325,18 @@ export default function RequestedBatchWareHouse({
           >
             Confirm Pick up
           </Button>
+          <Popconfirm
+            title="Cancel pickup?"
+            description={`Cancel Shipment #${shipment.shipmentNo} and return the issued quantity to stock?`}
+            okText="Yes, Cancel"
+            cancelText="No"
+            okButtonProps={{ danger: true, loading: cancelPickupLoadingId === shipment.id }}
+            onConfirm={() => handleCancelPickup(shipment)}
+          >
+            <Button danger loading={cancelPickupLoadingId === shipment.id}>
+              Cancel
+            </Button>
+          </Popconfirm>
         </Space>
       </div>
     );
@@ -1477,7 +1458,7 @@ export default function RequestedBatchWareHouse({
             ) : null}
           </div>
         }
-        width="70%"
+        width="100%"
         placement="right"
         onClose={handleClose}
         open={open}

@@ -128,6 +128,7 @@ type DeleteDraftPayload = { id: number };
 type AcceptIssuePayload = { id: number };
 type GeneratePickupQrPayload = { id: number; fulfillmentId?: string };
 type ConfirmPickupPayload = { id: number; fulfillmentId?: string; note?: string };
+type CancelPickupPayload = { id: number; fulfillmentId: string };
 type IssueDashboardDto = {
   pendingCount: number;
   readyCount: number;
@@ -187,6 +188,12 @@ const SparePartWarehouseAction = {
   confirmPickup: (payload: ConfirmPickupPayload): ServiceApiType<ConfirmPickupPayload> => ({
     type: 'EXEC',
     actionName: 'confirm-spare-part-pickup',
+    endpoint: 'PROD',
+    payload,
+  }),
+  cancelPickup: (payload: CancelPickupPayload): ServiceApiType<CancelPickupPayload> => ({
+    type: 'EXEC',
+    actionName: 'cancel-spare-part-pickup',
     endpoint: 'PROD',
     payload,
   }),
@@ -732,6 +739,21 @@ export const SparePartWarehouseService = (requestAction: RequestActions) => ({
     const data = unwrapExecPayload(response);
     if (!data) {
       throw new Error('Confirm pickup response is missing data.');
+    }
+
+    return {
+      record: mapIssueRequestRecord(data),
+      detail: mapIssueRequestDetail(data),
+    };
+  },
+  cancelPickup: async (payload: CancelPickupPayload): Promise<{ record: WarehouseRequestRecord; detail: RequestDetailData }> => {
+    const response = (await singleRequest<ExecResponseDto<IssueRequestDto>>(
+      SparePartWarehouseAction.cancelPickup(payload),
+    )(requestAction)) as ExecResponseDto<IssueRequestDto>;
+
+    const data = unwrapExecPayload(response);
+    if (!data) {
+      throw new Error('Cancel pickup response is missing data.');
     }
 
     return {

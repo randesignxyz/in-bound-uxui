@@ -153,16 +153,16 @@ export default function FormModalSelectItems({
         precision: 0,
       },
     },
-    {
-      title: "Used QTY",
-      dataIndex: "used_quantity",
-      width: 120,
-      valueType: "digit",
-      fieldProps: {
-        min: 0,
-        precision: 0,
-      },
-    },
+    // {
+    //   title: "Used QTY",
+    //   dataIndex: "used_quantity",
+    //   width: 120,
+    //   valueType: "digit",
+    //   fieldProps: {
+    //     min: 0,
+    //     precision: 0,
+    //   },
+    // },
     {
       title: "UoM",
       dataIndex: "UoM",

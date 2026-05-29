@@ -653,11 +653,12 @@ export function TempGRCreationModal({
         width: 92,
         render: (_, record) => (
           <InputNumber
-            min={1}
+            min={0}
             precision={0}
             step={1}
             parser={parseWholeNumberInput}
-            value={record.poQty}
+            value={record.poQty === 0 ? null : record.poQty}
+            placeholder="0"
             onChange={(value) => updateItem(record.index, 'poQty', value ?? 0)}
             onKeyDown={preventNonNumericKeyDown}
             status={errors[`poQty-${record.index}`] ? 'error' : undefined}
@@ -672,12 +673,13 @@ export function TempGRCreationModal({
         width: 92,
         render: (_, record) => (
           <InputNumber
-            min={1}
+            min={0}
             max={record.poQty > 0 ? record.poQty : undefined}
             precision={0}
             step={1}
             parser={parseWholeNumberInput}
-            value={record.receiveQty}
+            value={record.receiveQty === 0 ? null : record.receiveQty}
+            placeholder="0"
             onChange={(value) => updateItem(record.index, 'receiveQty', value ?? 0)}
             onKeyDown={preventNonNumericKeyDown}
             status={errors[`receiveQty-${record.index}`] ? 'error' : undefined}
@@ -714,10 +716,10 @@ export function TempGRCreationModal({
           <DatePicker
             style={{ width: '100%' }}
             value={record.productDate ? dayjs(record.productDate) : null}
-            onChange={(date) =>
+            onChange={(date: dayjs.Dayjs | null) =>
               updateItem(record.index, 'productDate', date ? date.format('YYYY-MM-DD') : '')
             }
-            disabledDate={(current) =>
+            disabledDate={(current: dayjs.Dayjs) =>
               Boolean(record.expiryDate) && current.isAfter(dayjs(record.expiryDate), 'day')
             }
             status={errors[`productDate-${record.index}`] ? 'error' : undefined}
@@ -732,10 +734,10 @@ export function TempGRCreationModal({
           <DatePicker
             style={{ width: '100%' }}
             value={record.expiryDate ? dayjs(record.expiryDate) : null}
-            onChange={(date) =>
+            onChange={(date: dayjs.Dayjs | null) =>
               updateItem(record.index, 'expiryDate', date ? date.format('YYYY-MM-DD') : '')
             }
-            disabledDate={(current) =>
+            disabledDate={(current: dayjs.Dayjs) =>
               Boolean(record.productDate) && current.isBefore(dayjs(record.productDate), 'day')
             }
             status={errors[`expiryDate-${record.index}`] ? 'error' : undefined}
@@ -850,7 +852,7 @@ export function TempGRCreationModal({
                   <DatePicker
                     style={{ width: '100%' }}
                     value={postingDate ? dayjs(postingDate) : null}
-                    onChange={(_, dateStr) => setPostingDate(dateStr as string)}
+                    onChange={(_: any, dateStr: string | string[]) => setPostingDate(dateStr as string)}
                   />
                 </Form.Item>
               </Col>
@@ -953,11 +955,11 @@ export function TempGRCreationModal({
                     fileList={uploadedFiles}
                     showUploadList={false}
                     onChange={handleUploadChange}
-                    onRemove={(file) => {
+                    onRemove={(file: UploadFile) => {
                       removeFile(file.uid);
                       return true;
                     }}
-                    onPreview={(file) => void handlePreviewFile(file)}
+                    onPreview={(file: UploadFile) => void handlePreviewFile(file)}
                     accept=".pdf,.doc,.docx,image/*"
                     listType="text"
                   >

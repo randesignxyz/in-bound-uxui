@@ -337,6 +337,7 @@ export interface GRActivity {
 }
 
 export interface GoodsReceipt {
+  id?: number;
   grNumber: string;
   receivingNumber?: string;
   businessUnit?: string;

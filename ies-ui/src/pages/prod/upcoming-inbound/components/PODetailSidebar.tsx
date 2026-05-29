@@ -8,6 +8,8 @@ import dayjs from 'dayjs';
 
 import { getPurchaseOrderReceiptState, type PurchaseOrder, type POItem, type GoodsReceipt } from '../workflow';
 import type { InboundWarehouseMasterApi } from '../data';
+import { simpleRequestActions } from '@/services/model';
+import { UpcomingInboundServiceAPI } from '../service';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -73,43 +75,28 @@ export function PODetailSidebar({
 
   const currentPO = po || renderedPO;
 
-  const linkedReceipts = React.useMemo(() => {
-    if (!currentPO) return [];
-    return goodsReceipts.filter((receipt) => {
-      if (receipt.poNumber === currentPO.poNumber) return true;
-      return receipt.poReferences?.some((reference) => reference.poNumber === currentPO.poNumber);
-    });
-  }, [currentPO?.poNumber, goodsReceipts]);
 
-  const allPOActivities = React.useMemo(() => {
-    const list: Array<{
-      grNumber: string;
-      title: string;
-      description?: string;
-      performedBy?: string;
-      timestamp: string;
-      processState?: string;
-    }> = [];
 
-    linkedReceipts.forEach((receipt) => {
-      receipt.activities?.forEach((act) => {
-        list.push({
-          grNumber: receipt.grNumber,
-          title: act.title,
-          description: act.description,
-          performedBy: act.performedBy,
-          timestamp: act.timestamp,
-          processState: act.processState,
+  const [fetchedActivities, setFetchedActivities] = useState<any[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const requestActions = simpleRequestActions();
+  const services = UpcomingInboundServiceAPI(requestActions);
+
+  useEffect(() => {
+    if (isAuditModalOpen && currentPO?.poNumber) {
+      setActivitiesLoading(true);
+      services.getPoActivities(currentPO.poNumber)
+        .then((data) => {
+          setFetchedActivities(data || []);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch PO activities:', err);
+        })
+        .finally(() => {
+          setActivitiesLoading(false);
         });
-      });
-    });
-
-    return list.sort((a, b) => {
-      if (!a.timestamp) return -1;
-      if (!b.timestamp) return 1;
-      return a.timestamp.localeCompare(b.timestamp);
-    });
-  }, [linkedReceipts]);
+    }
+  }, [isAuditModalOpen, currentPO?.poNumber]);
 
   if (!currentPO) return null;
 
@@ -520,7 +507,15 @@ export function PODetailSidebar({
         </div>
 
         {(() => {
-          const filteredActivities = allPOActivities.filter((act) => {
+          if (activitiesLoading) {
+            return (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 0' }}>
+                <Spin tip="Loading system logs..." />
+              </div>
+            );
+          }
+
+          const filteredActivities = (fetchedActivities || []).filter((act) => {
             const query = auditSearchQuery.toLowerCase();
             return (
               act.title?.toLowerCase().includes(query) ||
@@ -534,7 +529,7 @@ export function PODetailSidebar({
           if (filteredActivities.length === 0) {
             return (
               <div style={{ textAlign: 'center', padding: '32px 0', color: '#8c8c8c' }}>
-                {allPOActivities.length === 0
+                {fetchedActivities.length === 0
                   ? 'No system activities have been logged yet for Goods Receipts under this Purchase Order.'
                   : 'No activities matched your search.'}
               </div>

@@ -2072,22 +2072,28 @@ export default function UpcomingInboundListview({
       await loadInboundData();
       const updated = syncReceiptInState(response.data);
 
+      const isQcReject = payload.qcResult === 'Rejected';
+
       setQcStatusCounts((prev) => {
         const isPass = updated.qcResult === 'Pass';
         return {
           ...prev,
           Pending: qcStatusFilter === 'Pending' ? Math.max(0, prev.Pending - 1) : prev.Pending,
-          Submitted: isPass ? prev.Submitted + 1 : prev.Submitted,
-          Rejected: !isPass ? prev.Rejected + 1 : prev.Rejected,
+          Submitted: (isPass || isQcReject) ? prev.Submitted + 1 : prev.Submitted,
+          Rejected: (!isPass || isQcReject) ? prev.Rejected + 1 : prev.Rejected,
         };
       });
 
-      setQcStatusFilter(updated.qcResult === 'Pass' ? 'Submitted' : 'Rejected');
-
-      if (updated.qcResult === 'Pass') {
-        setSelectedGR(null);
-      } else {
+      if (isQcReject && updated.qcResult === 'Pass') {
+        setQcStatusFilter('Submitted');
         setSelectedGR(updated);
+      } else {
+        setQcStatusFilter(updated.qcResult === 'Pass' ? 'Submitted' : 'Rejected');
+        if (updated.qcResult === 'Pass') {
+          setSelectedGR(null);
+        } else {
+          setSelectedGR(updated);
+        }
       }
       message.success(response.message || 'QC review submitted.');
       return true;

@@ -257,6 +257,7 @@ describe('receipt discrepancy helpers', () => {
     expect(hasReceiptDiscrepancy(items)).toBe(true);
     expect(buildReceiptExceptionReason(items)).toBe('ITEM-001: short by 80 KG');
   });
+
 });
 
 describe('getPurchaseOrderReceiptState', () => {

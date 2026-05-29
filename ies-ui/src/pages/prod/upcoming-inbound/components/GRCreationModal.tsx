@@ -585,7 +585,29 @@ export function GRCreationModal({
     supportingDocs = uploadFilesToSupportingDocs(uploadedFiles, 'WAREHOUSE'),
     poSupportingDocs: Record<string, UploadFile[]> = poUploadedFiles,
   ) => {
-    const receivableItems = items.filter((item) => !item.isDeferred);
+    const itemsBySplitKey = new Map<string, GRItem[]>();
+    items.forEach((item) => {
+      const splitKey = getItemSplitKey(item);
+      const group = itemsBySplitKey.get(splitKey) || [];
+      group.push(item);
+      itemsBySplitKey.set(splitKey, group);
+    });
+
+    const filteredItems: GRItem[] = [];
+    itemsBySplitKey.forEach((group) => {
+      if (group.length <= 1) {
+        filteredItems.push(...group);
+      } else {
+        const activeRows = group.filter((item) => !item.isMissing && !item.isDeferred);
+        if (activeRows.length > 0) {
+          filteredItems.push(...activeRows);
+        } else {
+          filteredItems.push(group[0]);
+        }
+      }
+    });
+
+    const receivableItems = filteredItems.filter((item) => !item.isDeferred);
     const hasDiscrepancy = hasReceiptDiscrepancy(receivableItems);
     const exceptionReason = buildReceiptExceptionReason(receivableItems);
     const nextProcessState =

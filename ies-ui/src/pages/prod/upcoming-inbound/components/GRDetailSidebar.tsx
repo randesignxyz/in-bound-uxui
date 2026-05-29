@@ -48,6 +48,8 @@ import {
   summarizeSuppliers,
 } from '../workflow';
 import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
+import { simpleRequestActions } from '@/services/model';
+import { UpcomingInboundServiceAPI } from '../service';
 import { SupportingDocsList } from './SupportingDocsList';
 
 const { Text, Title } = Typography;
@@ -58,6 +60,18 @@ type EditableSidebarItem = GRItem & {
   isChild?: boolean;
   childPosition?: number;
 };
+
+function getSidebarItemPoNumber(item: GRItem, receipt: GoodsReceipt) {
+  return item.poNumber || receipt.linkedPoNumber || receipt.poNumber || 'TEMP';
+}
+
+function getSidebarItemLineGroupKey(item: GRItem, receipt: GoodsReceipt) {
+  return [
+    getSidebarItemPoNumber(item, receipt),
+    item.code,
+    typeof item.poLineNumber === 'number' ? `line:${item.poLineNumber}` : 'line:unknown',
+  ].join('::');
+}
 
 function splitDeliveryNotes(value?: string) {
   return value?.split(',').map((entry) => entry.trim()).filter(Boolean) ?? [];
@@ -221,6 +235,27 @@ export function GRDetailSidebar({
     setDrawerOpen(open);
   }, [open, selectedReceipt]);
 
+  const [fetchedActivities, setFetchedActivities] = useState<any[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const requestActions = simpleRequestActions();
+  const services = UpcomingInboundServiceAPI(requestActions);
+
+  useEffect(() => {
+    if (isAuditModalOpen && receipt?.id) {
+      setActivitiesLoading(true);
+      services.getGrActivities(receipt.id)
+        .then((data) => {
+          setFetchedActivities(data || []);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch GR activities:', err);
+        })
+        .finally(() => {
+          setActivitiesLoading(false);
+        });
+    }
+  }, [isAuditModalOpen, receipt?.id]);
+
   useEffect(() => {
     if (!open || !receipt) return;
     const qcSupportingDocs = (receipt.documentChecklist.supportingDocs || []).filter(
@@ -261,14 +296,12 @@ export function GRDetailSidebar({
       const baseItems = items.map((item, index) => ({
         ...item,
         index,
-        key: `${item.poNumber || receipt.linkedPoNumber || receipt.poNumber || 'TEMP'}-${item.code}-${item.batchNumber || index}`,
+        key: `${getSidebarItemLineGroupKey(item, receipt)}-${item.batchNumber || index}`,
       }));
       return baseItems.map((item, idx) => {
-        const itemPo = item.poNumber || receipt.linkedPoNumber || receipt.poNumber;
+        const itemLineGroupKey = getSidebarItemLineGroupKey(item, receipt);
         const siblings = baseItems.slice(0, idx).filter(
-          (x) =>
-            (x.poNumber || receipt.linkedPoNumber || receipt.poNumber) === itemPo &&
-            x.code === item.code
+          (x) => getSidebarItemLineGroupKey(x, receipt) === itemLineGroupKey
         );
         return {
           ...item,
@@ -777,6 +810,11 @@ export function GRDetailSidebar({
             <Badge dot={isQcEditable && !row.qcDecision} color="#faad14" offset={[4, 2]}>
               <div style={{ fontWeight: 500, display: 'inline-block' }}>{row.code}</div>
             </Badge>
+            {typeof row.poLineNumber === 'number' && (
+              <Tag color="blue" style={{ marginLeft: 6, fontSize: 11 }}>
+                Line {row.poLineNumber + 1}
+              </Tag>
+            )}
             <div
               style={{
                 fontSize: 12,
@@ -1382,7 +1420,15 @@ export function GRDetailSidebar({
         </div>
 
         {(() => {
-          const filteredActivities = (receipt?.activities || []).filter((act) => {
+          if (activitiesLoading) {
+            return (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 0' }}>
+                <Spin tip="Loading system logs..." />
+              </div>
+            );
+          }
+
+          const filteredActivities = (fetchedActivities || []).filter((act) => {
             const query = auditSearchQuery.toLowerCase();
             return (
               act.title?.toLowerCase().includes(query) ||
@@ -1395,7 +1441,7 @@ export function GRDetailSidebar({
           if (filteredActivities.length === 0) {
             return (
               <div style={{ textAlign: 'center', padding: '32px 0', color: '#8c8c8c' }}>
-                {receipt?.activities?.length === 0
+                {fetchedActivities.length === 0
                   ? 'No system activities have been logged yet for this Goods Receipt.'
                   : 'No activities matched your search.'}
               </div>

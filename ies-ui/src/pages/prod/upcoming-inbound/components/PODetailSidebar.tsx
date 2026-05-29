@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Descriptions, Divider, Spin, Tag, Space, Typography } from 'antd';
+import { Button, Descriptions, Divider, Spin, Tag, Space, Typography, Modal, Timeline, Input } from 'antd';
 import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
-import { ExportOutlined } from '@ant-design/icons';
+import { ExportOutlined, HistoryOutlined, UserOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 import { getPurchaseOrderReceiptState, type PurchaseOrder, type POItem, type GoodsReceipt } from '../workflow';
@@ -61,6 +61,8 @@ export function PODetailSidebar({
 }: PODetailSidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(open);
   const [renderedPO, setRenderedPO] = useState<PurchaseOrder | null>(po);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [auditSearchQuery, setAuditSearchQuery] = useState('');
 
   useEffect(() => {
     if (po) {
@@ -70,6 +72,44 @@ export function PODetailSidebar({
   }, [open, po]);
 
   const currentPO = po || renderedPO;
+
+  const linkedReceipts = React.useMemo(() => {
+    if (!currentPO) return [];
+    return goodsReceipts.filter((receipt) => {
+      if (receipt.poNumber === currentPO.poNumber) return true;
+      return receipt.poReferences?.some((reference) => reference.poNumber === currentPO.poNumber);
+    });
+  }, [currentPO?.poNumber, goodsReceipts]);
+
+  const allPOActivities = React.useMemo(() => {
+    const list: Array<{
+      grNumber: string;
+      title: string;
+      description?: string;
+      performedBy?: string;
+      timestamp: string;
+      processState?: string;
+    }> = [];
+
+    linkedReceipts.forEach((receipt) => {
+      receipt.activities?.forEach((act) => {
+        list.push({
+          grNumber: receipt.grNumber,
+          title: act.title,
+          description: act.description,
+          performedBy: act.performedBy,
+          timestamp: act.timestamp,
+          processState: act.processState,
+        });
+      });
+    });
+
+    return list.sort((a, b) => {
+      if (!a.timestamp) return -1;
+      if (!b.timestamp) return 1;
+      return a.timestamp.localeCompare(b.timestamp);
+    });
+  }, [linkedReceipts]);
 
   if (!currentPO) return null;
 
@@ -90,6 +130,7 @@ export function PODetailSidebar({
   const receiverWarehouse = currentPO.receiverWarehouse?.trim();
 
   const receiptState = getPurchaseOrderReceiptState(currentPO, goodsReceipts);
+
   const shouldShowCreateInboundReceiving = receiptState.canCreateInboundReceiving;
   const poStatusTagColor =
     receiptState.displayStatus === 'Fully Received'
@@ -166,14 +207,21 @@ export function PODetailSidebar({
       width={880}
       drawerProps={{
         destroyOnClose: false,
-        extra: shouldShowCreateInboundReceiving ? (
-          <Button type="primary" onClick={() => onCreateGR(currentPO)}>
-            Create Inbound Receiving
-          </Button>
-        ) : (
-          <Tag color={poStatusTagColor} style={{ fontSize: '13px', padding: '4px 10px', fontWeight: 600 }}>
-            {receiptState.displayStatus}
-          </Tag>
+        extra: (
+          <Space>
+            <Button icon={<HistoryOutlined />} onClick={() => setIsAuditModalOpen(true)}>
+              View System Log
+            </Button>
+            {shouldShowCreateInboundReceiving ? (
+              <Button type="primary" onClick={() => onCreateGR(currentPO)}>
+                Create Inbound Receiving
+              </Button>
+            ) : (
+              <Tag color={poStatusTagColor} style={{ fontSize: '13px', padding: '4px 10px', fontWeight: 600 }}>
+                {receiptState.displayStatus}
+              </Tag>
+            )}
+          </Space>
         ),
         afterOpenChange: (visible) => {
           if (!visible) {
@@ -444,6 +492,118 @@ export function PODetailSidebar({
           </Spin>
         </div>
       </div>
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <HistoryOutlined style={{ color: '#1890ff' }} />
+            <span style={{ fontWeight: 600, fontSize: 16 }}>Purchase Order System Log Trail</span>
+            <Tag color="blue">{currentPO.poNumber}</Tag>
+          </div>
+        }
+        open={isAuditModalOpen}
+        onCancel={() => {
+          setIsAuditModalOpen(false);
+          setAuditSearchQuery('');
+        }}
+        footer={null}
+        width={720}
+        bodyStyle={{ padding: '16px 24px', maxHeight: '70vh', overflowY: 'auto' }}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Input
+            placeholder="Search audit actions, users, receiving numbers or remarks..."
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            value={auditSearchQuery}
+            onChange={(e) => setAuditSearchQuery(e.target.value)}
+            allowClear
+          />
+        </div>
+
+        {(() => {
+          const filteredActivities = allPOActivities.filter((act) => {
+            const query = auditSearchQuery.toLowerCase();
+            return (
+              act.title?.toLowerCase().includes(query) ||
+              act.description?.toLowerCase().includes(query) ||
+              act.performedBy?.toLowerCase().includes(query) ||
+              act.timestamp?.toLowerCase().includes(query) ||
+              act.grNumber?.toLowerCase().includes(query)
+            );
+          });
+
+          if (filteredActivities.length === 0) {
+            return (
+              <div style={{ textAlign: 'center', padding: '32px 0', color: '#8c8c8c' }}>
+                {allPOActivities.length === 0
+                  ? 'No system activities have been logged yet for Goods Receipts under this Purchase Order.'
+                  : 'No activities matched your search.'}
+              </div>
+            );
+          }
+
+          return (
+            <Timeline style={{ marginTop: 16 }}>
+              {filteredActivities.map((act, index) => {
+                const isRejected = act.title?.toLowerCase().includes('reject') || act.title?.toLowerCase().includes('exception');
+                const isApproved = act.title?.toLowerCase().includes('approve') || act.title?.toLowerCase().includes('post') || act.title?.toLowerCase().includes('sync');
+                const isDraft = act.title?.toLowerCase().includes('draft') || act.title?.toLowerCase().includes('create');
+
+                let dotColor = '#1890ff';
+                if (isRejected) dotColor = '#ff4d4f';
+                else if (isApproved) dotColor = '#52c41a';
+                else if (isDraft) dotColor = '#bfbfbf';
+
+                return (
+                  <Timeline.Item
+                    key={index}
+                    color={dotColor}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 600, color: isRejected ? '#cf1322' : '#262626' }}>
+                          {act.title}
+                        </span>
+                        <Space size={8}>
+                          <Tag color="cyan" style={{ margin: 0 }}>
+                            {act.grNumber}
+                          </Tag>
+                          <Tag
+                            color={act.performedBy ? 'blue' : 'default'}
+                            icon={<UserOutlined />}
+                            style={{ margin: 0 }}
+                          >
+                            {act.performedBy || 'System'}
+                          </Tag>
+                        </Space>
+                      </div>
+
+                      <div style={{ fontSize: 11, color: '#8c8c8c' }}>
+                        {act.timestamp}
+                      </div>
+
+                      {act.description && act.description !== act.title && (
+                        <div style={{
+                          marginTop: 6,
+                          padding: '8px 12px',
+                          background: '#fafafa',
+                          borderLeft: '3px solid #d9d9d9',
+                          borderRadius: '0 4px 4px 0',
+                          fontSize: 12,
+                          color: '#595959',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word'
+                        }}>
+                          {act.description}
+                        </div>
+                      )}
+                    </div>
+                  </Timeline.Item>
+                );
+              })}
+            </Timeline>
+          );
+        })()}
+      </Modal>
     </DrawerForm>
   );
 }

@@ -23,7 +23,6 @@ export type LegacyGRStatus =
   | 'Approved'
   | 'Ready To Post SAP'
   | 'Posted'
-  | 'Merged'
   | 'Correction Required';
 
 export type InboundHistoryStatus =
@@ -909,11 +908,10 @@ export function mapProcessStateToLegacyStatus(state: InboundProcessState): Legac
     case 'QC_PENDING':
     case 'QC_PASSED':
     case 'PENDING_SUPERVISOR_REVIEW':
+    case 'MERGED_TO_SUPERVISOR_REVIEW':
       return 'Pending Approval';
     case 'SUPERVISOR_APPROVED':
       return 'Ready To Post SAP';
-    case 'MERGED_TO_SUPERVISOR_REVIEW':
-      return 'Merged';
     case 'TRANSFERRED_TO_PM_RM_WH':
     case 'FIN_SUBMITTED':
     case 'DAILY_CLOSED':
@@ -985,11 +983,6 @@ function isSkipQcActivityText(activityText: string) {
   return normalizedText.includes('skip qc') || normalizedText.includes('skipped qc');
 }
 
-function isMergeActivityText(activityText: string) {
-  const normalizedText = activityText.toLowerCase();
-  return normalizedText.includes('merged');
-}
-
 function hasActivityMatch(receipt: GoodsReceipt, text: string) {
   return receipt.activities.some((activity) => getActivityText(activity).toLowerCase().includes(text));
 }
@@ -1054,7 +1047,7 @@ export const officialStateLabel: Record<InboundProcessState, string> = {
   QC_PASSED: 'QC Passed',
   PENDING_SUPERVISOR_REVIEW: 'Pending Supervisor Review',
   CORRECTION_REQUIRED: 'Correction Required',
-  MERGED_TO_SUPERVISOR_REVIEW: 'Merged To Supervisor Review',
+  MERGED_TO_SUPERVISOR_REVIEW: 'Pending Supervisor Review',
   SUPERVISOR_APPROVED: 'Ready to Post SAP',
   SAP_SYNCED: 'SAP Synced',
   TRANSFERRED_TO_PM_RM_WH: 'Supervisor Approved',
@@ -1281,25 +1274,17 @@ function appendTimelineState(
 function appendSkipQcTimelineStates(items: TimelineState[], activity: GRActivity) {
   appendTimelineState(
     items,
-    'MERGED_TO_SUPERVISOR_REVIEW',
+    'PENDING_SUPERVISOR_REVIEW',
     activity.title || 'Skip QC',
     activity.description || activity.title || 'Skip QC',
-    '',
+    activity.timestamp,
     false,
   );
 
   const skipQcActivity = items[items.length - 1];
-  if (skipQcActivity?.processState === 'MERGED_TO_SUPERVISOR_REVIEW') {
+  if (skipQcActivity?.processState === 'PENDING_SUPERVISOR_REVIEW') {
     skipQcActivity.performedBy = activity.performedBy;
   }
-
-  appendTimelineState(
-    items,
-    'PENDING_SUPERVISOR_REVIEW',
-    'Supervisor Pending',
-    officialStateLabel.PENDING_SUPERVISOR_REVIEW,
-    activity.timestamp,
-  );
 }
 
 function timelineEndsWithStates(
@@ -1344,24 +1329,14 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
       return;
     }
 
-    const isWarehouseMergeActivity =
-      (activity.processState === 'PENDING_SUPERVISOR_REVIEW' ||
-        activity.processState === 'MERGED_TO_SUPERVISOR_REVIEW') &&
-      (isSkipQcActivity || isMergeActivityText(activityText));
-    const expandedStates: InboundProcessState[] = isWarehouseMergeActivity
-      ? activity.processState
-        ? [activity.processState]
-        : []
-      : mapActivityProcessStateToTimelineStates(activity.processState);
+    const expandedStates = mapActivityProcessStateToTimelineStates(activity.processState);
     if (!expandedStates.length) return;
 
     expandedStates.forEach((state, index) => {
       const isDerivedQcPassed =
         state === 'QC_PASSED' && activity.processState === 'PENDING_SUPERVISOR_REVIEW' && index === 0;
       const shouldUseActivityTextForTimelineState =
-        isWarehouseMergeActivity ||
-        ((state === 'PENDING_SUPERVISOR_REVIEW' || state === 'MERGED_TO_SUPERVISOR_REVIEW') &&
-          (isSkipQcActivityText(activityText) || isMergeActivityText(activityText)));
+        state === 'PENDING_SUPERVISOR_REVIEW' && isSkipQcActivityText(activityText);
       const title = shouldUseActivityTextForTimelineState
         ? activity.title || officialStateLabel[state]
         : isDerivedQcPassed
@@ -1392,16 +1367,15 @@ export function buildReceiptTimelineActivities(receipt: GoodsReceipt): GRActivit
     });
   });
 
-  const hasSkipQcMergeHistory = timelineSourceActivities.some((activity) => {
+  const hasSkipQcHistory = timelineSourceActivities.some((activity) => {
     const activityText = getActivityText(activity);
     return (
-      (activity.processState === 'PENDING_SUPERVISOR_REVIEW' ||
-        activity.processState === 'MERGED_TO_SUPERVISOR_REVIEW') &&
-      (isSkipQcActivityText(activityText) || isMergeActivityText(activityText))
+      activity.processState === 'PENDING_SUPERVISOR_REVIEW' &&
+      isSkipQcActivityText(activityText)
     );
   });
   const currentTimelineStates =
-    receipt.processState === 'PENDING_SUPERVISOR_REVIEW' && hasSkipQcMergeHistory
+    receipt.processState === 'PENDING_SUPERVISOR_REVIEW' && hasSkipQcHistory
       ? (['PENDING_SUPERVISOR_REVIEW'] as InboundProcessState[])
       : mapActivityProcessStateToTimelineStates(receipt.processState);
   const currentVisibleState =

@@ -1397,7 +1397,7 @@ export default function RequestedBatchWareHouse({
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Badge status="processing" />
-            <span>Current Draft (not yet committed)</span>
+            <span>Current Draft</span>
             <Tag color="blue" bordered={false}>
               {totalDraft} item(s) staged
             </Tag>
@@ -1666,8 +1666,8 @@ export default function RequestedBatchWareHouse({
         title="Confirm Pick up"
         description={
           confirmPickupShipment
-            ? `Confirm that the requester has picked up Shipment #${confirmPickupShipment.shipmentNo}?`
-            : 'Confirm that the requester has picked up the prepared spare parts?'
+            ? `Confirm that the who has picked up Shipment #${confirmPickupShipment.shipmentNo}?`
+            : 'Confirm that the who has picked up the prepared spare parts?'
         }
         confirmText="Confirm"
         loading={confirmPickupLoading}
@@ -1708,7 +1708,7 @@ export default function RequestedBatchWareHouse({
       <Modal
         title="Pickup QR Code"
         open={pickupQrModalOpen}
-        centered
+        // centered
         footer={null}
         maskClosable={false}
         keyboard={false}

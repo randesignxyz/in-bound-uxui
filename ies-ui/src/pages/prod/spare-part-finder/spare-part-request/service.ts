@@ -105,6 +105,9 @@ type IssueDetailLineDto = {
   approvedQty: number;
   issuedQty: number;
   remainingQty: number;
+  rejected?: boolean;
+  rejectRemark?: string | null;
+  approvalStatus?: string | null;
   unit: string;
   fromWarehouseCode?: string | null;
   fromWarehouse?: string | null;
@@ -223,6 +226,8 @@ type UpdatePendingRequestLinesPayload = {
     requestLineId: number;
     requestedQty: number | string;
     editedAt?: string;
+    rejected?: boolean;
+    rejectRemark?: string;
   }>;
 };
 
@@ -717,15 +722,8 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
   const rawStatus = String(item.requestStatus || '').trim().toUpperCase();
   const normalizedPickupStatus = String(item.pickupStatus || '').trim().toLowerCase();
   const activityDtos = item.activities || [];
-  const productRowCount = new Map<string, number>();
-  (item.items || []).forEach((line) => {
-    const productId = line.sparePartId || line.sparePartCode;
-    productRowCount.set(productId, (productRowCount.get(productId) || 0) + 1);
-  });
   const rejectedActivityByLineId = new Map<number, { by?: string; remark?: string }>();
   const editedActivityByLineId = new Map<number, { by?: string; remark?: string }>();
-  const rejectedActivityByProductId = new Map<string, { by?: string; remark?: string }>();
-  const editedActivityByProductId = new Map<string, { by?: string; remark?: string }>();
 
   activityDtos.forEach((activity) => {
     const label = String(activity.label || '').trim().toLowerCase();
@@ -733,7 +731,6 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
 
     if (label === 'item rejected') {
       const match = description.match(/^(.+?)\s+rejected(?::\s*(.*))?$/i);
-      const productId = match?.[1]?.trim();
       const requestLineId = Number(activity.requestLineId || 0);
       if (requestLineId) {
         rejectedActivityByLineId.set(requestLineId, {
@@ -741,29 +738,12 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
           remark: match?.[2]?.trim() || description,
         });
       }
-      if (productId) {
-        rejectedActivityByProductId.set(productId, {
-          by: activity.by?.trim() || undefined,
-          remark: match?.[2]?.trim() || description,
-        });
-      }
     }
 
     if (label === 'item edited') {
-      const match =
-        description.match(/edited\s+(.+?)\s+approved quantity/i) ||
-        description.match(/edited\s+(.+?)\s+requested quantity/i) ||
-        description.match(/^(.+?)\s+requested quantity updated/i);
-      const productId = match?.[1]?.trim();
       const requestLineId = Number(activity.requestLineId || 0);
       if (requestLineId) {
         editedActivityByLineId.set(requestLineId, {
-          by: activity.by?.trim() || undefined,
-          remark: description,
-        });
-      }
-      if (productId) {
-        editedActivityByProductId.set(productId, {
           by: activity.by?.trim() || undefined,
           remark: description,
         });
@@ -794,14 +774,12 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     const requestLineId = Number(line.requestLineId || 0);
     const requestedQty = Number(line.requestedQty ?? line.approvedQty ?? 0);
     const approvedQty = Number(line.approvedQty ?? 0);
-    const canFallbackToProductActivity = (productRowCount.get(productId) || 0) === 1;
-    const rejectedActivity =
-      rejectedActivityByLineId.get(requestLineId) ||
-      (canFallbackToProductActivity ? rejectedActivityByProductId.get(productId) : undefined);
-    const editedActivity =
-      editedActivityByLineId.get(requestLineId) ||
-      (canFallbackToProductActivity ? editedActivityByProductId.get(productId) : undefined);
-    const isRejectedLine = rawStatus !== 'PENDING' && approvedQty === 0;
+    const rejectedActivity = rejectedActivityByLineId.get(requestLineId);
+    const editedActivity = editedActivityByLineId.get(requestLineId);
+    const isRejectedLine =
+      Boolean(line.rejected) ||
+      String(line.approvalStatus || '').trim().toUpperCase() === 'REJECTED' ||
+      (rawStatus !== 'PENDING' && approvedQty === 0);
     const hasQuantityEdit = approvedQty > 0 && approvedQty !== requestedQty;
     const pendingEditedQty = rawStatus === 'PENDING' && hasQuantityEdit ? approvedQty : requestedQty;
 
@@ -827,7 +805,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       description: line.remark || undefined,
       approvalState: isRejectedLine ? 'rejected' : editedActivity || hasQuantityEdit ? 'edited' : undefined,
       approvalBy: rejectedActivity?.by || editedActivity?.by,
-      approvalRemark: rejectedActivity?.remark || editedActivity?.remark,
+      approvalRemark: rejectedActivity?.remark || line.rejectRemark || editedActivity?.remark,
     };
   });
   const detailCategory = items.find((entry) => entry.category)?.category;
@@ -1013,6 +991,18 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     return matchedEntry?.note?.trim() || (confirmedHistory.length === 1 ? confirmedHistory[0].note?.trim() : undefined);
   };
 
+  const mappedActivities = activityDtos.map((activity) => ({
+    label: String(activity.label || '').trim(),
+    description: String(activity.description || '').trim(),
+    date: activity.date || item.requestedDate,
+    by: activity.by?.trim() ? activity.by.trim() : undefined,
+    remark:
+      (activity as RequestDetailActivity).remark?.trim() ||
+      getPickupActivityRemark(activity) ||
+      undefined,
+    dot: activity.dot === 'pending' ? 'pending' as const : 'done' as const,
+    requestLineId: Number(activity.requestLineId || 0) || undefined,
+  }));
   return {
     id: Number(item.id || 0),
     requestId: item.requestNo || '',
@@ -1029,18 +1019,7 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
     approverRemark: extractApproverRemark(item.managerRemark),
     warehouseBy: history[history.length - 1]?.warehouseStaffId || history[0]?.warehouseStaffId || undefined,
     items,
-    activities: activityDtos.map((activity) => ({
-      label: String(activity.label || '').trim(),
-      description: String(activity.description || '').trim(),
-      date: activity.date || item.requestedDate,
-      by: activity.by?.trim() ? activity.by.trim() : undefined,
-      remark:
-        (activity as RequestDetailActivity).remark?.trim() ||
-        getPickupActivityRemark(activity) ||
-        undefined,
-      dot: activity.dot === 'pending' ? 'pending' : 'done',
-      requestLineId: Number(activity.requestLineId || 0) || undefined,
-    })),
+    activities: mappedActivities,
     // activities:
     //   (item.activities || []).length > 0
     //     ? (item.activities || []).map((activity) => ({

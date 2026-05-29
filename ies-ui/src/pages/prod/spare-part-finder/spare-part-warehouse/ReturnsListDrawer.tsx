@@ -794,12 +794,12 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       dataIndex: 'uom',
       key: 'uom',
     },
-    {
-      title: 'Used QTY',
-      dataIndex: 'usedQty',
-      key: 'used_key',
-      align: 'center' as const,
-    },
+    // {
+    //   title: 'Used QTY',
+    //   dataIndex: 'usedQty',
+    //   key: 'used_key',
+    //   align: 'center' as const,
+    // },
     {
       title: 'QTY to Return',
       dataIndex: 'qtyToReturn',

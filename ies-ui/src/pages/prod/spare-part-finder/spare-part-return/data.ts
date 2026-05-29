@@ -35,6 +35,8 @@ export interface SparePartPickedLine {
   imageId?: string;
   pendingReturnQty?: number;
   returnedQty?: number;
+  item_condition?: string;
+  itemCondition?: string;
   remainingQty?: number;
 }
 
@@ -97,6 +99,8 @@ export interface SparePartReturnListItem {
   requested_date?: string;
   requested_pickup_date?: string;
   imageId?: string;
+  item_condition?: string;
+  itemCondition?: string;
   // extra fields for drawer/modal
   requestId?: number;
   requestLineId?: number;
@@ -233,6 +237,7 @@ export interface RequestDetailLineItem {
   image?: string;
   product_id: string;
   request_id: string;
+  item_condition?: string;
   item_name: string;
   uom?: string;
   quantity_to_return: number;
@@ -363,6 +368,8 @@ export const mapToFlattenedRowsMySparePartList = (
           pickupLocation:           shipment.pickupLocation,
           itemId:                   line.itemId,
           imageId:                   line.imageId,
+          item_condition:           line.item_condition ?? line.itemCondition,
+          itemCondition:            line.itemCondition ?? line.item_condition,
           deliveredQty:             line.deliveredQty,
           category:                 typeof line.category === 'string' ? line.category : line.category?.category_name || '-',
           pendingReturnQty,

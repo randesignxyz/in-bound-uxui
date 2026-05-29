@@ -19,7 +19,7 @@ import {
   Upload,
   message,
 } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import SparePartImage from '../spare-part-request/SparePartImage';
 import type {
@@ -31,7 +31,6 @@ import { SparePartReturnAPI } from '../spare-part-return/service';
 import { getUploadFileObjectUrlV2, RequestActions } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { SparePartWarehouseReturnAPI } from './service.return';
-import { formatSpfDateTime } from '../shared/dateTime';
 
 const { Title } = Typography;
 const MAX_ATTACHMENTS = 3;
@@ -62,6 +61,8 @@ interface ReturnItem {
   imageId?: string;
   image?: string;
   productId: string;
+  request_id?: string;
+  item_condition?: string;
   partName?: string;
   name: string;
   uom?: string;
@@ -260,6 +261,8 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           itemId: i.return_item_id,
           image: i.image,
           productId: i.product_id,
+          request_id: i.request_id,
+          item_condition: i.item_condition,
           name: i.item_name,
           partName: i.item_name,
           uom: i.uom,
@@ -283,6 +286,8 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       qtyToReturn: i.qtyToReturn ?? i.quantity_to_return ?? 0,
       usedQty: i.usedQty ?? i.used_quantity ?? 0,
       productId: i.productId ?? i.product_id ?? '',
+      request_id: i.request_id ?? i.requestId ?? '',
+      item_condition: i.item_condition ?? i.itemCondition ?? '',
       name: i.name ?? i.item_name ?? '',
       uom: i.uom ?? i.UoM ?? '',
     }));
@@ -351,6 +356,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             image: i.image ?? undefined,
             product_id: i.product_id,
             request_id: i.request_id,
+            item_condition: i.item_condition,
             item_name: i.item_name,
             uom: i.uom,
             quantity_to_return: i.quantity_to_return,
@@ -766,6 +772,18 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
       ),
     },
     {
+      title: 'Request ID',
+      dataIndex: 'request_id',
+      key: 'request_id',
+      render: (_: unknown, record: ReturnItem) => record.request_id || '—',
+    },
+    {
+      title: 'Condition',
+      dataIndex: 'item_condition',
+      key: 'item_condition',
+      render: (_: unknown, record: ReturnItem) => record.item_condition || '—',
+    },
+    {
       title: 'Name',
       dataIndex: 'name',
       key: 'name_product',
@@ -982,7 +1000,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                           maxCount={MAX_ATTACHMENTS}
                           onPreview={handlePreview}
                           onChange={handleAttachmentChange(record)}
-                          itemRender={(originNode, file) => {
+                          itemRender={(originNode: React.ReactNode, file: any) => {
                             const src = file.thumbUrl || file.url || (file.preview as string) || '';
                             const existingFileId = isExistingImageFile(file) ? String(file.response) : undefined;
 
@@ -1043,7 +1061,7 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                               </div>
                             );
                           }}
-                          onRemove={(file) => {
+                          onRemove={(file: UploadFile) => {
                             handleRemoveAttachment(record, file, rowFiles);
                           }}
                         >

@@ -38,6 +38,8 @@ interface ReturnItem {
   imageId?: string;
   image?: string;
   productId: string;
+  request_id?: string;
+  item_condition?: string;
   partName?: string;
   name: string;
   uom?: string;
@@ -59,6 +61,7 @@ interface FetchReturnDetailResponseItem {
   image?: string;
   product_id?: string;
   request_id?: string;
+  item_condition?: string;
   item_name?: string;
   uom?: string;
   quantity_to_return?: number;
@@ -177,6 +180,8 @@ const mapFetchedItemToRow = (item: RequestDetailLineItem, index: number): Return
   imageId: item.imageId,
   image: item.image,
   productId: item.product_id,
+  request_id: item.request_id,
+  item_condition: item.item_condition,
   partName: item.item_name,
   name: item.item_name,
   uom: item.uom,
@@ -196,6 +201,8 @@ const mapFallbackItemToRow = (item: RequestDetailLineItem, index: number): Retur
   imageId: item.imageId,
   image: item.image,
   productId: item.product_id,
+  request_id: item.request_id,
+  item_condition: item.item_condition,
   partName: item.item_name,
   name: item.item_name,
   uom: item.uom,
@@ -225,6 +232,7 @@ const mapResponseToDetailData = (
     image: line.image,
     product_id: line.product_id ?? '',
     request_id: line.request_id ?? '',
+    item_condition: line.item_condition,
     item_name: line.item_name ?? '',
     uom: line.uom,
     quantity_to_return: line.quantity_to_return ?? 0,
@@ -417,6 +425,18 @@ export default function DrawerBatchReturnItems({
       dataIndex: 'productId',
       key: 'product_id',
       render: (_, record) => <Typography.Link>{record.productId}</Typography.Link>,
+    },
+    {
+        title: 'Request ID',
+        dataIndex: 'request_id',
+        key: 'request_id',
+        render: (_, record) => record.request_id || '-',
+    },
+    {
+    title: 'Condition',
+    dataIndex: 'item_condition',
+    key: 'item_condition',
+    render: (_, record) => record.item_condition || '-',
     },
     { title: 'Name', dataIndex: 'name', key: 'name_product', ellipsis: true },
     { title: 'UoM', dataIndex: 'uom', key: 'uom' },

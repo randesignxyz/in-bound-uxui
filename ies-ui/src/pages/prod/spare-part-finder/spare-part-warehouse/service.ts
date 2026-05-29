@@ -612,6 +612,10 @@ const mapIssueRequestDetail = (item: IssueRequestDto): RequestDetailData => {
 
 const mapIssueStatusFilter = (value?: 'All' | WarehouseDisplayStatus) => {
   switch (value) {
+    case 'Pending':
+      return 'PENDING';
+    case 'In Progress':
+      return 'IN_PROGRESS';
     case 'Partial':
       return 'PARTIAL_ISSUE';
     case 'Ready To Pick Up':

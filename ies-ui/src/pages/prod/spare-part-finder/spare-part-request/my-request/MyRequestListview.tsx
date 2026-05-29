@@ -187,9 +187,15 @@ export default function MyRequestListview({
       scope,
     );
 
+    const items = response.items || [];
+    const displayFilteredItems =
+      filters.status === 'ALL'
+        ? items
+        : items.filter((item) => deriveDisplayStatus(item) === filters.status);
+
     return {
-      data: response.items || [],
-      total: response.total || 0,
+      data: displayFilteredItems,
+      total: filters.status === 'ALL' ? response.total || 0 : displayFilteredItems.length,
       success: true,
     };
   };

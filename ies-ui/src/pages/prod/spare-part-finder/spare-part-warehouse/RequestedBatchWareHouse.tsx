@@ -1221,6 +1221,9 @@ export default function RequestedBatchWareHouse({
         const draftedQty = clampInt(draftByProductId[lineKey]);
         const remainingRequestQty = Math.max(0, requestedQty - sentQty - draftedQty);
         const exceedsRemainingRequestQty = current > remainingRequestQty;
+        if (isFullySent) {
+          return <Text type="secondary">-</Text>;
+        }
         return (
           <div style={{ width: '100%', maxWidth: 100 }}>
             <InputNumber
@@ -1270,6 +1273,11 @@ export default function RequestedBatchWareHouse({
       render: (_: unknown, record) => {
         const lineKey = getRequestLineKey(record);
         const current = conditionByProductId[lineKey] || 'NEW';
+        const isFullySent = getMaxSelectableQty(record) <= 0;
+
+        if (isFullySent) {
+          return <Text type="secondary">-</Text>;
+        }
 
         return (
           <Radio.Group
@@ -1408,7 +1416,7 @@ export default function RequestedBatchWareHouse({
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Badge status="processing" />
-            <span>Current Draft (not yet committed)</span>
+            <span>Current Draft</span>
             <Tag color="blue" bordered={false}>
               {totalDraft} item(s) staged
             </Tag>
@@ -1677,8 +1685,8 @@ export default function RequestedBatchWareHouse({
         title="Confirm Pick up"
         description={
           confirmPickupShipment
-            ? `Confirm that the requester has picked up Shipment #${confirmPickupShipment.shipmentNo}?`
-            : 'Confirm that the requester has picked up the prepared spare parts?'
+            ? `Confirm that the who has picked up Shipment #${confirmPickupShipment.shipmentNo}?`
+            : 'Confirm that the who has picked up the prepared spare parts?'
         }
         confirmText="Confirm"
         loading={confirmPickupLoading}
@@ -1719,7 +1727,7 @@ export default function RequestedBatchWareHouse({
       <Modal
         title="Pickup QR Code"
         open={pickupQrModalOpen}
-        centered
+        // centered
         footer={null}
         maskClosable={false}
         keyboard={false}

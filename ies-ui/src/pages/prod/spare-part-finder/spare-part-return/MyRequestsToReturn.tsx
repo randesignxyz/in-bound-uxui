@@ -14,6 +14,8 @@ import type {
 import { SparePartReturnAPI } from './service';
 import { WarehouseReturnRow } from '../spare-part-warehouse/ReturnsListWarehouse';
 
+type DateRangePickerValue = [Dayjs | null, Dayjs | null] | null;
+
 interface MyRequestsToReturnProps {
   onUpdated?: () => void;
   defaultStatus?: string;
@@ -53,6 +55,11 @@ const buildAdvanceSearch = (
   }
 
   return baseSearch;
+};
+
+const resolveDateRange = (dates: DateRangePickerValue): [Dayjs, Dayjs] | undefined => {
+  if (!dates?.[0] || !dates?.[1]) return undefined;
+  return [dates[0], dates[1]];
 };
 
 export default function MyRequestsToReturn({
@@ -152,17 +159,15 @@ export default function MyRequestsToReturn({
           />
           <DatePicker.RangePicker
             placeholder={['Return Date From', 'Return Date To']}
-            onChange={(dates) => {
-              setReturnDateRange(dates ? ([dates[0], dates[1]] as [Dayjs, Dayjs]) : undefined);
+            onChange={(dates: DateRangePickerValue) => {
+              setReturnDateRange(resolveDateRange(dates));
               actionRef.current?.reloadAndRest?.();
             }}
           />
           <DatePicker.RangePicker
             placeholder={['Status(Approved/Rejected) Date From', 'Status(Approved/Rejected) Date To']}
-            onChange={(dates) => {
-              setManagerDecisionDateRange(
-                dates ? ([dates[0], dates[1]] as [Dayjs, Dayjs]) : undefined
-              );
+            onChange={(dates: DateRangePickerValue) => {
+              setManagerDecisionDateRange(resolveDateRange(dates));
               actionRef.current?.reloadAndRest?.();
             }}
             disabled={statusFilter !== 'Approved' && statusFilter !== 'Rejected'}

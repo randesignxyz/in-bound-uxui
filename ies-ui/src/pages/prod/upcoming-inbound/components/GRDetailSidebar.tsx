@@ -1,4 +1,4 @@
-import { InboxOutlined } from '@ant-design/icons';
+import { InboxOutlined, HistoryOutlined, UserOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProCard, ProTable } from '@ant-design/pro-components';
 import { DrawerForm } from '@ant-design/pro-form';
 import type { ProColumns } from '@ant-design/pro-table';
@@ -48,6 +48,8 @@ import {
   summarizeSuppliers,
 } from '../workflow';
 import { SupportingDocPreviewModal } from './SupportingDocPreviewModal';
+import { simpleRequestActions } from '@/services/model';
+import { UpcomingInboundServiceAPI } from '../service';
 import { SupportingDocsList } from './SupportingDocsList';
 
 const { Text, Title } = Typography;
@@ -58,6 +60,18 @@ type EditableSidebarItem = GRItem & {
   isChild?: boolean;
   childPosition?: number;
 };
+
+function getSidebarItemPoNumber(item: GRItem, receipt: GoodsReceipt) {
+  return item.poNumber || receipt.linkedPoNumber || receipt.poNumber || 'TEMP';
+}
+
+function getSidebarItemLineGroupKey(item: GRItem, receipt: GoodsReceipt) {
+  return [
+    getSidebarItemPoNumber(item, receipt),
+    item.code,
+    typeof item.poLineNumber === 'number' ? `line:${item.poLineNumber}` : 'line:unknown',
+  ].join('::');
+}
 
 function splitDeliveryNotes(value?: string) {
   return value?.split(',').map((entry) => entry.trim()).filter(Boolean) ?? [];
@@ -168,6 +182,13 @@ function isRejectedActivityTitle(title: string) {
   return title === 'QC Rejected' || title === 'Supervisor Rejected';
 }
 
+function isSkipQcReceipt(receipt: GoodsReceipt) {
+  return receipt.activities.some((activity) => {
+    const activityText = `${activity.title || ''} ${activity.description || ''}`.trim().toLowerCase();
+    return activityText.includes('skip qc') || activityText.includes('skipped qc');
+  });
+}
+
 function getRejectedQtyForRow(item: GRItem) {
   if (item.qcDecision !== 'Reject') {
     return 0;
@@ -198,6 +219,8 @@ export function GRDetailSidebar({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(open);
   const [renderedReceipt, setRenderedReceipt] = useState<GoodsReceipt | null>(selectedReceipt);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [auditSearchQuery, setAuditSearchQuery] = useState('');
   const [previewState, setPreviewState] = useState<{
     fileName?: string;
     url?: string;
@@ -211,6 +234,27 @@ export function GRDetailSidebar({
     }
     setDrawerOpen(open);
   }, [open, selectedReceipt]);
+
+  const [fetchedActivities, setFetchedActivities] = useState<any[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const requestActions = simpleRequestActions();
+  const services = UpcomingInboundServiceAPI(requestActions);
+
+  useEffect(() => {
+    if (isAuditModalOpen && receipt?.id) {
+      setActivitiesLoading(true);
+      services.getGrActivities(receipt.id)
+        .then((data) => {
+          setFetchedActivities(data || []);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch GR activities:', err);
+        })
+        .finally(() => {
+          setActivitiesLoading(false);
+        });
+    }
+  }, [isAuditModalOpen, receipt?.id]);
 
   useEffect(() => {
     if (!open || !receipt) return;
@@ -252,14 +296,12 @@ export function GRDetailSidebar({
       const baseItems = items.map((item, index) => ({
         ...item,
         index,
-        key: `${item.poNumber || receipt.linkedPoNumber || receipt.poNumber || 'TEMP'}-${item.code}-${item.batchNumber || index}`,
+        key: `${getSidebarItemLineGroupKey(item, receipt)}-${item.batchNumber || index}`,
       }));
       return baseItems.map((item, idx) => {
-        const itemPo = item.poNumber || receipt.linkedPoNumber || receipt.poNumber;
+        const itemLineGroupKey = getSidebarItemLineGroupKey(item, receipt);
         const siblings = baseItems.slice(0, idx).filter(
-          (x) =>
-            (x.poNumber || receipt.linkedPoNumber || receipt.poNumber) === itemPo &&
-            x.code === item.code
+          (x) => getSidebarItemLineGroupKey(x, receipt) === itemLineGroupKey
         );
         return {
           ...item,
@@ -307,6 +349,7 @@ export function GRDetailSidebar({
     viewerRole === 'WAREHOUSE_SUPERVISOR' &&
     receipt.processState === 'PENDING_SUPERVISOR_REVIEW';
   const showQcReadOnly = viewerRole !== 'WAREHOUSE_STAFF' && !isQcEditable;
+  const isSkippedQcReceipt = isSkipQcReceipt(receipt);
   const reviewerLabel =
     receipt.approvedBy === 'qam.inspector' ||
     ['QC_PASSED', 'CORRECTION_REQUIRED', 'MISMATCH_EXCEPTION'].includes(receipt.processState)
@@ -767,6 +810,11 @@ export function GRDetailSidebar({
             <Badge dot={isQcEditable && !row.qcDecision} color="#faad14" offset={[4, 2]}>
               <div style={{ fontWeight: 500, display: 'inline-block' }}>{row.code}</div>
             </Badge>
+            {typeof row.poLineNumber === 'number' && (
+              <Tag color="blue" style={{ marginLeft: 6, fontSize: 11 }}>
+                Line {row.poLineNumber + 1}
+              </Tag>
+            )}
             <div
               style={{
                 fontSize: 12,
@@ -894,34 +942,40 @@ export function GRDetailSidebar({
         width: 140,
         render: (_: unknown, row: EditableSidebarItem) => {
           const isReject = row.qcDecision === 'Reject';
+          const hasError = isReject && typeof row.qcRejectedQty === 'number' && row.qcRejectedQty > row.receiveQty;
 
           return (
-            <InputNumber
-              style={{ width: '100%' }}
-              min={1}
-              max={row.receiveQty}
-              precision={0}
-              controls={false}
-              placeholder="-"
-              disabled={!isReject}
-              value={isReject ? row.qcRejectedQty : undefined}
-              status={errors[`rejectedQty-${row.index}`] ? 'error' : undefined}
-              parser={(value) => {
-                const parsed = parseInt(value?.replace(/[^\d]/g, '') ?? '', 10);
-                return isNaN(parsed) ? '' : parsed;
-              }}
-              onKeyDown={(e) => {
-                const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
-                if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
-                  e.preventDefault();
-                }
-              }}
-              onChange={(value) => {
-                const num = typeof value === 'number' ? value : null;
-                const clamped = num !== null ? Math.min(num, row.receiveQty) : null;
-                handleRejectedQtyChange(row.index, clamped);
-              }}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <InputNumber
+                style={{ width: '100%' }}
+                min={1}
+                precision={0}
+                controls={false}
+                placeholder="-"
+                disabled={!isReject}
+                value={isReject ? row.qcRejectedQty : undefined}
+                status={hasError || errors[`rejectedQty-${row.index}`] ? 'error' : undefined}
+                parser={(value) => {
+                  const parsed = parseInt(value?.replace(/[^\d]/g, '') ?? '', 10);
+                  return isNaN(parsed) ? '' : parsed;
+                }}
+                onKeyDown={(e) => {
+                  const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+                  if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                onChange={(value) => {
+                  const num = typeof value === 'number' ? value : null;
+                  handleRejectedQtyChange(row.index, num);
+                }}
+              />
+              {hasError && (
+                <div style={{ color: '#ff4d4f', fontSize: 11, lineHeight: '14px' }}>
+                  Exceeds received qty ({row.receiveQty.toLocaleString()})
+                </div>
+              )}
+            </div>
           );
         },
       },
@@ -944,9 +998,10 @@ export function GRDetailSidebar({
         width: 120,
         render: (_: unknown, row: EditableSidebarItem) => {
           const decision = row.qcDecision;
+          const displayDecision = decision || (isSkippedQcReceipt ? 'Skipped' : 'Pending');
           return (
-            <Tag color={decision === 'Reject' ? 'red' : decision === 'Pass' ? 'green' : 'default'}>
-              {decision || 'Pending'}
+            <Tag color={decision === 'Reject' ? 'red' : decision === 'Pass' ? 'green' : isSkippedQcReceipt ? 'blue' : 'default'}>
+              {displayDecision}
             </Tag>
           );
         },
@@ -982,7 +1037,7 @@ export function GRDetailSidebar({
                 Waiting for PO link
               </Text>
             )}
-            <Space>{headerActions}</Space>
+            {headerActions}
           </Space>
         </div>
       }
@@ -1272,7 +1327,16 @@ export function GRDetailSidebar({
           </div>
 
           <Divider />
-          <div style={{ fontWeight: 600, marginBottom: 16 }}>Activities</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ fontWeight: 600 }}>Activities</span>
+            <Button
+              size="small"
+              icon={<HistoryOutlined />}
+              onClick={() => setIsAuditModalOpen(true)}
+            >
+              View System Log
+            </Button>
+          </div>
           <Timeline
             items={timelineActivities.map((activity) => ({
               color:
@@ -1328,6 +1392,121 @@ export function GRDetailSidebar({
           onChange={(event) => setDraftRemark(event.target.value)}
         />
       </Modal>
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <HistoryOutlined style={{ color: '#1890ff' }} />
+            <span style={{ fontWeight: 600, fontSize: 16 }}>System Log Trail</span>
+            <Tag color="blue">{receipt?.grNumber}</Tag>
+          </div>
+        }
+        open={isAuditModalOpen}
+        onCancel={() => {
+          setIsAuditModalOpen(false);
+          setAuditSearchQuery('');
+        }}
+        footer={null}
+        width={720}
+        bodyStyle={{ padding: '16px 24px', maxHeight: '70vh', overflowY: 'auto' }}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Input
+            placeholder="Search audit actions, users, or remarks..."
+            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+            value={auditSearchQuery}
+            onChange={(e) => setAuditSearchQuery(e.target.value)}
+            allowClear
+          />
+        </div>
+
+        {(() => {
+          if (activitiesLoading) {
+            return (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 0' }}>
+                <Spin tip="Loading system logs..." />
+              </div>
+            );
+          }
+
+          const filteredActivities = (fetchedActivities || []).filter((act) => {
+            const query = auditSearchQuery.toLowerCase();
+            return (
+              act.title?.toLowerCase().includes(query) ||
+              act.description?.toLowerCase().includes(query) ||
+              act.performedBy?.toLowerCase().includes(query) ||
+              act.timestamp?.toLowerCase().includes(query)
+            );
+          });
+
+          if (filteredActivities.length === 0) {
+            return (
+              <div style={{ textAlign: 'center', padding: '32px 0', color: '#8c8c8c' }}>
+                {fetchedActivities.length === 0
+                  ? 'No system activities have been logged yet for this Goods Receipt.'
+                  : 'No activities matched your search.'}
+              </div>
+            );
+          }
+
+          return (
+            <Timeline style={{ marginTop: 16 }}>
+              {filteredActivities.map((act, index) => {
+                const isRejected = act.title?.toLowerCase().includes('reject') || act.title?.toLowerCase().includes('exception');
+                const isApproved = act.title?.toLowerCase().includes('approve') || act.title?.toLowerCase().includes('post') || act.title?.toLowerCase().includes('sync');
+                const isDraft = act.title?.toLowerCase().includes('draft') || act.title?.toLowerCase().includes('create');
+
+                let dotColor = '#1890ff';
+                if (isRejected) dotColor = '#ff4d4f';
+                else if (isApproved) dotColor = '#52c41a';
+                else if (isDraft) dotColor = '#bfbfbf';
+
+                return (
+                  <Timeline.Item
+                    key={index}
+                    color={dotColor}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 600, color: isRejected ? '#cf1322' : '#262626' }}>
+                          {act.title}
+                        </span>
+                        <Tag
+                          color={act.performedBy ? 'blue' : 'default'}
+                          icon={<UserOutlined />}
+                          style={{ margin: 0 }}
+                        >
+                          {act.performedBy || 'System'}
+                        </Tag>
+                      </div>
+
+                      <div style={{ fontSize: 11, color: '#8c8c8c' }}>
+                        {act.timestamp}
+                      </div>
+
+                      {act.description && act.description !== act.title && (
+                        <div style={{
+                          marginTop: 6,
+                          padding: '8px 12px',
+                          background: '#fafafa',
+                          borderLeft: '3px solid #d9d9d9',
+                          borderRadius: '0 4px 4px 0',
+                          fontSize: 12,
+                          color: '#595959',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word'
+                        }}>
+                          {act.description}
+                        </div>
+                      )}
+                    </div>
+                  </Timeline.Item>
+                );
+              })}
+            </Timeline>
+          );
+        })()}
+      </Modal>
+
       <SupportingDocPreviewModal
         open={Boolean(previewState)}
         fileName={previewState?.fileName}

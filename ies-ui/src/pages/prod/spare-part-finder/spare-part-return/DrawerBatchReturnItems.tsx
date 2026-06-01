@@ -440,7 +440,7 @@ export default function DrawerBatchReturnItems({
     },
     { title: 'Name', dataIndex: 'name', key: 'name_product', ellipsis: true },
     { title: 'UoM', dataIndex: 'uom', key: 'uom' },
-    { title: 'Used QTY', dataIndex: 'usedQty', key: 'used_key', align: 'center' },
+    // { title: 'Used QTY', dataIndex: 'usedQty', key: 'used_key', align: 'center' },
     {
       title: 'QTY to Return',
       dataIndex: 'qtyToReturn',

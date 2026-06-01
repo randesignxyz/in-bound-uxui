@@ -1,6 +1,6 @@
 import FormModalComp from "@/components/FormModal";
 import { EditableProTable, ProColumns } from "@ant-design/pro-components";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import TextArea from "antd/es/input/TextArea";
 import SparePartImage from "../spare-part-request/SparePartImage";
 import { Form, Modal, message } from "antd";
@@ -153,16 +153,16 @@ export default function FormModalSelectItems({
         precision: 0,
       },
     },
-    {
-      title: "Used QTY",
-      dataIndex: "used_quantity",
-      width: 120,
-      valueType: "digit",
-      fieldProps: {
-        min: 0,
-        precision: 0,
-      },
-    },
+    // {
+    //   title: "Used QTY",
+    //   dataIndex: "used_quantity",
+    //   width: 120,
+    //   valueType: "digit",
+    //   fieldProps: {
+    //     min: 0,
+    //     precision: 0,
+    //   },
+    // },
     {
       title: "UoM",
       dataIndex: "UoM",

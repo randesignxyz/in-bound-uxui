@@ -971,17 +971,104 @@ function isRejectedBranchActivity(activity: GRActivity) {
   );
 }
 
+function isCorrectionCycleActivity(activity: GRActivity) {
+  const activityText = getActivityText(activity).toLowerCase();
+
+  return (
+    activity.processState === 'CORRECTION_REQUIRED' ||
+    activity.processState === 'MISMATCH_EXCEPTION' ||
+    activityText.includes('qc rejected') ||
+    activityText.includes('supervisor rejected') ||
+    activityText.includes('rejected during qc') ||
+    activityText.includes('correction required')
+  );
+}
+
 function getTimelineSourceActivities(receipt: GoodsReceipt) {
-  if (!shouldUsePassBranchTimeline(receipt)) {
-    return receipt.activities;
+  const normalizeActivities = (activities: GRActivity[]) =>
+    collapseDuplicateResubmissionActivities(removeStaleSkipQcAfterCorrection(activities));
+
+  if (receipt.activities.some(isCorrectionCycleActivity)) {
+    return normalizeActivities(receipt.activities);
   }
 
-  return receipt.activities.filter((activity) => !isRejectedBranchActivity(activity));
+  if (!shouldUsePassBranchTimeline(receipt)) {
+    return normalizeActivities(receipt.activities);
+  }
+
+  return normalizeActivities(receipt.activities.filter((activity) => !isRejectedBranchActivity(activity)));
+}
+
+function removeStaleSkipQcAfterCorrection(activities: GRActivity[]) {
+  let latestCorrectionIndex = -1;
+
+  activities.forEach((activity, index) => {
+    if (isCorrectionCycleActivity(activity)) {
+      latestCorrectionIndex = index;
+    }
+  });
+
+  if (latestCorrectionIndex < 0) {
+    return activities;
+  }
+
+  let hasNonSkipSupervisorReviewAfterCorrection = false;
+
+  return activities.filter((activity, index) => {
+    if (index <= latestCorrectionIndex) {
+      return true;
+    }
+
+    const activityText = getActivityText(activity);
+    const isSupervisorReviewActivity = activity.processState === 'PENDING_SUPERVISOR_REVIEW';
+    const isSkipOrMergeActivity =
+      isSkipQcActivityText(activityText) || isMergeActivityText(activityText);
+
+    if (isSupervisorReviewActivity && isSkipOrMergeActivity) {
+      return !hasNonSkipSupervisorReviewAfterCorrection;
+    }
+
+    if (isSupervisorReviewActivity) {
+      hasNonSkipSupervisorReviewAfterCorrection = true;
+    }
+
+    return true;
+  });
+}
+
+function collapseDuplicateResubmissionActivities(activities: GRActivity[]) {
+  const seenResubmissionStates = new Set<InboundProcessState>();
+  const normalizedActivities: GRActivity[] = [];
+
+  activities.forEach((activity) => {
+    if (isCorrectionCycleActivity(activity)) {
+      seenResubmissionStates.clear();
+    }
+
+    if (
+      activity.processState === 'GRPO_DRAFT' ||
+      activity.processState === 'QC_PENDING'
+    ) {
+      if (seenResubmissionStates.has(activity.processState)) {
+        return;
+      }
+      seenResubmissionStates.add(activity.processState);
+    }
+
+    normalizedActivities.push(activity);
+  });
+
+  return normalizedActivities;
 }
 
 function isSkipQcActivityText(activityText: string) {
   const normalizedText = activityText.toLowerCase();
   return normalizedText.includes('skip qc') || normalizedText.includes('skipped qc');
+}
+
+function isMergeActivityText(activityText: string) {
+  const normalizedText = activityText.toLowerCase();
+  return normalizedText.includes('merge') || normalizedText.includes('merged');
 }
 
 function hasActivityMatch(receipt: GoodsReceipt, text: string) {
@@ -1286,6 +1373,15 @@ function appendSkipQcTimelineStates(items: TimelineState[], activity: GRActivity
   if (skipQcActivity?.processState === 'PENDING_SUPERVISOR_REVIEW') {
     skipQcActivity.performedBy = activity.performedBy;
   }
+
+  appendTimelineState(
+    items,
+    'PENDING_SUPERVISOR_REVIEW',
+    'Supervisor Pending',
+    officialStateLabel.PENDING_SUPERVISOR_REVIEW,
+    activity.timestamp,
+    false,
+  );
 }
 
 function timelineEndsWithStates(

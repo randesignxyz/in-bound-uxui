@@ -109,6 +109,8 @@ export interface RequestDetailLineItem {
   fromWarehouse?: string;
   toWarehouse?: string;
   productionLine?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   warehouse?: string;
   zone?: string;
   shelf?: string;
@@ -258,6 +260,9 @@ const getActivityRank = (label?: string): number => {
   return 8;
 };
 
+const getOtherDestinationText = (item: RequestDetailLineItem): string | undefined =>
+  item.requestOtherDestination ? item.otherDestination?.trim() || undefined : undefined;
+
 const getMaxVisibleActivityRank = (status: RequestStatus): number => {
   switch (status) {
     case 'pending':
@@ -364,9 +369,11 @@ export default function RequestedBatchWareHouse({
       description: it.remark ?? it.description ?? undefined,
       stockQuantity: it.stockQuantity,
       fromWarehouse: it.fromWarehouseCode ?? it.fromWarehouse ?? undefined,
-      toWarehouse: it.toWarehouseCode ?? undefined,
-      productionLine: it.forLine ?? undefined,
-      warehouse: it.toWarehouseCode ?? req?.category,
+      requestOtherDestination: Boolean(it.requestOtherDestination || it.otherDestination?.trim()),
+      otherDestination: it.otherDestination?.trim() || undefined,
+      toWarehouse: it.requestOtherDestination || it.otherDestination?.trim() ? undefined : it.toWarehouseCode ?? undefined,
+      productionLine: it.requestOtherDestination || it.otherDestination?.trim() ? undefined : it.forLine ?? undefined,
+      warehouse: it.requestOtherDestination || it.otherDestination?.trim() ? undefined : it.toWarehouseCode ?? req?.category,
       zone: it.zone,
       shelf: it.shelf,
       level: it.level,
@@ -1137,13 +1144,19 @@ export default function RequestedBatchWareHouse({
       title: 'To WH',
       key: 'toWarehouse',
       width: 'auto',
-      render: (_: unknown, record) => record.toWarehouse || record.warehouse || '—',
+      render: (_: unknown, record) => (getOtherDestinationText(record) ? '—' : record.toWarehouse || record.warehouse || '—'),
     },
     {
       title: 'Line',
       dataIndex: 'productionLine',
       width: 'auto',
-      render: (_: unknown, record) => record.productionLine || '—',
+      render: (_: unknown, record) => (getOtherDestinationText(record) ? '—' : record.productionLine || '—'),
+    },
+    {
+      title: 'Other Destination',
+      key: 'otherDestination',
+      width: 'auto',
+      render: (_: unknown, record) => getOtherDestinationText(record) || '—',
     },
     { title: 'Requested', dataIndex: 'quantityToReturn', width: 'auto', align: 'right' as const },
     {

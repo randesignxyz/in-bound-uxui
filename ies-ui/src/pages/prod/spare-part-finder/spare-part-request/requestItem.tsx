@@ -24,8 +24,10 @@ interface RequestRowItem {
   quantity: number;
   purpose: string;
   uom: string;
-  toWarehouseCode: string;
-  forLine: string;
+  toWarehouseCode: string | null;
+  forLine: string | null;
+  requestOtherDestination: boolean;
+  otherDestination: string;
 }
 
 interface WarehouseOption {
@@ -45,9 +47,11 @@ interface RequestItemModalProps {
     item: SparePartRequestItem;
     quantity: number;
     purpose: string;
-    toWarehouseCode: string;
-    forLine: string;
+    toWarehouseCode: string | null;
+    forLine: string | null;
     uom: string;
+    requestOtherDestination?: boolean;
+    otherDestination?: string;
     }[];
   initialWarehousesByBusinessUnit?: Record<string, WarehouseOption[]>;
   initialRemark?: string;
@@ -58,9 +62,11 @@ interface RequestItemModalProps {
       item: SparePartRequestItem;
       quantity: number;
       purpose: string;
-      toWarehouseCode: string;
-      forLine: string;
+      toWarehouseCode: string | null;
+      forLine: string | null;
       uom: string;
+      requestOtherDestination: boolean;
+      otherDestination: string;
     }[];
     remark: string;
     priority: PriorityLevel;
@@ -138,6 +144,19 @@ const getInventoryId = (item: SparePartRequestItem) =>
 const getRequestItemKey = (item: SparePartRequestItem) =>
   `${item.productId || item.id || ''}::${item.warehouse || item.locations?.[0]?.warehouseCode || ''}::${getInventoryId(item) ?? 'no-inventory'}`;
 
+const isOtherDestinationRow = (row: Pick<RequestRowItem, 'requestOtherDestination' | 'toWarehouseCode' | 'forLine'>) =>
+  row.requestOtherDestination || row.toWarehouseCode === null || row.forLine === null;
+
+const uniqueWarehouseOptions = (items: WarehouseOption[]) => {
+  const seen = new Set<string>();
+  return items.filter((warehouse) => {
+    const code = String(warehouse.warehouseCode || '').trim();
+    if (!code || seen.has(code)) return false;
+    seen.add(code);
+    return true;
+  });
+};
+
 const RequestItemModal: React.FC<RequestItemModalProps> = ({
   open,
   selectedItems,
@@ -211,8 +230,14 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           quantity: initialRow?.quantity ?? 1,
           purpose: initialRow?.purpose || '',
           uom: initialRow?.uom || uomOptions[0] || '',
-          toWarehouseCode: initialRow?.toWarehouseCode || '',
-          forLine: initialRow?.forLine || '',
+          toWarehouseCode: initialRow?.toWarehouseCode === null ? null : initialRow?.toWarehouseCode || '',
+          forLine: initialRow?.forLine === null ? null : initialRow?.forLine || '',
+          requestOtherDestination:
+            initialRow?.requestOtherDestination ||
+            initialRow?.toWarehouseCode === null ||
+            initialRow?.forLine === null ||
+            false,
+          otherDestination: initialRow?.otherDestination || '',
         };
       });
     });
@@ -327,8 +352,8 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
 
     setRows((previous) =>
       previous.map((row) => {
-        const businessUnit = normalizeBusinessUnit(row.item.businessUnit);
-        const warehouseOptions = warehousesByBusinessUnit[businessUnit];
+        const businessUnit = getRowBusinessUnit(row);
+        const warehouseOptions = getWarehouseOptionsForBusinessUnit(businessUnit);
 
         if (!warehouseOptions || warehouseOptions.length === 0) {
           return row;
@@ -337,10 +362,13 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
         const currentWarehouseAllowed = warehouseOptions.some(
           (warehouse) => warehouse.warehouseCode === row.toWarehouseCode,
         );
-        const nextWarehouseCode = currentWarehouseAllowed
+        const requestOtherDestination = isOtherDestinationRow(row);
+        const nextWarehouseCode = requestOtherDestination
+          ? row.toWarehouseCode
+          : currentWarehouseAllowed
           ? row.toWarehouseCode
           : warehouseOptions[0].warehouseCode;
-        const nextLine = row.forLine || lineOptions[0]?.value || '';
+        const nextLine = requestOtherDestination ? row.forLine : row.forLine || lineOptions[0]?.value || '';
 
         if (nextWarehouseCode === row.toWarehouseCode && nextLine === row.forLine) {
           return row;
@@ -353,7 +381,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
         };
       }),
     );
-  }, [lineOptions, open, rows.length, warehousesByBusinessUnit]);
+  }, [lineOptions, open, rows.length, warehousesByBusinessUnit, initialWarehousesByBusinessUnit]);
 
   const handleQuantityChange = (key: number, value: number) => {
     setRows((prev) =>
@@ -383,6 +411,42 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     );
   };
 
+  const getWarehouseOptionsForBusinessUnit = (businessUnit: string) => {
+    const exactOptions = warehousesByBusinessUnit[businessUnit] || initialWarehousesByBusinessUnit?.[businessUnit] || [];
+    if (exactOptions.length > 0) return exactOptions;
+
+    return uniqueWarehouseOptions([
+      ...Object.values(initialWarehousesByBusinessUnit || {}).flat(),
+      ...Object.values(warehousesByBusinessUnit).flat(),
+    ]);
+  };
+
+  const getBusinessUnitForWarehouse = (warehouseCode?: string | null) => {
+    const normalizedWarehouse = String(warehouseCode || '').trim().toUpperCase();
+    if (!normalizedWarehouse) return '';
+
+    const warehouseGroups = {
+      ...(initialWarehousesByBusinessUnit || {}),
+      ...warehousesByBusinessUnit,
+    };
+
+    const match = Object.entries(warehouseGroups).find(([, warehouses]) =>
+      warehouses.some((warehouse) => String(warehouse.warehouseCode || '').trim().toUpperCase() === normalizedWarehouse),
+    );
+
+    return match?.[0] || '';
+  };
+
+  const getRowBusinessUnit = (row: RequestRowItem) => {
+    const itemBusinessUnit = normalizeBusinessUnit(row.item.businessUnit);
+    const uom = normalizeUomCode(row.uom || row.item.uom);
+    if (itemBusinessUnit && itemBusinessUnit !== '-' && itemBusinessUnit !== uom) {
+      return itemBusinessUnit;
+    }
+
+    return getBusinessUnitForWarehouse(row.item.warehouse || row.item.locations?.[0]?.warehouseCode);
+  };
+
   const handleDeleteRow = (key: number) => {
     const updated = rows.filter((r) => r.key !== key);
     if (updated.length === 0) {
@@ -410,12 +474,29 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       message.warning('Please fill in the remark.');
       return;
     }
-    const missingWarehouse = rows.some((r) => !r.toWarehouseCode.trim());
+    const missingDestination = rows.some(
+      (r) => isOtherDestinationRow(r) && !r.otherDestination.trim(),
+    );
+    if (missingDestination) {
+      message.warning('Please fill in the other destination for all selected items.');
+      return;
+    }
+    const missingWarehouse = rows.some(
+      (r) =>
+        !isOtherDestinationRow(r) &&
+        r.toWarehouseCode !== null &&
+        !String(r.toWarehouseCode || '').trim(),
+    );
     if (missingWarehouse) {
       message.warning('Please select a destination warehouse for all items.');
       return;
     }
-    const missingLine = rows.some((r) => !r.forLine.trim());
+    const missingLine = rows.some(
+      (r) =>
+        !isOtherDestinationRow(r) &&
+        r.forLine !== null &&
+        !String(r.forLine || '').trim(),
+    );
     if (missingLine) {
       message.warning('Please select a line for all items.');
       return;
@@ -440,6 +521,8 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           toWarehouseCode: r.toWarehouseCode,
           forLine: r.forLine,
           uom: r.uom,
+          requestOtherDestination: isOtherDestinationRow(r),
+          otherDestination: r.otherDestination.trim(),
         })),
         remark,
         priority,
@@ -453,14 +536,14 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
   const columns = [
     {
       title: 'No',
-      width: '6%',
+      width: 'auto',
       align: 'center' as const,
       render: (_: unknown, __: RequestRowItem, index: number) => index + 1,
     },
     {
       title: 'Product ID',
       dataIndex: ['item', 'productId'],
-      width: '120px',
+      width: 'auto',
       render: (text: string, record: RequestRowItem) =>
         onViewProduct ? (
           <Typography.Link
@@ -492,12 +575,12 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       title: 'Part Name',
       dataIndex: ['item', 'partName'],
       ellipsis: true,
-      width: '10%',
+      width: 'auto',
     },
     {
       title: 'Category',
       dataIndex: ['item', 'category'],
-      width: '6%',
+      width: 'auto',
       align: 'center' as const,
     },
     {
@@ -505,19 +588,24 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
       dataIndex: ['item', 'businessUnit'],
       width: '4%',
       align: 'center' as const,
+      render: (_: unknown, record: RequestRowItem) => getRowBusinessUnit(record) || '-',
     },
     {
       title: 'Warehouse',
       dataIndex: ['item', 'warehouse'],
-      width: '7%',
+      width: 'auto',
     },
      {
      title: 'To Warehouse',
      dataIndex: ['item', 'toWarehouse'],
-     width: 220,
+     width: '20%',
      render: (_text: string, record: RequestRowItem) => {
-      const businessUnit = normalizeBusinessUnit(record.item.businessUnit);
-      const warehouseOptions = warehousesByBusinessUnit[businessUnit] || initialWarehousesByBusinessUnit?.[businessUnit] || [];
+      if (isOtherDestinationRow(record)) {
+        return null;
+      }
+
+      const businessUnit = getRowBusinessUnit(record);
+      const warehouseOptions = getWarehouseOptionsForBusinessUnit(businessUnit);
       const loading = warehouseOptions.length === 0 && Boolean(loadingWarehouseUnits[businessUnit]);
 
       return (
@@ -542,26 +630,65 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
      {
      title: 'For Line',
      dataIndex: ['item', 'productLine'],
-     width: 220,
-     render: (_text: string, record: RequestRowItem) => (
-      <Select
-        showSearch
-        placeholder="Select line"
-        optionFilterProp="label"
-        style={{ width: '100%' }}
-        loading={lineOptionsLoading}
-        value={record.forLine || undefined}
-        onChange={(value) => updateRow(record.key, { forLine: value })}
-        options={lineOptions}
-      />
-     )
+     width: '20%',
+     render: (_text: string, record: RequestRowItem) => {
+      if (isOtherDestinationRow(record)) {
+        return null;
+      }
+      return (
+        <Space direction="vertical" size={2} style={{ width: '100%' }}>
+        <Select
+          showSearch
+          placeholder="Select line"
+          optionFilterProp="label"
+          style={{ width: '100%' }}
+          loading={lineOptionsLoading}
+          value={record.forLine || undefined}
+          onChange={(value) => updateRow(record.key, { forLine: value })}
+          options={lineOptions}
+        />
+        </Space>
+      );
+     }
     },
+    {
+      title: 'Other',
+      dataIndex: 'requestOtherDestination',
+      width: 'auto',
+      render: (_: unknown, record: RequestRowItem) => {
+        const requestOtherDestination = isOtherDestinationRow(record);
 
-    
+        return (
+          <Space direction="vertical" size={4} style={{ width: '100%' }}>
+          <Button
+            size="small"
+            type={requestOtherDestination ? 'primary' : 'default'}
+            onClick={() =>
+              updateRow(record.key, {
+                requestOtherDestination: !requestOtherDestination,
+                toWarehouseCode: requestOtherDestination ? record.toWarehouseCode || '' : null,
+                forLine: requestOtherDestination ? record.forLine || '' : null,
+              })
+            }
+          >
+            {requestOtherDestination ? 'Other Destination' : 'Other'}
+          </Button>
+          {requestOtherDestination && (
+            <Input.TextArea
+              rows={1}
+              placeholder="Input destination"
+              value={record.otherDestination}
+              onChange={(event) => updateRow(record.key, { otherDestination: event.target.value })}
+            />
+          )}
+          </Space>
+        );
+      },
+    },
   {
     title: 'UoM',
     dataIndex: 'uom',
-    width: '6%',
+    width: 'auto',
     render: (_: unknown, record: RequestRowItem) => {
       const uomOptions = getItemUomOptions(record.item);
       const selectedUom = record.uom || uomOptions[0] || '';
@@ -588,7 +715,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     },
   },
     {
-      title: 'QTY to Request',
+      title: 'QTY Request',
       width: 120,
       render: (_: unknown, record: RequestRowItem) => {
         const availableStock = Number(record.item.stock || 0);
@@ -620,7 +747,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
     },
     {
       title: 'Purpose',
-      width: '15%',
+      width: '100%',
       render: (_: unknown, record: RequestRowItem) => (
         <Input.TextArea
           placeholder="write your purpose here (optional)"

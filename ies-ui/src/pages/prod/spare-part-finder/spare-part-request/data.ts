@@ -21,6 +21,8 @@ export interface MyRequestLineItem {
   fromWarehouseCode?: string;
   toWarehouseCode?: string;
   forLine?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   remark?: string;
   imageId?: string | string[];
 }

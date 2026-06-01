@@ -430,7 +430,7 @@ export default function MySparePartList() {
               title: 'Product Number',
               dataIndex: 'part_number',
               render: (value, record) => (
-                <a onClick={() => console.log('Clicked part number:', value, 'with id:', record.id)}>
+                <a onClick={() => onDetailHandler(record)}>
                   {value}
                 </a>
               ),

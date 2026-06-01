@@ -28,6 +28,8 @@ const normalizePickedItemDetail = (response: any): PickedItemDetail | null => {
   return {
     ...raw,
     forLine: raw.forLine ?? raw.for_line ?? '',
+    requestOtherDestination: Boolean(raw.requestOtherDestination ?? raw.request_other_destination ?? raw.otherDestination ?? raw.other_destination),
+    otherDestination: raw.otherDestination ?? raw.other_destination ?? '',
   } as PickedItemDetail;
 };
 
@@ -47,6 +49,8 @@ interface PickedItemDetail {
   category?: { id?: number; category_name?: string } | string;
   businessUnit?: string;
   forLine?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   requestedBy?: string;
   requestDate?: string;
   approvedBy?: string;
@@ -164,7 +168,13 @@ export default function DrawerViewItem({
 
   const isClosed = detail?.isClosed ?? data?.isClosed ?? false;
   const title = detail?.itemName || data?.spare_part_name || data?.part_number || 'Product Details';
-  const lineValue = detail?.forLine || (data as any)?.forLine || '-';
+  const otherDestination = detail?.requestOtherDestination
+    ? detail.otherDestination?.trim()
+    : (data as any)?.requestOtherDestination
+      ? String((data as any)?.otherDestination || '').trim()
+      : '';
+  const lineValue = otherDestination ? '-' : detail?.forLine || (data as any)?.forLine || '-';
+  const warehouseToValue = otherDestination ? '-' : detail?.toWarehouseName || detail?.toWarehouseCode || '-';
   const pickedUpdates = useMemo(
     () =>
       [...(detail?.pickedUpdates ?? [])].sort(
@@ -173,6 +183,7 @@ export default function DrawerViewItem({
     [detail?.pickedUpdates],
   );
   const latestPickedUpdate = pickedUpdates[0];
+  const pickupLocationValue = latestPickedUpdate?.pickupLocation || otherDestination || detail?.toWarehouseCode || '-';
   const categoryLabel = useMemo(() => {
     const category = detail?.category;
     if (typeof category === 'string') return category;
@@ -441,7 +452,11 @@ export default function DrawerViewItem({
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
               <Text style={{ color: '#8c8c8c' }}>Warehouse To</Text>
-              <Text>{detail?.toWarehouseName || detail?.toWarehouseCode || '-'}</Text>
+              <Text>{warehouseToValue}</Text>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
+              <Text style={{ color: '#8c8c8c' }}>Other Destination</Text>
+              <Text>{otherDestination || '-'}</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
               <Text style={{ color: '#8c8c8c' }}>Pickup Method</Text>
@@ -449,7 +464,7 @@ export default function DrawerViewItem({
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>
               <Text style={{ color: '#8c8c8c' }}>Pickup Location</Text>
-              <Text>{latestPickedUpdate?.pickupLocation || detail?.toWarehouseCode || '-'}</Text>
+              <Text>{pickupLocationValue}</Text>
             </div>
 
             {pickedUpdates.length > 0 && (

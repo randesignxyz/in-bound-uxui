@@ -36,6 +36,8 @@ type IssueLineDto = {
   fromWarehouse?: string | null;
   toWarehouseCode?: string | null;
   forLine?: string | null;
+  requestOtherDestination?: boolean | null;
+  otherDestination?: string | null;
   remark?: string | null;
   imageId?: string | string[] | null;
   itemCondition?: string | null;
@@ -337,6 +339,10 @@ const mapIssueLineToWarehouseLine = (item: IssueLineDto) => ({
   receivedQuantity: Number(item.issuedQty || 0),
   businessUnit: item.forLine || '',
   uom: item.unit || 'pcs',
+  toWarehouseCode: item.toWarehouseCode || undefined,
+  forLine: item.forLine || undefined,
+  requestOtherDestination: Boolean(item.requestOtherDestination || item.otherDestination?.trim()),
+  otherDestination: item.otherDestination?.trim() || undefined,
 });
 
 const isApprovedIssueLine = (item: IssueLineDto) => Number(item.approvedQty || 0) > 0;
@@ -372,9 +378,11 @@ const mapIssueLineDetail = (item: IssueLineDto, requestId: string, index: number
   warehouseSentQuantity: Number(item.issuedQty || 0),
   description: item.remark || undefined,
   fromWarehouse: item.fromWarehouseCode || item.fromWarehouse || undefined,
-  toWarehouse: item.toWarehouseCode || undefined,
-  productionLine: item.forLine || undefined,
-  warehouse: item.toWarehouseCode || undefined,
+  requestOtherDestination: Boolean(item.requestOtherDestination || item.otherDestination?.trim()),
+  otherDestination: item.otherDestination?.trim() || undefined,
+  toWarehouse: item.requestOtherDestination || item.otherDestination?.trim() ? undefined : item.toWarehouseCode || undefined,
+  productionLine: item.requestOtherDestination || item.otherDestination?.trim() ? undefined : item.forLine || undefined,
+  warehouse: item.requestOtherDestination || item.otherDestination?.trim() ? undefined : item.toWarehouseCode || undefined,
   category: resolveCategoryName(item.category),
   businessUnit: item.businessUnit || item.business_unit || item.bu || undefined,
   uom: item.unit || 'pcs',

@@ -8,6 +8,10 @@ export interface WarehouseRequestLineItem {
   receivedQuantity?: number;
   businessUnit?: string;
   uom?: string;
+  toWarehouseCode?: string;
+  forLine?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
 }
 
 export interface WarehouseRequestShipmentLine {

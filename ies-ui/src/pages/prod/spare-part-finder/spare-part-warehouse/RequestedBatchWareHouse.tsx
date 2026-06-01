@@ -343,6 +343,7 @@ export default function RequestedBatchWareHouse({
   const sparePartServices = SparePartRequestAPI(detailRequestActions);
   const initKeyRef = useRef<string>('');
   const productDetailRequestRef = useRef(0);
+  const prefetchedDetailKeyRef = useRef('');
 
   const [spfOpen, setSpfOpen] = useState(false);
   const [selectedProductDetail, setSelectedProductDetail] = useState<any>(null);
@@ -577,6 +578,7 @@ export default function RequestedBatchWareHouse({
 
   useEffect(() => {
     if (!open) {
+      prefetchedDetailKeyRef.current = '';
       setItemDetailMap({});
       return;
     }
@@ -585,9 +587,23 @@ export default function RequestedBatchWareHouse({
       new Map((data.items || []).filter((item) => item.productId).map((item) => [item.productId, item])).values(),
     );
     if (!detailItems.length) {
+      prefetchedDetailKeyRef.current = '';
       setItemDetailMap({});
       return;
     }
+
+    const prefetchKey = JSON.stringify(
+      detailItems.map((item) => ({
+        productId: item.productId,
+        inventoryId: item.inventoryId,
+        warehouseCode: item.fromWarehouseCode || item.warehouseCode,
+        businessUnit: item.businessUnit,
+      })),
+    );
+    if (prefetchedDetailKeyRef.current === prefetchKey) {
+      return;
+    }
+    prefetchedDetailKeyRef.current = prefetchKey;
 
     let active = true;
 

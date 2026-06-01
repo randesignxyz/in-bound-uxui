@@ -32,7 +32,8 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
   const { initialState } = useModel('@@initialState');
   const currentUserLogin = initialState?.currentUser?.login;
   const requestActions = simpleRequestActions();
-  const services = SparePartWarehouseService(requestActions);
+  const servicesRef = useRef(SparePartWarehouseService(requestActions));
+  const services = servicesRef.current;
   const canExportExcel = access.canSpfWarehouseStaff || access.canAdmin;
   const [searchInput, setSearchInput] = useState('');
   const [searchText, setSearchText] = useState('');
@@ -45,12 +46,17 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
   const [exportLoading, setExportLoading] = useState(false);
   const exportInFlightRef = useRef(false);
   const [requestRows, setRequestRows] = useState<WarehouseRequestRecord[]>([]);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [loading, setLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<WarehouseRequestRecord | null>(null);
   const [selectedRequestData, setSelectedRequestData] = useState<RequestDetailData | null>(null);
 
-  const loadRequests = useCallback(async () => {
+  const loadRequests = useCallback(async (nextPagination: { current?: number; pageSize?: number }) => {
+    const resolvedPagination = {
+      current: nextPagination.current ?? 1,
+      pageSize: nextPagination.pageSize ?? 10,
+    };
     setLoading(true);
     try {
       const response = await services.pageRequests({
@@ -59,17 +65,23 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
         priority: priorityFilter,
         dateRange: dateRangeFilter ? [dateRangeFilter[0].toISOString(), dateRangeFilter[1].toISOString()] : null,
         pagination: {
-          current: 0,
-          pageSize: 20,
+          current: resolvedPagination.current,
+          pageSize: resolvedPagination.pageSize,
         },
       });
       setRequestRows(response.items || []);
+      setPagination((prev) => ({
+        ...prev,
+        current: resolvedPagination.current,
+        pageSize: resolvedPagination.pageSize,
+        total: Number(response.total || 0),
+      }));
     } catch (error) {
       message.error('Failed to load warehouse requests.');
     } finally {
       setLoading(false);
     }
-  }, [searchText, statusFilter, priorityFilter, dateRangeFilter]);
+  }, [dateRangeFilter, priorityFilter, searchText, services, statusFilter]);
 
   const loadBusinessUnits = useCallback(async () => {
     try {
@@ -85,16 +97,16 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
   }, []);
 
   useEffect(() => {
-    loadRequests();
-  }, [loadRequests]);
+    loadRequests({ current: 1, pageSize: pagination.pageSize });
+  }, [dateRangeFilter, loadRequests, priorityFilter, searchText, statusFilter]);
 
   useEffect(() => {
     loadBusinessUnits();
   }, [loadBusinessUnits]);
 
   const reloadRequests = useCallback(async () => {
-    await loadRequests();
-  }, [loadRequests]);
+    await loadRequests({ current: pagination.current, pageSize: pagination.pageSize });
+  }, [loadRequests, pagination.current, pagination.pageSize]);
 
   const openDrawer = useCallback(
     async (record: WarehouseRequestRecord) => {
@@ -224,9 +236,6 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
   const filteredRequests = useMemo(
     () =>
       requestRows.filter((request) => {
-        const keyword = searchText.trim().toLowerCase();
-        const matchesKeyword = !keyword || request.requestId.toLowerCase().includes(keyword);
-        const displayStatus = deriveWarehouseDisplayStatus(request);
         const requestDate = parseRequestDate(request.requestDate);
         const matchesDateRange =
           !dateRangeFilter ||
@@ -240,13 +249,11 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
           );
 
         return (
-          matchesKeyword &&
-          (statusFilter === 'All' || displayStatus === statusFilter) &&
           matchesDateRange &&
           matchesBusinessUnit
         );
       }),
-    [businessUnitFilters, dateRangeFilter, requestRows, searchText, statusFilter],
+    [businessUnitFilters, dateRangeFilter, requestRows],
   );
 
   const summaryColumns = useMemo(
@@ -404,10 +411,15 @@ export default function RequestsListWarehouse({ onDataChanged }: RequestsListWar
           loading={loading}
           tableLayout="auto"
           pagination={{
-            pageSize: 10,
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50],
             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+            onChange: (current, pageSize) => {
+              loadRequests({ current, pageSize });
+            },
           }}
           search={false}
           options={false}

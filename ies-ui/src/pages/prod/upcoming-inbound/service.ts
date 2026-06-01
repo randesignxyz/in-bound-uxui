@@ -264,6 +264,20 @@ const UpcomingInboundAction = {
     actionName: 'inbound-mark-qc-badge-viewed',
     payload: data,
   }),
+
+  getGrActivities: (id: number): ServiceApiType<{ id: number }> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-goods-receipt-activities',
+    payload: { id },
+  }),
+
+  getPoActivities: (poNumber: string): ServiceApiType<{ poNumber: string }> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PROD',
+    actionName: 'inbound-purchase-order-activities',
+    payload: { poNumber },
+  }),
 };
 
 export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
@@ -498,6 +512,18 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
         UpcomingInboundAction.markQcBadgeViewed(data),
       )(requestAction)) as InboundSuccessPayloadResponse<InboundGoodsReceiptApi>;
       return mapPayloadResponse(response, mapInboundGoodsReceipt);
+    },
+
+    getGrActivities: async (id: number): Promise<any[]> => {
+      return (await singleRequest<any>(
+        UpcomingInboundAction.getGrActivities(id),
+      )(requestAction)) as any[];
+    },
+
+    getPoActivities: async (poNumber: string): Promise<any[]> => {
+      return (await singleRequest<any>(
+        UpcomingInboundAction.getPoActivities(poNumber),
+      )(requestAction)) as any[];
     },
   };
 };

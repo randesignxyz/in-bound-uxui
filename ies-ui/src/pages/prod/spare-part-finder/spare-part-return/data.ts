@@ -31,6 +31,8 @@ export interface SparePartPickedLine {
   deliveredQty: number;
   category?: string | { category_name?: string | null } | null;
   businessUnit: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   kind: string;
   imageId?: string;
   pendingReturnQty?: number;
@@ -112,6 +114,8 @@ export interface SparePartReturnListItem {
   warehouseCode?: string;
   warehouseName?: string;
   pickupLocation?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   itemId?: string;
   type?: string;
   kind?: string;
@@ -244,6 +248,8 @@ export interface RequestDetailLineItem {
   used_quantity: number;
   total: number;
   forLine?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   // Warehouse receipt fields (present when state = COMPLETED)
   received_qty?: number;
   good_qty?: number;
@@ -262,6 +268,8 @@ export interface RequestDetailActivityItem {
   business_unit?: string;
   fromWarehouse?: string;
   toWarehouse?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   damaged_qty?: number;
   good_qty?: number;
   damage_message?: string | null;
@@ -352,6 +360,8 @@ export const mapToFlattenedRowsMySparePartList = (
           receiving_from_warehouseName : shipment.warehouseName,
           receiving_from_warehouse:   shipment.warehouseCode,
           businessUnit:             line.businessUnit,
+          requestOtherDestination:   Boolean(line.requestOtherDestination || line.otherDestination?.trim()),
+          otherDestination:          line.otherDestination?.trim() || undefined,
           requested_date:           formatDate(request.requestedAt),
           requested_pickup_date:    formatDate(shipment.pickedUpAt),
           // extra fields for drawer/modal

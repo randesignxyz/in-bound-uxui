@@ -38,7 +38,7 @@ export default function ListView() {
     }
 
     try {
-      const pageSize = 100;
+      const pageSize = 10;
       let currentPage = 1;
       let total = 0;
       let readyCount = 0;
@@ -77,6 +77,7 @@ export default function ListView() {
     loadReadyToPickupCount();
   }, [loadReadyToPickupCount]);
 
+  /*
   useEffect(() => {
     const handleWindowFocus = () => loadReadyToPickupCount();
     const handleVisibilityChange = () => {
@@ -103,6 +104,7 @@ export default function ListView() {
 
     return () => window.clearInterval(timer);
   }, [loadReadyToPickupCount]);
+  */
 
   useEffect(() => {
     if (activeTabKey !== '2') return;

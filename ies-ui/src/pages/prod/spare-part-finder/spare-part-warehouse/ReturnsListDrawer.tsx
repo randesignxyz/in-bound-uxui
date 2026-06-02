@@ -75,6 +75,8 @@ interface ReturnItem {
   damagedQty?: number;
   itemRemark?: string;
   forLine?: string; // Not from API, but useful to show in table for warehouse staff to identify which line to receive against
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   images?: string[];  // file IDs
 }
 
@@ -178,6 +180,9 @@ const getWorkflowStatus = (status?: string, state?: string): ReturnStatus => {
   return normalizedStatus === 'Partially Returned' ? 'Receiving' : normalizedStatus;
 };
 
+const getOtherDestinationText = (item: { requestOtherDestination?: boolean; otherDestination?: string }) =>
+  item.requestOtherDestination ? item.otherDestination?.trim() || undefined : undefined;
+
 const getTimelineColor = (dot?: string, label?: string) => {
   switch ((dot ?? '').toLowerCase()) {
     case 'approved':
@@ -269,6 +274,8 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
           usedQty: i.used_quantity ?? 0,
           qtyToReturn: i.quantity_to_return ?? 0,
           forLine: i.forLine,
+          requestOtherDestination: i.requestOtherDestination,
+          otherDestination: i.otherDestination,
           // Receipt fields from completed returns
           receivedQty: i.received_qty,
           goodQty: i.good_qty,
@@ -368,6 +375,8 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             remark: i.remark,
             images: i.images,
             forLine: i.forLine,
+            requestOtherDestination: i.requestOtherDestination,
+            otherDestination: i.otherDestination,
           })),
           activities: (item.activities ?? []).map((a: any) => ({
             label: a.label,
@@ -860,15 +869,6 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
             width: 100,
           },
           {
-            title: 'Line',
-            key: 'forLine',
-            render: (_: any, record: ReturnItem) => (
-            <span style={{ fontWeight: 600, color: '#1890ff' }}>
-              {record.forLine ?? '-'}
-            </span>
-          ),
-          },
-          {
             title: 'Damaged',
             key: 'damaged_amount',
             render: (_: unknown, record: ReturnItem) => {
@@ -904,6 +904,24 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
               );
             },
             width: 100,
+          },
+          {
+            title: 'Line',
+            key: 'forLine',
+            render: (_: any, record: ReturnItem) => (
+            <span style={{ fontWeight: 600, color: '#1890ff' }}>
+              {getOtherDestinationText(record) ? '-' : record.forLine ?? '-'}
+            </span>
+          ),
+          },
+          {
+            title: 'Other Destination',
+            key: 'otherDestination',
+            render: (_: unknown, record: ReturnItem) => (
+              <Typography.Text type="secondary">
+                {getOtherDestinationText(record) || '-'}
+              </Typography.Text>
+            ),
           },
           {
             title: 'Remarks',
@@ -1317,7 +1335,16 @@ export default function ReturnsListDrawer({ open, onClose, onSuccess, data, retu
                             render: (_, record) => record.damage_message || record.remark || '-',
                           },
                           { title: 'From Warehouse', dataIndex: 'fromWarehouse' },
-                          { title: 'To Warehouse', dataIndex: 'toWarehouse' },
+                          {
+                            title: 'To Warehouse',
+                            dataIndex: 'toWarehouse',
+                            render: (_, record) => getOtherDestinationText(record) ? '-' : record.toWarehouse || '-',
+                          },
+                          {
+                            title: 'Other Destination',
+                            dataIndex: 'otherDestination',
+                            render: (_, record) => getOtherDestinationText(record) || '-',
+                          },
                           // {title: 'Line', dataIndex: 'forLine' },
                           { title: 'Business Unit', dataIndex: 'business_unit' },
                         ]}

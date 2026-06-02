@@ -109,6 +109,8 @@ export interface RequestDetailLineItem {
   fromWarehouse?: string;
   toWarehouse?: string;
   productionLine?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   warehouse?: string;
   zone?: string;
   shelf?: string;
@@ -258,6 +260,9 @@ const getActivityRank = (label?: string): number => {
   return 8;
 };
 
+const getOtherDestinationText = (item: RequestDetailLineItem): string | undefined =>
+  item.requestOtherDestination ? item.otherDestination?.trim() || undefined : undefined;
+
 const getMaxVisibleActivityRank = (status: RequestStatus): number => {
   switch (status) {
     case 'pending':
@@ -314,6 +319,7 @@ export default function RequestedBatchWareHouse({
   const sparePartServices = SparePartRequestAPI(detailRequestActions);
   const initKeyRef = useRef<string>('');
   const productDetailRequestRef = useRef(0);
+  const prefetchedDetailKeyRef = useRef('');
 
   const [spfOpen, setSpfOpen] = useState(false);
   const [selectedProductDetail, setSelectedProductDetail] = useState<any>(null);
@@ -364,9 +370,11 @@ export default function RequestedBatchWareHouse({
       description: it.remark ?? it.description ?? undefined,
       stockQuantity: it.stockQuantity,
       fromWarehouse: it.fromWarehouseCode ?? it.fromWarehouse ?? undefined,
-      toWarehouse: it.toWarehouseCode ?? undefined,
-      productionLine: it.forLine ?? undefined,
-      warehouse: it.toWarehouseCode ?? req?.category,
+      requestOtherDestination: Boolean(it.requestOtherDestination || it.otherDestination?.trim()),
+      otherDestination: it.otherDestination?.trim() || undefined,
+      toWarehouse: it.requestOtherDestination || it.otherDestination?.trim() ? undefined : it.toWarehouseCode ?? undefined,
+      productionLine: it.requestOtherDestination || it.otherDestination?.trim() ? undefined : it.forLine ?? undefined,
+      warehouse: it.requestOtherDestination || it.otherDestination?.trim() ? undefined : it.toWarehouseCode ?? req?.category,
       zone: it.zone,
       shelf: it.shelf,
       level: it.level,
@@ -514,6 +522,7 @@ export default function RequestedBatchWareHouse({
 
   useEffect(() => {
     if (!open) {
+      prefetchedDetailKeyRef.current = '';
       setItemDetailMap({});
       return;
     }
@@ -522,9 +531,23 @@ export default function RequestedBatchWareHouse({
       new Map((data.items || []).filter((item) => item.productId).map((item) => [item.productId, item])).values(),
     );
     if (!detailItems.length) {
+      prefetchedDetailKeyRef.current = '';
       setItemDetailMap({});
       return;
     }
+
+    const prefetchKey = JSON.stringify(
+      detailItems.map((item) => ({
+        productId: item.productId,
+        inventoryId: item.inventoryId,
+        warehouseCode: item.fromWarehouseCode || item.warehouseCode,
+        businessUnit: item.businessUnit,
+      })),
+    );
+    if (prefetchedDetailKeyRef.current === prefetchKey) {
+      return;
+    }
+    prefetchedDetailKeyRef.current = prefetchKey;
 
     let active = true;
 
@@ -1137,13 +1160,19 @@ export default function RequestedBatchWareHouse({
       title: 'To WH',
       key: 'toWarehouse',
       width: 'auto',
-      render: (_: unknown, record) => record.toWarehouse || record.warehouse || '—',
+      render: (_: unknown, record) => (getOtherDestinationText(record) ? '—' : record.toWarehouse || record.warehouse || '—'),
     },
     {
       title: 'Line',
       dataIndex: 'productionLine',
       width: 'auto',
-      render: (_: unknown, record) => record.productionLine || '—',
+      render: (_: unknown, record) => (getOtherDestinationText(record) ? '—' : record.productionLine || '—'),
+    },
+    {
+      title: 'Other Destination',
+      key: 'otherDestination',
+      width: 'auto',
+      render: (_: unknown, record) => getOtherDestinationText(record) || '—',
     },
     { title: 'Requested', dataIndex: 'quantityToReturn', width: 'auto', align: 'right' as const },
     {

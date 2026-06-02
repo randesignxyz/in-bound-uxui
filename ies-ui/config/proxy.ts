@@ -9,6 +9,11 @@
  */
 export default {
   dev: {
+    '/services/prod': {
+      target: 'http://[::1]:8480',
+      changeOrigin: true,
+      pathRewrite: { '^/services/prod': '' },
+    },
     '/api/': {
       target: 'http://[::1]:8080',
       // target: 'http://10.0.12.247:85',

@@ -49,6 +49,8 @@ type MyRequestLineDto = {
   issued_from_warehouse_code?: string | null;
   toWarehouseCode?: string | null;
   forLine?: string | null;
+  requestOtherDestination?: boolean | null;
+  otherDestination?: string | null;
   remark?: string | null;
   imageId?: string | string[] | null;
 };
@@ -113,6 +115,8 @@ type IssueDetailLineDto = {
   fromWarehouse?: string | null;
   toWarehouseCode?: string | null;
   forLine?: string | null;
+  requestOtherDestination?: boolean | null;
+  otherDestination?: string | null;
   remark?: string | null;
   imageId?: string | string[] | null;
 };
@@ -154,9 +158,11 @@ type CreateRequestPayload = {
     item: SparePartRequestItem;
     quantity: number;
     purpose: string;
-    toWarehouseCode: string;
-    forLine: string;
+    toWarehouseCode: string | null;
+    forLine: string | null;
     uom?: string;
+    requestOtherDestination?: boolean;
+    otherDestination?: string;
   }>;
   remark: string;
   priority: 'normal' | 'high' | 'urgent';
@@ -281,6 +287,8 @@ const SparePartRequestAction = {
         purpose: line.purpose,
         toWarehouseCode: line.toWarehouseCode,
         forLine: line.forLine,
+        requestOtherDestination: Boolean(line.requestOtherDestination),
+        otherDestination: line.otherDestination?.trim() || null,
         productId: line.item.productId,
         uom: resolveRequestLineUom(line),
       })),
@@ -569,6 +577,8 @@ const mapRequestLine = (item: MyRequestLineDto): MyRequestLineItem => ({
     undefined,
   toWarehouseCode: item.toWarehouseCode || undefined,
   forLine: item.forLine || undefined,
+  requestOtherDestination: Boolean(item.requestOtherDestination || item.otherDestination?.trim()),
+  otherDestination: item.otherDestination?.trim() || undefined,
   remark: item.remark || undefined,
   imageId: item.imageId || undefined,
 });
@@ -683,11 +693,13 @@ export const buildRequestDetailData = (request: MyRequestItem): RequestDetailDat
     total: Number(item.requestedQty || 0),
     warehouseSentQuantity: 0,
     fromWarehouse: undefined,
-    toWarehouse: item.toWarehouseCode || undefined,
-    productionLine: item.forLine || undefined,
-    warehouse: item.toWarehouseCode,
+    requestOtherDestination: Boolean(item.requestOtherDestination || item.otherDestination?.trim()),
+    otherDestination: item.otherDestination?.trim() || undefined,
+    toWarehouse: item.requestOtherDestination || item.otherDestination?.trim() ? undefined : item.toWarehouseCode || undefined,
+    productionLine: item.requestOtherDestination || item.otherDestination?.trim() ? undefined : item.forLine || undefined,
+    warehouse: item.requestOtherDestination || item.otherDestination?.trim() ? undefined : item.toWarehouseCode,
     category: item.category || detailCategory,
-    businessUnit: item.unit,
+    businessUnit: undefined,
     uom: item.unit,
     description: item.remark,
     approvalState:
@@ -796,11 +808,13 @@ const mapIssueDetailToRequestDetailData = (item: IssueDetailDto): RequestDetailD
       total: requestedQty,
       warehouseSentQuantity: Number(line.issuedQty || 0),
       fromWarehouse: line.fromWarehouseCode || line.fromWarehouse || undefined,
-      toWarehouse: line.toWarehouseCode || undefined,
-      productionLine: line.forLine || undefined,
-      warehouse: line.toWarehouseCode || undefined,
+      requestOtherDestination: Boolean(line.requestOtherDestination || line.otherDestination?.trim()),
+      otherDestination: line.otherDestination?.trim() || undefined,
+      toWarehouse: line.requestOtherDestination || line.otherDestination?.trim() ? undefined : line.toWarehouseCode || undefined,
+      productionLine: line.requestOtherDestination || line.otherDestination?.trim() ? undefined : line.forLine || undefined,
+      warehouse: line.requestOtherDestination || line.otherDestination?.trim() ? undefined : line.toWarehouseCode || undefined,
       category: resolveCategoryName(line.category),
-      businessUnit: line.unit || 'pcs',
+      businessUnit: undefined,
       uom: line.unit || 'pcs',
       description: line.remark || undefined,
       approvalState: isRejectedLine ? 'rejected' : editedActivity || hasQuantityEdit ? 'edited' : undefined,

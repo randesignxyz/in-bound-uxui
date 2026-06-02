@@ -579,13 +579,142 @@ describe('buildReceiptTimelineActivities', () => {
 
     const activities = buildReceiptTimelineActivities(receipt);
     const skipQcIndex = activities.findIndex((activity) => activity.title === 'Skip QC by warehouse');
+    const supervisorPendingIndex = activities.findIndex((activity) => activity.title === 'Supervisor Pending');
 
     expect(skipQcIndex).toBeGreaterThan(-1);
+    expect(supervisorPendingIndex).toBe(skipQcIndex + 1);
     expect(activities[skipQcIndex]).toMatchObject({
       secondaryText: 'by warehouse',
       timestamp: '2026-04-22 01:50:53',
       processState: 'PENDING_SUPERVISOR_REVIEW',
     });
+    expect(activities[supervisorPendingIndex]).toMatchObject({
+      timestamp: '2026-04-22 01:50:53',
+      processState: 'PENDING_SUPERVISOR_REVIEW',
+    });
+  });
+
+  it('shows supervisor pending between skip qc and approval', () => {
+    const receipt = createReceipt({
+      processState: 'SUPERVISOR_APPROVED',
+      displayStatus: 'Ready to Post SAP',
+      qcResult: 'Pass',
+      activities: [
+        {
+          title: 'QC Pending',
+          description: 'Resubmitted to QC',
+          performedBy: 'warehouse_omc',
+          timestamp: '2026-06-01 06:41:39',
+          state: 'done',
+          processState: 'QC_PENDING',
+        },
+        {
+          title: 'Skip QC by warehouse_omc',
+          description: 'Warehouse skipped QC and forwarded the receipt directly to supervisor review',
+          performedBy: 'warehouse_omc',
+          timestamp: '2026-06-01 07:01:21',
+          state: 'done',
+          processState: 'PENDING_SUPERVISOR_REVIEW',
+        },
+        {
+          title: 'Supervisor approved inbound receiving and marked it GR ready to post',
+          description: 'Supervisor approved inbound receiving as GR ready to post',
+          performedBy: 'supervisor_omc',
+          timestamp: '2026-06-01 07:02:17',
+          state: 'active',
+          processState: 'SUPERVISOR_APPROVED',
+        },
+      ],
+    });
+
+    const activities = buildReceiptTimelineActivities(receipt);
+
+    expect(activities.map((activity) => activity.title)).toEqual([
+      'Received Checking',
+      'Receipt Confirmed',
+      'Stored On-Hold',
+      'QC Pending',
+      'Skip QC by warehouse_omc',
+      'Supervisor Pending',
+      'Ready to Post SAP',
+    ]);
+  });
+
+  it('retains supervisor rejected history after the corrected receipt is approved', () => {
+    const receipt = createReceipt({
+      processState: 'SUPERVISOR_APPROVED',
+      displayStatus: 'Ready to Post SAP',
+      qcResult: 'Pass',
+      activities: [
+        {
+          title: 'QC approved inbound receiving and forwarded it to supervisor review',
+          description: 'QC forwarded passed items to supervisor',
+          performedBy: 'qc_omc',
+          timestamp: '2026-06-01 06:31:33',
+          state: 'done',
+          processState: 'PENDING_SUPERVISOR_REVIEW',
+        },
+        {
+          title: 'Correction Required',
+          description: 'Supervisor rejected inbound receiving and returned it for correction',
+          performedBy: 'supervisor_omc',
+          timestamp: '2026-06-01 06:40:00',
+          state: 'done',
+          processState: 'CORRECTION_REQUIRED',
+        },
+        {
+          title: 'GRPO Draft',
+          description: 'Warehouse corrected supervisor rejection',
+          performedBy: 'warehouse_omc',
+          timestamp: '2026-06-01 06:41:06',
+          state: 'done',
+          processState: 'GRPO_DRAFT',
+        },
+        {
+          title: 'QC Pending',
+          description: 'Resubmitted to QC',
+          performedBy: 'warehouse_omc',
+          timestamp: '2026-06-01 06:41:07',
+          state: 'done',
+          processState: 'QC_PENDING',
+        },
+        {
+          title: 'QC approved inbound receiving and forwarded it to supervisor review',
+          description: 'QC forwarded passed items to supervisor',
+          performedBy: 'qc_omc',
+          timestamp: '2026-06-01 07:00:50',
+          state: 'done',
+          processState: 'PENDING_SUPERVISOR_REVIEW',
+        },
+        {
+          title: 'Supervisor approved inbound receiving and marked it GR ready to post',
+          description: 'Supervisor approved inbound receiving as GR ready to post',
+          performedBy: 'supervisor_omc',
+          timestamp: '2026-06-01 07:02:05',
+          state: 'active',
+          processState: 'SUPERVISOR_APPROVED',
+        },
+      ],
+    });
+
+    const activities = buildReceiptTimelineActivities(receipt);
+
+    expect(activities.map((activity) => activity.title)).toEqual([
+      'Received Checking',
+      'Receipt Confirmed',
+      'Stored On-Hold',
+      'QC Passed',
+      'Pending Supervisor Review',
+      'Supervisor Rejected',
+      'GRPO Draft',
+      'QC Pending',
+      'QC Passed',
+      'Pending Supervisor Review',
+      'Ready to Post SAP',
+    ]);
+    expect(activities.find((activity) => activity.title === 'Supervisor Rejected')?.secondaryText).toBe(
+      'by supervisor_omc',
+    );
   });
 });
 

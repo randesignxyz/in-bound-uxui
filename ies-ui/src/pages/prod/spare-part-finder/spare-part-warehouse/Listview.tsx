@@ -47,6 +47,7 @@ export default function ListView() {
     }),
     [],
   );
+  const warehouseService = useMemo(() => SparePartWarehouseService(requestAction), [requestAction]);
 
   const refreshCount = useCallback(() => {
     countApprovedAndPartialReturns(requestAction).then((count) => {
@@ -57,7 +58,7 @@ export default function ListView() {
 
   const refreshPendingRequestCount = useCallback(async () => {
     try {
-      const dashboard = await SparePartWarehouseService(requestAction).getDashboard();
+      const dashboard = await warehouseService.getDashboard();
       const currentCount = Number(dashboard.pendingCount || 0);
       setPendingRequestCount(currentCount);
       setPendingRequestUnreadCount(
@@ -68,13 +69,14 @@ export default function ListView() {
       setPendingRequestCount(0);
       setPendingRequestUnreadCount(0);
     }
-  }, [currentUserLogin, requestAction]);
+  }, [currentUserLogin, warehouseService]);
 
   useEffect(() => {
     refreshCount();
     refreshPendingRequestCount();
-  }, [activeKey, refreshCount, refreshPendingRequestCount]);
+  }, [refreshCount, refreshPendingRequestCount]);
 
+  /*
   useEffect(() => {
     const handleWindowFocus = () => refreshPendingRequestCount();
     const handleVisibilityChange = () => {
@@ -91,6 +93,7 @@ export default function ListView() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [refreshPendingRequestCount]);
+  */
 
   useEffect(() => {
     if (activeKey === '2') {

@@ -586,6 +586,7 @@ export default function UpcomingInboundListview({
   // Shared PO filters
   const [poSearchValue, setPOSearchValue] = useState('');
   const [poVendorFilter, setPOVendorFilter] = useState<string>('ALL');
+  const [poVendorSearch, setPoVendorSearch] = useState('');
   const [poTypeFilter, setPOTypeFilter] = useState<'ALL' | PurchaseOrder['type']>('ALL');
   const [queueSearchValue, setQueueSearchValue] = useState('');
   const [queueTypeFilter, setQueueTypeFilter] = useState<'ALL' | GoodsReceipt['receiptType']>(
@@ -2307,11 +2308,25 @@ export default function UpcomingInboundListview({
       />
       <Select
         value={poVendorFilter}
-        onChange={(value) => setPOVendorFilter(value)}
+        onChange={(value) => {
+          setPOVendorFilter(value);
+          setPoVendorSearch('');
+        }}
         style={{ width: 220 }}
+        showSearch
+        filterOption={false}
+        placeholder="All Vendors"
+        onSearch={(input) => setPoVendorSearch(input)}
+        onBlur={() => setPoVendorSearch('')}
         options={[
           { label: 'All Vendors', value: 'ALL' },
-          ...warehouseVendorOptions.map((vendor) => ({
+          ...(poVendorSearch
+            ? warehouseVendorOptions
+                .filter((vendor) =>
+                  vendor.toLowerCase().includes(poVendorSearch.toLowerCase()),
+                )
+            : warehouseVendorOptions.slice(0, 20)
+          ).map((vendor) => ({
             label: vendor,
             value: vendor,
           })),
@@ -2328,8 +2343,8 @@ export default function UpcomingInboundListview({
         disabled={selectedWarehousePOs.length === 0}
       >
         {selectedWarehousePOs.length > 1
-          ? `Create 1 IR (${selectedWarehousePOs.length} POs)`
-          : 'Create 1 IR'}
+          ? `Create IR (${selectedWarehousePOs.length} POs)`
+          : 'Create IR'}
       </Button>
       {selectedWarehousePONumbers.length > 0 && (
         <Button onClick={() => setSelectedWarehousePONumbers([])}>Clear Selection</Button>

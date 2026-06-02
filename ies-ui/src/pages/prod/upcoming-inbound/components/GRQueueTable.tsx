@@ -34,7 +34,6 @@ const statusColor: Record<LegacyGRStatus, string> = {
   Approved: 'green',
   'Ready To Post SAP': 'blue',
   Posted: 'blue',
-  Merged: 'cyan',
   'Correction Required': 'red',
 };
 

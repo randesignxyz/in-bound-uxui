@@ -50,6 +50,8 @@ interface ReturnItem {
   damagedQty?: number;
   itemRemark?: string;
   forLine?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   images?: string[];
 }
 
@@ -73,6 +75,8 @@ interface FetchReturnDetailResponseItem {
   remark?: string;
   images?: string[];
   forLine?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
 }
 interface FetchReturnDetailResponseActivity {
   label?: string;
@@ -174,6 +178,9 @@ const getStepStatusFromApi = (status?: string, state?: string): ReturnStatus => 
   return mapApiValueToStatus(status || state);
 };
 
+const getOtherDestinationText = (item: { requestOtherDestination?: boolean; otherDestination?: string }) =>
+  item.requestOtherDestination ? item.otherDestination?.trim() || undefined : undefined;
+
 const mapFetchedItemToRow = (item: RequestDetailLineItem, index: number): ReturnItem => ({
   id: item.return_item_id ?? item.no ?? index + 1,
   itemId: item.return_item_id,
@@ -190,6 +197,8 @@ const mapFetchedItemToRow = (item: RequestDetailLineItem, index: number): Return
   receivedQty: item.received_qty,
   goodQty: item.good_qty,
   forLine: item.forLine,
+  requestOtherDestination: item.requestOtherDestination,
+  otherDestination: item.otherDestination,
   damagedQty: item.damaged_qty,
   itemRemark: item.remark,
   images: item.images,
@@ -212,6 +221,9 @@ const mapFallbackItemToRow = (item: RequestDetailLineItem, index: number): Retur
   goodQty: item.good_qty,
   damagedQty: item.damaged_qty,
   itemRemark: item.remark,
+  forLine: item.forLine,
+  requestOtherDestination: item.requestOtherDestination,
+  otherDestination: item.otherDestination,
   images: item.images,
 });
 
@@ -244,6 +256,8 @@ const mapResponseToDetailData = (
     remark: line.remark,
     images: line.images,
     forLine: line.forLine,
+    requestOtherDestination: line.requestOtherDestination,
+    otherDestination: line.otherDestination,
   })),
   activities: (item.activities ?? []).map((activity) => ({
     label: activity.label ?? '',
@@ -478,16 +492,6 @@ export default function DrawerBatchReturnItems({
       ),
     },
     {
-      title: 'For Line',
-      key: 'forLine',
-      width: 90,
-      render: (_, record) => (
-        <span style={{ fontWeight: 600, color: '#1890ff' }}>
-          {record.forLine ?? '-'}
-        </span>
-      ),
-    },
-    {
       title: 'Damaged',
       key: 'damaged_amount',
       width: 90,
@@ -495,6 +499,26 @@ export default function DrawerBatchReturnItems({
         <span style={{ fontWeight: 600, color: record.damagedQty ? '#ff4d4f' : '#8c8c8c' }}>
           {record.damagedQty ?? '-'}
         </span>
+      ),
+    },
+        {
+      title: 'For Line',
+      key: 'forLine',
+      width: 90,
+      render: (_, record) => (
+        <span style={{ fontWeight: 600, color: '#1890ff' }}>
+          {getOtherDestinationText(record) ? '-' : record.forLine ?? '-'}
+        </span>
+      ),
+    },
+    {
+      title: 'Other Destination',
+      key: 'otherDestination',
+      width: 180,
+      render: (_, record) => (
+        <Typography.Text type="secondary">
+          {getOtherDestinationText(record) || '-'}
+        </Typography.Text>
       ),
     },
     {
@@ -737,7 +761,16 @@ export default function DrawerBatchReturnItems({
                             render: (_, record) => record.damage_message || record.remark || '-',
                           },
                           { title: 'From Warehouse', dataIndex: 'fromWarehouse' },
-                          { title: 'To Warehouse', dataIndex: 'toWarehouse' },
+                          {
+                            title: 'To Warehouse',
+                            dataIndex: 'toWarehouse',
+                            render: (_, record) => getOtherDestinationText(record) ? '-' : record.toWarehouse || '-',
+                          },
+                          {
+                            title: 'Other Destination',
+                            dataIndex: 'otherDestination',
+                            render: (_, record) => getOtherDestinationText(record) || '-',
+                          },
                           { title: 'Business Unit', dataIndex: 'business_unit' },
                         ]}
                       />

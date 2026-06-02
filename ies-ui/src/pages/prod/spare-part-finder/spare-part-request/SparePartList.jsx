@@ -35,6 +35,8 @@ const getSparePartRowKey = (record) =>
 
 const normalizeBusinessUnit = (value) => String(value || '').trim().toUpperCase();
 
+const cleanText = (value) => String(value || '').trim();
+
 const getUniqueWarehouseItems = (items = []) => {
   const seen = new Set();
   return items
@@ -87,19 +89,26 @@ const buildResubmitItem = (line, index) => ({
   stock: Math.max(Number(line.quantityToReturn || line.requestedQty || line.total || 1), 1),
   businessUnit: line.businessUnit || '',
   status: 'available',
-  warehouse: line.warehouse || '',
+  warehouse: line.fromWarehouseCode || line.fromWarehouse || line.warehouse || '',
   locations: [],
   tab: 'spare-list',
 });
 
-const buildResubmitRow = (line, item) => ({
-  item,
-  quantity: Math.max(Number(line.quantityToReturn || line.requestedQty || line.total || 1), 1),
-  purpose: line.description || '',
-  toWarehouseCode: line.toWarehouse || line.toWarehouseCode || '',
-  forLine: line.company || '',
-  uom: line.uom || '',
-});
+const buildResubmitRow = (line, item) => {
+  const otherDestination = cleanText(line.otherDestination);
+  const requestOtherDestination = Boolean(line.requestOtherDestination || otherDestination);
+
+  return {
+    item,
+    quantity: Math.max(Number(line.quantityToReturn || line.requestedQty || line.total || 1), 1),
+    purpose: line.description || '',
+    toWarehouseCode: requestOtherDestination ? null : cleanText(line.toWarehouseCode || line.toWarehouse),
+    forLine: requestOtherDestination ? null : cleanText(line.forLine || line.productionLine),
+    uom: line.uom || '',
+    requestOtherDestination,
+    otherDestination,
+  };
+};
 
 export default function SparePartListView({ resubmitDraft, onResubmitDraftHandled }) {
   const access = useAccess();
@@ -295,6 +304,38 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
     setRequestInitialRemark(resubmitDraft.remark || '');
     setRequestInitialPriority(normalizeResubmitPriority(resubmitDraft.priority));
     setRequestModalOpen(true);
+
+    fetchSparePartBusinessUnits()
+      .then((businessUnitRows) => {
+        const businessUnits = Array.from(
+          new Set(
+            businessUnitRows
+              .map((row) => normalizeBusinessUnit(row.businessUnit))
+              .filter((businessUnit) => businessUnit && businessUnit !== '-'),
+          ),
+        );
+
+        if (businessUnits.length === 0) {
+          setRequestWarehousesByBusinessUnit({});
+          return [];
+        }
+
+        return Promise.all(
+          businessUnits.map(async (businessUnit) => [
+            businessUnit,
+            await fetchSparePartWarehouses(businessUnit),
+          ]),
+        );
+      })
+      .then((warehouseEntries) => {
+        if (warehouseEntries.length > 0) {
+          setRequestWarehousesByBusinessUnit(Object.fromEntries(warehouseEntries));
+        }
+      })
+      .catch(() => {
+        message.error('Failed to load destination warehouses.');
+      });
+
     onResubmitDraftHandled?.();
   }, [onResubmitDraftHandled, resubmitDraft]);
 

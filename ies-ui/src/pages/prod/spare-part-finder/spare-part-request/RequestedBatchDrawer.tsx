@@ -64,6 +64,10 @@ const normalizeLineItem = (item: RequestDetailLineItem, index: number): RequestD
   fromWarehouse: toDisplayText(item.fromWarehouse),
   toWarehouse: toDisplayText(item.toWarehouse),
   productionLine: toDisplayText(item.productionLine),
+  requestOtherDestination:
+    Boolean(item.requestOtherDestination) ||
+    Boolean(toDisplayText(item.otherDestination)?.trim()),
+  otherDestination: toDisplayText(item.otherDestination),
   warehouse: toDisplayText(item.warehouse),
   zone: toDisplayText(item.zone),
   shelf: toDisplayText(item.shelf),
@@ -150,6 +154,9 @@ const getActivityRank = (label?: string): number => {
   return 10;
 };
 
+const getOtherDestinationText = (item: RequestDetailLineItem): string | undefined =>
+  item.requestOtherDestination ? item.otherDestination?.trim() || undefined : undefined;
+
 interface PersistedRequestDrawerState {
   activityLogs?: RequestDetailActivity[];
   quantityOverrides?: Record<string, number>;
@@ -210,6 +217,8 @@ export interface RequestDetailLineItem {
   fromWarehouse?: string;
   toWarehouse?: string;
   productionLine?: string;
+  requestOtherDestination?: boolean;
+  otherDestination?: string;
   warehouse?: string;
   zone?: string;
   shelf?: string;
@@ -373,11 +382,15 @@ export default function RequestedBatchDrawer({
         warehouseSentQuantity: 0,
         fromWarehouseCode: toDisplayText(item.fromWarehouseCode),
         fromWarehouse: toDisplayText(item.fromWarehouseCode) || toDisplayText(item.fromWarehouse),
-        toWarehouse: item.toWarehouseCode || undefined,
-        productionLine: item.forLine || undefined,
-        warehouse: toDisplayText(item.toWarehouseCode) || toDisplayText(fallbackRequest.category),
+        requestOtherDestination: Boolean(item.requestOtherDestination || item.otherDestination?.trim()),
+        otherDestination: toDisplayText(item.otherDestination),
+        toWarehouse: item.requestOtherDestination || item.otherDestination?.trim() ? undefined : item.toWarehouseCode || undefined,
+        productionLine: item.requestOtherDestination || item.otherDestination?.trim() ? undefined : item.forLine || undefined,
+        warehouse: item.requestOtherDestination || item.otherDestination?.trim()
+          ? undefined
+          : toDisplayText(item.toWarehouseCode) || toDisplayText(fallbackRequest.category),
         category: toDisplayText(item.category) || toDisplayText(fallbackRequest.category),
-        businessUnit: item.unit,
+        businessUnit: undefined,
         uom: item.unit,
         description: item.remark,
       }, index)) ||
@@ -405,7 +418,8 @@ export default function RequestedBatchDrawer({
 
     const total = Number(data.totalItems ?? 0);
     const received = Number(data.receivedItems ?? 0);
-    if (total > 0 && received >= total) return 'completed';
+    const canDeriveCompletedStatus = ['ready_to_Pickup', 'partial', 'completed'].includes(data.status);
+    if (canDeriveCompletedStatus && total > 0 && received >= total) return 'completed';
 
     return data.status;
   }, [data.receivedItems, data.status, data.totalItems, statusOverride]);
@@ -1213,6 +1227,13 @@ export default function RequestedBatchDrawer({
       render: (_: unknown, record) => record.productionLine || '—',
     },
     {
+      title: 'Other Destination',
+      dataIndex: 'otherDestination',
+      width: '20%',
+      ellipsis: true,
+      render: (_: unknown, record) => getOtherDestinationText(record) || '-',
+    },
+    {
       title: 'Sent',
       align: 'center',
       width: '10%',
@@ -1330,6 +1351,14 @@ export default function RequestedBatchDrawer({
       activeRequestItems
         .map((item) => item.productionLine)
         .find((value) => String(value || '').trim()) || '—',
+    [activeRequestItems],
+  );
+
+  const requestOtherDestination = useMemo(
+    () =>
+      activeRequestItems
+        .map(getOtherDestinationText)
+        .find((value) => String(value || '').trim()) || '-',
     [activeRequestItems],
   );
 
@@ -1581,6 +1610,7 @@ export default function RequestedBatchDrawer({
           <Descriptions.Item label="From WH">{requestFromWarehouse}</Descriptions.Item>
           <Descriptions.Item label="To WH">{requestToWarehouse}</Descriptions.Item>
           <Descriptions.Item label="Line">{requestProductionLine}</Descriptions.Item>
+          <Descriptions.Item label="Other Destination">{requestOtherDestination}</Descriptions.Item>
           <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
           <Descriptions.Item label="Received Items">{displayedReceivedItems}</Descriptions.Item>
           {/* <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item> */}

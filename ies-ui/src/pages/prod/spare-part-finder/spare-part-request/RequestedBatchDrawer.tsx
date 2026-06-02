@@ -1607,10 +1607,6 @@ export default function RequestedBatchDrawer({
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
           <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="From WH">{requestFromWarehouse}</Descriptions.Item>
-          <Descriptions.Item label="To WH">{requestToWarehouse}</Descriptions.Item>
-          <Descriptions.Item label="Line">{requestProductionLine}</Descriptions.Item>
-          <Descriptions.Item label="Other Destination">{requestOtherDestination}</Descriptions.Item>
           <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
           <Descriptions.Item label="Received Items">{displayedReceivedItems}</Descriptions.Item>
           {/* <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item> */}

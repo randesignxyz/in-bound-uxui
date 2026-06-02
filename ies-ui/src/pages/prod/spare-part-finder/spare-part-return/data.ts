@@ -25,6 +25,9 @@ export interface SparePartPickedLine {
   requestLineId: number;
   fulfillmentLineId: number | string;
   isClosed: boolean;
+  forLine?: string;
+  toWarehouseCode?: string;
+  toWarehouseName?: string;
   partName: string;
   uom: string;
   requestedQty: number;
@@ -97,6 +100,9 @@ export interface SparePartReturnListItem {
   UoM?: string;
   category?: string;
   receiving_from_warehouse?: string;
+  forLine?: string;
+  toWarehouseCode?: string;
+  toWarehouseName?: string;
   businessUnit?: string;
   requested_date?: string;
   requested_pickup_date?: string;
@@ -358,7 +364,10 @@ export const mapToFlattenedRowsMySparePartList = (
           quantity:                 line.requestedQty,
           UoM:                      line.uom,
           receiving_from_warehouseName : shipment.warehouseName,
-          receiving_from_warehouse:   shipment.warehouseCode,
+          receiving_from_warehouse:   line.toWarehouseCode,
+          forLine:                    line.forLine,
+          toWarehouseCode:            line.toWarehouseCode,
+          toWarehouseName:            line.toWarehouseName,
           businessUnit:             line.businessUnit,
           requestOtherDestination:   Boolean(line.requestOtherDestination || line.otherDestination?.trim()),
           otherDestination:          line.otherDestination?.trim() || undefined,

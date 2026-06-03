@@ -448,7 +448,7 @@ export default function DrawerViewItem({
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
               <Text style={{ color: '#8c8c8c' }}>Warehouse From</Text>
-              <Text>{detail?.fromWarehouseName || detail?.fromWarehouseCode || '-'}</Text>
+              <Text>{detail?.fromWarehouseCode || detail?.fromWarehouseName || '-'}</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
               <Text style={{ color: '#8c8c8c' }}>Warehouse To</Text>

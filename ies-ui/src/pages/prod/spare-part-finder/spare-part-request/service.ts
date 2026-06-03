@@ -158,6 +158,11 @@ type CreateRequestPayload = {
     item: SparePartRequestItem;
     quantity: number;
     purpose: string;
+    sourceWarehouseCode?: string | null;
+    sourceInventoryId?: number | null;
+    sourceBusinessUnit?: string | null;
+    inventoryId?: number | null;
+    warehouseCode?: string | null;
     toWarehouseCode: string | null;
     forLine: string | null;
     uom?: string;
@@ -285,6 +290,21 @@ const SparePartRequestAction = {
       items: payload.items.map((line) => ({
         requestedQty: toDecimalPayload(line.quantity),
         purpose: line.purpose,
+        sourceWarehouseCode:
+          line.sourceWarehouseCode ||
+          line.warehouseCode ||
+          line.item.locations?.[0]?.warehouseCode ||
+          line.item.warehouse ||
+          null,
+        sourceInventoryId: line.sourceInventoryId || line.inventoryId || line.item.locations?.[0]?.inventoryId || null,
+        sourceBusinessUnit: line.sourceBusinessUnit || line.item.businessUnit || null,
+        inventoryId: line.inventoryId || line.sourceInventoryId || line.item.locations?.[0]?.inventoryId || null,
+        warehouseCode:
+          line.warehouseCode ||
+          line.sourceWarehouseCode ||
+          line.item.locations?.[0]?.warehouseCode ||
+          line.item.warehouse ||
+          null,
         toWarehouseCode: line.toWarehouseCode,
         forLine: line.forLine,
         requestOtherDestination: Boolean(line.requestOtherDestination),

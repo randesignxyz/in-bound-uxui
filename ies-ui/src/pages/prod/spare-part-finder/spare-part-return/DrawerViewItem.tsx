@@ -18,10 +18,29 @@ const formatDrawerDateTime = (value?: string | null) => {
   return parsed.format('YYYY-MM-DD HH:mm:ss');
 };
 
-const normalizePickedItemDetail = (response: any): PickedItemDetail | null => {
-  const raw = Array.isArray(response)
-    ? response[0]
-    : response?.items?.[0] || response?.data?.items?.[0] || response?.data?.[0] || response;
+const normalizePickedItemDetail = (
+  response: any,
+  selectedItem?: SparePartReturnListItem | null,
+): PickedItemDetail | null => {
+  const responseItems = Array.isArray(response)
+    ? response
+    : response?.items || response?.data?.items || response?.data;
+  const items = Array.isArray(responseItems) ? responseItems : null;
+  const selectedFulfillmentLineId =
+    selectedItem?.fulfillmentLineId == null ? null : String(selectedItem.fulfillmentLineId);
+  const selectedRequestLineId =
+    selectedItem?.requestLineId == null ? null : String(selectedItem.requestLineId);
+  const raw = items
+    ? items.find((item) => {
+        const fulfillmentLineId = item?.fulfillmentLineId == null ? null : String(item.fulfillmentLineId);
+        const requestLineId = item?.requestLineId == null ? null : String(item.requestLineId);
+
+        return (
+          (selectedFulfillmentLineId && fulfillmentLineId === selectedFulfillmentLineId) ||
+          (selectedRequestLineId && requestLineId === selectedRequestLineId)
+        );
+      }) || items[0]
+    : response;
 
   if (!raw || typeof raw !== 'object') return null;
 
@@ -121,7 +140,7 @@ export default function DrawerViewItem({
       setLoading(true);
       try {
         const response = await SparePartReturnAPI(requestAction).itemPickedDetails(itemId, requestId);
-        const item = normalizePickedItemDetail(response);
+        const item = normalizePickedItemDetail(response, data);
 
         if (active) {
           setDetail(item);

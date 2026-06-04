@@ -60,7 +60,14 @@ interface TempGRCreationModalProps {
   supplierOptions?: InboundSupplierMasterApi[];
   uomOptions?: InboundUomMasterApi[];
   warehouseOptions?: InboundWarehouseMasterApi[];
+  onSupplierSearch?: (searchValue: string, businessUnit: string) => Promise<void> | void;
+  onUomSearch?: (searchValue: string, businessUnit: string) => Promise<void> | void;
+  onWarehouseSearch?: (searchValue: string, businessUnit: string) => Promise<void> | void;
+  onItemSearch?: (searchValue: string, businessUnit: string) => Promise<void> | void;
 }
+
+const MASTER_DATA_PAGE_SIZE = 20;
+const MASTER_DATA_SEARCH_DEBOUNCE_MS = 300;
 
 function buildEmptyItem(): GRItem {
   return {
@@ -145,6 +152,10 @@ export function TempGRCreationModal({
   supplierOptions = [],
   uomOptions = [],
   warehouseOptions = [],
+  onSupplierSearch,
+  onUomSearch,
+  onWarehouseSearch,
+  onItemSearch,
 }: TempGRCreationModalProps) {
   const [postingDate, setPostingDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [actualReceiptDate, setActualReceiptDate] = useState(dayjs().format('YYYY-MM-DD'));
@@ -160,6 +171,7 @@ export function TempGRCreationModal({
   const [warehouseSearch, setWarehouseSearch] = useState('');
   const [supplierSearch, setSupplierSearch] = useState('');
   const [itemSearch, setItemSearch] = useState('');
+  const [uomSearch, setUomSearch] = useState('');
   const [previewState, setPreviewState] = useState<{
     fileName?: string;
     url?: string;
@@ -171,6 +183,7 @@ export function TempGRCreationModal({
     setWarehouseSearch('');
     setSupplierSearch('');
     setItemSearch('');
+    setUomSearch('');
     if (initialReceipt) {
       setPostingDate(initialReceipt.postingDate || dayjs().format('YYYY-MM-DD'));
       setActualReceiptDate(initialReceipt.actualReceiptDate || dayjs().format('YYYY-MM-DD'));
@@ -204,6 +217,46 @@ export function TempGRCreationModal({
     setUploadedFiles([]);
     setErrors({});
   }, [availableBusinessUnits, initialReceipt, open, supplierOptions]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      onSupplierSearch?.(supplierSearch, businessUnit);
+    }, MASTER_DATA_SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [businessUnit, onSupplierSearch, open, supplierSearch]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      onWarehouseSearch?.(warehouseSearch, businessUnit);
+    }, MASTER_DATA_SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [businessUnit, onWarehouseSearch, open, warehouseSearch]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      onItemSearch?.(itemSearch, businessUnit);
+    }, MASTER_DATA_SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [businessUnit, itemSearch, onItemSearch, open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const timeout = window.setTimeout(() => {
+      onUomSearch?.(uomSearch, businessUnit);
+    }, MASTER_DATA_SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [businessUnit, onUomSearch, open, uomSearch]);
 
   const visibleSupplierOptions = useMemo(
     () =>
@@ -285,7 +338,7 @@ export function TempGRCreationModal({
         )
       : visibleWarehouseOptions;
 
-    const sliced = filtered.slice(0, 20);
+    const sliced = filtered.slice(0, MASTER_DATA_PAGE_SIZE);
 
     if (
       selectedWarehouseCode &&
@@ -310,7 +363,7 @@ export function TempGRCreationModal({
         )
       : visibleSupplierOptions;
 
-    const sliced = filtered.slice(0, 20);
+    const sliced = filtered.slice(0, MASTER_DATA_PAGE_SIZE);
 
     if (
       supplier &&
@@ -336,7 +389,7 @@ export function TempGRCreationModal({
         )
       : visibleItemOptions;
 
-    const sliced = filtered.slice(0, 20);
+    const sliced = filtered.slice(0, MASTER_DATA_PAGE_SIZE);
 
     const selectedCodes = new Set(items.map((item) => item.code).filter(Boolean));
     selectedCodes.forEach((code) => {
@@ -352,6 +405,30 @@ export function TempGRCreationModal({
 
     return sliced;
   }, [visibleItemOptions, itemSearch, items]);
+
+  const displayedUomOptions = useMemo(() => {
+    const normalizedSearch = uomSearch.trim().toLowerCase();
+    const filtered = normalizedSearch
+      ? visibleUomOptions.filter((option) =>
+          option.label.toLowerCase().includes(normalizedSearch) ||
+          option.value.toLowerCase().includes(normalizedSearch)
+        )
+      : visibleUomOptions;
+
+    const sliced = filtered.slice(0, MASTER_DATA_PAGE_SIZE);
+
+    const selectedUoms = new Set(items.map((item) => item.uom).filter(Boolean));
+    selectedUoms.forEach((uom) => {
+      if (!sliced.some((opt) => opt.value === uom)) {
+        const selectedOption = visibleUomOptions.find((opt) => opt.value === uom);
+        if (selectedOption) {
+          sliced.push(selectedOption);
+        }
+      }
+    });
+
+    return sliced;
+  }, [items, uomSearch, visibleUomOptions]);
 
   const updateItem = useCallback((index: number, field: keyof GRItem, value: unknown) => {
     setItems((prev) =>
@@ -696,11 +773,20 @@ export function TempGRCreationModal({
           <Select
             showSearch
             value={record.uom || undefined}
-            onChange={(value) => updateItem(record.index, 'uom', value)}
+            onChange={(value) => {
+              updateItem(record.index, 'uom', value);
+              setUomSearch('');
+            }}
+            onSearch={setUomSearch}
+            onDropdownVisibleChange={(visible) => {
+              if (!visible) {
+                setUomSearch('');
+              }
+            }}
+            filterOption={false}
             status={errors[`uom-${record.index}`] ? 'error' : undefined}
             placeholder="UoM"
-            options={visibleUomOptions}
-            optionFilterProp="label"
+            options={displayedUomOptions}
             notFoundContent="No UOM master data"
             popupMatchSelectWidth={220}
             listHeight={360}
@@ -772,7 +858,7 @@ export function TempGRCreationModal({
         ),
       },
     ],
-    [errors, handleSelectItemCode, items.length, displayedItemOptions, visibleUomOptions, updateItem],
+    [errors, handleSelectItemCode, items.length, displayedItemOptions, displayedUomOptions, updateItem],
   );
 
   return (

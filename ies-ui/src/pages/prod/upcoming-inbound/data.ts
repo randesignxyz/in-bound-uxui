@@ -38,6 +38,8 @@ export interface InboundSupplierMasterListParams {
   business_unit?: string | null;
   searchValue?: string | null;
   status?: string | null;
+  pageNumber?: number;
+  pageSize?: number;
 }
 
 export interface InboundUomMasterListParams {
@@ -45,6 +47,8 @@ export interface InboundUomMasterListParams {
   business_unit?: string | null;
   searchValue?: string | null;
   status?: string | null;
+  pageNumber?: number;
+  pageSize?: number;
 }
 
 export interface InboundWarehouseMasterListParams {
@@ -52,6 +56,8 @@ export interface InboundWarehouseMasterListParams {
   business_unit?: string | null;
   searchValue?: string | null;
   status?: string | null;
+  pageNumber?: number;
+  pageSize?: number;
 }
 
 export interface InboundItemMasterListParams {
@@ -59,6 +65,8 @@ export interface InboundItemMasterListParams {
   business_unit?: string | null;
   searchValue?: string | null;
   activeOnly?: boolean | null;
+  pageNumber?: number;
+  pageSize?: number;
 }
 
 export interface InboundSupplierMasterApi {

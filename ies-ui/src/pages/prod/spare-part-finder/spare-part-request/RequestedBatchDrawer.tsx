@@ -614,7 +614,13 @@ export default function RequestedBatchDrawer({
       return;
     }
 
-    const productIds = Array.from(new Set((data.items || []).map((item) => item.productId).filter(Boolean)));
+    const firstItemByProductId = new Map<string, RequestDetailLineItem>();
+    (data.items || []).forEach((item) => {
+      if (item.productId && !firstItemByProductId.has(item.productId)) {
+        firstItemByProductId.set(item.productId, item);
+      }
+    });
+    const productIds = Array.from(firstItemByProductId.keys());
     if (!productIds.length) {
       setItemDetailMap({});
       return;
@@ -624,8 +630,11 @@ export default function RequestedBatchDrawer({
 
     Promise.allSettled(
       productIds.map((productId) => {
+        const item = firstItemByProductId.get(productId);
         return sparePartServices.detail({
           productId,
+          warehouseCode: item?.fromWarehouseCode || item?.fromWarehouse || item?.warehouse,
+          businessUnit: item?.businessUnit,
         });
       }),
     ).then((results) => {
@@ -778,7 +787,11 @@ export default function RequestedBatchDrawer({
     setSpfLoading(true);
     setSpfOpen(true);
     try {
-      const detail = await sparePartServices.detail({ productId: record.productId });
+      const detail = await sparePartServices.detail({
+        productId: record.productId,
+        warehouseCode: record.fromWarehouseCode || record.fromWarehouse || record.warehouse,
+        businessUnit: record.businessUnit,
+      });
       if (productDetailRequestRef.current !== requestId) return;
       setSelectedProductDetail(detail);
     } catch (_error) {
@@ -916,11 +929,6 @@ export default function RequestedBatchDrawer({
       ...itemRejectRemarks,
       [lineKey]: normalizedRemark,
     };
-    const shouldRejectWholeRequest =
-      requestItems.length > 0 &&
-      requestItems.every((item) => nextItemMarks[getRequestLineKey(item)] === 'rejected') &&
-      requestItems.every((item) => typeof item.requestLineId === 'number');
-
     setItemMarks(nextItemMarks);
     setItemRejectRemarks(nextItemRejectRemarks);
     setQuantityOverrides((prev) => ({
@@ -933,94 +941,49 @@ export default function RequestedBatchDrawer({
     }));
     setRejectingItem(null);
 
-    if (!shouldRejectWholeRequest) {
-      if (effectiveStatus === 'pending' && onEditPendingRequestLines && data.id && record.requestLineId) {
-        setActionLoading(true);
-        try {
-          await onEditPendingRequestLines({
-            id: data.id,
-            lines: [
-              {
-                requestLineId: record.requestLineId,
-                requestedQty: 0,
-                rejected: true,
-                rejectRemark: normalizedRemark,
-                editedAt: new Date().toISOString(),
-              },
-            ],
-          });
-          message.success(`${record.productId} rejected successfully.`);
-        } catch (_error) {
-          setItemMarks((prev) => {
-            const next = { ...prev };
-            delete next[lineKey];
-            return next;
-          });
-          setItemRejectRemarks((prev) => {
-            const next = { ...prev };
-            delete next[lineKey];
-            return next;
-          });
-          setQuantityOverrides((prev) => {
-            const next = { ...prev };
-            delete next[lineKey];
-            return next;
-          });
-          setEditedItems((prev) => {
-            const next = { ...prev };
-            delete next[lineKey];
-            return next;
-          });
-          message.error('Failed to reject item.');
-        } finally {
-          setActionLoading(false);
-        }
-      } else {
-        message.success(`${record.productId} marked as rejected.`);
-      }
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      if (onApprove && data.id) {
-        await onApprove({
+    if (effectiveStatus === 'pending' && onEditPendingRequestLines && data.id && record.requestLineId) {
+      setActionLoading(true);
+      try {
+        await onEditPendingRequestLines({
           id: data.id,
-          lines: buildApprovalLines(nextItemMarks, nextItemRejectRemarks),
-          remark: normalizedRemark,
+          lines: [
+            {
+              requestLineId: record.requestLineId,
+              requestedQty: 0,
+              rejected: true,
+              rejectRemark: normalizedRemark,
+              editedAt: new Date().toISOString(),
+            },
+          ],
         });
-      } else if (onReject && data.id) {
-        await onReject({
-          id: data.id,
-          remark: normalizedRemark,
+        message.success(`${record.productId} rejected successfully.`);
+      } catch (_error) {
+        setItemMarks((prev) => {
+          const next = { ...prev };
+          delete next[lineKey];
+          return next;
         });
+        setItemRejectRemarks((prev) => {
+          const next = { ...prev };
+          delete next[lineKey];
+          return next;
+        });
+        setQuantityOverrides((prev) => {
+          const next = { ...prev };
+          delete next[lineKey];
+          return next;
+        });
+        setEditedItems((prev) => {
+          const next = { ...prev };
+          delete next[lineKey];
+          return next;
+        });
+        message.error('Failed to reject item.');
+      } finally {
+        setActionLoading(false);
       }
-      setStatusOverride('rejected');
-      message.success('Request rejected successfully.');
-    } catch (_error) {
-      setItemMarks((prev) => {
-        const next = { ...prev };
-        delete next[lineKey];
-        return next;
-      });
-      setItemRejectRemarks((prev) => {
-        const next = { ...prev };
-        delete next[lineKey];
-        return next;
-      });
-      setQuantityOverrides((prev) => {
-        const next = { ...prev };
-        delete next[lineKey];
-        return next;
-      });
-      setEditedItems((prev) => {
-        const next = { ...prev };
-        delete next[lineKey];
-        return next;
-      });
-      message.error('Failed to reject request.');
-    } finally {
-      setActionLoading(false);
+    } else {
+      message.success(`${record.productId} marked as rejected.`);
     }
   };
 
@@ -1607,10 +1570,6 @@ export default function RequestedBatchDrawer({
           <Descriptions.Item label="Request ID">{data.requestId}</Descriptions.Item>
           <Descriptions.Item label="Category">{data.category ?? '—'}</Descriptions.Item>
           <Descriptions.Item label="Priority">{data.priority ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label="From WH">{requestFromWarehouse}</Descriptions.Item>
-          <Descriptions.Item label="To WH">{requestToWarehouse}</Descriptions.Item>
-          <Descriptions.Item label="Line">{requestProductionLine}</Descriptions.Item>
-          <Descriptions.Item label="Other Destination">{requestOtherDestination}</Descriptions.Item>
           <Descriptions.Item label="Total Items">{displayedTotalItems}</Descriptions.Item>
           <Descriptions.Item label="Received Items">{displayedReceivedItems}</Descriptions.Item>
           {/* <Descriptions.Item label="Request Date">{formatSpfDateTime(data.requestDate)}</Descriptions.Item> */}

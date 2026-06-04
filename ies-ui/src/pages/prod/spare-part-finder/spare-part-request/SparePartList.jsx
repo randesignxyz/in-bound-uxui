@@ -700,7 +700,7 @@ export default function SparePartListView({ resubmitDraft, onResubmitDraftHandle
         id: item.id,
         productId: item.productId,
         inventoryId: item.locations?.[0]?.inventoryId,
-        warehouseCode: item.warehouse || item.locations?.[0]?.warehouseCode,
+        warehouseCode: item.locations?.[0]?.warehouseCode || item.warehouse,
         businessUnit: businessUnit && businessUnit !== '-' ? businessUnit : undefined,
       });
       if (detailRequestRef.current !== requestId) return;

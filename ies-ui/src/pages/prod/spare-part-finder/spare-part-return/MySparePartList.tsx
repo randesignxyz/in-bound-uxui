@@ -427,7 +427,7 @@ export default function MySparePartList() {
             },
             {
               key: 'part_number',
-              title: 'Product Number',
+              title: 'Product ID',
               dataIndex: 'part_number',
               render: (value, record) => (
                 <a onClick={() => onDetailHandler(record)}>
@@ -473,8 +473,25 @@ export default function MySparePartList() {
               },
             },
             { key: 'UoM', title: 'UoM', dataIndex: 'UoM' },
-              { key: 'category', title: 'Category', dataIndex: 'category' },
-            { key: 'Warehouse', title: 'Warehouse', dataIndex: 'receiving_from_warehouse' },
+            { key: 'category', title: 'Category', dataIndex: 'category' },
+            {
+              key: 'otherDestination',
+              title: 'Destination',
+              dataIndex: 'otherDestination',
+              render: (value) => String(value || '').trim() || '—',
+            },
+            {
+              key: 'forLine',
+              title: 'Line',
+              dataIndex: 'forLine',
+              render: (value) => String(value || '').trim() || '-',
+            },
+            {
+              key: 'Warehouse',
+              title: 'Warehouse',
+              dataIndex: 'toWarehouseCode',
+              render: (value) => String(value || '').trim() || '-',
+            },
             { key: 'BU', title: 'BU', dataIndex: 'businessUnit' },
             { key: 'Requested_Date', title: 'Requested Date', dataIndex: 'requested_date' },
             {

@@ -26,6 +26,7 @@ interface RequestRowItem {
   uom: string;
   toWarehouseCode: string | null;
   forLine: string | null;
+  productionLineId: number | null;
   requestOtherDestination: boolean;
   otherDestination: string;
 }
@@ -36,8 +37,9 @@ interface WarehouseOption {
 }
 
 interface LineOption {
-  value: string;
+  value: number;
   label: string;
+  lineCode: string;
 }
 
 interface RequestItemModalProps {
@@ -49,10 +51,11 @@ interface RequestItemModalProps {
     purpose: string;
     toWarehouseCode: string | null;
     forLine: string | null;
+    productionLineId?: number | null;
     uom: string;
     requestOtherDestination?: boolean;
     otherDestination?: string;
-    }[];
+  }[];
   initialWarehousesByBusinessUnit?: Record<string, WarehouseOption[]>;
   initialRemark?: string;
   initialPriority?: PriorityLevel;
@@ -64,6 +67,7 @@ interface RequestItemModalProps {
       purpose: string;
       toWarehouseCode: string | null;
       forLine: string | null;
+      productionLineId: number | null;
       uom: string;
       requestOtherDestination: boolean;
       otherDestination: string;
@@ -232,6 +236,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           uom: initialRow?.uom || uomOptions[0] || '',
           toWarehouseCode: initialRow?.toWarehouseCode === null ? null : initialRow?.toWarehouseCode || '',
           forLine: initialRow?.forLine === null ? null : initialRow?.forLine || '',
+          productionLineId: initialRow?.productionLineId ?? null,
           requestOtherDestination:
             initialRow?.requestOtherDestination ||
             initialRow?.toWarehouseCode === null ||
@@ -264,10 +269,14 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
         setLineOptions(
           lines
             .map((line) => ({
-              value: line.lineCode,
-              label: line.lineCode,
+              value: line.id,
+              label:
+                line.lineName && line.lineName !== line.lineCode
+                  ? `${line.lineCode} - ${line.lineName} (#${line.id})`
+                  : `${line.lineCode} (#${line.id})`,
+              lineCode: line.lineCode,
             }))
-            .filter((line) => line.value),
+            .filter((line) => line.value && line.lineCode),
         );
       })
       .catch(() => {
@@ -368,9 +377,17 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           : currentWarehouseAllowed
           ? row.toWarehouseCode
           : warehouseOptions[0].warehouseCode;
-        const nextLine = requestOtherDestination ? row.forLine : row.forLine || lineOptions[0]?.value || '';
+        const matchedLineOption = lineOptions.find((option) => option.lineCode === row.forLine);
+        const nextLineOption = lineOptions.find((option) => option.value === row.productionLineId) || matchedLineOption || lineOptions[0];
+        const nextLine = requestOtherDestination ? row.forLine : row.forLine || nextLineOption?.lineCode || '';
+        const nextProductionLineId =
+          requestOtherDestination ? row.productionLineId : row.productionLineId || matchedLineOption?.value || nextLineOption?.value || null;
 
-        if (nextWarehouseCode === row.toWarehouseCode && nextLine === row.forLine) {
+        if (
+          nextWarehouseCode === row.toWarehouseCode &&
+          nextLine === row.forLine &&
+          nextProductionLineId === row.productionLineId
+        ) {
           return row;
         }
 
@@ -378,6 +395,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           ...row,
           toWarehouseCode: nextWarehouseCode,
           forLine: nextLine,
+          productionLineId: nextProductionLineId,
         };
       }),
     );
@@ -525,6 +543,7 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           warehouseCode: r.item.locations?.[0]?.warehouseCode || r.item.warehouse || null,
           toWarehouseCode: r.toWarehouseCode,
           forLine: r.forLine,
+          productionLineId: r.productionLineId,
           uom: r.uom,
           requestOtherDestination: isOtherDestinationRow(r),
           otherDestination: r.otherDestination.trim(),
@@ -648,8 +667,14 @@ const RequestItemModal: React.FC<RequestItemModalProps> = ({
           optionFilterProp="label"
           style={{ width: '100%' }}
           loading={lineOptionsLoading}
-          value={record.forLine || undefined}
-          onChange={(value) => updateRow(record.key, { forLine: value })}
+          value={record.productionLineId ?? undefined}
+          onChange={(value) => {
+            const selectedLine = lineOptions.find((line) => line.value === value);
+            updateRow(record.key, {
+              productionLineId: value,
+              forLine: selectedLine?.lineCode || null,
+            });
+          }}
           options={lineOptions}
         />
         </Space>

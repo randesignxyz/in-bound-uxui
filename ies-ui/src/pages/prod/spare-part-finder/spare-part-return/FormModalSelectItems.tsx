@@ -81,18 +81,19 @@ export default function FormModalSelectItems({
       const totalHandled = qtyToReturn + qtyUsed;
 
       const fulfillmentLineIdStr = String(item.fulfillmentLineId ?? "").trim();
-      if (fulfillmentLineIdStr) {
-        if (fulfillmentLineIdStr.includes(",")) {
-          return "Selected item contains multiple picked lines. Please refresh and select the picked line again.";
-        }
-        if (!Number.isFinite(Number(fulfillmentLineIdStr))) {
-          return "Invalid fulfillment line id in selected items.";
-        }
-        if (seenFulfillmentLineIds.has(fulfillmentLineIdStr)) {
-          return `Duplicate fulfillment line selected: ${fulfillmentLineIdStr}.`;
-        }
-        seenFulfillmentLineIds.add(fulfillmentLineIdStr);
+      if (!fulfillmentLineIdStr) {
+        return "Missing fulfillment line id in selected items. Please refresh and select the picked line again.";
       }
+      if (fulfillmentLineIdStr.includes(",")) {
+        return "Selected item contains multiple picked lines. Please refresh and select the picked line again.";
+      }
+      if (!Number.isFinite(Number(fulfillmentLineIdStr))) {
+        return "Invalid fulfillment line id in selected items.";
+      }
+      if (seenFulfillmentLineIds.has(fulfillmentLineIdStr)) {
+        return `Duplicate fulfillment line selected: ${fulfillmentLineIdStr}.`;
+      }
+      seenFulfillmentLineIds.add(fulfillmentLineIdStr);
 
       if (totalHandled <= 0) {
         return `Please enter quantity for ${item.part_number || item.itemId || "selected item"}.`;

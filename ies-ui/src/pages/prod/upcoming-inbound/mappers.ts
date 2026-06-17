@@ -291,6 +291,7 @@ function mapInboundPoReceiptLog(log: any): NonNullable<UpcomingInboundPurchaseOr
 
 function mapInboundGoodsReceiptItem(item: InboundGrItemApi): UpcomingInboundGoodsReceiptItem {
   return {
+    id: readNumber(item, 'id') ?? undefined,
     poLineNumber: readNumber(item, 'poLineNumber', 'po_line_number') ?? undefined,
     code: readString(item, 'code'),
     name: readString(item, 'name'),

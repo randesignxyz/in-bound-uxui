@@ -268,6 +268,7 @@ export type GoodsReceiptSourceType = 'PLANNED' | 'UNPLANNED_WITH_PO' | 'TEMP_NO_
 export type POLinkStatus = 'NOT_REQUIRED' | 'WAITING_PO' | 'LINKED';
 
 export interface GRItem {
+  id?: number;             // DB primary key — echo back as `itemId` in QC review for exact matching
   poLineNumber?: number;
   code: string;
   name: string;

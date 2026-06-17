@@ -165,6 +165,7 @@ type CreateRequestPayload = {
     warehouseCode?: string | null;
     toWarehouseCode: string | null;
     forLine: string | null;
+    productionLineId?: number | null;
     uom?: string;
     requestOtherDestination?: boolean;
     otherDestination?: string;
@@ -307,6 +308,7 @@ const SparePartRequestAction = {
           null,
         toWarehouseCode: line.toWarehouseCode,
         forLine: line.forLine,
+        productionLineId: line.productionLineId ?? null,
         requestOtherDestination: Boolean(line.requestOtherDestination),
         otherDestination: line.otherDestination?.trim() || null,
         productId: line.item.productId,

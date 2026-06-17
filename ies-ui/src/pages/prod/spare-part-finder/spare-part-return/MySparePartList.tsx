@@ -16,7 +16,7 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
-import { useRef, useState } from 'react';
+import React, { useRef, useState} from 'react';
 import DrawerViewItem from './DrawerViewItem';
 import FormModalSelectItems from './FormModalSelectItems';
 import type { SparePartReturnListItem } from './data';
@@ -81,6 +81,15 @@ export default function MySparePartList() {
     const lineId = Number(rawValue);
     return Number.isInteger(lineId) && lineId > 0 ? lineId : null;
   };
+
+  const normalizeSelectedReturnRows = (rows: SparePartReturnListItem[]) =>
+    rows.map((row) => {
+      const fulfillmentLineId = parseSingleFulfillmentLineId(row.fulfillmentLineId);
+      return {
+        ...row,
+        fulfillmentLineId: fulfillmentLineId ?? row.fulfillmentLineId,
+      };
+    });
 
   const handleTogglePickedItemState = async (record: SparePartReturnListItem) => {
     const fulfillmentLineId = parseSingleFulfillmentLineId(record.fulfillmentLineId);
@@ -151,7 +160,7 @@ export default function MySparePartList() {
       const totalHandled = item.quantity + item.quantityUsed;
 
       if (!fulfillmentLineId) {
-        message.error('Invalid fulfillment line id in selected items. Please refresh and select the picked line again.');
+        message.error(`Invalid fulfillment line id '${fulfillmentLineIdStr || '-'}' in selected items. Please refresh and select the picked line again.`);
         return;
       }
 
@@ -219,7 +228,7 @@ export default function MySparePartList() {
   };
 
   const handleModalItemsChange = (items: SparePartReturnListItem[]) => {
-    setSelectedItems(items);
+    setSelectedItems(normalizeSelectedReturnRows(items));
     setSelectedRowKeys(items.map((item) => item.id));
   };
 
@@ -309,7 +318,7 @@ export default function MySparePartList() {
             }}
           />
           <DatePicker.RangePicker
-            onChange={(dates) => {
+            onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
               setSelectedDateRange(dates ? ([dates[0], dates[1]] as [Dayjs, Dayjs]) : undefined);
               setSelectedRowKeys([]);
               setSelectedItems([]);
@@ -371,10 +380,13 @@ export default function MySparePartList() {
             selectedRowKeys,
             onChange: (keys, rows) => {
               setSelectedRowKeys(keys);
-              setSelectedItems(rows);
+              setSelectedItems(normalizeSelectedReturnRows(rows));
             },
             getCheckboxProps: (record) => ({
-              disabled: !!record.isClosed || (record.availableQty ?? 0) <= 0,
+              disabled:
+                !!record.isClosed ||
+                (record.availableQty ?? 0) <= 0 ||
+                !parseSingleFulfillmentLineId(record.fulfillmentLineId),
             }),
           }}
           toolBarRender={() => [

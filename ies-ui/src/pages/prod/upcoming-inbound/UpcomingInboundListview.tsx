@@ -1083,11 +1083,16 @@ export default function UpcomingInboundListview({
     await loadDashboardSummary();
 
     if (activeRole === 'WAREHOUSE_STAFF') {
-      await Promise.all([
+      const promises: Promise<any>[] = [
         loadPurchaseOrders(poPagination.current, poPagination.pageSize),
-        loadReceipts('operations', queuePagination.current, queuePagination.pageSize),
         loadWarehouseSupportReceipts(),
-      ]);
+      ];
+      if (effectiveInboundView === 'history') {
+        promises.push(loadReceipts('history', historyPagination.current, historyPagination.pageSize));
+      } else {
+        promises.push(loadReceipts('operations', queuePagination.current, queuePagination.pageSize));
+      }
+      await Promise.all(promises);
       return;
     }
 
@@ -1123,7 +1128,16 @@ export default function UpcomingInboundListview({
     }
 
     if (activeRole === 'WAREHOUSE_STAFF') {
-      await loadPurchaseOrders(poPagination.current, poPagination.pageSize);
+      const promises: Promise<any>[] = [
+        loadPurchaseOrders(poPagination.current, poPagination.pageSize),
+      ];
+      if (effectiveInboundView === 'history') {
+        promises.push(loadReceipts('history', historyPagination.current, historyPagination.pageSize));
+      } else {
+        promises.push(loadReceipts('operations', queuePagination.current, queuePagination.pageSize));
+        promises.push(loadWarehouseSupportReceipts());
+      }
+      await Promise.all(promises);
       return;
     }
 
@@ -1517,7 +1531,17 @@ export default function UpcomingInboundListview({
     [receipts],
   );
 
-  const filteredRoleQueue = useMemo(() => receipts, [receipts]);
+  const filteredRoleQueue = useMemo(() => {
+    return [...receipts].sort((a, b) => {
+      const aPartial = (a.processState !== 'GRPO_DRAFT' && a.processState !== 'CORRECTION_REQUIRED' && !a.qtyMatch) || a.processState === 'MISMATCH_EXCEPTION';
+      const bPartial = (b.processState !== 'GRPO_DRAFT' && b.processState !== 'CORRECTION_REQUIRED' && !b.qtyMatch) || b.processState === 'MISMATCH_EXCEPTION';
+      if (aPartial && !bPartial) return -1;
+      if (!aPartial && bPartial) return 1;
+      const aTime = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+      const bTime = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+      return bTime - aTime;
+    });
+  }, [receipts]);
 
   // Handlers (mirrors WarehouseStaffUI)
   const hydratePurchaseOrder = async (po: PurchaseOrder): Promise<PurchaseOrder> => {
@@ -2055,6 +2079,7 @@ export default function UpcomingInboundListview({
         id: receipt.id,
         items: payload.items.map((item) => ({
           code: item.code,
+          itemId: item.id ?? undefined,
           poNumber: item.poNumber || undefined,
           poLineNumber: item.poLineNumber ?? undefined,
           batchNumber: item.batchNumber || undefined,
@@ -2416,7 +2441,17 @@ export default function UpcomingInboundListview({
     () => (isInboundAdmin ? allInboundReportOptions : inboundReportOptionsByRole[activeRole]),
     [activeRole, isInboundAdmin],
   );
-  const historyReceipts = useMemo(() => receipts, [receipts]);
+  const historyReceipts = useMemo(() => {
+    return [...receipts].sort((a, b) => {
+      const aPartial = (a.processState !== 'GRPO_DRAFT' && a.processState !== 'CORRECTION_REQUIRED' && !a.qtyMatch) || a.processState === 'MISMATCH_EXCEPTION';
+      const bPartial = (b.processState !== 'GRPO_DRAFT' && b.processState !== 'CORRECTION_REQUIRED' && !b.qtyMatch) || b.processState === 'MISMATCH_EXCEPTION';
+      if (aPartial && !bPartial) return -1;
+      if (!aPartial && bPartial) return 1;
+      const aTime = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+      const bTime = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+      return bTime - aTime;
+    });
+  }, [receipts]);
   const filteredHistoryReceiptCount = historyPagination.total;
   const historyHeaderTitle =
     activeRole === 'WAREHOUSE_SUPERVISOR' ? 'Good Receipt' : 'Inbound Receiving';

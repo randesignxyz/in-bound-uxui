@@ -244,6 +244,7 @@ export interface InboundGrPoReferenceApi {
 }
 
 export interface InboundGrItemApi {
+  id?: number | null;
   poNumber?: string | null;
   poLineNumber?: number | null;
   supplier?: string | null;
@@ -466,6 +467,7 @@ export interface InboundLinkPoInput {
 
 export interface InboundQcReviewItemInput {
   code: string;
+  itemId?: number | null;          // DB primary key for exact matching; omit to fall back to fuzzy matching
   poNumber?: string | null;
   poLineNumber?: number | null;
   batchNumber?: string | null;

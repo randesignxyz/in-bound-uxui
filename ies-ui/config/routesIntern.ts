@@ -53,6 +53,10 @@ export default [
     component: './prod/upcoming-inbound/procurement',
   },
   {
+    path: '/prod/inventory-inbound',
+    redirect: '/prod/inventory-inbound/list',
+  },
+  {
     path: '/prod/inventory-inbound/:view/*',
     name: 'upcomingInbound',
     hideInMenu: 'true',

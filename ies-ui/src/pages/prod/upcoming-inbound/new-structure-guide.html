@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDE Markdown Viewer</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg-body: #181818;
+            --bg-ide: #1e1e1e;
+            --text-color: #cccccc;
+            --text-heading: #e0e0e0;
+            --border-color: #333333;
+            --accent: #007acc;
+            --code-bg: #2d2d2d;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .ide-window {
+            background-color: var(--bg-ide);
+            width: 100%;
+            max-width: 1100px;
+            border-radius: 10px;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            height: calc(100vh - 80px);
+        }
+
+        .ide-header {
+            background-color: #252526;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .mac-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot.close { background-color: #ff5f56; }
+        .dot.minimize { background-color: #ffbd2e; }
+        .dot.maximize { background-color: #27c93f; }
+
+        .ide-tabs {
+            background-color: #252526;
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .tab {
+            background-color: var(--bg-ide);
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 13px;
+            border-top: 1px solid var(--accent);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab-icon {
+            color: #519aba;
+            font-size: 14px;
+        }
+
+        .ide-content {
+            padding: 32px 48px;
+            overflow-y: auto;
+            flex-grow: 1;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        .ide-content::-webkit-scrollbar {
+            width: 14px;
+        }
+
+        .ide-content::-webkit-scrollbar-track {
+            background: var(--bg-ide);
+        }
+
+        .ide-content::-webkit-scrollbar-thumb {
+            background-color: #424242;
+            border: 4px solid var(--bg-ide);
+            border-radius: 8px;
+        }
+
+        .ide-content::-webkit-scrollbar-thumb:hover {
+            background-color: #4f4f4f;
+        }
+
+        /* Typography & Markdown Elements */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-heading);
+            font-weight: 600;
+            margin-top: 1.8em;
+            margin-bottom: 0.8em;
+            line-height: 1.3;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.6em;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
+        }
+
+        h3 {
+            font-size: 1.25em;
+        }
+
+        p, li {
+            line-height: 1.7;
+            font-size: 15px;
+            color: #d4d4d4;
+        }
+
+        ul, ol {
+            padding-left: 24px;
+            margin-bottom: 1.2em;
+        }
+
+        li {
+            margin-bottom: 0.4em;
+        }
+
+        a {
+            color: #3794ff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 2.5em 0;
+        }
+
+        /* Inline Code */
+        code {
+            font-family: 'Fira Code', monospace;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ce9178;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        /* Code Blocks */
+        pre {
+            background-color: var(--bg-ide) !important;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin: 1.5em 0;
+            padding: 1em;
+            overflow: auto;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: 14px;
+        }
+
+        /* Planner Panel / Frontmatter (If present) */
+        .agent-planner {
+            background-color: #252526;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .agent-planner h3 {
+            margin-top: 0;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Mermaid Wrapper */
+        .mermaid {
+            background-color: #ffffff; /* FSD layer diagram uses #f9f9f9 fill, keeping contrast */
+            padding: 20px;
+            margin: 2em 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            overflow-x: auto;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="ide-window">
+        <div class="ide-header">
+            <div class="mac-dots">
+                <div class="dot close"></div>
+                <div class="dot minimize"></div>
+                <div class="dot maximize"></div>
+            </div>
+        </div>
+        <div class="ide-tabs">
+            <div class="tab">
+                <span class="tab-icon">☰</span>
+                README.md
+            </div>
+        </div>
+        <div class="ide-content line-numbers">
+
+            <h1>Architectural Guide: Refactored Upcoming Inbound Module</h1>
+
+            <p>This guide outlines the purpose, file mapping, and import/dependency rules for the new hybrid <strong>Feature-Sliced Design (FSD)</strong> structure of the <code>upcoming-inbound</code> module.</p>
+
+            <hr>
+
+            <h2>1. Directory Overview &amp; Dependency Flow</h2>
+
+            <div class="mermaid">
+flowchart TD
+    subgraph Layers [FSD Hybrid Layers]
+        Entry[Root Router Entries]
+        Workspaces[workspaces/ - Persona Screens]
+        Features[features/ - Interactive Scenarios]
+        State[state/ - Shared State & Cache]
+        Core[core/ - Domain Rules & Types]
+        API[api/ - HTTP Services]
+        Shared[shared/ - Generic UI/Utils]
+    end
+
+    Entry --> Workspaces
+    Workspaces --> Features
+    Workspaces --> State
+    Features --> State
+    Features --> Core
+    State --> API
+    State --> Core
+    Core --> Shared
+    API --> Shared
+
+    style Layers fill:#f9f9f9,stroke:#333,stroke-width:1px
+            </div>
+
+            <ul>
+                <li><strong>Core Rule:</strong> Imports must always flow <strong>downward</strong>. A layer should never import code from a layer above it (e.g., <code>core/</code> must never import from <code>features/</code> or <code>state/</code>).</li>
+            </ul>
+
+            <hr>
+
+            <h2>2. Folder-by-Folder Guide</h2>
+
+            <h3>📂 <code>core/</code> (Domain Logic &amp; Translators)</h3>
+            <ul>
+                <li><strong>Purpose</strong>: Houses pure business rules, permissions, types, and translations. It is decoupled from React UI components.</li>
+                <li><strong>Key Files</strong>:
+                    <ul>
+                        <li><code>workflow.ts</code>: Contains state machine transitions, status color mappings, and phase logic.</li>
+                        <li><code>permissions.ts</code>: Domain permission rules (e.g., <code>canApprove</code>, <code>canSkipQC</code>).</li>
+                        <li><code>mappers.ts</code>: Maps backend API DTOs into frontend-friendly model types.</li>
+                        <li><code>types.ts</code> &amp; <code>constants.ts</code>: Shared domain interfaces, Enums, and configuration values.</li>
+                    </ul>
+                </li>
+                <li><strong>Usage</strong>:
+<pre><code class="language-typescript">// Example: Inside a UI component
+import { getReceiptDisplayStatus } from '../core/workflow';</code></pre>
+                </li>
+            </ul>
+
+            <h3>📂 <code>api/</code> (Network Communication)</h3>
+            <ul>
+                <li><strong>Purpose</strong>: The direct layer communicating with backend endpoints. No business calculations or UI logic lives here.</li>
+                <li><strong>Key Files</strong>:
+                    <ul>
+                        <li><code>service.ts</code>: API request calls (using Axios or request clients).</li>
+                        <li><code>dto.ts</code>: Declares request and response contract interfaces exactly as received from the server.</li>
+                    </ul>
+                </li>
+                <li><strong>Usage</strong>: Holds raw fetches. <code>state/</code> hooks will invoke these methods.</li>
+            </ul>
+
+            <h3>📂 <code>state/</code> (Data Orchestration &amp; Caching)</h3>
+            <ul>
+                <li><strong>Purpose</strong>: Manages runtime React context, query caching (React Query), and state hooks shared across features.</li>
+                <li><strong>Key Files</strong>:
+                    <ul>
+                        <li><code>InboundProvider.tsx</code>: Context wrapper managing active filters, selected tabs, or user roles.</li>
+                        <li><code>useGoodsReceipts.ts</code> / <code>usePurchaseOrders.ts</code>: Hooks wrapping API calls to handle caching, loading indicators, and mutations.</li>
+                        <li><code>useInboundWorkspace.ts</code>: Manages active screen configurations.</li>
+                    </ul>
+                </li>
+                <li><strong>Usage</strong>: Shared states between panels and tables are read from here.</li>
+            </ul>
+
+            <h3>📂 <code>features/</code> (Interactive Scenarios)</h3>
+            <ul>
+                <li><strong>Purpose</strong>: Encapsulates specific interactive features or user operations.</li>
+                <li><strong>Subfolders</strong>:
+                    <ul>
+                        <li><code>goods-receipt/</code>: Managing GR creation, editing, and linking.</li>
+                        <li><code>purchase-order/</code>: Details and operations relating to PO sidebars/tables.</li>
+                        <li><code>qc-review/</code>: Action forms for QC inspections.</li>
+                        <li><code>supervisor-review/</code>: Approvals, rejections, and correction prompts.</li>
+                        <li><code>procurement/</code>: Exception resolution actions (<code>CloseRefundModal</code>, <code>ReissuePOModal</code>, <code>ReleaseWarehouseModal</code>).</li>
+                        <li><code>supporting-documents/</code>: Upload lists, previews, and attachments.</li>
+                    </ul>
+                </li>
+                <li><strong>Internal Structure of a Feature</strong>:
+<pre><code class="language-text">features/my-feature/
+├── components/          # Feature-specific modals, forms, and cards
+├── hooks/               # Local UI controllers (e.g., useModalState)
+├── utils/               # Internal helpers specific to this feature
+└── index.ts             # Public exports (Exposes only what workspaces need)</code></pre>
+                </li>
+                <li><strong>Strict Rule</strong>: <strong>No Cross-Feature Imports</strong>. For example, <code>qc-review/</code> should never import from <code>supervisor-review/</code>. If they need to share UI or logic, move it to <code>shared/</code> or <code>core/</code>.</li>
+            </ul>
+
+            <h3>📂 <code>workspaces/</code> (Persona-Based Dashboards)</h3>
+            <ul>
+                <li><strong>Purpose</strong>: Compose features and entities into full workspaces depending on who is logged in.</li>
+                <li><strong>Key Files</strong>:
+                    <ul>
+                        <li><code>WarehouseWorkspace.tsx</code>: Screens customized for warehouse operators (lists, GR templates).</li>
+                        <li><code>QCWorkspace.tsx</code>: Displays QC queues and inspection actions.</li>
+                        <li><code>SupervisorWorkspace.tsx</code>: Multi-approval views, history, and status checks.</li>
+                        <li><code>ProcurementWorkspace.tsx</code> (formerly <code>inboundprocurementlist.tsx</code>): Exceptions resolutions panel.</li>
+                    </ul>
+                </li>
+                <li><strong>Usage</strong>: Workspaces read status from <code>state/</code>, pass props to <code>features/</code> components, and coordinate layout actions.</li>
+            </ul>
+
+            <h3>📂 <code>shared/</code> (Generic Library)</h3>
+            <ul>
+                <li><strong>Purpose</strong>: Infrastructure pieces that can be reused anywhere in the app (completely generic).</li>
+                <li><strong>Key Files</strong>:
+                    <ul>
+                        <li><code>ui/</code>: Custom generic wrappers, custom spinners, and visual buttons.</li>
+                        <li><code>hooks/</code>: E.g., <code>useDebounce</code>, <code>useWindowDimensions</code>.</li>
+                        <li><code>utils/</code>: Date formatters, currency math helpers.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <hr>
+
+            <h2>3. Entry Points (Page Coordinates)</h2>
+            <p>At the root of the <code>upcoming-inbound/</code> directory:</p>
+            <ol>
+                <li><strong><code>index.tsx</code></strong>: Route entry-point mapping to <code>/prod/inventory-inbound/*</code>. It bootstraps standard operations.</li>
+                <li><strong><code>procurement.tsx</code></strong>: Route entry-point mapping to <code>/prod/inventory-inbound/procurement/*</code>. It loads the procurement dashboard.</li>
+                <li><strong><code>InboundListview.tsx</code></strong>: The parent coordinator that initializes <code>&lt;InboundProvider&gt;</code> and swaps the appropriate workspace based on role and URL path parameters.</li>
+            </ol>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            fontFamily: 'Inter, sans-serif'
+        });
+    </script>
+</body>
+</html>

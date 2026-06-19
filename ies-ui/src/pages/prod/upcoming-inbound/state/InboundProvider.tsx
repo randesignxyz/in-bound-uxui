@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useMemo, useEffect, useRef } from 'react';
-import { useAccess, useLocation } from '@umijs/max';
+import { useAccess } from '@umijs/max';
 import type {
   UpcomingInboundGoodsReceipt as GoodsReceipt,
   UpcomingInboundPurchaseOrder as PurchaseOrder,
@@ -227,6 +227,19 @@ export const InboundProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const activeBusinessUnitFilter = isInboundAdmin ? undefined : activeBusinessUnit;
   const hasActiveBusinessUnit = Boolean(activeBusinessUnitFilter);
+
+  useEffect(() => {
+    if (isInboundAdmin || inboundVisibleBusinessUnits.length === 0) {
+      return;
+    }
+
+    setActiveBusinessUnit((current) => {
+      if (current && inboundVisibleBusinessUnits.includes(current)) {
+        return current;
+      }
+      return inboundVisibleBusinessUnits[0];
+    });
+  }, [inboundVisibleBusinessUnits, isInboundAdmin]);
 
   const canUseWarehouseRole = useMemo(
     () =>

@@ -414,6 +414,7 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
     uomMasterOptions,
     warehouseMasterOptions,
     itemMasterOptions,
+    loadMasterData,
     loadInboundData,
     refreshCurrentTable,
   } = useInboundData();
@@ -423,6 +424,8 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
 
   // Track initial load from URL query params
   const hasOpenedReceiptFromQueryRef = useRef(false);
+  const inboundMasterDataKeyRef = useRef<string | null>(null);
+  const inboundTableDataKeyRef = useRef<string | null>(null);
 
   const routePurchaseOrderKeys = useMemo<string[]>(() => {
     if (typeof window === 'undefined' || !window.location.search) {
@@ -436,7 +439,7 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
   const isReceiveWithoutPoRoute = routeView === 'receive-without-po';
 
   const closeInboundEntryRoute = useCallback(() => {
-    history.push(ProdPaths.upcomingInbound);
+    history.replace(`${ProdPaths.upcomingInbound}/list`);
   }, []);
 
   const parsePurchaseOrderRowKey = useCallback(
@@ -514,10 +517,60 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
     return getCombinedPurchaseOrderVendor(selectedWarehousePOs);
   }, [selectedWarehousePOs]);
 
-  // Load Inbound Data Effect
+  // Load master dropdowns once per business unit, then load the visible workspace table once per role/view.
   useEffect(() => {
+    if (!hasInboundWorkspaceAccess) {
+      return;
+    }
+
+    if (!isInboundAdmin && inboundVisibleBusinessUnits.length > 0 && !activeBusinessUnitFilter) {
+      return;
+    }
+
+    const inboundMasterDataKey = activeBusinessUnitFilter || 'ALL';
+    if (inboundMasterDataKeyRef.current !== inboundMasterDataKey) {
+      inboundMasterDataKeyRef.current = inboundMasterDataKey;
+      void loadMasterData();
+    }
+  }, [
+    hasInboundWorkspaceAccess,
+    isInboundAdmin,
+    inboundVisibleBusinessUnits.length,
+    activeBusinessUnitFilter,
+    loadMasterData,
+  ]);
+
+  useEffect(() => {
+    if (!hasInboundWorkspaceAccess) {
+      return;
+    }
+
+    if (!isInboundAdmin && inboundVisibleBusinessUnits.length > 0 && !activeBusinessUnitFilter) {
+      return;
+    }
+
+    const inboundTableDataKey = [
+      activeBusinessUnitFilter || 'ALL',
+      activeRole,
+      effectiveInboundView,
+    ].join('::');
+
+    if (inboundTableDataKeyRef.current === inboundTableDataKey) {
+      return;
+    }
+
+    inboundTableDataKeyRef.current = inboundTableDataKey;
+
     void loadInboundData();
-  }, [loadInboundData]);
+  }, [
+    hasInboundWorkspaceAccess,
+    isInboundAdmin,
+    inboundVisibleBusinessUnits.length,
+    activeBusinessUnitFilter,
+    activeRole,
+    effectiveInboundView,
+    loadInboundData,
+  ]);
 
   // Clear URL query parameters for direct links
   const clearReceiptQueryParams = useCallback(() => {

@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useRef } from 'react';
 import dayjs from 'dayjs';
 import { useInboundContext } from './InboundProvider';
 import { upcomingInboundService } from '../api/service';
@@ -35,6 +35,7 @@ export function usePurchaseOrders() {
   } = context;
 
   const { current: poCurrentPage, pageSize: poPageSize } = poPagination;
+  const purchaseOrderRequestKeyRef = useRef<string | null>(null);
 
   const sharedDateRangeFilter = useMemo<[string, string] | null>(() => {
     if (dashboardSummaryRange === 'CUSTOM') {
@@ -125,29 +126,52 @@ export function usePurchaseOrders() {
 
   const loadPurchaseOrders = useCallback(
     async (current = poCurrentPage, pageSize = poPageSize) => {
-      const requestId = ++purchaseOrderRequestIdRef.current;
-      const poResult = await services.pagePurchaseOrders({
-        criteria: {
-          searchValue: poSearchValue.trim() || undefined,
-          advanceSearch: buildPurchaseOrderAdvanceSearchCriteria(),
-        },
-        pagination: {
-          current,
-          pageSize,
-        },
-      });
+      const requestKey = [
+        'PO',
+        activeBusinessUnitFilter || 'ALL',
+        current,
+        pageSize,
+        poSearchValue.trim() || '',
+        poVendorFilter,
+        poTypeFilter,
+        sharedDateRangeFilter?.join('|') || 'NO_RANGE',
+      ].join('::');
 
-      if (requestId !== purchaseOrderRequestIdRef.current) {
+      if (purchaseOrderRequestKeyRef.current === requestKey) {
         return;
       }
 
-      const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.items);
-      applyPurchaseOrderResult(nextPurchaseOrders);
-      setPoPagination({
-        current,
-        pageSize,
-        total: poResult.total || nextPurchaseOrders.length,
-      });
+      purchaseOrderRequestKeyRef.current = requestKey;
+
+      try {
+        const requestId = ++purchaseOrderRequestIdRef.current;
+        const poResult = await services.pagePurchaseOrders({
+          criteria: {
+            searchValue: poSearchValue.trim() || undefined,
+            advanceSearch: buildPurchaseOrderAdvanceSearchCriteria(),
+          },
+          pagination: {
+            current,
+            pageSize,
+          },
+        });
+
+        if (requestId !== purchaseOrderRequestIdRef.current) {
+          return;
+        }
+
+        const nextPurchaseOrders = sortPurchaseOrdersByLatestExpectedDate(poResult.items);
+        applyPurchaseOrderResult(nextPurchaseOrders);
+        setPoPagination({
+          current,
+          pageSize,
+          total: poResult.total || nextPurchaseOrders.length,
+        });
+      } finally {
+        if (purchaseOrderRequestKeyRef.current === requestKey) {
+          purchaseOrderRequestKeyRef.current = null;
+        }
+      }
     },
     [
       poSearchValue,

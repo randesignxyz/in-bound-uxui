@@ -60,19 +60,27 @@ export function GRQueueTable({
       key: 'receivingNumber',
       title: 'IR Number',
       dataIndex: 'receivingNumber',
-      render: (_: any, row: GoodsReceipt) => {
-        const shouldShowQcBadge =
-          typeof shouldShowNotificationBadge === 'function'
-            ? shouldShowNotificationBadge(row)
-            : statusMode === 'qc' && row.items.some((item) => !item.qcDecision);
+        render: (_: any, row: GoodsReceipt) => {
+          const shouldShowQcBadge =
+            typeof shouldShowNotificationBadge === 'function'
+              ? shouldShowNotificationBadge(row)
+              : statusMode === 'qc' && row.items.some((item) => !item.qcDecision);
 
-        return (
-          <Badge dot={shouldShowQcBadge} color="#faad14" offset={[4, 2]}>
-            <a onClick={() => onViewDetail(row)}>{getReceiptIrNumber(row)}</a>
-          </Badge>
-        );
+          return (
+            <Badge dot={shouldShowQcBadge} color="#faad14" offset={[4, 2]}>
+              <a
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onViewDetail(row);
+                }}
+              >
+                {getReceiptIrNumber(row)}
+              </a>
+            </Badge>
+          );
+        },
       },
-    },
     ...(showApprovedGrColumn
       ? [
           {

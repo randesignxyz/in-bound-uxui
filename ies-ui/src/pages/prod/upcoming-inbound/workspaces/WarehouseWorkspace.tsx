@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Typography, Button, Input, Select, Radio, Badge, Tag, Row, Col, Space } from 'antd';
 
-import { ReloadOutlined, ClockCircleOutlined, WarningOutlined, InboxOutlined } from '@ant-design/icons';
+import { ReloadOutlined } from '@ant-design/icons';
 import { POListTable } from '../features/purchase-order';
 import { InboundGRTable } from '../features/goods-receipt';
 import { useInboundContext } from '../state';
@@ -50,7 +50,6 @@ export function WarehouseWorkspace({
   warehouseVendorOptions,
   selectedWarehousePOs,
   selectedWarehousePOVendor,
-  warehouseRejectedReceiptCount,
   historyReceipts,
   onViewPODetail,
   onCreateSelectedGR,

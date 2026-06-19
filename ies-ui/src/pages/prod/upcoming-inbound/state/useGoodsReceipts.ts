@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import dayjs from 'dayjs';
 import { useInboundContext, HistoryStatusFilter, QcQueueStatusFilter, InboundWorkspaceRole } from './InboundProvider';
 import { upcomingInboundService } from '../api/service';
@@ -16,6 +16,8 @@ import { getReceiptPOReferences } from '../core/workflow';
 export function useGoodsReceipts() {
   const context = useInboundContext();
   const services = upcomingInboundService;
+  const receiptRequestKeyRef = useRef<string | null>(null);
+  const warehouseSupportRequestKeyRef = useRef<string | null>(null);
 
   const {
     activeBusinessUnitFilter,
@@ -218,34 +220,62 @@ export function useGoodsReceipts() {
 
   const loadReceipts = useCallback(
     async (mode: 'operations' | 'history', current: number, pageSize: number) => {
-      const requestId = ++receiptRequestIdRef.current;
-      const receiptResult = await services.pageGoodsReceipts({
-        criteria: buildGoodsReceiptCriteria(mode),
-        pagination: {
-          current,
-          pageSize,
-        },
-      });
+      const requestKey = [
+        mode,
+        activeBusinessUnitFilter || 'ALL',
+        activeRole,
+        current,
+        pageSize,
+        dashboardSummaryRange,
+        dashboardPeriodFilter?.join('|') || 'NO_RANGE',
+        queueSearchValue.trim() || '',
+        queueTypeFilter,
+        queueSourceFilter,
+        qcStatusFilter,
+        historyTypeFilter,
+        historyStatusFilter,
+      ].join('::');
 
-      if (requestId !== receiptRequestIdRef.current) {
+      if (receiptRequestKeyRef.current === requestKey) {
         return;
       }
 
-      const nextReceipts = receiptResult.items
-        .map(normalizeReceiptForUI)
-        .filter(isVisibleOperationalReceipt);
-      setReceipts(nextReceipts);
+      receiptRequestKeyRef.current = requestKey;
 
-      const nextPagination = {
-        current,
-        pageSize,
-        total: receiptResult.total || nextReceipts.length,
-      };
+      try {
+        const requestId = ++receiptRequestIdRef.current;
+        const receiptResult = await services.pageGoodsReceipts({
+          criteria: buildGoodsReceiptCriteria(mode),
+          pagination: {
+            current,
+            pageSize,
+          },
+        });
 
-      if (mode === 'history') {
-        setHistoryPagination(nextPagination);
-      } else {
-        setQueuePagination(nextPagination);
+        if (requestId !== receiptRequestIdRef.current) {
+          return;
+        }
+
+        const nextReceipts = receiptResult.items
+          .map(normalizeReceiptForUI)
+          .filter(isVisibleOperationalReceipt);
+        setReceipts(nextReceipts);
+
+        const nextPagination = {
+          current,
+          pageSize,
+          total: receiptResult.total || nextReceipts.length,
+        };
+
+        if (mode === 'history') {
+          setHistoryPagination(nextPagination);
+        } else {
+          setQueuePagination(nextPagination);
+        }
+      } finally {
+        if (receiptRequestKeyRef.current === requestKey) {
+          receiptRequestKeyRef.current = null;
+        }
       }
     },
     [
@@ -261,41 +291,54 @@ export function useGoodsReceipts() {
   );
 
   const loadWarehouseSupportReceipts = useCallback(async () => {
-    const requestId = ++warehouseSupportRequestIdRef.current;
-    const [awaitingPoResult, exceptionResult] = await Promise.all([
-      services.pageGoodsReceipts({
-        criteria: {
-          ...buildBusinessUnitCriteria(),
-          dateFrom: null,
-          dateTo: null,
-          receiptSourceType: 'TEMP_NO_PO',
-          poLinkStatus: 'WAITING_PO',
-        },
-        pagination: {
-          current: 1,
-          pageSize: 10,
-        },
-      }),
-      services.pageGoodsReceipts({
-        criteria: {
-          ...buildBusinessUnitCriteria(),
-          dateFrom: null,
-          dateTo: null,
-          processStates: ['MISMATCH_EXCEPTION', 'CORRECTION_REQUIRED'],
-        },
-        pagination: {
-          current: 1,
-          pageSize: 10,
-        },
-      }),
-    ]);
-
-    if (requestId !== warehouseSupportRequestIdRef.current) {
+    const requestKey = [activeBusinessUnitFilter || 'ALL', 'WAREHOUSE_SUPPORT'].join('::');
+    if (warehouseSupportRequestKeyRef.current === requestKey) {
       return;
     }
 
-    setAwaitingPOLinkReceipts(awaitingPoResult.items.map(normalizeReceiptForUI));
-    setExceptionQueueReceipts(exceptionResult.items.map(normalizeReceiptForUI));
+    warehouseSupportRequestKeyRef.current = requestKey;
+
+    try {
+      const requestId = ++warehouseSupportRequestIdRef.current;
+      const [awaitingPoResult, exceptionResult] = await Promise.all([
+        services.pageGoodsReceipts({
+          criteria: {
+            ...buildBusinessUnitCriteria(),
+            dateFrom: null,
+            dateTo: null,
+            receiptSourceType: 'TEMP_NO_PO',
+            poLinkStatus: 'WAITING_PO',
+          },
+          pagination: {
+            current: 1,
+            pageSize: 10,
+          },
+        }),
+        services.pageGoodsReceipts({
+          criteria: {
+            ...buildBusinessUnitCriteria(),
+            dateFrom: null,
+            dateTo: null,
+            processStates: ['MISMATCH_EXCEPTION', 'CORRECTION_REQUIRED'],
+          },
+          pagination: {
+            current: 1,
+            pageSize: 10,
+          },
+        }),
+      ]);
+
+      if (requestId !== warehouseSupportRequestIdRef.current) {
+        return;
+      }
+
+      setAwaitingPOLinkReceipts(awaitingPoResult.items.map(normalizeReceiptForUI));
+      setExceptionQueueReceipts(exceptionResult.items.map(normalizeReceiptForUI));
+    } finally {
+      if (warehouseSupportRequestKeyRef.current === requestKey) {
+        warehouseSupportRequestKeyRef.current = null;
+      }
+    }
   }, [
     warehouseSupportRequestIdRef,
     services,

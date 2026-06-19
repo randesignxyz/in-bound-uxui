@@ -1,8 +1,8 @@
 import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Card, Typography, Button, Input, Select, Radio, Badge, Row, Col, Space, Statistic, Modal, Form, Checkbox, message, DatePicker, Segmented } from 'antd';
-import { AppstoreOutlined, BarsOutlined, ClockCircleOutlined, ExportOutlined, InboxOutlined, ReloadOutlined, SyncOutlined, WarningOutlined } from '@ant-design/icons';
+import { Card, Typography, Button, Select, Radio, Badge, Row, Col, Space, Statistic, Modal, Form, Checkbox, message, DatePicker, Segmented } from 'antd';
+import { AppstoreOutlined, BarsOutlined, ClockCircleOutlined, ExportOutlined, InboxOutlined, SyncOutlined, WarningOutlined } from '@ant-design/icons';
 import { ProCard } from '@ant-design/pro-components';
-import { history, useAccess, useLocation } from '@umijs/max';
+import { history, useLocation } from '@umijs/max';
 import dayjs, { type Dayjs } from 'dayjs';
 
 import { ProdPaths } from '@/pages/prod';
@@ -320,11 +320,8 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
 
   const {
     isInboundAdmin,
-    hasInboundSyncAdminRole,
     inboundVisibleBusinessUnits,
     inboundWarehouseBusinessUnits,
-    inboundQcBusinessUnits,
-    inboundSupervisorBusinessUnits,
     inboundRoleOptions,
     hasInboundWorkspaceAccess,
     activeRole,
@@ -336,7 +333,6 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
     activeBusinessUnit,
     setActiveBusinessUnit,
     activeBusinessUnitFilter,
-    hasActiveBusinessUnit,
     isGRCreationOpen,
     setIsGRCreationOpen,
     isTempGRCreationOpen,
@@ -362,13 +358,10 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
 
   const {
     purchaseOrders,
-    poPagination,
     poSearchValue,
     setPOSearchValue,
     poVendorFilter,
     setPOVendorFilter,
-    poVendorSearch,
-    setPoVendorSearch,
     poTypeFilter,
     setPOTypeFilter,
     selectedPOs,
@@ -382,10 +375,6 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
 
   const {
     receipts,
-    awaitingPOLinkReceipts,
-    exceptionQueueReceipts,
-    queuePagination,
-    historyPagination,
     queueSearchValue,
     setQueueSearchValue,
     queueTypeFilter,
@@ -399,13 +388,11 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
     historyStatusFilter,
     setHistoryStatusFilter,
     loadReceipts,
-    loadWarehouseSupportReceipts,
     saveGoodsReceipt,
     changeGoodsReceiptStatus,
     linkPoToTempReceipt,
     submitQcReview,
     submitSupervisorReview,
-    markQcBadgeViewed,
   } = useGoodsReceipts();
 
   const {
@@ -480,6 +467,7 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
   }, [inboundWarehouseBusinessUnits, isInboundAdmin]);
 
   const activeTempReceiptBU = activeBusinessUnitFilter || tempReceiptBusinessUnits[0];
+  const canCreateInboundReceiving = activeRole === 'WAREHOUSE_STAFF' && canUseWarehouseRole;
 
   const supplierOptionsForTempReceipt = useMemo(() => {
     return supplierMasterOptions.filter(
@@ -517,6 +505,62 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
     return getCombinedPurchaseOrderVendor(selectedWarehousePOs);
   }, [selectedWarehousePOs]);
 
+  const inboundTableDataKey = useMemo(() => {
+    const dateRangeKey = context.dashboardPeriodFilter?.join('|') || 'NO_RANGE';
+    const baseKey = [
+      activeBusinessUnitFilter || 'ALL',
+      activeRole,
+      effectiveInboundView,
+      context.dashboardSummaryRange,
+      dateRangeKey,
+    ].join('::');
+
+    if (activeRole === 'WAREHOUSE_STAFF') {
+      return [
+        baseKey,
+        'PO',
+        poSearchValue.trim(),
+        poVendorFilter,
+        poTypeFilter,
+      ].join('::');
+    }
+
+    if (activeRole === 'QC') {
+      return [
+        baseKey,
+        'QC',
+        queueSearchValue.trim(),
+        queueTypeFilter,
+        qcStatusFilter,
+      ].join('::');
+    }
+
+    return [
+      baseKey,
+      'SUP',
+      queueSearchValue.trim(),
+      queueTypeFilter,
+      queueSourceFilter,
+      historyTypeFilter,
+      historyStatusFilter,
+    ].join('::');
+  }, [
+    activeBusinessUnitFilter,
+    activeRole,
+    context.dashboardPeriodFilter,
+    context.dashboardSummaryRange,
+    effectiveInboundView,
+    historyStatusFilter,
+    historyTypeFilter,
+    poSearchValue,
+    poTypeFilter,
+    poVendorFilter,
+    qcStatusFilter,
+    queueSearchValue,
+    queueSourceFilter,
+    queueTypeFilter,
+  ]);
+
   // Load master dropdowns once per business unit, then load the visible workspace table once per role/view.
   useEffect(() => {
     if (!hasInboundWorkspaceAccess) {
@@ -549,12 +593,6 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
       return;
     }
 
-    const inboundTableDataKey = [
-      activeBusinessUnitFilter || 'ALL',
-      activeRole,
-      effectiveInboundView,
-    ].join('::');
-
     if (inboundTableDataKeyRef.current === inboundTableDataKey) {
       return;
     }
@@ -569,6 +607,7 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
     activeBusinessUnitFilter,
     activeRole,
     effectiveInboundView,
+    inboundTableDataKey,
     loadInboundData,
   ]);
 
@@ -1209,6 +1248,14 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
       return;
     }
 
+    if (!canCreateInboundReceiving) {
+      message.error('You do not have permission to create inbound receiving.');
+      setIsGRCreationOpen(false);
+      setSelectedPOs([]);
+      closeInboundEntryRoute();
+      return;
+    }
+
     let isCancelled = false;
 
     const openCreateRoute = async () => {
@@ -1272,7 +1319,13 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
     return () => {
       isCancelled = true;
     };
-  }, [closeInboundEntryRoute, isCreateInboundRoute, routePurchaseOrderKeys, receipts]);
+  }, [
+    canCreateInboundReceiving,
+    closeInboundEntryRoute,
+    isCreateInboundRoute,
+    routePurchaseOrderKeys,
+    receipts,
+  ]);
 
   useEffect(() => {
     if (!isReceiveWithoutPoRoute) {
@@ -1280,14 +1333,14 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
       return;
     }
 
-    if (!canUseWarehouseRole) {
-      message.error('You do not have warehouse permission for the selected business unit.');
+    if (!canCreateInboundReceiving) {
+      message.error('You do not have permission to create inbound receiving.');
       closeInboundEntryRoute();
       return;
     }
 
     setIsTempGRCreationOpen(true);
-  }, [canUseWarehouseRole, closeInboundEntryRoute, isReceiveWithoutPoRoute]);
+  }, [canCreateInboundReceiving, closeInboundEntryRoute, isReceiveWithoutPoRoute]);
 
   const handleWarehousePOSelectionChange = (nextSelectedRowKeys: string[]) => {
     const nextSelectedPOs = purchaseOrders.filter((purchaseOrder) =>
@@ -1305,8 +1358,8 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
   };
 
   const handleCreateTempGR = () => {
-    if (!canUseWarehouseRole) {
-      message.error('You do not have warehouse permission for the selected business unit.');
+    if (!canCreateInboundReceiving) {
+      message.error('You do not have permission to create inbound receiving.');
       return;
     }
     history.push(`${ProdPaths.upcomingInbound}/receive-without-po`);
@@ -1414,6 +1467,10 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
 
   const handleCreateGR = (pos: PurchaseOrder[]) => {
     if (!pos.length) return;
+    if (!canCreateInboundReceiving) {
+      message.error('You do not have permission to create inbound receiving.');
+      return;
+    }
     const closedPurchaseOrders = getClosedPurchaseOrdersForCreate(pos, receipts);
     if (closedPurchaseOrders.length > 0) {
       message.error(
@@ -1439,6 +1496,10 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
 
   const handleCreateSelectedGR = async () => {
     if (!selectedWarehousePOs.length) return;
+    if (!canCreateInboundReceiving) {
+      message.error('You do not have permission to create inbound receiving.');
+      return;
+    }
     if (!canCombinePurchaseOrders(selectedWarehousePOs)) {
       message.error(
         'You can only combine purchase orders from the same business unit and vendor into one IR/GR.',
@@ -2045,6 +2106,7 @@ export function InboundListview({ routeView = 'list' }: InboundListviewProps) {
             open={selectedPODetail !== null}
             onClose={() => setSelectedPODetail(null)}
             po={selectedPODetail}
+            canCreateInboundReceiving={canCreateInboundReceiving}
             onCreateGR={(po) => handleCreateGR([po])}
             onOpenReceiptInNewTab={handleOpenReceiptInNewTab}
             warehouseOptions={warehouseMasterOptions}

@@ -53,17 +53,25 @@ export function InboundGRTable({
       key: 'receivingNumber',
       title: 'IR Number',
       dataIndex: 'receivingNumber',
-      render: (_: any, r: GoodsReceipt) => {
-        const shouldShowRowBadge =
-          showNotificationBadge && getInboundHistoryStatus(r) === 'Rejected';
+        render: (_: any, r: GoodsReceipt) => {
+          const shouldShowRowBadge =
+            showNotificationBadge && getInboundHistoryStatus(r) === 'Rejected';
 
-        return (
-          <Badge dot={shouldShowRowBadge} color="#ff4d4f" offset={[2, 2]}>
-            <a onClick={() => onViewDetail(r)}>{getReceiptIrNumber(r)}</a>
-          </Badge>
-        );
+          return (
+            <Badge dot={shouldShowRowBadge} color="#ff4d4f" offset={[2, 2]}>
+              <a
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onViewDetail(r);
+                }}
+              >
+                {getReceiptIrNumber(r)}
+              </a>
+            </Badge>
+          );
+        },
       },
-    },
     ...(showApprovedGrColumn
       ? [
           {

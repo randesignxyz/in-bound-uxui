@@ -22,6 +22,7 @@ interface PODetailSidebarProps {
   open: boolean;
   onClose: () => void;
   po: PurchaseOrder | null;
+  canCreateInboundReceiving?: boolean;
   onCreateGR: (po: PurchaseOrder) => void;
   onOpenReceiptInNewTab: (receiptId: number) => void;
   warehouseOptions?: InboundWarehouseMasterApi[];
@@ -57,6 +58,7 @@ export function PODetailSidebar({
   open,
   onClose,
   po,
+  canCreateInboundReceiving = true,
   onCreateGR,
   onOpenReceiptInNewTab,
   goodsReceipts = [],
@@ -117,7 +119,8 @@ export function PODetailSidebar({
 
   const receiptState = getPurchaseOrderReceiptState(currentPO, goodsReceipts);
 
-  const shouldShowCreateInboundReceiving = receiptState.canCreateInboundReceiving;
+  const shouldShowCreateInboundReceiving =
+    canCreateInboundReceiving && receiptState.canCreateInboundReceiving;
   const poStatusTagColor =
     receiptState.displayStatus === 'Fully Received'
       ? 'success'

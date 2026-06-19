@@ -27,7 +27,6 @@ export function QCWorkspace({
   const context = useInboundContext();
   const {
     queuePagination,
-    queueSearchValue,
     setQueueSearchValue,
     queueTypeFilter,
     setQueueTypeFilter,

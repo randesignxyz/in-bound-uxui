@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { message } from 'antd';
 import { useInboundContext } from './InboundProvider';
 import { usePurchaseOrders } from './usePurchaseOrders';
@@ -10,6 +10,7 @@ export function useInboundData() {
   const { loadPurchaseOrders, sharedDateRangeFilter } = usePurchaseOrders();
   const { loadReceipts, loadWarehouseSupportReceipts } = useGoodsReceipts();
   const services = upcomingInboundService;
+  const dashboardSummaryRequestKeyRef = useRef<string | null>(null);
 
   const {
     isInboundAdmin,
@@ -49,12 +50,32 @@ export function useInboundData() {
   }), [activeBusinessUnitFilter, dashboardSummaryRange, sharedDateRangeFilter]);
 
   const loadDashboardSummary = useCallback(async () => {
-    const requestId = ++dashboardSummaryRequestIdRef.current;
-    const summaryResult = await services.getDashboardSummary(buildDashboardSummaryParams());
-    if (requestId !== dashboardSummaryRequestIdRef.current) {
+    const params = buildDashboardSummaryParams();
+    const requestKey = [
+      params.businessUnit || 'ALL',
+      params.range || 'ALL',
+      params.dateFrom || 'NO_FROM',
+      params.dateTo || 'NO_TO',
+    ].join('::');
+
+    if (dashboardSummaryRequestKeyRef.current === requestKey) {
       return;
     }
-    setInboundStats(summaryResult);
+
+    dashboardSummaryRequestKeyRef.current = requestKey;
+
+    try {
+      const requestId = ++dashboardSummaryRequestIdRef.current;
+      const summaryResult = await services.getDashboardSummary(params);
+      if (requestId !== dashboardSummaryRequestIdRef.current) {
+        return;
+      }
+      setInboundStats(summaryResult);
+    } finally {
+      if (dashboardSummaryRequestKeyRef.current === requestKey) {
+        dashboardSummaryRequestKeyRef.current = null;
+      }
+    }
   }, [dashboardSummaryRequestIdRef, services, buildDashboardSummaryParams, setInboundStats]);
 
   const loadMasterData = useCallback(async () => {

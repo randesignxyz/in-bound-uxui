@@ -57,6 +57,7 @@ interface Location {
   inventoryId?: number | null;
   warehouseCode: string;
   warehouseName?: string;
+  businessUnit?: string | null;
   level: string;
   shelve: string;
   rack: string;
@@ -89,6 +90,7 @@ export type UpdateSparePartDetailPayload = {
   categoryId?: number;
   isActive?: boolean;
   warehouseCode?: string;
+  businessUnit?: string;
   rack?: string;
   shelve?: string;
   level?: string;
@@ -315,10 +317,11 @@ export const SparePartRequestAPI = (requestAction?: RequestActions) => ({
     return mapPagingResult(response, params);
   },
   detail: async (params: SparePartDetailParams): Promise<SparePartRequestItem> => {
-    const response = await singleRequest<SparePartRequestListApiItem>(SparePartRequestTestAction.detail(params))(
+    const response = await singleRequest<any>(SparePartRequestTestAction.detail(params))(
       requestAction,
     );
-    return mapItem(response as SparePartRequestListApiItem, params.inventoryId);
+    const payload = response?.data ?? response;
+    return mapItem(payload as SparePartRequestListApiItem, params.inventoryId);
   },
   updateImages: async (productId: string, images: string[]): Promise<SparePartRequestItem> => {
     const response = await singleRequest<any>(SparePartRequestTestAction.updateImages({ productId, images }))(
@@ -442,3 +445,4 @@ export const fetchProductionLines = async (): Promise<{ id: number; lineCode: st
   const lines = Array.isArray(payload) ? payload : payload?.data;
   return Array.isArray(lines) ? lines : [];
 };
+

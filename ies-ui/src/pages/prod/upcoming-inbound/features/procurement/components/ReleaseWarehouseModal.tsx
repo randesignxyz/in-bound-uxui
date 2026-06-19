@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Alert, Button, Form, Input, Modal, Select, Table, Typography, Space, Row, Col, Tag, message } from 'antd';
+import { Alert, Button, Form, Input, Modal, Select, Table, Typography, Row, Col, Tag, message } from 'antd';
 import { ExportOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 

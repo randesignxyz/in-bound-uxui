@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-import { Alert, Button, Form, Input, Modal, Select, Table, Typography, Space, Row, Col, message } from 'antd';
-import { CloseCircleOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Alert, Button, Form, Input, Modal, Select, Table, Typography, Row, Col, message } from 'antd';
+import { CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Text, Title } = Typography;

@@ -67,28 +67,42 @@ export function buildReceiptExceptionReason(items: GRItem[]) {
     .join('; ');
 }
 
-export function getExceptionQueueReceipts(receipts: GoodsReceipt[]) {
-  const qtyCoverageByItem = buildReceiptQtyCoverage(receipts);
+// Helpers
+function getLatestCorrectionActivityText(receipt: GoodsReceipt) {
+  const latestCorrectionActivity =
+    [...receipt.activities].reverse().find((activity) => activity.processState === receipt.processState) ??
+    [...receipt.activities]
+      .reverse()
+      .find((activity) => `${activity.title || ''} ${activity.description || ''}`.trim().length > 0);
 
-  return receipts.filter((receipt) => isReceiptVisibleInExceptionQueue(receipt, qtyCoverageByItem));
+  return `${latestCorrectionActivity?.title || ''} ${latestCorrectionActivity?.description || ''}`.trim().toLowerCase();
 }
 
-function buildReceiptQtyCoverage(receipts: GoodsReceipt[]) {
-  const coverageByItem = new Map<string, { expectedQty: number; receiveQty: number }>();
+function isSupervisorRejectedCorrection(receipt: GoodsReceipt) {
+  return getLatestCorrectionActivityText(receipt).includes('supervisor rejected');
+}
 
-  receipts.filter(isReceiptEligibleForQtyCoverage).forEach((receipt) => {
-    receipt.items.forEach((item) => {
-      const itemKey = buildReceiptItemKey(receipt, item);
-      if (!itemKey) return;
+function isQcRejectedCorrection(receipt: GoodsReceipt) {
+  return getLatestCorrectionActivityText(receipt).includes('qc rejected');
+}
 
-      const currentCoverage = coverageByItem.get(itemKey) || { expectedQty: 0, receiveQty: 0 };
-      currentCoverage.expectedQty = Math.max(currentCoverage.expectedQty, item.poQty);
-      currentCoverage.receiveQty += Math.max(item.receiveQty, 0);
-      coverageByItem.set(itemKey, currentCoverage);
-    });
-  });
+function isQcRejectedReceipt(receipt: GoodsReceipt) {
+  return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || isQcRejectedCorrection(receipt);
+}
 
-  return coverageByItem;
+function isRejectedReceipt(receipt: GoodsReceipt) {
+  return isSupervisorRejectedCorrection(receipt) || isQcRejectedReceipt(receipt);
+}
+
+function buildReceiptItemKey(receipt: GoodsReceipt, item: ReceiptPoGroupedItemShape) {
+  const poNumber = normalizeReceiptItemPoNumber(receipt, item)?.trim().toUpperCase();
+  const itemCode = item.code?.trim().toUpperCase();
+
+  if (!poNumber || !itemCode) {
+    return undefined;
+  }
+
+  return `${poNumber}::${itemCode}`;
 }
 
 function isReceiptEligibleForQtyCoverage(receipt: GoodsReceipt) {
@@ -119,6 +133,35 @@ function isReceiptEligibleForQtyCoverage(receipt: GoodsReceipt) {
   return !isRejectedReceipt(receipt);
 }
 
+function buildReceiptQtyCoverage(receipts: GoodsReceipt[]) {
+  const coverageByItem = new Map<string, { expectedQty: number; receiveQty: number }>();
+
+  receipts.filter(isReceiptEligibleForQtyCoverage).forEach((receipt) => {
+    receipt.items.forEach((item) => {
+      const itemKey = buildReceiptItemKey(receipt, item);
+      if (!itemKey) return;
+
+      const currentCoverage = coverageByItem.get(itemKey) || { expectedQty: 0, receiveQty: 0 };
+      currentCoverage.expectedQty = Math.max(currentCoverage.expectedQty, item.poQty);
+      currentCoverage.receiveQty += Math.max(item.receiveQty, 0);
+      coverageByItem.set(itemKey, currentCoverage);
+    });
+  });
+
+  return coverageByItem;
+}
+
+function collectQuantityExceptionItemKeys(receipt: GoodsReceipt) {
+  return Array.from(
+    new Set(
+      receipt.items
+          .filter((item) => item.isMissing || item.receiveQty < item.poQty)
+          .map((item) => buildReceiptItemKey(receipt, item))
+          .filter((itemKey): itemKey is string => Boolean(itemKey)),
+    ),
+  );
+}
+
 function isReceiptVisibleInExceptionQueue(
   receipt: GoodsReceipt,
   qtyCoverageByItem: Map<string, { expectedQty: number; receiveQty: number }>,
@@ -138,51 +181,8 @@ function isReceiptVisibleInExceptionQueue(
   return !receipt.qtyMatch;
 }
 
-function collectQuantityExceptionItemKeys(receipt: GoodsReceipt) {
-  return Array.from(
-    new Set(
-      receipt.items
-          .filter((item) => item.isMissing || item.receiveQty < item.poQty)
-          .map((item) => buildReceiptItemKey(receipt, item))
-          .filter((itemKey): itemKey is string => Boolean(itemKey)),
-    ),
-  );
-}
+export function getExceptionQueueReceipts(receipts: GoodsReceipt[]) {
+  const qtyCoverageByItem = buildReceiptQtyCoverage(receipts);
 
-function buildReceiptItemKey(receipt: GoodsReceipt, item: ReceiptPoGroupedItemShape) {
-  const poNumber = normalizeReceiptItemPoNumber(receipt, item)?.trim().toUpperCase();
-  const itemCode = item.code?.trim().toUpperCase();
-
-  if (!poNumber || !itemCode) {
-    return undefined;
-  }
-
-  return `${poNumber}::${itemCode}`;
-}
-
-// Helpers
-function getLatestCorrectionActivityText(receipt: GoodsReceipt) {
-  const latestCorrectionActivity =
-    [...receipt.activities].reverse().find((activity) => activity.processState === receipt.processState) ??
-    [...receipt.activities]
-      .reverse()
-      .find((activity) => `${activity.title || ''} ${activity.description || ''}`.trim().length > 0);
-
-  return `${latestCorrectionActivity?.title || ''} ${latestCorrectionActivity?.description || ''}`.trim().toLowerCase();
-}
-
-function isSupervisorRejectedCorrection(receipt: GoodsReceipt) {
-  return getLatestCorrectionActivityText(receipt).includes('supervisor rejected');
-}
-
-function isQcRejectedCorrection(receipt: GoodsReceipt) {
-  return getLatestCorrectionActivityText(receipt).includes('qc rejected');
-}
-
-function isQcRejectedReceipt(receipt: GoodsReceipt) {
-  return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || isQcRejectedCorrection(receipt);
-}
-
-function isRejectedReceipt(receipt: GoodsReceipt) {
-  return isSupervisorRejectedCorrection(receipt) || isQcRejectedReceipt(receipt);
+  return receipts.filter((receipt) => isReceiptVisibleInExceptionQueue(receipt, qtyCoverageByItem));
 }

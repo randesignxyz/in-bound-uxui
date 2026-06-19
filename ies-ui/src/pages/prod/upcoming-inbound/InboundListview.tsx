@@ -98,7 +98,6 @@ type DashboardStatCard = {
   prefix?: ReactNode;
 };
 
-const DEFAULT_TABLE_PAGE_SIZE = 10;
 
 const simulationRoleLabel: Record<InboundWorkspaceRole, string> = {
   WAREHOUSE_STAFF: 'Warehouse Staff',

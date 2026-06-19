@@ -73,20 +73,6 @@ export function getLinkedPurchaseOrderReceipts(
     return receipt.poReferences?.some((reference) => reference.poNumber === purchaseOrder.poNumber);
   });
 }
-
-export function isBlockingPurchaseOrderReceipt(receipt: GoodsReceipt) {
-  return (
-    BLOCKING_PO_RECEIPT_STATES.has(receipt.processState) ||
-    receipt.qcResult === 'Rejected' ||
-    isRejectedReceipt(receipt)
-  );
-}
-
-// Inline this or import from exceptions to avoid circular dependencies. Let's define isRejectedReceipt here simply or import it.
-// Since isRejectedReceipt is part of exceptions, but we don't want circular dependency: purchase-order -> exceptions -> goods-receipt -> purchase-order.
-// Let's see: isRejectedReceipt is:
-// function isRejectedReceipt(receipt: GoodsReceipt) { return isSupervisorRejectedCorrection(receipt) || isQcRejectedReceipt(receipt); }
-// Let's implement it here as a helper, or import it. It's safer to implement it as a quick internal helper or import it. Let's check: can we just define isRejectedReceipt here? Yes.
 function isRejectedReceipt(receipt: GoodsReceipt) {
   const latestCorrectionActivity =
     [...receipt.activities].reverse().find((activity) => activity.processState === receipt.processState) ??
@@ -101,6 +87,14 @@ function isRejectedReceipt(receipt: GoodsReceipt) {
   const isQcRejectedReceipt = receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || isQcRejectedCorrection;
 
   return isSupervisorRejectedCorrection || isQcRejectedReceipt;
+}
+
+export function isBlockingPurchaseOrderReceipt(receipt: GoodsReceipt) {
+  return (
+    BLOCKING_PO_RECEIPT_STATES.has(receipt.processState) ||
+    receipt.qcResult === 'Rejected' ||
+    isRejectedReceipt(receipt)
+  );
 }
 
 export function getPurchaseOrderReceiptState(

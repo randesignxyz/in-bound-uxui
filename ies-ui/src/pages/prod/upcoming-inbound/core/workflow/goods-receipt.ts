@@ -1,6 +1,5 @@
 import type {
   GoodsReceipt,
-  GRItem,
   ReceiptPoGroupedItemShape,
   ReceiptPoItemGroup,
   InboundProcessState,
@@ -60,6 +59,18 @@ export function summarizeSuppliers(receipt: GoodsReceipt) {
   return `${suppliers.length} suppliers`;
 }
 
+function normalizeReceiptItemPoNumber(
+  receipt: GoodsReceipt,
+  item: ReceiptPoGroupedItemShape,
+) {
+  return (
+    item.poNumber?.trim() ||
+    receipt.linkedPoNumber?.trim() ||
+    receipt.poNumber?.trim() ||
+    undefined
+  );
+}
+
 export function groupReceiptItemsByPO<TItem extends ReceiptPoGroupedItemShape>(
   receipt: GoodsReceipt,
   items: TItem[],
@@ -113,18 +124,6 @@ export function groupReceiptItemsByPO<TItem extends ReceiptPoGroupedItemShape>(
     if (!right.poNumber) return -1;
     return left.poNumber.localeCompare(right.poNumber);
   });
-}
-
-function normalizeReceiptItemPoNumber(
-  receipt: GoodsReceipt,
-  item: ReceiptPoGroupedItemShape,
-) {
-  return (
-    item.poNumber?.trim() ||
-    receipt.linkedPoNumber?.trim() ||
-    receipt.poNumber?.trim() ||
-    undefined
-  );
 }
 
 export function getReceiptIrNumber(
@@ -203,6 +202,51 @@ export function getSupportingDocSourceColor(source?: SupportingDocSource | null)
     default:
       return 'default';
   }
+}
+
+// Helpers
+function getLatestCorrectionActivityText(receipt: GoodsReceipt) {
+  const latestCorrectionActivity =
+    [...receipt.activities].reverse().find((activity) => activity.processState === receipt.processState) ??
+    [...receipt.activities]
+      .reverse()
+      .find((activity) => `${activity.title || ''} ${activity.description || ''}`.trim().length > 0);
+
+  return `${latestCorrectionActivity?.title || ''} ${latestCorrectionActivity?.description || ''}`.trim().toLowerCase();
+}
+
+function isSupervisorRejectedCorrection(receipt: GoodsReceipt) {
+  return getLatestCorrectionActivityText(receipt).includes('supervisor rejected');
+}
+
+function isQcRejectedCorrection(receipt: GoodsReceipt) {
+  return getLatestCorrectionActivityText(receipt).includes('qc rejected');
+}
+
+export function isQcRejectedReceipt(receipt: GoodsReceipt) {
+  return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || isQcRejectedCorrection(receipt);
+}
+
+function isRejectedReceipt(receipt: GoodsReceipt) {
+  return isSupervisorRejectedCorrection(receipt) || isQcRejectedReceipt(receipt);
+}
+
+function hasActivityMatch(receipt: GoodsReceipt, text: string) {
+  return receipt.activities.some((activity) =>
+    `${activity.title || ''} ${activity.description || ''}`.trim().toLowerCase().includes(text)
+  );
+}
+
+function hasSupervisorRejectedHistory(receipt: GoodsReceipt) {
+  return hasActivityMatch(receipt, 'supervisor rejected');
+}
+
+function hasQcRejectedHistory(receipt: GoodsReceipt) {
+  return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || hasActivityMatch(receipt, 'qc rejected');
+}
+
+function hasRejectedHistory(receipt: GoodsReceipt) {
+  return hasSupervisorRejectedHistory(receipt) || hasQcRejectedHistory(receipt);
 }
 
 export function getReceiptDisplayStatus(receipt: GoodsReceipt) {
@@ -398,47 +442,4 @@ export function mapProcessStateToLegacyStatus(state: InboundProcessState): Legac
   }
 }
 
-// Helpers
-function getLatestCorrectionActivityText(receipt: GoodsReceipt) {
-  const latestCorrectionActivity =
-    [...receipt.activities].reverse().find((activity) => activity.processState === receipt.processState) ??
-    [...receipt.activities]
-      .reverse()
-      .find((activity) => `${activity.title || ''} ${activity.description || ''}`.trim().length > 0);
 
-  return `${latestCorrectionActivity?.title || ''} ${latestCorrectionActivity?.description || ''}`.trim().toLowerCase();
-}
-
-function hasActivityMatch(receipt: GoodsReceipt, text: string) {
-  return receipt.activities.some((activity) =>
-    `${activity.title || ''} ${activity.description || ''}`.trim().toLowerCase().includes(text)
-  );
-}
-
-function hasRejectedHistory(receipt: GoodsReceipt) {
-  return hasSupervisorRejectedHistory(receipt) || hasQcRejectedHistory(receipt);
-}
-
-function isRejectedReceipt(receipt: GoodsReceipt) {
-  return isSupervisorRejectedCorrection(receipt) || isQcRejectedReceipt(receipt);
-}
-
-export function isQcRejectedReceipt(receipt: GoodsReceipt) {
-  return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || isQcRejectedCorrection(receipt);
-}
-
-function isSupervisorRejectedCorrection(receipt: GoodsReceipt) {
-  return getLatestCorrectionActivityText(receipt).includes('supervisor rejected');
-}
-
-function isQcRejectedCorrection(receipt: GoodsReceipt) {
-  return getLatestCorrectionActivityText(receipt).includes('qc rejected');
-}
-
-function hasSupervisorRejectedHistory(receipt: GoodsReceipt) {
-  return hasActivityMatch(receipt, 'supervisor rejected');
-}
-
-function hasQcRejectedHistory(receipt: GoodsReceipt) {
-  return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || hasActivityMatch(receipt, 'qc rejected');
-}

@@ -15,32 +15,6 @@ function getActivitySecondaryText(performedBy?: string) {
   return normalizedActor ? `by ${normalizedActor}` : undefined;
 }
 
-function getLatestCorrectionActivityText(receipt: GoodsReceipt) {
-  const latestCorrectionActivity =
-    [...receipt.activities].reverse().find((activity) => activity.processState === receipt.processState) ??
-    [...receipt.activities]
-      .reverse()
-      .find((activity) => getActivityText(activity).length > 0);
-
-  return getActivityText(latestCorrectionActivity).toLowerCase();
-}
-
-function isSupervisorRejectedCorrection(receipt: GoodsReceipt) {
-  return getLatestCorrectionActivityText(receipt).includes('supervisor rejected');
-}
-
-function isQcRejectedCorrection(receipt: GoodsReceipt) {
-  return getLatestCorrectionActivityText(receipt).includes('qc rejected');
-}
-
-function isQcRejectedReceipt(receipt: GoodsReceipt) {
-  return receipt.processState === 'MISMATCH_EXCEPTION' || receipt.qcResult === 'Rejected' || isQcRejectedCorrection(receipt);
-}
-
-function isRejectedReceipt(receipt: GoodsReceipt) {
-  return isSupervisorRejectedCorrection(receipt) || isQcRejectedReceipt(receipt);
-}
-
 function shouldUsePassBranchTimeline(receipt: GoodsReceipt) {
   if (!receipt.qcResult?.trim().toLowerCase().includes('pass')) {
     return false;
@@ -80,19 +54,14 @@ function isCorrectionCycleActivity(activity: GRActivity) {
   );
 }
 
-function getTimelineSourceActivities(receipt: GoodsReceipt) {
-  const normalizeActivities = (activities: GRActivity[]) =>
-    collapseDuplicateResubmissionActivities(removeStaleSkipQcAfterCorrection(activities));
+function isSkipQcActivityText(activityText: string) {
+  const normalizedText = activityText.toLowerCase();
+  return normalizedText.includes('skip qc') || normalizedText.includes('skipped qc');
+}
 
-  if (receipt.activities.some(isCorrectionCycleActivity)) {
-    return normalizeActivities(receipt.activities);
-  }
-
-  if (!shouldUsePassBranchTimeline(receipt)) {
-    return normalizeActivities(receipt.activities);
-  }
-
-  return normalizeActivities(receipt.activities.filter((activity) => !isRejectedBranchActivity(activity)));
+function isMergeActivityText(activityText: string) {
+  const normalizedText = activityText.toLowerCase();
+  return normalizedText.includes('merge') || normalizedText.includes('merged');
 }
 
 function removeStaleSkipQcAfterCorrection(activities: GRActivity[]) {
@@ -157,14 +126,19 @@ function collapseDuplicateResubmissionActivities(activities: GRActivity[]) {
   return normalizedActivities;
 }
 
-function isSkipQcActivityText(activityText: string) {
-  const normalizedText = activityText.toLowerCase();
-  return normalizedText.includes('skip qc') || normalizedText.includes('skipped qc');
-}
+function getTimelineSourceActivities(receipt: GoodsReceipt) {
+  const normalizeActivities = (activities: GRActivity[]) =>
+    collapseDuplicateResubmissionActivities(removeStaleSkipQcAfterCorrection(activities));
 
-function isMergeActivityText(activityText: string) {
-  const normalizedText = activityText.toLowerCase();
-  return normalizedText.includes('merge') || normalizedText.includes('merged');
+  if (receipt.activities.some(isCorrectionCycleActivity)) {
+    return normalizeActivities(receipt.activities);
+  }
+
+  if (!shouldUsePassBranchTimeline(receipt)) {
+    return normalizeActivities(receipt.activities);
+  }
+
+  return normalizeActivities(receipt.activities.filter((activity) => !isRejectedBranchActivity(activity)));
 }
 
 function resolveHistoricalTimelineTitle(

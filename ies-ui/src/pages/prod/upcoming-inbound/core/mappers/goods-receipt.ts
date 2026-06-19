@@ -72,6 +72,218 @@ const LEGACY_STATUS_VALUES: LegacyGRStatus[] = [
   'Correction Required',
 ];
 
+function normalizeQcDecision(value?: string | null): QcDecision | undefined {
+  switch ((value || '').trim().toLowerCase()) {
+    case 'pass':
+      return 'Pass';
+    case 'reject':
+    case 'rejected':
+    case 'on hold':
+    case 'on-hold':
+    case 'on_hold':
+      return 'Reject';
+    default:
+      return normalizeEnum(value, QC_DECISION_VALUES, undefined);
+  }
+}
+
+function mapInboundGoodsReceiptItem(item: InboundGrItemApi): UpcomingInboundGoodsReceiptItem {
+  return {
+    id: readNumber(item, 'id') ?? undefined,
+    poLineNumber: readNumber(item, 'poLineNumber', 'po_line_number') ?? undefined,
+    code: readString(item, 'code'),
+    name: readString(item, 'name'),
+    poNumber: readValue<string | null>(item, 'poNumber', 'po_number') ?? '',
+    supplier: readValue<string | null>(item, 'supplier') ?? '',
+    poQty: readNumber(item, 'poQty', 'po_qty') ?? 0,
+    receiveQty: readNumber(item, 'receiveQty', 'receive_qty') ?? 0,
+    uom: readString(item, 'uom'),
+    productDate:
+      readValue<string | null>(item, 'productDate', 'product_date') ??
+      readValue<string | null>(item, 'manufacturingDate', 'manufacturing_date') ??
+      '',
+    expiryDate:
+      readValue<string | null>(item, 'expiryDate', 'expiry_date') ??
+      readValue<string | null>(item, 'bestBeforeDate', 'best_before_date') ??
+      '',
+    batchNumber: readValue<string | null>(item, 'batchNumber', 'batch_number') ?? '',
+    barcode: readValue<string | null>(item, 'barcode') ?? '',
+    deliveryNoteNumber: readValue<string | null>(item, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
+    isMissing: readBoolean(item, 'isMissing', 'is_missing'),
+    missingRemark: readValue<string | null>(item, 'missingRemark', 'missing_remark') ?? undefined,
+    qcDecision: normalizeQcDecision(readValue<string | null>(item, 'qcDecision', 'qc_decision')),
+    qcRejectedQty: readNumber(item, 'qcRejectedQty', 'qc_rejected_qty') ?? undefined,
+    qcRemark: readValue<string | null>(item, 'qcRemark', 'qc_remark') ?? undefined,
+  };
+}
+
+function normalizeSupportingDocSource(value?: string | null): SupportingDocSource | null | undefined {
+  switch (value) {
+    case 'WAREHOUSE':
+    case 'QC':
+    case 'SUPERVISOR':
+      return value;
+    case null:
+      return null;
+    default:
+      return undefined;
+  }
+}
+
+function mapSupportingDoc(doc: SupportingDocReferenceApi): SupportingDocReference {
+  return {
+    fileId: readValue<string | null>(doc, 'fileId', 'file_id') ?? undefined,
+    fileName: readString(doc, 'fileName', 'file_name'),
+    source: normalizeSupportingDocSource(readValue<string | null>(doc, 'source')),
+    poNumber: readValue<string | null>(doc, 'poNumber', 'po_number') ?? undefined,
+  };
+}
+
+function mapInboundDocumentChecklist(
+  checklist?: InboundGrDocumentChecklistApi,
+): UpcomingInboundDocumentChecklist {
+  return {
+    vendorDN: readBoolean(checklist, 'vendorDN', 'vendor_dn'),
+    goodsReceiptPOForm: readBoolean(checklist, 'goodsReceiptPOForm', 'goods_receipt_po_form'),
+    pmrmStockCardForm: readBoolean(checklist, 'pmrmStockCardForm', 'pmrm_stock_card_form'),
+    supportingDocs: readArray<SupportingDocReferenceApi>(checklist, 'supportingDocs', 'supporting_docs').map(mapSupportingDoc),
+  };
+}
+
+function normalizeActivityState(value: string): UpcomingInboundActivity['state'] {
+  switch (value) {
+    case 'active':
+    case 'locked':
+      return value;
+    default:
+      return 'done';
+  }
+}
+
+export function mapInboundActivity(activity: InboundGrActivityApi): UpcomingInboundActivity {
+  return {
+    title: readString(activity, 'title'),
+    description: readValue<string | null>(activity, 'description') ?? readString(activity, 'title'),
+    performedBy: readValue<string | null>(activity, 'performedBy', 'performed_by') ?? undefined,
+    timestamp: formatDisplayTimestamp(readValue<string | null>(activity, 'timestamp')),
+    state: normalizeActivityState(readString(activity, 'state')),
+    processState: normalizeEnum(readString(activity, 'state'), PROCESS_STATE_VALUES, undefined),
+  };
+}
+
+function inferScenarioPath(
+  api: InboundGoodsReceiptApi,
+  processState: UpcomingInboundProcessState,
+): GRScenarioPath {
+  if (processState === 'MISMATCH_EXCEPTION') return 'MISMATCH_CORRECTION';
+  if (processState === 'CORRECTION_REQUIRED') return 'CORRECTION_LOOP';
+  if (readString(api, 'receiptSourceType', 'receipt_source_type') === 'TEMP_NO_PO' || readString(api, 'receiptType', 'receipt_type') === 'Unplanned') return 'UNPLANNED_ARRIVAL';
+  if (readString(api, 'qcResult', 'qc_result') === 'Rejected') return 'QC_REJECTED';
+  if (
+    processState === 'TRANSFERRED_TO_PM_RM_WH' ||
+    processState === 'FIN_SUBMITTED' ||
+    processState === 'DAILY_CLOSED' ||
+    processState === 'MONTHLY_SUMMARY_READY'
+  ) {
+    return 'QC_PASS_TRANSFER';
+  }
+  return 'NORMAL';
+}
+
+function scenarioNameByPath(path: GRScenarioPath): string {
+  switch (path) {
+    case 'MISMATCH_CORRECTION':
+      return 'Mismatch Correction Flow';
+    case 'UNPLANNED_ARRIVAL':
+      return 'Unplanned Inbound Receiving Flow';
+    case 'QC_REJECTED':
+      return 'QC Rejected Flow';
+    case 'QC_PASS_TRANSFER':
+      return 'QC Pass To Transfer Flow';
+    case 'CORRECTION_LOOP':
+      return 'Correction Loop Flow';
+    case 'DAILY_CLOSE':
+      return 'Daily Close Flow';
+    case 'MONTHLY_SUMMARY':
+      return 'Monthly Summary Flow';
+    default:
+      return 'Inbound Receiving Flow';
+  }
+}
+
+function scenarioStepNumber(processState: UpcomingInboundProcessState): number {
+  switch (processState) {
+    case 'GRPO_DRAFT':
+    case 'QC_PENDING':
+      return 1;
+    case 'QC_PASSED':
+    case 'PENDING_SUPERVISOR_REVIEW':
+      return 2;
+    case 'SUPERVISOR_APPROVED':
+    case 'SAP_SYNCED':
+      return 3;
+    case 'TRANSFERRED_TO_PM_RM_WH':
+    case 'FIN_SUBMITTED':
+    case 'DAILY_CLOSED':
+    case 'MONTHLY_SUMMARY_READY':
+      return 4;
+    default:
+      return 1;
+  }
+}
+
+function buildInboundScenarioMeta(
+  api: InboundGoodsReceiptApi,
+  processState: UpcomingInboundProcessState,
+  stepTitle: string,
+): GRScenarioMeta {
+  const scenarioPath = inferScenarioPath(api, processState);
+
+  return {
+    scenarioId: `LIVE-${readString(api, 'receivingNumber', 'receiving_number')}`,
+    scenarioName: scenarioNameByPath(scenarioPath),
+    scenarioPath,
+    stepNumber: scenarioStepNumber(processState),
+    totalSteps: 4,
+    stepTitle,
+  };
+}
+
+function buildFallbackPoReferences(api: InboundGoodsReceiptApi): UpcomingInboundGoodsReceipt['poReferences'] {
+  const poNumber = readValue<string | null>(api, 'poNumber', 'po_number');
+  if (!poNumber) return [];
+
+  return [
+    {
+      poNumber,
+      businessUnit: readString(api, 'businessUnit', 'business_unit'),
+      supplier: readString(api, 'supplier'),
+      expectedDate: undefined,
+      expectedTime: undefined,
+      deliveryNoteNumber: readValue<string | null>(api, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
+    },
+  ];
+}
+
+function normalizeLegacyStatus(value: string | null | undefined, processState: UpcomingInboundProcessState): LegacyGRStatus {
+  return normalizeEnum(value, LEGACY_STATUS_VALUES, mapProcessStateToLegacyStatus(processState));
+}
+
+function normalizeQcResult(value: string, processState: UpcomingInboundProcessState): UpcomingInboundGoodsReceipt['qcResult'] {
+  switch (value) {
+    case 'Pass':
+      return 'Pass';
+    case 'Rejected':
+    case 'On Hold':
+    case 'On-Hold':
+      return 'Rejected';
+    case 'Pending':
+      return 'Pending';
+    default:
+      return processState === 'SUPERVISOR_APPROVED' ? 'Pass' : 'Pending';
+  }
+}
+
 export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInboundGoodsReceipt {
   const poReferences = readArray<InboundGoodsReceiptApi['poReferences'][number]>(
     api,
@@ -190,216 +402,4 @@ export function mapInboundGoodsReceipt(api: InboundGoodsReceiptApi): UpcomingInb
 
 export function mapInboundGoodsReceipts(receipts: InboundGoodsReceiptApi[]): UpcomingInboundGoodsReceipt[] {
   return receipts.map(mapInboundGoodsReceipt);
-}
-
-function mapInboundGoodsReceiptItem(item: InboundGrItemApi): UpcomingInboundGoodsReceiptItem {
-  return {
-    id: readNumber(item, 'id') ?? undefined,
-    poLineNumber: readNumber(item, 'poLineNumber', 'po_line_number') ?? undefined,
-    code: readString(item, 'code'),
-    name: readString(item, 'name'),
-    poNumber: readValue<string | null>(item, 'poNumber', 'po_number') ?? '',
-    supplier: readValue<string | null>(item, 'supplier') ?? '',
-    poQty: readNumber(item, 'poQty', 'po_qty') ?? 0,
-    receiveQty: readNumber(item, 'receiveQty', 'receive_qty') ?? 0,
-    uom: readString(item, 'uom'),
-    productDate:
-      readValue<string | null>(item, 'productDate', 'product_date') ??
-      readValue<string | null>(item, 'manufacturingDate', 'manufacturing_date') ??
-      '',
-    expiryDate:
-      readValue<string | null>(item, 'expiryDate', 'expiry_date') ??
-      readValue<string | null>(item, 'bestBeforeDate', 'best_before_date') ??
-      '',
-    batchNumber: readValue<string | null>(item, 'batchNumber', 'batch_number') ?? '',
-    barcode: readValue<string | null>(item, 'barcode') ?? '',
-    deliveryNoteNumber: readValue<string | null>(item, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
-    isMissing: readBoolean(item, 'isMissing', 'is_missing'),
-    missingRemark: readValue<string | null>(item, 'missingRemark', 'missing_remark') ?? undefined,
-    qcDecision: normalizeQcDecision(readValue<string | null>(item, 'qcDecision', 'qc_decision')),
-    qcRejectedQty: readNumber(item, 'qcRejectedQty', 'qc_rejected_qty') ?? undefined,
-    qcRemark: readValue<string | null>(item, 'qcRemark', 'qc_remark') ?? undefined,
-  };
-}
-
-function mapInboundDocumentChecklist(
-  checklist?: InboundGrDocumentChecklistApi,
-): UpcomingInboundDocumentChecklist {
-  return {
-    vendorDN: readBoolean(checklist, 'vendorDN', 'vendor_dn'),
-    goodsReceiptPOForm: readBoolean(checklist, 'goodsReceiptPOForm', 'goods_receipt_po_form'),
-    pmrmStockCardForm: readBoolean(checklist, 'pmrmStockCardForm', 'pmrm_stock_card_form'),
-    supportingDocs: readArray<SupportingDocReferenceApi>(checklist, 'supportingDocs', 'supporting_docs').map(mapSupportingDoc),
-  };
-}
-
-function mapSupportingDoc(doc: SupportingDocReferenceApi): SupportingDocReference {
-  return {
-    fileId: readValue<string | null>(doc, 'fileId', 'file_id') ?? undefined,
-    fileName: readString(doc, 'fileName', 'file_name'),
-    source: normalizeSupportingDocSource(readValue<string | null>(doc, 'source')),
-    poNumber: readValue<string | null>(doc, 'poNumber', 'po_number') ?? undefined,
-  };
-}
-
-function normalizeSupportingDocSource(value?: string | null): SupportingDocSource | null | undefined {
-  switch (value) {
-    case 'WAREHOUSE':
-    case 'QC':
-    case 'SUPERVISOR':
-      return value;
-    case null:
-      return null;
-    default:
-      return undefined;
-  }
-}
-
-export function mapInboundActivity(activity: InboundGrActivityApi): UpcomingInboundActivity {
-  return {
-    title: readString(activity, 'title'),
-    description: readValue<string | null>(activity, 'description') ?? readString(activity, 'title'),
-    performedBy: readValue<string | null>(activity, 'performedBy', 'performed_by') ?? undefined,
-    timestamp: formatDisplayTimestamp(readValue<string | null>(activity, 'timestamp')),
-    state: normalizeActivityState(readString(activity, 'state')),
-    processState: normalizeEnum(readString(activity, 'state'), PROCESS_STATE_VALUES, undefined),
-  };
-}
-
-function buildInboundScenarioMeta(
-  api: InboundGoodsReceiptApi,
-  processState: UpcomingInboundProcessState,
-  stepTitle: string,
-): GRScenarioMeta {
-  const scenarioPath = inferScenarioPath(api, processState);
-
-  return {
-    scenarioId: `LIVE-${readString(api, 'receivingNumber', 'receiving_number')}`,
-    scenarioName: scenarioNameByPath(scenarioPath),
-    scenarioPath,
-    stepNumber: scenarioStepNumber(processState),
-    totalSteps: 4,
-    stepTitle,
-  };
-}
-
-function inferScenarioPath(
-  api: InboundGoodsReceiptApi,
-  processState: UpcomingInboundProcessState,
-): GRScenarioPath {
-  if (processState === 'MISMATCH_EXCEPTION') return 'MISMATCH_CORRECTION';
-  if (processState === 'CORRECTION_REQUIRED') return 'CORRECTION_LOOP';
-  if (readString(api, 'receiptSourceType', 'receipt_source_type') === 'TEMP_NO_PO' || readString(api, 'receiptType', 'receipt_type') === 'Unplanned') return 'UNPLANNED_ARRIVAL';
-  if (readString(api, 'qcResult', 'qc_result') === 'Rejected') return 'QC_REJECTED';
-  if (
-    processState === 'TRANSFERRED_TO_PM_RM_WH' ||
-    processState === 'FIN_SUBMITTED' ||
-    processState === 'DAILY_CLOSED' ||
-    processState === 'MONTHLY_SUMMARY_READY'
-  ) {
-    return 'QC_PASS_TRANSFER';
-  }
-  return 'NORMAL';
-}
-
-function scenarioNameByPath(path: GRScenarioPath): string {
-  switch (path) {
-    case 'MISMATCH_CORRECTION':
-      return 'Mismatch Correction Flow';
-    case 'UNPLANNED_ARRIVAL':
-      return 'Unplanned Inbound Receiving Flow';
-    case 'QC_REJECTED':
-      return 'QC Rejected Flow';
-    case 'QC_PASS_TRANSFER':
-      return 'QC Pass To Transfer Flow';
-    case 'CORRECTION_LOOP':
-      return 'Correction Loop Flow';
-    case 'DAILY_CLOSE':
-      return 'Daily Close Flow';
-    case 'MONTHLY_SUMMARY':
-      return 'Monthly Summary Flow';
-    default:
-      return 'Inbound Receiving Flow';
-  }
-}
-
-function scenarioStepNumber(processState: UpcomingInboundProcessState): number {
-  switch (processState) {
-    case 'GRPO_DRAFT':
-    case 'QC_PENDING':
-      return 1;
-    case 'QC_PASSED':
-    case 'PENDING_SUPERVISOR_REVIEW':
-      return 2;
-    case 'SUPERVISOR_APPROVED':
-    case 'SAP_SYNCED':
-      return 3;
-    case 'TRANSFERRED_TO_PM_RM_WH':
-    case 'FIN_SUBMITTED':
-    case 'DAILY_CLOSED':
-    case 'MONTHLY_SUMMARY_READY':
-      return 4;
-    default:
-      return 1;
-  }
-}
-
-function buildFallbackPoReferences(api: InboundGoodsReceiptApi): UpcomingInboundGoodsReceipt['poReferences'] {
-  const poNumber = readValue<string | null>(api, 'poNumber', 'po_number');
-  if (!poNumber) return [];
-
-  return [
-    {
-      poNumber,
-      businessUnit: readString(api, 'businessUnit', 'business_unit'),
-      supplier: readString(api, 'supplier'),
-      expectedDate: undefined,
-      expectedTime: undefined,
-      deliveryNoteNumber: readValue<string | null>(api, 'deliveryNoteNumber', 'delivery_note_number') ?? undefined,
-    },
-  ];
-}
-
-function normalizeLegacyStatus(value: string | null | undefined, processState: UpcomingInboundProcessState): LegacyGRStatus {
-  return normalizeEnum(value, LEGACY_STATUS_VALUES, mapProcessStateToLegacyStatus(processState));
-}
-
-function normalizeQcResult(value: string, processState: UpcomingInboundProcessState): UpcomingInboundGoodsReceipt['qcResult'] {
-  switch (value) {
-    case 'Pass':
-      return 'Pass';
-    case 'Rejected':
-    case 'On Hold':
-    case 'On-Hold':
-      return 'Rejected';
-    case 'Pending':
-      return 'Pending';
-    default:
-      return processState === 'SUPERVISOR_APPROVED' ? 'Pass' : 'Pending';
-  }
-}
-
-function normalizeQcDecision(value?: string | null): QcDecision | undefined {
-  switch ((value || '').trim().toLowerCase()) {
-    case 'pass':
-      return 'Pass';
-    case 'reject':
-    case 'rejected':
-    case 'on hold':
-    case 'on-hold':
-    case 'on_hold':
-      return 'Reject';
-    default:
-      return normalizeEnum(value, QC_DECISION_VALUES, undefined);
-  }
-}
-
-function normalizeActivityState(value: string): UpcomingInboundActivity['state'] {
-  switch (value) {
-    case 'active':
-    case 'locked':
-      return value;
-    default:
-      return 'done';
-  }
 }

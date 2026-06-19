@@ -58,6 +58,66 @@ const UpcomingInboundAction = {
   }),
 };
 
+function normalizeInboundUomMaster(value: InboundUomMasterApi | any): InboundUomMasterApi {
+  return {
+    id: value?.id ?? null,
+    business_unit: String(value?.business_unit ?? value?.businessUnit ?? '').trim().toUpperCase(),
+    uom_entry: value?.uom_entry ?? value?.uomEntry ?? null,
+    uom_code: value?.uom_code ?? value?.uomCode ?? value?.code ?? '',
+    uom_name:
+      value?.uom_name ?? value?.uomName ?? value?.name ?? value?.uom_code ?? value?.uomCode ?? '',
+    status: value?.status ?? 'Active',
+  };
+}
+
+function normalizeInboundSupplierMaster(
+  value: InboundSupplierMasterApi | any,
+): InboundSupplierMasterApi {
+  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
+  const supplierCode = value?.supplier_code ?? value?.supplierCode ?? value?.code ?? '';
+  const supplierName =
+    value?.supplier_name ?? value?.supplierName ?? value?.name ?? supplierCode ?? '';
+
+  return {
+    id: value?.id ?? null,
+    business_unit: String(businessUnit).trim().toUpperCase(),
+    supplier_code: String(supplierCode).trim(),
+    supplier_name: String(supplierName).trim(),
+    status: value?.status ?? 'Active',
+  };
+}
+
+function normalizeInboundWarehouseMaster(
+  value: InboundWarehouseMasterApi | any,
+): InboundWarehouseMasterApi {
+  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
+  const warehouseCode = value?.warehouse_code ?? value?.warehouseCode ?? value?.code ?? '';
+  return {
+    id: value?.id ?? null,
+    business_unit: String(businessUnit).trim().toUpperCase(),
+    warehouse_code: String(warehouseCode).trim(),
+    warehouse_name:
+      value?.warehouse_name ?? value?.warehouseName ?? value?.name ?? warehouseCode ?? '',
+    status: value?.status ?? 'Active',
+  };
+}
+
+function normalizeInboundItemMaster(value: InboundItemMasterApi | any): InboundItemMasterApi {
+  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
+  const itemCode = value?.item_code ?? value?.itemCode ?? value?.code ?? '';
+  const itemName = value?.item_name ?? value?.itemName ?? value?.name ?? itemCode ?? '';
+  const uom = value?.uom ?? value?.uom_code ?? value?.uomCode ?? '';
+
+  return {
+    id: value?.id ?? null,
+    business_unit: String(businessUnit).trim().toUpperCase(),
+    item_code: String(itemCode).trim(),
+    item_name: String(itemName).trim(),
+    uom: String(uom).trim(),
+    is_active: Boolean(value?.is_active ?? value?.isActive ?? true),
+  };
+}
+
 export const masterDataServiceAPI = (requestAction: RequestActions) => {
   return {
     syncMasterDataFromSap: async (): Promise<
@@ -166,63 +226,3 @@ export const masterDataServiceAPI = (requestAction: RequestActions) => {
     },
   };
 };
-
-function normalizeInboundUomMaster(value: InboundUomMasterApi | any): InboundUomMasterApi {
-  return {
-    id: value?.id ?? null,
-    business_unit: String(value?.business_unit ?? value?.businessUnit ?? '').trim().toUpperCase(),
-    uom_entry: value?.uom_entry ?? value?.uomEntry ?? null,
-    uom_code: value?.uom_code ?? value?.uomCode ?? value?.code ?? '',
-    uom_name:
-      value?.uom_name ?? value?.uomName ?? value?.name ?? value?.uom_code ?? value?.uomCode ?? '',
-    status: value?.status ?? 'Active',
-  };
-}
-
-function normalizeInboundSupplierMaster(
-  value: InboundSupplierMasterApi | any,
-): InboundSupplierMasterApi {
-  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
-  const supplierCode = value?.supplier_code ?? value?.supplierCode ?? value?.code ?? '';
-  const supplierName =
-    value?.supplier_name ?? value?.supplierName ?? value?.name ?? supplierCode ?? '';
-
-  return {
-    id: value?.id ?? null,
-    business_unit: String(businessUnit).trim().toUpperCase(),
-    supplier_code: String(supplierCode).trim(),
-    supplier_name: String(supplierName).trim(),
-    status: value?.status ?? 'Active',
-  };
-}
-
-function normalizeInboundWarehouseMaster(
-  value: InboundWarehouseMasterApi | any,
-): InboundWarehouseMasterApi {
-  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
-  const warehouseCode = value?.warehouse_code ?? value?.warehouseCode ?? value?.code ?? '';
-  return {
-    id: value?.id ?? null,
-    business_unit: String(businessUnit).trim().toUpperCase(),
-    warehouse_code: String(warehouseCode).trim(),
-    warehouse_name:
-      value?.warehouse_name ?? value?.warehouseName ?? value?.name ?? warehouseCode ?? '',
-    status: value?.status ?? 'Active',
-  };
-}
-
-function normalizeInboundItemMaster(value: InboundItemMasterApi | any): InboundItemMasterApi {
-  const businessUnit = value?.business_unit ?? value?.businessUnit ?? '';
-  const itemCode = value?.item_code ?? value?.itemCode ?? value?.code ?? '';
-  const itemName = value?.item_name ?? value?.itemName ?? value?.name ?? itemCode ?? '';
-  const uom = value?.uom ?? value?.uom_code ?? value?.uomCode ?? '';
-
-  return {
-    id: value?.id ?? null,
-    business_unit: String(businessUnit).trim().toUpperCase(),
-    item_code: String(itemCode).trim(),
-    item_name: String(itemName).trim(),
-    uom: String(uom).trim(),
-    is_active: Boolean(value?.is_active ?? value?.isActive ?? true),
-  };
-}

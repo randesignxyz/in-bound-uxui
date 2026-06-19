@@ -9,8 +9,7 @@ import dayjs from 'dayjs';
 import { getPurchaseOrderReceiptState, type PurchaseOrder, type POItem, type GoodsReceipt } from '../../../core/workflow';
 
 import type { InboundWarehouseMasterApi } from '../../../core/type';
-import { simpleRequestActions } from '@/services/model';
-import { UpcomingInboundServiceAPI } from '../../../api/service';
+import { upcomingInboundService } from '../../../api/service';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -80,8 +79,7 @@ export function PODetailSidebar({
 
   const [fetchedActivities, setFetchedActivities] = useState<any[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
-  const requestActions = simpleRequestActions();
-  const services = UpcomingInboundServiceAPI(requestActions);
+  const services = upcomingInboundService;
 
   useEffect(() => {
     if (isAuditModalOpen && currentPO?.poNumber) {
@@ -97,7 +95,7 @@ export function PODetailSidebar({
           setActivitiesLoading(false);
         });
     }
-  }, [isAuditModalOpen, currentPO?.poNumber]);
+  }, [isAuditModalOpen, currentPO?.poNumber, services]);
 
   if (!currentPO) return null;
 

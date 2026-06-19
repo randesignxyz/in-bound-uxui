@@ -1,14 +1,11 @@
 import { useAccess } from '@umijs/max';
-import { simpleRequestActions } from '@/services/model';
-import { UpcomingInboundServiceAPI } from '../api/service';
+import { upcomingInboundService } from '../api/service';
 import { useInboundContext } from './InboundProvider';
 
 export function useInboundWorkspace() {
   const context = useInboundContext();
   const access = useAccess();
-  const requestActions = simpleRequestActions();
-  const services = UpcomingInboundServiceAPI(requestActions);
-
+  const services = upcomingInboundService;
 
   const {
     isInboundAdmin,
@@ -119,4 +116,3 @@ export function useInboundWorkspace() {
     services,
   };
 }
-

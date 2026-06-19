@@ -50,8 +50,7 @@ import {
 } from '../../../core/workflow';
 
 import { SupportingDocsList, SupportingDocPreviewModal } from '../../supporting-documents';
-import { simpleRequestActions } from '@/services/model';
-import { UpcomingInboundServiceAPI } from '../../../api/service';
+import { upcomingInboundService } from '../../../api/service';
 
 const { Text, Title } = Typography;
 
@@ -238,8 +237,7 @@ export function GRDetailSidebar({
 
   const [fetchedActivities, setFetchedActivities] = useState<any[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
-  const requestActions = simpleRequestActions();
-  const services = UpcomingInboundServiceAPI(requestActions);
+  const services = upcomingInboundService;
 
   useEffect(() => {
     if (isAuditModalOpen && receipt?.id) {
@@ -255,7 +253,7 @@ export function GRDetailSidebar({
           setActivitiesLoading(false);
         });
     }
-  }, [isAuditModalOpen, receipt?.id]);
+  }, [isAuditModalOpen, receipt?.id, services]);
 
   useEffect(() => {
     if (!open || !receipt) return;

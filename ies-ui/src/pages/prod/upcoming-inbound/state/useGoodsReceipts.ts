@@ -1,8 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import dayjs from 'dayjs';
 import { useInboundContext, HistoryStatusFilter, QcQueueStatusFilter, InboundWorkspaceRole } from './InboundProvider';
-import { UpcomingInboundServiceAPI } from '../api/service';
-import { simpleRequestActions } from '@/services/model';
+import { upcomingInboundService } from '../api/service';
 import type {
   UpcomingInboundGoodsReceipt as GoodsReceipt,
   InboundSaveGoodsReceiptInput,
@@ -16,8 +15,7 @@ import { getReceiptPOReferences } from '../core/workflow';
 
 export function useGoodsReceipts() {
   const context = useInboundContext();
-  const requestActions = simpleRequestActions();
-  const services = UpcomingInboundServiceAPI(requestActions);
+  const services = upcomingInboundService;
 
   const {
     activeBusinessUnitFilter,

@@ -3,16 +3,13 @@ import { message } from 'antd';
 import { useInboundContext } from './InboundProvider';
 import { usePurchaseOrders } from './usePurchaseOrders';
 import { useGoodsReceipts } from './useGoodsReceipts';
-import { UpcomingInboundServiceAPI } from '../api/service';
-import { simpleRequestActions } from '@/services/model';
+import { upcomingInboundService } from '../api/service';
 
 export function useInboundData() {
   const context = useInboundContext();
   const { loadPurchaseOrders, sharedDateRangeFilter } = usePurchaseOrders();
   const { loadReceipts, loadWarehouseSupportReceipts } = useGoodsReceipts();
-
-  const requestActions = simpleRequestActions();
-  const services = UpcomingInboundServiceAPI(requestActions);
+  const services = upcomingInboundService;
 
   const {
     isInboundAdmin,
@@ -39,6 +36,10 @@ export function useInboundData() {
     historyPagination,
     dashboardSummaryRequestIdRef,
   } = context;
+
+  const { current: poCurrentPage, pageSize: poPageSize } = poPagination;
+  const { current: queueCurrentPage, pageSize: queuePageSize } = queuePagination;
+  const { current: historyCurrentPage, pageSize: historyPageSize } = historyPagination;
 
   const buildDashboardSummaryParams = useCallback(() => ({
     businessUnit: activeBusinessUnitFilter || null,
@@ -120,13 +121,13 @@ export function useInboundData() {
 
     if (activeRole === 'WAREHOUSE_STAFF') {
       const promises: Promise<any>[] = [
-        loadPurchaseOrders(poPagination.current, poPagination.pageSize),
+        loadPurchaseOrders(poCurrentPage, poPageSize),
         loadWarehouseSupportReceipts(),
       ];
       if (effectiveInboundView === 'history') {
-        promises.push(loadReceipts('history', historyPagination.current, historyPagination.pageSize));
+        promises.push(loadReceipts('history', historyCurrentPage, historyPageSize));
       } else {
-        promises.push(loadReceipts('operations', queuePagination.current, queuePagination.pageSize));
+        promises.push(loadReceipts('operations', queueCurrentPage, queuePageSize));
       }
       await Promise.all(promises);
       return;
@@ -136,11 +137,11 @@ export function useInboundData() {
     setExceptionQueueReceipts([]);
 
     if (effectiveInboundView === 'history') {
-      await loadReceipts('history', historyPagination.current, historyPagination.pageSize);
+      await loadReceipts('history', historyCurrentPage, historyPageSize);
       return;
     }
 
-    await loadReceipts('operations', queuePagination.current, queuePagination.pageSize);
+    await loadReceipts('operations', queueCurrentPage, queuePageSize);
   }, [
     hasInboundWorkspaceAccess,
     isInboundAdmin,
@@ -152,9 +153,12 @@ export function useInboundData() {
     loadPurchaseOrders,
     loadWarehouseSupportReceipts,
     loadReceipts,
-    poPagination,
-    queuePagination,
-    historyPagination,
+    poCurrentPage,
+    poPageSize,
+    queueCurrentPage,
+    queuePageSize,
+    historyCurrentPage,
+    historyPageSize,
     setAwaitingPOLinkReceipts,
     setExceptionQueueReceipts,
   ]);
@@ -166,20 +170,21 @@ export function useInboundData() {
 
     if (activeRole === 'WAREHOUSE_STAFF') {
       const promises: Promise<any>[] = [
-        loadPurchaseOrders(poPagination.current, poPagination.pageSize),
+        loadPurchaseOrders(poCurrentPage, poPageSize),
       ];
       if (effectiveInboundView === 'history') {
-        promises.push(loadReceipts('history', historyPagination.current, historyPagination.pageSize));
+        promises.push(loadReceipts('history', historyCurrentPage, historyPageSize));
       } else {
-        promises.push(loadReceipts('operations', queuePagination.current, queuePagination.pageSize));
+        promises.push(loadReceipts('operations', queueCurrentPage, queuePageSize));
         promises.push(loadWarehouseSupportReceipts());
       }
       await Promise.all(promises);
       return;
     }
 
-    const pagination = effectiveInboundView === 'history' ? historyPagination : queuePagination;
-    await loadReceipts(effectiveInboundView, pagination.current, pagination.pageSize);
+    const current = effectiveInboundView === 'history' ? historyCurrentPage : queueCurrentPage;
+    const pageSize = effectiveInboundView === 'history' ? historyPageSize : queuePageSize;
+    await loadReceipts(effectiveInboundView, current, pageSize);
   }, [
     hasInboundWorkspaceAccess,
     activeRole,
@@ -187,9 +192,12 @@ export function useInboundData() {
     loadPurchaseOrders,
     loadReceipts,
     loadWarehouseSupportReceipts,
-    poPagination,
-    queuePagination,
-    historyPagination,
+    poCurrentPage,
+    poPageSize,
+    queueCurrentPage,
+    queuePageSize,
+    historyCurrentPage,
+    historyPageSize,
   ]);
 
   const syncMasterDataFromSap = useCallback(async () => {

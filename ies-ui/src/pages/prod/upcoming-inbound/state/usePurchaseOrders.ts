@@ -1,14 +1,12 @@
 import { useMemo, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { useInboundContext } from './InboundProvider';
-import { UpcomingInboundServiceAPI } from '../api/service';
-import { simpleRequestActions } from '@/services/model';
+import { upcomingInboundService } from '../api/service';
 import type { UpcomingInboundPurchaseOrder as PurchaseOrder } from '../core/type';
 
 export function usePurchaseOrders() {
   const context = useInboundContext();
-  const requestActions = simpleRequestActions();
-  const services = UpcomingInboundServiceAPI(requestActions);
+  const services = upcomingInboundService;
 
   const {
     activeBusinessUnitFilter,
@@ -35,6 +33,8 @@ export function usePurchaseOrders() {
     isSyncingPurchaseOrders,
     setIsSyncingPurchaseOrders,
   } = context;
+
+  const { current: poCurrentPage, pageSize: poPageSize } = poPagination;
 
   const sharedDateRangeFilter = useMemo<[string, string] | null>(() => {
     if (dashboardSummaryRange === 'CUSTOM') {
@@ -124,7 +124,7 @@ export function usePurchaseOrders() {
   );
 
   const loadPurchaseOrders = useCallback(
-    async (current = poPagination.current, pageSize = poPagination.pageSize) => {
+    async (current = poCurrentPage, pageSize = poPageSize) => {
       const requestId = ++purchaseOrderRequestIdRef.current;
       const poResult = await services.pagePurchaseOrders({
         criteria: {
@@ -150,8 +150,9 @@ export function usePurchaseOrders() {
       });
     },
     [
-      poPagination,
       poSearchValue,
+      poCurrentPage,
+      poPageSize,
       purchaseOrderRequestIdRef,
       services,
       buildPurchaseOrderAdvanceSearchCriteria,

@@ -6,6 +6,11 @@ import { goodsReceiptServiceAPI } from './service/goods-receipt';
 import { masterDataServiceAPI } from './service/master-data';
 import { dashboardServiceAPI } from './service/dashboard';
 
+const upcomingInboundRequestActions: RequestActions = {
+  start: undefined,
+  end: undefined,
+};
+
 export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
   return {
     ...purchaseOrderServiceAPI(requestAction),
@@ -14,3 +19,5 @@ export const UpcomingInboundServiceAPI = (requestAction: RequestActions) => {
     ...dashboardServiceAPI(requestAction),
   };
 };
+
+export const upcomingInboundService = UpcomingInboundServiceAPI(upcomingInboundRequestActions);

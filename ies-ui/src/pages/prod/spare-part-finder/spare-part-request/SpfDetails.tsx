@@ -43,6 +43,7 @@ interface DrawerViewItemProps {
     categoryId?: number;
     isActive?: boolean;
     warehouseCode?: string;
+    businessUnit?: string;
     rack?: string;
     shelve?: string;
     level?: string;
@@ -55,6 +56,7 @@ type DetailLocation = {
   inventoryId?: number | null;
   warehouseCode?: string;
   warehouseName?: string;
+  businessUnit?: string;
   level?: string;
   shelve?: string;
   rack?: string;
@@ -159,6 +161,7 @@ export default function SpfDetails({
     typeof availableStock === 'number' && Number.isFinite(availableStock) ? availableStock : null;
   const stockBadge = normalizedAvailableStock === null ? null : getStockBadge(normalizedAvailableStock);
   const displayCategory = data?.category || '-';
+  const displayBusinessUnit = firstLocation?.businessUnit || data?.businessUnit || '-';
   const displayWarehouse =
     firstLocation?.warehouseCode ||
     firstLocation?.warehouseName ||
@@ -215,6 +218,7 @@ export default function SpfDetails({
         categoryId: values.categoryId,
         isActive: data.isActive ?? true,
         warehouseCode: firstLocation?.warehouseCode || data.warehouse || undefined,
+        businessUnit: displayBusinessUnit && displayBusinessUnit !== '-' ? displayBusinessUnit : undefined,
         rack: String(values.rack || '').trim() || undefined,
         shelve: String(values.shelve || '').trim() || undefined,
         level: String(values.level || '').trim() || undefined,
@@ -607,7 +611,7 @@ export default function SpfDetails({
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
                     <Text style={{ color: '#8c8c8c' }}>Business Unit</Text>
-                    <Text>{data?.businessUnit || '-'}</Text>
+                    <Text>{displayBusinessUnit}</Text>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
                     <Text style={{ color: '#8c8c8c' }}>Kind</Text>
@@ -746,7 +750,7 @@ export default function SpfDetails({
           <Row gutter={[12, 12]}>
             <Col xs={24} md={12} xl={8}>{renderReadOnlyField('Part Code', data?.productId)}</Col>
             <Col xs={24} md={12} xl={8}>{renderReadOnlyField('UOM', displayUom)}</Col>
-            <Col xs={24} md={12} xl={8}>{renderReadOnlyField('Business Unit', data?.businessUnit)}</Col>
+            <Col xs={24} md={12} xl={8}>{renderReadOnlyField('Business Unit', displayBusinessUnit)}</Col>
             <Col xs={24} md={12} xl={8}>{renderReadOnlyField('Warehouse', displayWarehouse)}</Col>
           </Row>
 
@@ -824,3 +828,4 @@ export default function SpfDetails({
     </>
   );
 }
+

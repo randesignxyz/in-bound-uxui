@@ -67,6 +67,7 @@ export interface SparePartRequestItem {
     inventoryId?: number | null;
     warehouseCode: string;
     warehouseName?: string;
+    businessUnit?: string;
     level: string;
     shelve: string;
     rack: string;
@@ -109,3 +110,4 @@ export interface MyRequestItem {
 //                   Return
 // =======================================
 export type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'completed return' | 'partial return'
+

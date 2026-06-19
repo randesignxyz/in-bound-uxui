@@ -1,17 +1,23 @@
+import React from 'react';
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
+
 import { ProdPaths } from '@/pages/prod';
-import InboundProcurementList from './inboundprocurementlist';
+import ProcurementWorkspace from './workspaces/ProcurementWorkspace';
+import { InboundProvider } from './state';
 
 export default () => {
   return (
-    <CrudWrapper baseURL={`${ProdPaths.upcomingInbound}/procurement`}>
-      {(view) => {
-        const procurementView = view === 'list' ? 'list' : 'list';
-        if (procurementView === 'list') {
-          return <InboundProcurementList />;
-        }
-        return <InboundProcurementList />;
-      }}
-    </CrudWrapper>
+    <InboundProvider>
+      <CrudWrapper baseURL={`${ProdPaths.upcomingInbound}/procurement`}>
+        {(view) => {
+          const procurementView = view === 'list' ? 'list' : 'list';
+          if (procurementView === 'list') {
+            return <ProcurementWorkspace />;
+          }
+          return <ProcurementWorkspace />;
+        }}
+      </CrudWrapper>
+    </InboundProvider>
   );
 }
+

@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IES - Purchase Order</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-gold: #B49A00;
+      --primary-gold-hover: #9A8400;
+      --primary-gold-light: #fffdf0;
+      --primary-gold-border: #faad14;
+      
+      --topbar-gold: #e6c84f;
+      --topbar-gold-dark: #cbb038;
+      
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      
+      --border-color: #f0f0f0;
+      --border-input: #d9d9d9;
+      --border-table: #f5f5f5;
+      
+      --text-main: rgba(0, 0, 0, 0.88);
+      --text-secondary: rgba(0, 0, 0, 0.65);
+      --text-muted: rgba(0, 0, 0, 0.45);
+      --text-link: #1890ff;
+      
+      --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      font-size: 14px;
+      line-height: 1.5715;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Top App Bar */
+    .top-navbar {
+      height: 48px;
+      background: #e5cb5b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      color: #333333;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+    }
+
+    .nav-left svg {
+      color: #333333;
+    }
+
+    .badge-prod {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.3);
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: #333333;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #3b82f6;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    /* Page Container */
+    .page-wrapper {
+      padding: 16px 24px 32px;
+      max-width: 1720px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Breadcrumbs & Role Selector */
+    .top-action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .breadcrumbs {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .breadcrumbs a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .breadcrumbs span.current {
+      color: var(--text-secondary);
+    }
+
+    .role-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 32px;
+      padding: 0 12px;
+      background: #ffffff;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-main);
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    /* Title & Page Actions */
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .title-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-refresh {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 14px;
+      background: #ffffff;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-refresh:hover {
+      border-color: var(--primary-gold);
+      color: var(--primary-gold);
+    }
+
+    .btn-export {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 16px;
+      background: var(--primary-gold);
+      border: 1px solid var(--primary-gold);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      cursor: pointer;
+      outline: none;
+      box-shadow: none;
+      transition: all 0.2s;
+    }
+
+    .btn-export:hover, .btn-export:focus, .btn-export:active, .btn-export:focus-visible {
+      background: var(--primary-gold-hover);
+      border-color: var(--primary-gold-hover);
+      outline: none;
+      box-shadow: none;
+    }
+
+    /* KPI Summary Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .kpi-box {
+      background: #ffffff;
+      border: 1px solid #f0f0f0;
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 96px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+    }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .kpi-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .icon-blue { background: #e6f4ff; color: #1677ff; }
+    .icon-amber { background: #fffbe6; color: #faad14; }
+    .icon-purple { background: #f9f0ff; color: #722ed1; }
+    .icon-red { background: #fff2f0; color: #ff4d4f; }
+    .icon-green { background: #f6ffed; color: #52c41a; }
+
+    .kpi-number {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .kpi-blue { color: #1677ff; }
+    .kpi-amber { color: #faad14; }
+    .kpi-purple { color: #722ed1; }
+    .kpi-red { color: #ff4d4f; }
+    .kpi-green { color: #52c41a; }
+    .kpi-zero { color: #94a3b8 !important; }
+
+    /* Filter Form Card */
+    .filter-card {
+      background: #ffffff;
+      border: 1px solid #f0f0f0;
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-card);
+      display: grid;
+      grid-template-columns: 260px 180px 180px 200px 240px;
+      gap: 16px;
+      align-items: flex-end;
+    }
+
+    .form-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrapper svg {
+      position: absolute;
+      left: 10px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 34px;
+      padding: 4px 11px 4px 30px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 13.5px;
+      color: var(--text-main);
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--primary-gold);
+      box-shadow: 0 0 0 2px rgba(180, 154, 0, 0.15);
+    }
+
+    .form-select {
+      width: 100%;
+      height: 34px;
+      padding: 4px 11px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 13.5px;
+      color: var(--text-main);
+      background: #ffffff;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .date-input-wrap {
+      display: flex;
+      align-items: center;
+      height: 34px;
+      padding: 4px 11px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+      justify-content: space-between;
+      background: #ffffff;
+    }
+
+    /* Main Table Container */
+    .table-container {
+      background: #ffffff;
+      border: 1px solid #f0f0f0;
+      border-radius: 10px;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    /* Tab Header & View Switcher */
+    .tabs-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .tabs-list {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 2px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--primary-gold);
+      font-weight: 600;
+      border-bottom-color: var(--primary-gold);
+    }
+
+    .tab-count-badge {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 10px;
+      background: #f5f5f5;
+      color: var(--text-muted);
+    }
+
+    .tab-btn.active .tab-count-badge {
+      background: #B49A00;
+      color: #ffffff;
+    }
+
+    .view-toggle {
+      display: flex;
+      background: #f5f5f5;
+      padding: 2px;
+      border-radius: 6px;
+      gap: 2px;
+    }
+
+    .view-toggle button {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .view-toggle button.active {
+      background: var(--primary-gold);
+      color: #ffffff;
+    }
+
+    /* Table */
+    table.po-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    table.po-table thead th {
+      background: #fafafa;
+      padding: 12px 16px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid #f0f0f0;
+      white-space: nowrap;
+    }
+
+    table.po-table tbody td {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-main);
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+
+    table.po-table tbody tr:hover {
+      background: #fafafa;
+    }
+
+    .po-link {
+      color: #1677ff;
+      font-weight: 500;
+      text-decoration: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    .po-link:hover {
+      text-decoration: underline;
+    }
+
+    .vendor-code {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+      font-size: 12.5px;
+    }
+
+    .vendor-name {
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .date-text {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .amount-text {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .btn-create-ir {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      padding: 0 12px;
+      border: 1px solid #faad14;
+      background: #ffffff;
+      border-radius: 4px;
+      color: #d48806;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      box-shadow: none;
+      transition: all 0.2s;
+    }
+
+    .btn-create-ir:hover, .btn-create-ir:focus, .btn-create-ir:active {
+      background: #fffbe6;
+      border-color: #d48806;
+      outline: none;
+      box-shadow: none;
+    }
+
+    /* Table Footer & Pagination */
+    .table-footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .page-item {
+      min-width: 28px;
+      height: 28px;
+      padding: 0 6px;
+      border-radius: 4px;
+      border: 1px solid #d9d9d9;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .page-item.active {
+      background: var(--primary-gold);
+      border-color: var(--primary-gold);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .page-item.disabled {
+      color: #d9d9d9;
+      border-color: #f0f0f0;
+      cursor: not-allowed;
+    }
+
+    /* Floating Settings Gear */
+    .floating-gear {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      background: var(--primary-gold);
+      color: #ffffff;
+      border-radius: 6px 0 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Yellow Navigation Bar -->
+  <nav class="top-navbar">
+    <div class="nav-left">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path fill="#fff" d="M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/></svg>
+      <span>IES</span>
+      <span class="badge-prod">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4"/></svg>
+        PROD
+      </span>
+    </div>
+
+    <div class="nav-right">
+      <div class="user-profile">
+        <div class="avatar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <span>Static Dev</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Body -->
+  <div class="page-wrapper">
+    
+    <!-- Breadcrumbs & Role Selector -->
+    <div class="top-action-bar">
+      <div class="breadcrumbs">
+        <a href="#">Home</a>
+        <span>/</span>
+        <span class="current">Inbound Logistics Hub</span>
+      </div>
+
+      <button class="role-btn">
+        <span style="color: var(--text-muted); font-size: 12px;">Role:</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <strong>Procurement</strong>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- Title & Action Buttons -->
+    <div class="title-row">
+      <h1 class="page-title">Purchase Order</h1>
+
+      <div class="title-actions">
+        <button class="btn-refresh">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+
+        <button class="btn-export">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+    </div>
+
+    <!-- 5 KPI Summary Cards -->
+    <div class="kpi-row">
+      <!-- Card 1 -->
+      <div class="kpi-box">
+        <div class="kpi-header">
+          <span class="kpi-title">Open POs</span>
+          <div class="kpi-icon icon-blue">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+        </div>
+        <div class="kpi-number kpi-blue">10</div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="kpi-box">
+        <div class="kpi-header">
+          <span class="kpi-title">In Progress</span>
+          <div class="kpi-icon icon-amber" style="background: #f1f5f9; color: #94a3b8;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          </div>
+        </div>
+        <div class="kpi-number kpi-zero">0</div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="kpi-box">
+        <div class="kpi-header">
+          <span class="kpi-title">IR Schedules</span>
+          <div class="kpi-icon icon-purple" style="background: #f1f5f9; color: #94a3b8;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+        </div>
+        <div class="kpi-number kpi-zero">0</div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="kpi-box">
+        <div class="kpi-header">
+          <span class="kpi-title">QC Rejected</span>
+          <div class="kpi-icon icon-red" style="background: #f1f5f9; color: #94a3b8;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+        </div>
+        <div class="kpi-number kpi-zero">0</div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="kpi-box">
+        <div class="kpi-header">
+          <span class="kpi-title">Closed / History</span>
+          <div class="kpi-icon icon-green" style="background: #f1f5f9; color: #94a3b8;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+        </div>
+        <div class="kpi-number kpi-zero">0</div>
+      </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="filter-card">
+      <div class="form-item">
+        <label class="form-label">Search</label>
+        <div class="input-wrapper">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="form-input" placeholder="Search PO #, Vendor, Item...">
+        </div>
+      </div>
+
+      <div class="form-item">
+        <label class="form-label">Planning Status</label>
+        <select class="form-select">
+          <option>All Planning</option>
+          <option>Not Planned</option>
+          <option>Partially Planned</option>
+          <option>Fully Planned</option>
+        </select>
+      </div>
+
+      <div class="form-item">
+        <label class="form-label">PO Status</label>
+        <select class="form-select">
+          <option>All PO</option>
+          <option>Open</option>
+          <option>In Progress</option>
+          <option>Closed</option>
+        </select>
+      </div>
+
+      <div class="form-item">
+        <label class="form-label">Vendor</label>
+        <select class="form-select">
+          <option>All Vendor</option>
+          <option>OjiCans Co. Ltd</option>
+          <option>K-A Super Industries</option>
+          <option>Sichuan HK Printing Co.</option>
+          <option>Brenntag Pte Ltd</option>
+          <option>Brenntag Vietnam Co., Ltd.</option>
+          <option>CAM GSM PLC</option>
+          <option>Cancold Service Co., Ltd</option>
+          <option>CHIANGRAI FOOD CO., LTD.</option>
+          <option>UNICO VINA JOINT STOCK COMPANY</option>
+        </select>
+      </div>
+
+      <div class="form-item">
+        <label class="form-label">Date Range</label>
+        <div class="date-input-wrap">
+          <span>Start Date  →  End Date</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="table-container">
+      
+      <!-- Tabs Bar & View Switcher -->
+      <div class="tabs-header-bar">
+        <div class="tabs-list">
+          <div class="tab-btn active">
+            <span>Open POs</span>
+            <span class="tab-count-badge">10</span>
+          </div>
+          <div class="tab-btn">
+            <span>In Progress</span>
+            <span class="tab-count-badge">0</span>
+          </div>
+          <div class="tab-btn">
+            <span>IR Schedules</span>
+            <span class="tab-count-badge">0</span>
+          </div>
+          <div class="tab-btn">
+            <span>QC Rejected</span>
+            <span class="tab-count-badge">0</span>
+          </div>
+          <div class="tab-btn">
+            <span>Closed / History</span>
+            <span class="tab-count-badge">0</span>
+          </div>
+        </div>
+
+        <div class="view-toggle">
+          <button class="active">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+          <button>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <table class="po-table">
+        <thead>
+          <tr>
+            <th>PO # (DocNum)</th>
+            <th>Vendor Code</th>
+            <th>Vendor</th>
+            <th>Doc Date</th>
+            <th>Delivery Date</th>
+            <th>Total Amount</th>
+            <th style="text-align: right; padding-right: 24px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Row 1 -->
+          <tr>
+            <td><a href="#" class="po-link">26000977</a></td>
+            <td><span class="vendor-code">V0000074</span></td>
+            <td><span class="vendor-name">OjiCans Co. Ltd</span></td>
+            <td><span class="date-text">2026-08-22</span></td>
+            <td><span class="date-text">2026-08-27</span></td>
+            <td><span class="amount-text">$8,500</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+
+          <!-- Row 2 -->
+          <tr>
+            <td><a href="#" class="po-link">26000978</a></td>
+            <td><span class="vendor-code">V0000074</span></td>
+            <td><span class="vendor-name">OjiCans Co. Ltd</span></td>
+            <td><span class="date-text">2026-08-23</span></td>
+            <td><span class="date-text">2026-08-28</span></td>
+            <td><span class="amount-text">$8,200</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+
+          <!-- Row 3 -->
+          <tr>
+            <td><a href="#" class="po-link">26000979</a></td>
+            <td><span class="vendor-code">V0000001</span></td>
+            <td><span class="vendor-name">K-A Super Industries</span></td>
+            <td><span class="date-text">2026-08-24</span></td>
+            <td><span class="date-text">2026-08-29</span></td>
+            <td><span class="amount-text">$9,500</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+
+          <!-- Row 4 -->
+          <tr>
+            <td><a href="#" class="po-link">26000980</a></td>
+            <td><span class="vendor-code">V0000004</span></td>
+            <td><span class="vendor-name">Sichuan HK Printing Co.</span></td>
+            <td><span class="date-text">2026-08-24</span></td>
+            <td><span class="date-text">2026-08-30</span></td>
+            <td><span class="amount-text">$11,200</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+
+          <!-- Row 5 -->
+          <tr>
+            <td><a href="#" class="po-link">26000981</a></td>
+            <td><span class="vendor-code">V0000005</span></td>
+            <td><span class="vendor-name">Brenntag Pte Ltd</span></td>
+            <td><span class="date-text">2026-08-25</span></td>
+            <td><span class="date-text">2026-08-31</span></td>
+            <td><span class="amount-text">$14,600</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+
+          <!-- Row 6 -->
+          <tr>
+            <td><a href="#" class="po-link">26000982</a></td>
+            <td><span class="vendor-code">V0000006</span></td>
+            <td><span class="vendor-name">Brenntag Vietnam Co., Ltd.</span></td>
+            <td><span class="date-text">2026-08-26</span></td>
+            <td><span class="date-text">2026-09-01</span></td>
+            <td><span class="amount-text">$7,000</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+
+          <!-- Row 7 -->
+          <tr>
+            <td><a href="#" class="po-link">26000983</a></td>
+            <td><span class="vendor-code">V0000007</span></td>
+            <td><span class="vendor-name">CAM GSM PLC</span></td>
+            <td><span class="date-text">2026-08-26</span></td>
+            <td><span class="date-text">2026-09-02</span></td>
+            <td><span class="amount-text">$6,900</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+
+          <!-- Row 8 -->
+          <tr>
+            <td><a href="#" class="po-link">26000984</a></td>
+            <td><span class="vendor-code">V0000008</span></td>
+            <td><span class="vendor-name">Cancold Service Co., Ltd</span></td>
+            <td><span class="date-text">2026-08-26</span></td>
+            <td><span class="date-text">2026-09-03</span></td>
+            <td><span class="amount-text">$8,400</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+
+          <!-- Row 9 -->
+          <tr>
+            <td><a href="#" class="po-link">26000985</a></td>
+            <td><span class="vendor-code">V0000009</span></td>
+            <td><span class="vendor-name">CHIANGRAI FOOD CO., LTD.</span></td>
+            <td><span class="date-text">2026-08-27</span></td>
+            <td><span class="date-text">2026-09-04</span></td>
+            <td><span class="amount-text">$10,500</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+
+          <!-- Row 10 -->
+          <tr>
+            <td><a href="#" class="po-link">26000986</a></td>
+            <td><span class="vendor-code">V0000010</span></td>
+            <td><span class="vendor-name">UNICO VINA JOINT STOCK COMPANY</span></td>
+            <td><span class="date-text">2026-08-27</span></td>
+            <td><span class="date-text">2026-09-05</span></td>
+            <td><span class="amount-text">$12,000</span></td>
+            <td style="text-align: right; padding-right: 24px;">
+              <button class="btn-create-ir">Create IR</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Table Footer & Pagination -->
+      <div class="table-footer-bar">
+        <span>Showing 1-10 of 10 entries</span>
+
+        <div class="pagination-bar">
+          <div class="page-item disabled">&lt;</div>
+          <div class="page-item active">1</div>
+          <div class="page-item disabled">&gt;</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Floating Settings Widget -->
+  <div class="floating-gear">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </div>
+
+</body>
+</html>

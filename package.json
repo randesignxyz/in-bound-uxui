@@ -4,6 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "npm --prefix inbound-ui run dev",
+    "dev:inbound": "npm --prefix inbound-ui run dev",
+    "dev:delivery": "npm --prefix delivery-ui run dev",
+    "build:inbound": "npm --prefix inbound-ui run build",
+    "build:delivery": "npm --prefix delivery-ui run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,7 +24,7 @@
   "dependencies": {
     "@ant-design/pro-editor": "^1.3.0",
     "antd": "^5.22.2",
-    "antd-style": "^4.1.0",
+    "antd-style": "^3.7.1",
     "axios": "^1.10.0",
     "browser-image-compression": "^2.0.2",
     "firebase": "^11.10.0",

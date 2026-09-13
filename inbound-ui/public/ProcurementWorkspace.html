@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Procurement Workspace - Inbound Logistics UI</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #B49A00;
+      --primary-hover: #9A8400;
+      --primary-light: #fefce8;
+      --primary-border: #fef08a;
+      
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-subtle: #f9fafb;
+      
+      --border-color: #e5e7eb;
+      --border-light: #f1f5f9;
+      --border-focus: #B49A00;
+      
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --text-white: #ffffff;
+      
+      --status-success: #10b981;
+      --status-success-bg: #ecfdf5;
+      --status-success-border: #a7f3d0;
+      
+      --status-warning: #f59e0b;
+      --status-warning-bg: #fffbeb;
+      --status-warning-border: #fde68a;
+      
+      --status-danger: #ef4444;
+      --status-danger-bg: #fef2f2;
+      --status-danger-border: #fecaca;
+      
+      --status-info: #3b82f6;
+      --status-info-bg: #eff6ff;
+      --status-info-border: #bfdbfe;
+      
+      --status-purple: #8b5cf6;
+      --status-purple-bg: #f5f3ff;
+      --status-purple-border: #ddd6fe;
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding: 24px 32px;
+    }
+
+    .container {
+      max-width: 1560px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Top Navigation / Breadcrumbs */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .breadcrumbs span.active {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .view-switcher {
+      display: flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: var(--radius-md);
+      gap: 2px;
+    }
+
+    .view-switcher button {
+      padding: 4px 12px;
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .view-switcher button.active {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Header Section */
+    .workspace-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 4px;
+    }
+
+    .header-info h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .header-info p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 38px;
+      padding: 0 16px;
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      border-color: var(--border-color);
+      color: var(--text-main);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-surface-subtle);
+      border-color: #cbd5e1;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--text-white);
+      box-shadow: 0 2px 4px rgba(180, 154, 0, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    /* KPI Summary Row */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .kpi-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .kpi-icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .icon-blue { background: #eff6ff; color: #2563eb; }
+    .icon-amber { background: #fffbeb; color: #d97706; }
+    .icon-purple { background: #faf5ff; color: #9333ea; }
+    .icon-green { background: #ecfdf5; color: #059669; }
+    .icon-red { background: #fef2f2; color: #dc2626; }
+
+    .kpi-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-subtext {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .kpi-subtext strong {
+      color: var(--text-secondary);
+    }
+
+    /* Main Table & Filter Card */
+    .content-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Tabs Bar */
+    .tabs-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 20px;
+      background: var(--bg-surface);
+      gap: 24px;
+    }
+
+    .tab-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 4px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .tab-item.active {
+      color: var(--text-main);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 12px;
+      background: #f1f5f9;
+      color: var(--text-secondary);
+    }
+
+    .tab-item.active .tab-badge {
+      background: var(--primary-light);
+      color: var(--primary-hover);
+      border: 1px solid var(--primary-border);
+    }
+
+    /* Filter & Search Bar */
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-light);
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .search-box {
+      position: relative;
+      width: 320px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .search-input {
+      width: 100%;
+      height: 36px;
+      padding: 0 36px 0 34px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(180, 154, 0, 0.15);
+    }
+
+    .kbd-shortcut {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10.5px;
+      font-weight: 600;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 2px 5px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .select-dropdown {
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .filter-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Table Styles */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    thead th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border-light);
+      transition: background 0.15s ease;
+    }
+
+    tbody tr:hover {
+      background: #fbfcfe;
+    }
+
+    tbody td {
+      padding: 14px 16px;
+      font-size: 13.5px;
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .po-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .po-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: #1e40af;
+      font-size: 13px;
+    }
+
+    .po-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .vendor-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .vendor-name {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .vendor-code {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .badge-unplanned {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    .badge-unplanned .badge-dot { background: #64748b; }
+
+    .badge-partial {
+      background: var(--status-warning-bg);
+      color: #b45309;
+      border: 1px solid var(--status-warning-border);
+    }
+    .badge-partial .badge-dot { background: var(--status-warning); }
+
+    .badge-planned {
+      background: var(--status-success-bg);
+      color: #047857;
+      border: 1px solid var(--status-success-border);
+    }
+    .badge-planned .badge-dot { background: var(--status-success); }
+
+    .badge-intransit {
+      background: var(--status-info-bg);
+      color: #1d4ed8;
+      border: 1px solid var(--status-info-border);
+    }
+    .badge-intransit .badge-dot { background: var(--status-info); }
+
+    .badge-rejected {
+      background: var(--status-danger-bg);
+      color: #b91c1c;
+      border: 1px solid var(--status-danger-border);
+    }
+    .badge-rejected .badge-dot { background: var(--status-danger); }
+
+    /* Quantity Progress */
+    .qty-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 140px;
+    }
+
+    .qty-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .qty-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .qty-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .fill-green { background: #10b981; }
+    .fill-amber { background: #f59e0b; }
+    .fill-blue { background: #3b82f6; }
+
+    /* Action Buttons in Row */
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .action-btn {
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .action-btn:hover {
+      background: var(--bg-surface-subtle);
+      border-color: #cbd5e1;
+      color: var(--text-main);
+    }
+
+    .action-btn.primary {
+      background: #fefce8;
+      border-color: #fef08a;
+      color: #854d0e;
+    }
+
+    .action-btn.primary:hover {
+      background: #fef9c3;
+      border-color: #fde047;
+    }
+
+    /* Table Footer Pagination */
+    .table-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-light);
+      background: #fbfcfe;
+    }
+
+    .footer-left {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--text-white);
+    }
+
+    .page-btn:hover:not(.active) {
+      background: var(--bg-surface-subtle);
+    }
+
+    /* Schedule Drawer Mockup (Visual Layer for Figma capture) */
+    .drawer-preview {
+      margin-top: 24px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 20px;
+    }
+
+    .drawer-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .schedule-form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .form-control {
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      color: var(--text-main);
+      background: var(--bg-surface);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Bar & Breadcrumbs -->
+    <div class="top-bar">
+      <div class="breadcrumbs">
+        <span>Inbound Management</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        <span class="active">Procurement Workspace</span>
+      </div>
+
+      <div class="view-switcher">
+        <button class="active">Workspace V2</button>
+        <button>Workspace V1</button>
+      </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="workspace-header">
+      <div class="header-info">
+        <h1>Procurement Workspace</h1>
+        <p>Manage purchase orders, create inbound delivery schedules (IR Plans), and track goods receipt progress.</p>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+
+        <button class="btn btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+
+        <button class="btn btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          + Create Inbound Schedule
+        </button>
+      </div>
+    </header>
+
+    <!-- KPI Summary Row -->
+    <section class="kpi-grid">
+      <!-- KPI 1 -->
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">Open POs</span>
+          <div class="kpi-icon-wrap icon-blue">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value">48</div>
+        <div class="kpi-subtext"><strong>12</strong> awaiting scheduling</div>
+      </div>
+
+      <!-- KPI 2 -->
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">Pending IR Plans</span>
+          <div class="kpi-icon-wrap icon-amber">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value">19</div>
+        <div class="kpi-subtext"><strong>5</strong> arriving this week</div>
+      </div>
+
+      <!-- KPI 3 -->
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">In-Transit Shipments</span>
+          <div class="kpi-icon-wrap icon-purple">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value">14</div>
+        <div class="kpi-subtext"><strong>8</strong> at destination port</div>
+      </div>
+
+      <!-- KPI 4 -->
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">GR Completed (Today)</span>
+          <div class="kpi-icon-wrap icon-green">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value">8</div>
+        <div class="kpi-subtext"><strong>100%</strong> QC cleared</div>
+      </div>
+
+      <!-- KPI 5 -->
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <span class="kpi-label">QC Issues / Hold</span>
+          <div class="kpi-icon-wrap icon-red">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value">2</div>
+        <div class="kpi-subtext">Requires procurement review</div>
+      </div>
+    </section>
+
+    <!-- Main Content Card with Tabs & Table -->
+    <div class="content-card">
+      
+      <!-- Tabs -->
+      <div class="tabs-bar">
+        <div class="tab-item active">
+          <span>Open Purchase Orders</span>
+          <span class="tab-badge">48</span>
+        </div>
+        <div class="tab-item">
+          <span>In-Progress / Scheduled</span>
+          <span class="tab-badge">19</span>
+        </div>
+        <div class="tab-item">
+          <span>IR Delivery Plans</span>
+          <span class="tab-badge">32</span>
+        </div>
+        <div class="tab-item">
+          <span>QC Issues & Holds</span>
+          <span class="tab-badge">2</span>
+        </div>
+        <div class="tab-item">
+          <span>Closed / Archived</span>
+          <span class="tab-badge">180</span>
+        </div>
+      </div>
+
+      <!-- Filter & Search Controls -->
+      <div class="filter-bar">
+        <div class="filter-left">
+          <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" placeholder="Search PO#, Vendor, Item..." value="PO-2026-">
+            <span class="kbd-shortcut">⌘K</span>
+          </div>
+
+          <select class="select-dropdown">
+            <option>All Suppliers</option>
+            <option>Crown Beverage Cans Cambodia</option>
+            <option>San Miguel Packaging</option>
+            <option>Bekaert Packaging Solutions</option>
+            <option>Krones Machinery Group</option>
+          </select>
+
+          <select class="select-dropdown">
+            <option>All Planning Status</option>
+            <option>Unplanned (Action Needed)</option>
+            <option>Partially Planned</option>
+            <option>Fully Planned</option>
+          </select>
+
+          <select class="select-dropdown">
+            <option>Delivery Window: Next 30 Days</option>
+            <option>This Week</option>
+            <option>This Month</option>
+            <option>Past Due</option>
+          </select>
+        </div>
+
+        <div class="filter-right">
+          <button class="btn btn-secondary" style="height: 36px; padding: 0 12px; font-size: 13px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            More Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Table View -->
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px;"><input type="checkbox"></th>
+              <th>PO Number & Date</th>
+              <th>Supplier / Vendor</th>
+              <th>Target Warehouse</th>
+              <th>Items & Categories</th>
+              <th>Quantity & Fulfillment</th>
+              <th>Expected Date</th>
+              <th>Status</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Row 1 -->
+            <tr>
+              <td><input type="checkbox"></td>
+              <td>
+                <div class="po-cell">
+                  <span class="po-code">PO-2026-0891</span>
+                  <span class="po-date">Created 04 Sep 2026</span>
+                </div>
+              </td>
+              <td>
+                <div class="vendor-cell">
+                  <span class="vendor-name">Crown Beverage Cans Ltd</span>
+                  <span class="vendor-code">VND-00129 • Local</span>
+                </div>
+              </td>
+              <td>
+                <strong>WH-KANDAL-01</strong>
+                <div style="font-size: 11.5px; color: var(--text-muted);">Main Plant</div>
+              </td>
+              <td>
+                <div><strong>3 Items</strong></div>
+                <div style="font-size: 12px; color: var(--text-muted);">330ml Aluminum Cans, Can Ends</div>
+              </td>
+              <td>
+                <div class="qty-cell">
+                  <div class="qty-text">
+                    <span><strong>120,000</strong> / 250,000</span>
+                    <span style="color: #b45309; font-weight: 600;">48%</span>
+                  </div>
+                  <div class="qty-bar-bg">
+                    <div class="qty-bar-fill fill-amber" style="width: 48%;"></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <strong>12 Sep 2026</strong>
+                <div style="font-size: 11.5px; color: #059669; font-weight: 500;">In 5 days</div>
+              </td>
+              <td>
+                <span class="badge badge-partial">
+                  <span class="badge-dot"></span>
+                  Partially Planned
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="action-btn">View Details</button>
+                  <button class="action-btn primary">+ Plan IR</button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 2 -->
+            <tr>
+              <td><input type="checkbox"></td>
+              <td>
+                <div class="po-cell">
+                  <span class="po-code">PO-2026-0892</span>
+                  <span class="po-date">Created 05 Sep 2026</span>
+                </div>
+              </td>
+              <td>
+                <div class="vendor-cell">
+                  <span class="vendor-name">San Miguel Packaging Group</span>
+                  <span class="vendor-code">VND-00084 • International</span>
+                </div>
+              </td>
+              <td>
+                <strong>WH-PHNOMPENH-02</strong>
+                <div style="font-size: 11.5px; color: var(--text-muted);">Central Logistics</div>
+              </td>
+              <td>
+                <div><strong>1 Item</strong></div>
+                <div style="font-size: 12px; color: var(--text-muted);">Crown Cork Caps 26mm</div>
+              </td>
+              <td>
+                <div class="qty-cell">
+                  <div class="qty-text">
+                    <span><strong>0</strong> / 500,000</span>
+                    <span style="color: #475569; font-weight: 600;">0%</span>
+                  </div>
+                  <div class="qty-bar-bg">
+                    <div class="qty-bar-fill fill-amber" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <strong>15 Sep 2026</strong>
+                <div style="font-size: 11.5px; color: var(--text-muted);">In 8 days</div>
+              </td>
+              <td>
+                <span class="badge badge-unplanned">
+                  <span class="badge-dot"></span>
+                  Unplanned
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="action-btn">View Details</button>
+                  <button class="action-btn primary">+ Plan IR</button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 3 -->
+            <tr>
+              <td><input type="checkbox"></td>
+              <td>
+                <div class="po-cell">
+                  <span class="po-code">PO-2026-0885</span>
+                  <span class="po-date">Created 01 Sep 2026</span>
+                </div>
+              </td>
+              <td>
+                <div class="vendor-cell">
+                  <span class="vendor-name">Bekaert Packaging Solutions</span>
+                  <span class="vendor-code">VND-00312 • Regional</span>
+                </div>
+              </td>
+              <td>
+                <strong>WH-KANDAL-01</strong>
+                <div style="font-size: 11.5px; color: var(--text-muted);">Main Plant</div>
+              </td>
+              <td>
+                <div><strong>5 Items</strong></div>
+                <div style="font-size: 12px; color: var(--text-muted);">Shrink Film 45 Micron, Corrugated Trays</div>
+              </td>
+              <td>
+                <div class="qty-cell">
+                  <div class="qty-text">
+                    <span><strong>80,000</strong> / 80,000</span>
+                    <span style="color: #047857; font-weight: 600;">100%</span>
+                  </div>
+                  <div class="qty-bar-bg">
+                    <div class="qty-bar-fill fill-green" style="width: 100%;"></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <strong>09 Sep 2026</strong>
+                <div style="font-size: 11.5px; color: #2563eb; font-weight: 500;">In 2 days</div>
+              </td>
+              <td>
+                <span class="badge badge-intransit">
+                  <span class="badge-dot"></span>
+                  In-Transit (IR-0042)
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="action-btn">Track Shipment</button>
+                  <button class="action-btn">View IR Plan</button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 4 -->
+            <tr>
+              <td><input type="checkbox"></td>
+              <td>
+                <div class="po-cell">
+                  <span class="po-code">PO-2026-0870</span>
+                  <span class="po-date">Created 28 Aug 2026</span>
+                </div>
+              </td>
+              <td>
+                <div class="vendor-cell">
+                  <span class="vendor-name">ChemClean Industrial Chemicals</span>
+                  <span class="vendor-code">VND-00511 • Local</span>
+                </div>
+              </td>
+              <td>
+                <strong>WH-KANDAL-02</strong>
+                <div style="font-size: 11.5px; color: var(--text-muted);">Chemical Storage</div>
+              </td>
+              <td>
+                <div><strong>2 Items</strong></div>
+                <div style="font-size: 12px; color: var(--text-muted);">CIP Caustic Soda, Sanitizer Solution</div>
+              </td>
+              <td>
+                <div class="qty-cell">
+                  <div class="qty-text">
+                    <span><strong>15,000</strong> / 15,000</span>
+                    <span style="color: #047857; font-weight: 600;">100%</span>
+                  </div>
+                  <div class="qty-bar-bg">
+                    <div class="qty-bar-fill fill-green" style="width: 100%;"></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <strong>06 Sep 2026</strong>
+                <div style="font-size: 11.5px; color: #dc2626; font-weight: 600;">Pending QC Inspection</div>
+              </td>
+              <td>
+                <span class="badge badge-rejected">
+                  <span class="badge-dot"></span>
+                  QC Sampling Hold
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="action-btn">QC Report</button>
+                  <button class="action-btn">Manage Return</button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 5 -->
+            <tr>
+              <td><input type="checkbox"></td>
+              <td>
+                <div class="po-cell">
+                  <span class="po-code">PO-2026-0865</span>
+                  <span class="po-date">Created 25 Aug 2026</span>
+                </div>
+              </td>
+              <td>
+                <div class="vendor-cell">
+                  <span class="vendor-name">Krones Machinery Spare Parts</span>
+                  <span class="vendor-code">VND-00018 • Import (Germany)</span>
+                </div>
+              </td>
+              <td>
+                <strong>WH-KANDAL-01</strong>
+                <div style="font-size: 11.5px; color: var(--text-muted);">Main Plant</div>
+              </td>
+              <td>
+                <div><strong>12 Items</strong></div>
+                <div style="font-size: 12px; color: var(--text-muted);">Filler Valves, O-Rings, Sensor Kits</div>
+              </td>
+              <td>
+                <div class="qty-cell">
+                  <div class="qty-text">
+                    <span><strong>120</strong> / 120</span>
+                    <span style="color: #047857; font-weight: 600;">100%</span>
+                  </div>
+                  <div class="qty-bar-bg">
+                    <div class="qty-bar-fill fill-green" style="width: 100%;"></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <strong>07 Sep 2026</strong>
+                <div style="font-size: 11.5px; color: #059669; font-weight: 500;">Delivered Today</div>
+              </td>
+              <td>
+                <span class="badge badge-planned">
+                  <span class="badge-dot"></span>
+                  GR Completed (GR-9021)
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="action-btn">View GR</button>
+                  <button class="action-btn">Audit Trail</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="table-footer">
+        <div class="footer-left">
+          Showing <strong>1-5</strong> of <strong>48</strong> purchase orders
+        </div>
+
+        <div class="pagination">
+          <button class="page-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">4</button>
+          <button class="page-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Embedded Section: Create Inbound Delivery Plan (IR Plan) Configuration -->
+    <div class="drawer-preview">
+      <div class="drawer-header">
+        <div>
+          <h2 class="drawer-title">Schedule Inbound Delivery Plan (IR Plan)</h2>
+          <p style="font-size: 13.5px; color: var(--text-secondary); margin-top: 2px;">
+            Target Purchase Order: <strong style="color: #1e40af;">PO-2026-0891</strong> (Crown Beverage Cans Ltd)
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" style="height: 36px;">Cancel</button>
+          <button class="btn btn-primary" style="height: 36px;">Save & Issue Inbound Schedule</button>
+        </div>
+      </div>
+
+      <div class="schedule-form-grid">
+        <div class="form-group">
+          <label class="form-label">Delivery Date & Expected Time</label>
+          <input type="text" class="form-control" value="2026-09-12 09:30 AM">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Destination Warehouse & Unloading Bay</label>
+          <select class="form-control">
+            <option>WH-KANDAL-01 (Bay 3 - Beverage Dock)</option>
+            <option>WH-KANDAL-01 (Bay 4 - Bulk Raw Material)</option>
+            <option>WH-PHNOMPENH-02 (Central Hub)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Transport Carrier & Truck Plate Number</label>
+          <input type="text" class="form-control" value="DHL Freight Cambodia (3A-9821 PP)">
+        </div>
+      </div>
+
+      <div style="margin-top: 16px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">Allocated Line Items for this Delivery Batch</h3>
+        <table style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+          <thead>
+            <tr>
+              <th>Item Code</th>
+              <th>Description</th>
+              <th>Total PO Qty</th>
+              <th>Remaining Unplanned</th>
+              <th>Planned Delivery Qty</th>
+              <th>UOM</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>CAN-330-ALU</code></td>
+              <td><strong>330ml Aluminum Beverage Can (Printed)</strong></td>
+              <td>150,000</td>
+              <td>150,000</td>
+              <td><input type="number" class="form-control" style="width: 140px; height: 32px;" value="75000"></td>
+              <td>PCS</td>
+            </tr>
+            <tr>
+              <td><code>CAN-END-202</code></td>
+              <td><strong>202 Stay-On-Tab (SOT) Can Ends</strong></td>
+              <td>100,000</td>
+              <td>100,000</td>
+              <td><input type="number" class="form-control" style="width: 140px; height: 32px;" value="50000"></td>
+              <td>PCS</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

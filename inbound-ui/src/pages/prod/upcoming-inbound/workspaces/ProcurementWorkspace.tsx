@@ -11,6 +11,7 @@ export interface ProcurementWorkspaceProps {
   receipts?: GoodsReceipt[];
   onCreateIRPlan: (newPlan: IRPlan) => void;
   onRefresh: () => void;
+  onResetDemo?: () => void;
   onNavigateToRole?: (role: 'PROCUREMENT' | 'WAREHOUSE' | 'QC' | 'SUPERVISOR' | 'AUDIT_TIMELINE') => void;
 }
 
@@ -20,6 +21,7 @@ export const ProcurementWorkspace: React.FC<ProcurementWorkspaceProps> = ({
   receipts,
   onCreateIRPlan,
   onRefresh,
+  onResetDemo,
   onNavigateToRole,
 }) => {
   return (
@@ -29,6 +31,7 @@ export const ProcurementWorkspace: React.FC<ProcurementWorkspaceProps> = ({
       receipts={receipts}
       onCreateIRPlan={onCreateIRPlan}
       onRefresh={onRefresh}
+      onResetDemo={onResetDemo}
     />
   );
 };

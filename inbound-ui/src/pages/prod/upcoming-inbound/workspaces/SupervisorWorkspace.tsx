@@ -342,15 +342,9 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
       dataIndex: 'deliveryPlanStatus',
       key: 'status',
       width: 165,
-      render: (status: string, record: GoodsReceipt) => {
-        const s = status || 'Pending Supervisor';
-        let cls = 'open';
-        if (s === 'Pending Supervisor') cls = 'in-progress';
-        if (s === 'Posted') cls = 'completed';
-        if (record.sapPostingStatus === 'Posting Failed') cls = 'rejected';
-
-        return <span className={`status-pill ${cls}`}>{s}</span>;
-      },
+      render: (status: string) => (
+        <InboundStatusBadge type="deliveryPlan" value={status || 'Pending Supervisor'} />
+      ),
     },
     {
       title: 'SAP Doc #',
@@ -358,12 +352,12 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
       width: 140,
       render: (_: any, record: GoodsReceipt) => {
         if (record.sapDocNum) {
-          return <Tag color="green">{record.sapDocNum}</Tag>;
+          return <InboundStatusBadge type="sap" value="Posted" />;
         }
         if (record.sapPostingStatus === 'Posting Failed') {
-          return <Tag color="red">Failed</Tag>;
+          return <InboundStatusBadge type="sap" value="Posting Failed" />;
         }
-        return <Tag color="gold">Pending Post</Tag>;
+        return <InboundStatusBadge type="sap" value="Pending Post" />;
       },
     },
     {
@@ -965,7 +959,7 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
                   pagination={false}
                   className="po-custom-table"
                   columns={[
-                    { title: 'Item Code', dataIndex: 'code', key: 'code', render: (c) => <Text strong style={{ color: '#2563eb' }}>{c}</Text> },
+                    { title: 'Item Code', dataIndex: 'code', key: 'code', render: (c) => <Text strong style={{ color: '#334155' }}>{c}</Text> },
                     { title: 'Item Name & Description', dataIndex: 'name', key: 'name' },
                     { title: 'PO Qty', key: 'poQty', render: (_, r) => `${r.poQty || r.plannedQty} ${r.uom}` },
                     { title: 'Planned', key: 'planned', render: (_, r) => `${r.plannedQty || r.poQty} ${r.uom}` },
@@ -1066,7 +1060,7 @@ export const SupervisorWorkspace: React.FC<SupervisorWorkspaceProps> = ({
             pagination={false}
             className="po-custom-table"
             columns={[
-              { title: 'Item Code', dataIndex: 'code', key: 'code', render: (c) => <Text strong style={{ color: '#2563eb' }}>{c}</Text> },
+                    { title: 'Item Code', dataIndex: 'code', key: 'code', render: (c) => <Text strong style={{ color: '#334155' }}>{c}</Text> },
               { title: 'Item Name', dataIndex: 'name', key: 'name' },
               { title: 'Planned', key: 'planned', render: (_, r) => `${r.plannedQty || r.poQty} ${r.uom}` },
               { title: 'WH Received', dataIndex: 'receiveQty', key: 'receiveQty', render: (q, r) => `${q} ${r.uom}` },

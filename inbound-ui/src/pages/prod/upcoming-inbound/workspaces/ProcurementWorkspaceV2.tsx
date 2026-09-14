@@ -73,6 +73,7 @@ export interface ProcurementWorkspaceV2Props {
   receipts?: GoodsReceipt[];
   onCreateIRPlan: (newPlan: IRPlan) => void;
   onRefresh: () => void;
+  onResetDemo?: () => void;
   versionSwitcher?: React.ReactNode;
 }
 
@@ -82,6 +83,7 @@ interface ScheduleDraftItem {
   itemName: string;
   uom: string;
   totalPoQty: number;
+  remainingQty: number;
   schedules: {
     deliveryPlanNumber: string;
     deliveryDate: string;
@@ -99,9 +101,11 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
   receipts = [],
   onCreateIRPlan,
   onRefresh,
+  onResetDemo,
   versionSwitcher,
 }) => {
   const [workspaceView, setWorkspaceView] = useState<'list' | 'create-ir-plan'>('list');
+  const [isCreatingMoreIR, setIsCreatingMoreIR] = useState(false);
   const [activeCreatingPO, setActiveCreatingPO] = useState<PurchaseOrder | null>(null);
   const [activeTab, setActiveTab] = useState<TabKeyV2>('OPEN');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -331,6 +335,13 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
       return;
     }
     setActiveCreatingPO(po);
+    setIsCreatingMoreIR(
+      irPlans.some(
+        (plan) =>
+          plan.poNumbers?.includes(po.poNumber) &&
+          plan.items?.some((item) => (Number(item.allocatedQty) || 0) > 0),
+      ),
+    );
 
     const initialDate = po.expectedDate || '2026-08-27';
     const drafts: ScheduleDraftItem[] = [];
@@ -363,6 +374,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
         itemName: item.name,
         uom: item.uom,
         totalPoQty: item.poQty,
+        remainingQty: pendingQty,
         schedules: [
           {
             deliveryPlanNumber: 'Plan 1',
@@ -481,35 +493,38 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
 
     const po = activeCreatingPO || purchaseOrders[0];
     let totalPlanned = 0;
-    const finalItems: IRPlanItem[] = scheduleDraftItems.map((draft, idx) => {
-      const itemTotal = draft.schedules.reduce((sum, s) => sum + (Number(s.plannedQty) || 0), 0);
-      totalPlanned += itemTotal;
-      return {
-        id: `item-${idx + 1}`,
-        poNumber: draft.poNumber,
-        itemCode: draft.itemCode,
-        itemName: draft.itemName,
-        uom: draft.uom,
-        totalPoQty: draft.totalPoQty,
-        allocatedQty: itemTotal,
-        remainingQty: Math.max(0, draft.totalPoQty - itemTotal),
-        schedules: draft.schedules.map((s, sIdx) => ({
-          id: `s-${idx}-${sIdx}`,
-          deliveryPlanNumber: s.deliveryPlanNumber || `Plan ${sIdx + 1}`,
-          deliveryDate: s.deliveryDate || po?.expectedDate || '2026-08-28',
-          plannedQty: Number(s.plannedQty) || 0,
-          warehouseCode: s.warehouseCode || po?.receiverWarehouse || 'WHM1',
-          notes: s.notes || '',
-        })),
-      };
-    });
+    const finalItems: IRPlanItem[] = scheduleDraftItems
+      .map((draft, idx) => {
+        const positiveSchedules = draft.schedules.filter((s) => (Number(s.plannedQty) || 0) > 0);
+        const itemTotal = positiveSchedules.reduce((sum, s) => sum + (Number(s.plannedQty) || 0), 0);
+        totalPlanned += itemTotal;
+        return {
+          id: `item-${idx + 1}`,
+          poNumber: draft.poNumber,
+          itemCode: draft.itemCode,
+          itemName: draft.itemName,
+          uom: draft.uom,
+          totalPoQty: draft.totalPoQty,
+          allocatedQty: itemTotal,
+          remainingQty: Math.max(0, draft.totalPoQty - itemTotal),
+          schedules: positiveSchedules.map((s, sIdx) => ({
+            id: `s-${idx}-${sIdx}`,
+            deliveryPlanNumber: s.deliveryPlanNumber || `Plan ${sIdx + 1}`,
+            deliveryDate: s.deliveryDate || po?.expectedDate || '2026-08-28',
+            plannedQty: Number(s.plannedQty) || 0,
+            warehouseCode: s.warehouseCode || po?.receiverWarehouse || 'WHM1',
+            notes: s.notes || '',
+          })),
+        };
+      })
+      .filter((item) => item.allocatedQty > 0);
 
     // Collect all scheduled dates across items
     const allDates = Array.from(
       new Set(
         scheduleDraftItems.flatMap((draft) =>
           draft.schedules
-            .filter((s) => (Number(s.plannedQty) || 0) > 0 || draft.schedules.length === 1)
+            .filter((s) => (Number(s.plannedQty) || 0) > 0)
             .map((s) => s.deliveryDate)
             .filter(Boolean)
         )
@@ -564,6 +579,18 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
     setCurrentPage(1);
     message.info('Filters reset.');
   };
+  const handleResetDemo = () => {
+    onResetDemo?.();
+    setWorkspaceView('list');
+    setActiveTab('OPEN');
+    setSelectedRowKeys([]);
+    setSearchTerm('');
+    setPlanningFilter('ALL');
+    setStatusFilter('ALL');
+    setVendorFilter('ALL');
+    setDateRange(null);
+    setCurrentPage(1);
+  };
 
   // Table Columns for V2 (Option 1 Workflow)
   const poColumns = useMemo<ColumnsType<PurchaseOrder>>(() => {
@@ -608,11 +635,11 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
         render: (date: string) => <span>{date || '22-08-26'}</span>,
       },
       {
-        title: 'Delivery Date',
+        title: <span style={{ whiteSpace: 'nowrap' }}>Delivery Date</span>,
         dataIndex: 'expectedDate',
         key: 'expectedDate',
-        width: 105,
-        render: (date: string) => <span>{date || '22-08-26'}</span>,
+        width: 120,
+        render: (date: string) => <span style={{ whiteSpace: 'nowrap' }}>{date || '22-08-26'}</span>,
       },
       {
         title: 'Total Amount',
@@ -639,6 +666,19 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
       });
     }
 
+    if (activeTab === 'IN_PROGRESS') {
+      cols.push({
+        title: 'IR Scheduled',
+        key: 'irScheduled',
+        width: 115,
+        render: (_: any, record: PurchaseOrder) => (
+          <span style={{ fontWeight: 600, color: '#334155' }}>
+            {irPlans.filter((plan) => plan.poNumbers?.includes(record.poNumber)).length}
+          </span>
+        ),
+      });
+    }
+
     cols.push({
       title: 'Action',
       key: 'action',
@@ -661,7 +701,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
         if (record.docStatus === 'In Progress') {
           return (
             <button
-              className="btn-po-action-info"
+              className="btn-po-action"
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedPODetail(record);
@@ -674,17 +714,15 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
 
         const planStatus = getPOPlanningStatus(record);
         if (planStatus === 'FULLY_PLANNED' || record.docStatus === 'Closed') {
-          const linkedPlan = irPlans.find((p) => p.poNumbers.includes(record.poNumber));
           return (
             <button
               className="btn-po-action"
               onClick={(e) => {
                 e.stopPropagation();
-                if (linkedPlan) setSelectedPlanDetail(linkedPlan);
-                else setSelectedPODetail(record);
+                setSelectedPODetail(record);
               }}
             >
-              View Plan
+              {activeTab === 'CLOSED' || record.docStatus === 'Closed' ? 'View Inbound' : 'View Plan'}
             </button>
           );
         }
@@ -769,23 +807,6 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
       render: (v: string) => <span className="vendor-name">{v}</span>,
     },
     {
-      title: 'IR Scheduled',
-      key: 'irScheduled',
-      width: 130,
-      render: (_: any, record: IRPlan) => {
-        const splitCount = Math.max(
-          record.items?.reduce((max, it) => Math.max(max, it.schedules?.length || 1), 1) || 1,
-          record.deliveryDate?.includes(',') ? record.deliveryDate.split(',').length : 1
-        );
-
-        return (
-          <span style={{ fontWeight: 500, color: '#1e293b' }}>
-            {splitCount}
-          </span>
-        );
-      },
-    },
-    {
       title: 'Schedule Status',
       dataIndex: 'status',
       key: 'status',
@@ -855,11 +876,11 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
               background: '#ffffff',
               border: '1px solid #e5e7eb',
               borderRadius: 12,
-              padding: '20px 24px',
+              padding: '14px 18px',
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
               display: 'flex',
               flexDirection: 'column',
-              gap: 16,
+              gap: 10,
             }}
           >
             {/* Card Body: 3-Column Details Grid */}
@@ -958,32 +979,11 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
               gap: 16,
             }}
           >
-            {/* Section Header */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                borderBottom: '1px solid #f1f5f9',
-                paddingBottom: 12,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FileTextOutlined style={{ fontSize: 16, color: '#B49A00' }} />
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#1e293b' }}>
-                  Delivery Note & Vendor Documentation
-                </span>
-              </div>
-              <Tag color="gold" style={{ borderRadius: 6, margin: 0, fontWeight: 500 }}>
-                Vendor Inbound Documents
-              </Tag>
-            </div>
-
             {/* 2-Column Form & Upload Layout */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 24, alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 18, alignItems: 'start' }}>
               {/* Left Column: Delivery Note Form Fields */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
                     <label
                       style={{
@@ -991,7 +991,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                         fontSize: 13,
                         fontWeight: 600,
                         color: '#475569',
-                        marginBottom: 6,
+                        marginBottom: 4,
                       }}
                     >
                       Delivery Note No. <span style={{ color: '#ef4444' }}>*</span>
@@ -1001,7 +1001,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                       value={deliveryNoteNumber}
                       onChange={(e) => setDeliveryNoteNumber(e.target.value)}
                       prefix={<FileTextOutlined style={{ color: '#94a3b8' }} />}
-                      style={{ borderRadius: 8, height: 38 }}
+                      style={{ borderRadius: 8, height: 34 }}
                     />
                   </div>
                   <div>
@@ -1011,7 +1011,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                         fontSize: 13,
                         fontWeight: 600,
                         color: '#475569',
-                        marginBottom: 6,
+                        marginBottom: 4,
                       }}
                     >
                       Delivery Note Date
@@ -1020,7 +1020,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                       placeholder="Select Date"
                       value={deliveryNoteDate}
                       onChange={(d: dayjs.Dayjs | null) => setDeliveryNoteDate(d)}
-                      style={{ width: '100%', borderRadius: 8, height: 38 }}
+                      style={{ width: '100%', borderRadius: 8, height: 34 }}
                     />
                   </div>
                 </div>
@@ -1032,10 +1032,10 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                       fontSize: 13,
                       fontWeight: 600,
                       color: '#475569',
-                      marginBottom: 6,
+                      marginBottom: 4,
                     }}
                   >
-                    Vendor Remarks / Delivery Instructions
+                    Remarks
                   </label>
                   <Input.TextArea
                     rows={2}
@@ -1049,13 +1049,10 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
 
               {/* Right Column: File Upload Area & Attachments List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 20 }}>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569' }}>
-                    Vendor Attachments ({vendorAttachments.length})
+                    Attachments ({vendorAttachments.length})
                   </label>
-                  <span style={{ fontSize: 11, color: '#94a3b8' }}>
-                    DN, Packing Slip, Invoice, COA
-                  </span>
                 </div>
                 <Upload.Dragger
                   multiple
@@ -1079,14 +1076,12 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                     background: '#f8fafc',
                     border: '1.5px dashed #cbd5e1',
                     borderRadius: 8,
-                    padding: '12px 16px',
+                    padding: '7px 12px',
                   }}
-                  showUploadList={{
-                    showRemoveIcon: true,
-                  }}
+                  showUploadList={false}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '4px 0' }}>
-                    <InboxOutlined style={{ fontSize: 24, color: '#B49A00' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '2px 0' }}>
+                    <InboxOutlined style={{ fontSize: 20, color: '#B49A00' }} />
                     <div style={{ textAlign: 'left' }}>
                       <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
                         Click or drag vendor files here to attach
@@ -1097,6 +1092,63 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                     </div>
                   </div>
                 </Upload.Dragger>
+                {vendorAttachments.length > 0 && (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                      gap: 6,
+                    }}
+                  >
+                    {vendorAttachments.map((file) => (
+                      <div
+                        key={file.uid}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          minWidth: 0,
+                          padding: '5px 8px',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: 6,
+                          background: '#ffffff',
+                        }}
+                      >
+                        <PaperClipOutlined style={{ color: '#B49A00', flexShrink: 0 }} />
+                        <span
+                          title={file.name}
+                          style={{
+                            minWidth: 0,
+                            flex: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontSize: 11,
+                            color: '#475569',
+                          }}
+                        >
+                          {file.name}
+                        </span>
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<CloseCircleOutlined />}
+                          onClick={() =>
+                            setVendorAttachments((prev) => prev.filter((item) => item.uid !== file.uid))
+                          }
+                          aria-label={`Remove ${file.name}`}
+                          style={{
+                            flexShrink: 0,
+                            width: 20,
+                            height: 20,
+                            padding: 0,
+                            color: '#94a3b8',
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1109,10 +1161,12 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                   itemIdx,
                   sIdx,
                   isMainRow: sIdx === 0,
+                  docLine: (item as any).lineNumber || (item as any).poLineNumber || (itemIdx + 1),
                   itemCode: item.itemCode,
                   itemName: item.itemName,
                   poNumber: item.poNumber,
                   totalPoQty: item.totalPoQty,
+                  remainingQty: item.remainingQty,
                   uom: item.uom,
                   plannedQty: sched.plannedQty,
                   deliveryDate: sched.deliveryDate,
@@ -1124,6 +1178,21 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
               className="po-custom-table schedule-items-table"
               columns={[
                 {
+                  title: 'Docline #',
+                  key: 'docLine',
+                  width: 90,
+                  render: (_, r: any) =>
+                    r.isMainRow ? (
+                      <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 600, color: '#64748b', fontSize: 13 }}>{r.docLine}</span>
+                      </div>
+                    ) : (
+                      <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                        <span style={{ color: '#cbd5e1' }}>—</span>
+                      </div>
+                    ),
+                },
+                {
                   title: 'Item Code',
                   key: 'itemCode',
                   width: 140,
@@ -1131,7 +1200,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                     if (r.isMainRow) {
                       return (
                         <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
-                          <span style={{ fontWeight: 700, color: '#2563eb', fontSize: 14 }}>{r.itemCode}</span>
+                          <span style={{ fontWeight: 700, color: '#334155', fontSize: 14 }}>{r.itemCode}</span>
                         </div>
                       );
                     }
@@ -1172,6 +1241,32 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                     </div>
                   ),
                 },
+                ...(isCreatingMoreIR
+                  ? [
+                      {
+                        title: 'Remaining Qty',
+                        key: 'remainingQty',
+                        width: 140,
+                        render: (_: any, r: any) => (
+                          <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                            {r.isMainRow ? (
+                              <span
+                                style={{
+                                  fontWeight: 700,
+                                  color: r.remainingQty > 0 ? '#ea580c' : '#16a34a',
+                                  fontSize: 14,
+                                }}
+                              >
+                                {r.remainingQty.toLocaleString()} {r.uom}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#cbd5e1' }}>—</span>
+                            )}
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
                 {
                   title: 'IR Qty',
                   key: 'irQty',
@@ -1201,7 +1296,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                         (sum: number, s: any) => sum + (Number(s.plannedQty) || 0),
                         0
                       );
-                      const rem = r.totalPoQty - allocated;
+                      const rem = (isCreatingMoreIR ? r.remainingQty : r.totalPoQty) - allocated;
                       return (
                         <div style={{ height: 32, display: 'flex', alignItems: 'center', gap: 4 }}>
                           <span
@@ -1367,6 +1462,13 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                 className="action-btn"
               >
                 Refresh
+              </Button>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={handleResetDemo}
+                className="action-btn"
+              >
+                Reset Demo
               </Button>
               <Button
                 type="primary"
@@ -1697,7 +1799,12 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             </Text>
             <Space size={12}>
               <Button onClick={() => setSelectedPODetail(null)}>Close</Button>
-              {selectedPODetail?.docStatus !== 'Closed' && selectedPODetail?.docStatus !== 'In Progress' && (
+              {selectedPODetail?.docStatus !== 'Closed' &&
+                selectedPODetail?.items?.some(
+                  (item) =>
+                    (Number(item.remainingQty) ||
+                      Math.max(0, (Number(item.poQty) || 0) - (Number(item.receivedQty) || 0))) > 0,
+                ) && (
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
@@ -1710,7 +1817,9 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                     boxShadow: '0 2px 6px rgba(180, 154, 0, 0.25)',
                   }}
                 >
-                  Create IR Plan
+                  {irPlans.some((plan) => plan.poNumbers?.includes(selectedPODetail?.poNumber || ''))
+                    ? 'Create More IR'
+                    : 'Create IR'}
                 </Button>
               )}
             </Space>
@@ -1722,7 +1831,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
           if (!currentPO) return null;
 
           // Dynamically compute line items breakdown with IRS sub-rows (supporting multi-date schedules)
-          const enrichedPoRows = (currentPO.items || []).flatMap((item, itemIdx) => {
+          const enrichedPoRows: any[] = (currentPO.items || ([] as any[])).flatMap((item: any, itemIdx: number) => {
             const matchingPlanItems = irPlans
               .filter((plan) => plan.poNumbers?.includes(currentPO.poNumber))
               .flatMap((plan) =>
@@ -1746,7 +1855,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             matchingPlanItems.forEach((it) => {
               if (it.schedules && it.schedules.length > 0) {
                 it.schedules.forEach((s) => {
-                  if ((Number(s.plannedQty) || 0) > 0 || it.schedules.length === 1) {
+                  if ((Number(s.plannedQty) || 0) > 0) {
                     allSchedules.push({
                       deliveryPlanNumber: s.deliveryPlanNumber || 'Plan 1',
                       deliveryDate: s.deliveryDate || it.planRef?.deliveryDate || '',
@@ -1783,10 +1892,9 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                 totalIrQty: irQty,
                 remainingQty: pendingQty,
                 poDeliveryDate: item.expectedDate || currentPO.expectedDate || '2026-08-27',
-                irScheduleNumber: sched.planNumber
-                  ? `${sched.planNumber}${sched.deliveryPlanNumber ? ` (${sched.deliveryPlanNumber})` : ''}`
-                  : '—',
+                irScheduleNumber: sched.planNumber || '—',
                 irScheduleDate: sched.deliveryDate || '—',
+                irStatus: sched.planRef?.status || 'Pending',
                 planRef: sched.planRef,
               }));
             }
@@ -1805,6 +1913,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                 poDeliveryDate: item.expectedDate || currentPO.expectedDate || '2026-08-27',
                 irScheduleNumber: '—',
                 irScheduleDate: '—',
+                irStatus: '—' as any,
                 planRef: undefined,
               },
             ];
@@ -1978,7 +2087,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                       width: 120,
                       render: (_, r: any) =>
                         r.isMainRow ? (
-                          <Text strong style={{ color: '#2563eb' }}>{r.code}</Text>
+                          <Text strong style={{ color: '#334155' }}>{r.code}</Text>
                         ) : (
                           <div style={{ paddingLeft: 8 }}>
                             <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>↳</span>
@@ -2014,7 +2123,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                       key: 'irQty',
                       width: 110,
                       render: (_, r: any) => (
-                        <span style={{ color: (r.receivedQty || 0) > 0 ? '#2563eb' : '#94a3b8', fontWeight: (r.receivedQty || 0) > 0 ? 600 : 400 }}>
+                        <span style={{ color: '#0f172a', fontWeight: 600 }}>
                           {(r.receivedQty || 0).toLocaleString()} {r.uom}
                         </span>
                       ),
@@ -2050,6 +2159,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                       dataIndex: 'irScheduleNumber',
                       key: 'irScheduleNumber',
                       width: 140,
+                      hidden: linkedIRs.length === 0,
                       render: (_, r: any) => {
                         if (r.irScheduleNumber === '—') {
                           return <span style={{ color: '#94a3b8' }}>—</span>;
@@ -2069,6 +2179,19 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                           </span>
                         );
                       },
+                    },
+                    {
+                      title: 'IR Status',
+                      dataIndex: 'irStatus',
+                      key: 'irStatus',
+                      width: 110,
+                      hidden: linkedIRs.length === 0,
+                      render: (status: string) =>
+                        status === '—' ? (
+                          <span style={{ color: '#94a3b8' }}>—</span>
+                        ) : (
+                          <InboundStatusBadge type="deliveryPlan" value={status} />
+                        ),
                     },
                   ]}
                 />
@@ -2305,7 +2428,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                   }}
                 >
                   <FileTextOutlined style={{ color: '#B49A00' }} />
-                  <span>Delivery Note & Vendor Documentation</span>
+                  <span>Documents</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                   <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
@@ -2328,7 +2451,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                   </div>
                   <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
                     <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
-                      Attachments
+                      Supporting Files
                     </span>
                     <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>:</span>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -2407,7 +2530,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                       totalPoQty: item.totalPoQty || item.allocatedQty,
                       uom: item.uom,
                       irQty: sched.plannedQty,
-                      remainingQty: item.remainingQty,
+                      remainingQty: selectedPlanDetail.status === 'Completed' ? 0 : item.remainingQty,
                       deliveryDate: sched.deliveryDate || selectedPlanDetail.deliveryDate,
                       parentItem: item,
                     }));
@@ -2422,7 +2545,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                       totalPoQty: item.totalPoQty || item.allocatedQty,
                       uom: item.uom,
                       irQty: item.allocatedQty,
-                      remainingQty: item.remainingQty,
+                      remainingQty: selectedPlanDetail.status === 'Completed' ? 0 : item.remainingQty,
                       deliveryDate: selectedPlanDetail.deliveryDate,
                       parentItem: item,
                     },
@@ -2439,7 +2562,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                     width: 120,
                     render: (_, r: any) => {
                       if (r.isMainRow) {
-                        return <Text strong style={{ color: '#2563eb' }}>{r.itemCode}</Text>;
+                        return <Text strong style={{ color: '#334155' }}>{r.itemCode}</Text>;
                       }
                       return (
                         <div style={{ paddingLeft: 8 }}>

@@ -449,35 +449,38 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
 
     const po = activeCreatingPO || purchaseOrders[0];
     let totalPlanned = 0;
-    const finalItems: IRPlanItem[] = scheduleDraftItems.map((draft, idx) => {
-      const itemTotal = draft.schedules.reduce((sum, s) => sum + (Number(s.plannedQty) || 0), 0);
-      totalPlanned += itemTotal;
-      return {
-        id: `item-${idx + 1}`,
-        poNumber: draft.poNumber,
-        itemCode: draft.itemCode,
-        itemName: draft.itemName,
-        uom: draft.uom,
-        totalPoQty: draft.totalPoQty,
-        allocatedQty: itemTotal,
-        remainingQty: Math.max(0, draft.totalPoQty - itemTotal),
-        schedules: draft.schedules.map((s, sIdx) => ({
-          id: `s-${idx}-${sIdx}`,
-          deliveryPlanNumber: s.deliveryPlanNumber || `Plan ${sIdx + 1}`,
-          deliveryDate: s.deliveryDate || po?.expectedDate || '2026-08-28',
-          plannedQty: Number(s.plannedQty) || 0,
-          warehouseCode: s.warehouseCode || po?.receiverWarehouse || 'WHM1',
-          notes: s.notes || '',
-        })),
-      };
-    });
+    const finalItems: IRPlanItem[] = scheduleDraftItems
+      .map((draft, idx) => {
+        const positiveSchedules = draft.schedules.filter((s) => (Number(s.plannedQty) || 0) > 0);
+        const itemTotal = positiveSchedules.reduce((sum, s) => sum + (Number(s.plannedQty) || 0), 0);
+        totalPlanned += itemTotal;
+        return {
+          id: `item-${idx + 1}`,
+          poNumber: draft.poNumber,
+          itemCode: draft.itemCode,
+          itemName: draft.itemName,
+          uom: draft.uom,
+          totalPoQty: draft.totalPoQty,
+          allocatedQty: itemTotal,
+          remainingQty: Math.max(0, draft.totalPoQty - itemTotal),
+          schedules: positiveSchedules.map((s, sIdx) => ({
+            id: `s-${idx}-${sIdx}`,
+            deliveryPlanNumber: s.deliveryPlanNumber || `Plan ${sIdx + 1}`,
+            deliveryDate: s.deliveryDate || po?.expectedDate || '2026-08-28',
+            plannedQty: Number(s.plannedQty) || 0,
+            warehouseCode: s.warehouseCode || po?.receiverWarehouse || 'WHM1',
+            notes: s.notes || '',
+          })),
+        };
+      })
+      .filter((item) => item.allocatedQty > 0);
 
     // Collect all scheduled dates across items
     const allDates = Array.from(
       new Set(
         scheduleDraftItems.flatMap((draft) =>
           draft.schedules
-            .filter((s) => (Number(s.plannedQty) || 0) > 0 || draft.schedules.length === 1)
+            .filter((s) => (Number(s.plannedQty) || 0) > 0)
             .map((s) => s.deliveryDate)
             .filter(Boolean)
         )
@@ -1640,7 +1643,7 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
             matchingPlanItems.forEach((it) => {
               if (it.schedules && it.schedules.length > 0) {
                 it.schedules.forEach((s) => {
-                  if ((Number(s.plannedQty) || 0) > 0 || it.schedules.length === 1) {
+                  if ((Number(s.plannedQty) || 0) > 0) {
                     allSchedules.push({
                       deliveryPlanNumber: s.deliveryPlanNumber || 'Plan 1',
                       deliveryDate: s.deliveryDate || it.planRef?.deliveryDate || '',

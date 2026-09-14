@@ -325,14 +325,9 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
       dataIndex: 'deliveryPlanStatus',
       key: 'status',
       width: 150,
-      render: (status: string, record: GoodsReceipt) => {
-        const s = status || 'Waiting for QC';
-        let cls = 'waiting-qc';
-        if (s === 'QC Completed' || record.qcResult === 'Pass') cls = 'completed';
-        if (record.qcResult === 'Fail') cls = 'rejected';
-
-        return <span className={`status-pill ${cls}`}>{s}</span>;
-      },
+      render: (status: string) => (
+        <InboundStatusBadge type="deliveryPlan" value={status || 'Waiting for QC'} />
+      ),
     },
     {
       title: 'IR Plan #',
@@ -409,7 +404,7 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
       width: 120,
       render: (_: any, record: GoodsReceipt) => {
         if (!record.qcResult || record.deliveryPlanStatus === 'Waiting for QC') {
-          return <Tag color="purple">Pending</Tag>;
+          return <InboundStatusBadge type="qc" value="Pending" />;
         }
         return <InboundStatusBadge type="qc" value={record.qcResult} />;
       },
@@ -939,7 +934,7 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
                   pagination={false}
                   className="po-custom-table"
                   columns={[
-                    { title: 'Item Code', dataIndex: 'code', key: 'code', width: 120, render: (c) => <Text strong style={{ color: '#2563eb' }}>{c}</Text> },
+                    { title: 'Item Code', dataIndex: 'code', key: 'code', width: 120, render: (c) => <Text strong style={{ color: '#334155' }}>{c}</Text> },
                     { title: 'Item Name', dataIndex: 'name', key: 'name', render: (n) => <span style={{ fontWeight: 500 }}>{n}</span> },
                     { title: 'WH Received', dataIndex: 'receiveQty', key: 'receiveQty', width: 120, render: (q, r) => `${(q || 0).toLocaleString()} ${r.uom}` },
                     { title: 'Accepted', dataIndex: 'qcAcceptedQty', key: 'qcAcceptedQty', width: 110, render: (q, r) => <Tag color="green">{(q || 0).toLocaleString()} {r.uom}</Tag> },
@@ -1046,7 +1041,7 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
                   <Space direction="vertical" size={2}>
                     <Space>
                       <Tag color="cyan">PO: {item.poNumber}</Tag>
-                      <Text strong style={{ fontSize: 14, color: '#2563eb' }}>{item.code}</Text>
+                      <Text strong style={{ fontSize: 14, color: '#334155' }}>{item.code}</Text>
                     </Space>
                     <Text style={{ fontSize: 13, color: '#1e293b' }}>{item.name}</Text>
                   </Space>

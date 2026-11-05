@@ -1,3 +1,7 @@
+import { RowActionButton, rowActionColumn } from '../shared/ui/RowActionButton';
+import { RelatedActivity } from '../features/shared/RelatedActivity';
+import { WorkspaceTaskHeader, WorkspaceHeader, WorkspaceEmpty, workspacePagination } from '../shared/ui/WorkspaceUI';
+import { exportWorkspace, type ExportFormat } from '../shared/ui/workspaceExport';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Table,
@@ -32,13 +36,10 @@ import {
   EyeOutlined,
   FileTextOutlined,
   SendOutlined,
-  ExportOutlined,
   ClockCircleOutlined,
   DollarOutlined,
   WarningOutlined,
   InboxOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
   RightOutlined,
   LeftOutlined,
   DownOutlined,
@@ -105,18 +106,43 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
   versionSwitcher,
 }) => {
   const [workspaceView, setWorkspaceView] = useState<'list' | 'create-ir-plan'>('list');
+  // QC follow-ups are displayed as IRs, but never included in PO scheduling totals.
+  const followUpIRPlans = useMemo<IRPlan[]>(() => receipts.filter(receipt => receipt.parentIrNumber).map(receipt => ({
+    id: receipt.grNumber,
+    irPlanNumber: receipt.irPlanNumber || receipt.grNumber,
+    parentIrNumber: receipt.parentIrNumber,
+    qcFollowUpType: receipt.qcFollowUpType,
+    deliveryPlanNumber: 'QC Follow-Up',
+    vendor: receipt.supplier,
+    poNumbers: Array.from(new Set(receipt.items.map(item => item.poNumber || receipt.poNumber))),
+    deliveryDate: receipt.createdDate?.split('T')[0] || receipt.expectedDate || '',
+    status: receipt.processState === 'SAP_POSTED' ? 'Completed' : receipt.qcFollowUpType === 'REJECTED' ? 'Rejected' : 'In Progress',
+    items: receipt.items.map((item, index) => ({
+      id: `${receipt.grNumber}-${index}`,
+      poNumber: item.poNumber || receipt.poNumber,
+      itemCode: item.code,
+      itemName: item.name,
+      uom: item.uom,
+      totalPoQty: item.poQty,
+      allocatedQty: item.receiveQty,
+      remainingQty: 0,
+      schedules: [{ id: `${receipt.grNumber}-${index}`, deliveryPlanNumber: 'QC Follow-Up', deliveryDate: receipt.createdDate?.split('T')[0] || '', plannedQty: item.receiveQty }],
+    })),
+    totalPlannedQty: receipt.items.reduce((sum, item) => sum + item.receiveQty, 0),
+    totalItems: receipt.items.length,
+    createdBy: receipt.createdBy,
+    createdAt: receipt.createdDate,
+  })), [receipts]);
+  const visibleIRPlans = useMemo(() => [...followUpIRPlans, ...irPlans], [followUpIRPlans, irPlans]);
   const [isCreatingMoreIR, setIsCreatingMoreIR] = useState(false);
   const [activeCreatingPO, setActiveCreatingPO] = useState<PurchaseOrder | null>(null);
   const [activeTab, setActiveTab] = useState<TabKeyV2>('OPEN');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [planningFilter, setPlanningFilter] = useState<string>('ALL');
   const [vendorFilter, setVendorFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const pageSize = 10;
 
   // Modals / Drawer state
   const [selectedPlanDetail, setSelectedPlanDetail] = useState<IRPlan | null>(null);
@@ -179,7 +205,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
   const vendorOptions = useMemo(() => {
     const vendors = Array.from(new Set(purchaseOrders.map((p) => p.supplier).filter(Boolean)));
     return [
-      { label: 'All Vendor', value: 'ALL' },
+      { label: 'All Vendors', value: 'ALL' },
       ...vendors.map((v) => ({ label: v, value: v })),
     ];
   }, [purchaseOrders]);
@@ -212,11 +238,11 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
     return {
       open: openPOs.length,
       inProgress: inProgressPOs.length,
-      irPlans: irPlans.length,
+      irPlans: visibleIRPlans.length,
       qcRejected: qcRejectedPOs.length,
       closed: closedPOs.length,
     };
-  }, [purchaseOrders, irPlans]);
+  }, [purchaseOrders, irPlans, visibleIRPlans]);
 
   // Filtered POs based on the 5 tabs
   const filteredPOs = useMemo(() => {
@@ -284,7 +310,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
 
   // Filtered IR Plans for IR_PLANS tab
   const filteredIRPlans = useMemo(() => {
-    return irPlans.filter((plan) => {
+    return visibleIRPlans.filter((plan) => {
       // Status filter
       if (statusFilter !== 'ALL' && plan.status !== statusFilter) {
         return false;
@@ -316,16 +342,9 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
       }
       return true;
     });
-  }, [irPlans, statusFilter, vendorFilter, searchTerm, dateRange]);
+  }, [visibleIRPlans, statusFilter, vendorFilter, searchTerm, dateRange]);
 
   // Pagination slice
-  const paginatedPOs = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredPOs.slice(start, start + pageSize);
-  }, [filteredPOs, currentPage]);
-
-  const totalEntries = filteredPOs.length;
-  const totalPages = Math.ceil(totalEntries / pageSize) || 1;
 
   // Navigate to Dedicated Create IR Plan Page
   const handleNavigateToCreatePlan = (poToUse?: PurchaseOrder) => {
@@ -543,7 +562,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
       status: 'Pending',
       totalPlannedQty: totalPlanned,
       totalItems: finalItems.length,
-      createdBy: 'Keo Srey',
+      createdBy: 'Procurement (Demo)',
       createdAt: dayjs().format('YYYY-MM-DD HH:mm'),
       notes: deliveryNoteRemark || 'Inbound Receiving Plan generated from PO',
       deliveryNoteNumber: deliveryNoteNumber || `DN-${po?.poNumber || '2026'}-01`,
@@ -560,14 +579,24 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
 
     onCreateIRPlan(newIRPlan);
     message.success(
-      `IR Plan ${newIRPlan.irPlanNumber} confirmed! Sent to Warehouse Expected Inbound queue.`,
+      `IR Schedule ${newIRPlan.irPlanNumber} confirmed! Sent to Warehouse Expected Inbound queue.`,
     );
     setWorkspaceView('list');
     setActiveTab('IR_PLANS');
   };
 
-  const handleExport = () => {
-    message.success('Exporting Purchase Orders data to Excel format...');
+  const handleExport = (format: ExportFormat) => {
+    if (activeTab === 'IR_PLANS') {
+      exportWorkspace('inbound-schedules', [
+        ['IR Schedule #', 'Status'],
+        ...filteredIRPlans.map(plan => [plan.irPlanNumber, plan.status]),
+      ], format);
+    } else {
+      exportWorkspace('purchase-orders', [
+        ['PO #', 'Vendor', 'Status'],
+        ...filteredPOs.map(po => [po.poNumber, po.supplier, po.docStatus]),
+      ], format);
+    }
   };
 
   const handleResetFilters = () => {
@@ -576,7 +605,6 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
     setPlanningFilter('ALL');
     setVendorFilter('ALL');
     setDateRange(null);
-    setCurrentPage(1);
     message.info('Filters reset.');
   };
   const handleResetDemo = () => {
@@ -589,7 +617,6 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
     setStatusFilter('ALL');
     setVendorFilter('ALL');
     setDateRange(null);
-    setCurrentPage(1);
   };
 
   // Table Columns for V2 (Option 1 Workflow)
@@ -680,64 +707,57 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
     }
 
     cols.push({
-      title: 'Action',
-      key: 'action',
-      width: 125,
+      ...rowActionColumn,
       render: (_: any, record: PurchaseOrder) => {
         if (record.docStatus === 'Rejected') {
           return (
-            <button
-              className="btn-po-action-danger"
-              onClick={(e) => {
-                e.stopPropagation();
+            <RowActionButton
+              variant="danger"
+              icon={<SendOutlined />}
+              onClick={() => {
                 message.warning(`Initiated Vendor Return / Credit Note claim with ${record.supplier} for PO ${record.poNumber}.`);
               }}
             >
               Vendor Return
-            </button>
+            </RowActionButton>
           );
         }
 
         if (record.docStatus === 'In Progress') {
           return (
-            <button
-              className="btn-po-action"
-              onClick={(e) => {
-                e.stopPropagation();
+            <RowActionButton
+              onClick={() => {
                 setSelectedPODetail(record);
               }}
             >
               Track Intake
-            </button>
+            </RowActionButton>
           );
         }
 
         const planStatus = getPOPlanningStatus(record);
         if (planStatus === 'FULLY_PLANNED' || record.docStatus === 'Closed') {
           return (
-            <button
-              className="btn-po-action"
-              onClick={(e) => {
-                e.stopPropagation();
+            <RowActionButton
+              onClick={() => {
                 setSelectedPODetail(record);
               }}
             >
               {activeTab === 'CLOSED' || record.docStatus === 'Closed' ? 'View Inbound' : 'View Plan'}
-            </button>
+            </RowActionButton>
           );
         }
 
         return (
-          <button
-            className="btn-po-action"
-            onClick={(e) => {
-              e.stopPropagation();
+          <RowActionButton
+            variant="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
               handleNavigateToCreatePlan(record);
             }}
           >
-            <PlusOutlined style={{ marginRight: 4, fontSize: 11 }} />
             <span>Create IR</span>
-          </button>
+          </RowActionButton>
         );
       },
     });
@@ -772,8 +792,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
         return (
           <span
             className="po-link"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={() => {
               const foundPo = purchaseOrders.find((p) => p.poNumber === poNum) || {
                 poNumber: poNum,
                 docNum: poNum,
@@ -807,6 +826,21 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
       render: (v: string) => <span className="vendor-name">{v}</span>,
     },
     {
+      title: 'Origin / QC',
+      key: 'parentIrNumber',
+      width: 160,
+      render: (_: unknown, record: IRPlan) => record.parentIrNumber
+        ? <span>From {record.parentIrNumber} · {record.qcFollowUpType === 'ON_HOLD' ? 'On Hold' : 'Rejected'}</span>
+        : '—',
+    },
+    {
+      title: 'IR Schedule Date',
+      dataIndex: 'deliveryDate',
+      key: 'deliveryDate',
+      width: 160,
+      render: (date: string) => <span>{date || '—'}</span>,
+    },
+    {
       title: 'Schedule Status',
       dataIndex: 'status',
       key: 'status',
@@ -825,19 +859,15 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
       ),
     },
     {
-      title: 'Action',
-      key: 'action',
-      width: 125,
+      ...rowActionColumn,
       render: (_: any, record: IRPlan) => (
-        <button
-          className="btn-po-action"
-          onClick={(e) => {
-            e.stopPropagation();
+        <RowActionButton
+          onClick={() => {
             setSelectedPlanDetail(record);
           }}
         >
           View Schedule
-        </button>
+        </RowActionButton>
       ),
     },
   ];
@@ -855,18 +885,9 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
     const currentPO = activeCreatingPO || purchaseOrders[0];
 
     return (
-      <div className="procurement-workspace create-ir-plan-view" style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingBottom: 24 }}>
+      <div className="procurement-workspace create-ir-plan-view inbound-task-page" style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingBottom: 24 }}>
         {/* Top Breadcrumb / Action Header */}
-        <div className="create-plan-header">
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined style={{ fontSize: 18 }} />}
-            onClick={() => setWorkspaceView('list')}
-            className="back-nav-btn"
-          >
-            Create IR Schedule
-          </Button>
-        </div>
+        <WorkspaceTaskHeader title="Create IR Schedule" onBack={() => setWorkspaceView('list')} />
 
         <div className="create-plan-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Combined Purchase Order Details & Schedule Allocation Header Card */}
@@ -1344,39 +1365,18 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                   ),
                 },
                 {
-                  title: 'Action',
-                  key: 'action',
-                  width: 130,
+                  ...rowActionColumn,
                   render: (_, r) => (
                     <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
                       {r.isMainRow ? (
-                        <Button
-                          type="default"
-                          icon={<PlusOutlined />}
-                          className="split-date-btn"
-                          onClick={() => handleAddScheduleSplit(r.itemIdx)}
-                          style={{ width: 110, height: 32 }}
-                        >
+                        <RowActionButton icon={<PlusOutlined />} onClick={() => handleAddScheduleSplit(r.itemIdx)}>
                           Split Date
-                        </Button>
+                        </RowActionButton>
                       ) : (
-                        <Button
-                          size="small"
-                          type="text"
-                          icon={<DeleteOutlined style={{ color: '#ef4444' }} />}
-                          onClick={() => handleRemoveScheduleSplit(r.itemIdx, r.sIdx)}
-                          style={{
-                            color: '#ef4444',
-                            fontWeight: 500,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            height: 32,
-                            padding: '0 4px',
-                          }}
-                        >
+                        <RowActionButton variant="danger" icon={<DeleteOutlined />}
+                          onClick={() => handleRemoveScheduleSplit(r.itemIdx, r.sIdx)}>
                           Remove
-                        </Button>
+                        </RowActionButton>
                       )}
                     </div>
                   ),
@@ -1385,8 +1385,9 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             />
           </div>
 
+
           <div
-            className="page-footer-actions"
+            className="page-footer-actions inbound-task-actions"
             style={{
               display: 'flex',
               justifyContent: 'flex-end',
@@ -1447,50 +1448,13 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
   // MAIN LIST VIEW: PURCHASE ORDERS MANAGEMENT (V2 Option 1 Workflow)
   // -------------------------------------------------------------
   return (
-    <div className="procurement-workspace">
-      {/* 1. Header Row */}
-      <div className="workspace-header-row">
-        <div className="header-titles" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <h1 className="main-title" style={{ margin: 0 }}>Purchase Order</h1>
-            </div>
-            <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={onRefresh}
-                className="action-btn"
-              >
-                Refresh
-              </Button>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={handleResetDemo}
-                className="action-btn"
-              >
-                Reset Demo
-              </Button>
-              <Button
-                type="primary"
-                icon={<ExportOutlined />}
-                onClick={handleExport}
-                className="action-btn export-primary-btn"
-                style={{
-                  background: '#B49A00',
-                  borderColor: '#B49A00',
-                  border: '1px solid #B49A00',
-                  boxShadow: 'none',
-                  outline: 'none',
-                  color: '#ffffff',
-                  fontWeight: 600,
-                }}
-              >
-                Export
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="procurement-workspace inbound-role-workspace">
+      <WorkspaceHeader
+        title="Procurement — Purchase Orders"
+        onRefresh={onRefresh}
+        onExport={handleExport}
+        onResetDemo={handleResetDemo}
+      />
 
       {/* 2. KPI Summary Cards Grid matching the 5 Lifecycle Stages */}
       <div className="summary-cards-row">
@@ -1502,6 +1466,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             </div>
           </div>
           <div className={`kpi-value ${tabCounts.open === 0 ? 'zero' : 'blue'}`}>{tabCounts.open}</div>
+
         </div>
 
         <div className="kpi-card">
@@ -1512,6 +1477,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             </div>
           </div>
           <div className={`kpi-value ${tabCounts.inProgress === 0 ? 'zero' : 'amber'}`}>{tabCounts.inProgress}</div>
+
         </div>
 
         <div className="kpi-card">
@@ -1522,6 +1488,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             </div>
           </div>
           <div className={`kpi-value ${tabCounts.irPlans === 0 ? 'zero' : 'purple'}`}>{tabCounts.irPlans}</div>
+
         </div>
 
         <div className="kpi-card">
@@ -1532,6 +1499,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             </div>
           </div>
           <div className={`kpi-value ${tabCounts.qcRejected === 0 ? 'zero' : 'orange'}`} style={tabCounts.qcRejected === 0 ? { color: '#94a3b8' } : { color: '#dc2626' }}>{tabCounts.qcRejected}</div>
+
         </div>
 
         <div className="kpi-card">
@@ -1542,6 +1510,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             </div>
           </div>
           <div className={`kpi-value ${tabCounts.closed === 0 ? 'zero' : 'green'}`}>{tabCounts.closed}</div>
+
         </div>
       </div>
 
@@ -1683,26 +1652,6 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             </button>
           </div>
 
-          <div className="view-controls">
-            <div className="view-switcher-group">
-              <Tooltip title="Table View">
-                <button
-                  className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
-                  onClick={() => setViewMode('table')}
-                >
-                  <UnorderedListOutlined />
-                </button>
-              </Tooltip>
-              <Tooltip title="Expandable Card View">
-                <button
-                  className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
-                  onClick={() => setViewMode('cards')}
-                >
-                  <AppstoreOutlined />
-                </button>
-              </Tooltip>
-            </div>
-          </div>
         </div>
 
         {/* View Switcher */}
@@ -1711,16 +1660,20 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
             columns={irPlanColumns}
             dataSource={filteredIRPlans}
             rowKey="id"
-            pagination={{ pageSize: 10 }}
+            pagination={workspacePagination}
+            scroll={{ x: 1000 }}
+            locale={{ emptyText: <WorkspaceEmpty filtered={Boolean(searchTerm || statusFilter !== 'ALL' || vendorFilter !== 'ALL' || dateRange)} description="No inbound schedules in this queue. Create an IR from an open purchase order." /> }}
             className="po-custom-table"
           />
         ) : (
           <>
             <Table
               columns={poColumns}
-              dataSource={paginatedPOs}
+              dataSource={filteredPOs}
               rowKey="poNumber"
-              pagination={false}
+              pagination={workspacePagination}
+              scroll={{ x: 1000 }}
+              locale={{ emptyText: <WorkspaceEmpty filtered={Boolean(searchTerm || planningFilter !== 'ALL' || statusFilter !== 'ALL' || vendorFilter !== 'ALL' || dateRange)} description="No purchase orders in this queue. Choose another status or refresh to check for updates." /> }}
               className="po-custom-table"
               onRow={(record) => ({
                 onClick: () => {
@@ -1733,51 +1686,12 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
               }
             />
 
-            <div className="pagination-footer">
-              <div className="entries-info">
-                Showing 1-{Math.min(pageSize, filteredPOs.length)} of {totalEntries} entries
-              </div>
-              <div className="pagination-controls">
-                <button
-                  className="page-btn nav-btn"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                >
-                  &lt;
-                </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    className={`page-btn ${currentPage === pageNum ? 'active' : ''}`}
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
-                {totalPages > 5 && <span style={{ padding: '0 4px', color: '#94a3b8' }}>...</span>}
-                {totalPages > 5 && (
-                  <button
-                    className={`page-btn ${currentPage === totalPages ? 'active' : ''}`}
-                    onClick={() => setCurrentPage(totalPages)}
-                  >
-                    {totalPages}
-                  </button>
-                )}
-                <button
-                  className="page-btn nav-btn"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                >
-                  &gt;
-                </button>
-              </div>
-            </div>
           </>
         )}
       </div>
 
       {/* 5. Detail / Track Intake Drawer */}
-      <Drawer
+      <Drawer rootClassName="inbound-detail"
         title={
           <div style={{ display: 'flex', alignItems: 'center', width: '100%', paddingRight: 24 }}>
             <Space size={8}>
@@ -1790,7 +1704,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
         }
         open={!!selectedPODetail}
         onClose={() => setSelectedPODetail(null)}
-        width={980}
+        width={920}
         styles={{ body: { padding: '20px 24px', background: '#f8fafc' } }}
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -2196,13 +2110,14 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                   ]}
                 />
               </div>
+              <RelatedActivity receipts={linkedGRs} plans={linkedIRs} />
             </div>
           );
         })()}
       </Drawer>
 
       {/* 6. IR Schedule (IR Plan) Drawer */}
-      <Drawer
+      <Drawer rootClassName="inbound-detail"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: 24 }}>
             <Space size={10}>
@@ -2223,40 +2138,18 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
         onClose={() => setSelectedPlanDetail(null)}
         width={920}
         styles={{ body: { padding: '20px 24px', background: '#f8fafc' } }}
-        footer={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Procurement Inbound Schedule • Coordinates Supplier Delivery with Warehouse Receiving
-            </Text>
-            <Space size={12}>
-              <Button onClick={() => setSelectedPlanDetail(null)}>Close</Button>
-              {(() => {
-                const primaryPo = purchaseOrders.find(
-                  (p) => selectedPlanDetail?.poNumbers?.includes(p.poNumber),
-                );
-                return (
-                  primaryPo && (
-                    <Button
-                      type="primary"
-                      icon={<FileTextOutlined />}
-                      onClick={() => {
-                        const poToOpen = primaryPo;
-                        setSelectedPlanDetail(null);
-                        setSelectedPODetail(poToOpen);
-                      }}
-                      style={{ background: '#2563eb', borderColor: '#2563eb', fontWeight: 600 }}
-                    >
-                      View Linked PO Details ({primaryPo.poNumber})
-                    </Button>
-                  )
-                );
-              })()}
-            </Space>
-          </div>
-        }
+        footer={null}
       >
         {selectedPlanDetail && (
           <div className="detail-drawer-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {selectedPlanDetail.parentIrNumber && (
+              <Alert
+                type="info"
+                showIcon
+                message={`${selectedPlanDetail.qcFollowUpType === 'ON_HOLD' ? 'On-Hold' : 'Rejected'} follow-up from ${selectedPlanDetail.parentIrNumber}`}
+                description="Existing stock for OMM at WH-02. This child IR is for QC traceability and does not create another PO delivery."
+              />
+            )}
             {/* 1. Planning Overview Header Card */}
             <div
               className="po-figma-details-card"
@@ -2289,7 +2182,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
                     <span className="field-label" style={{ width: 105, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
-                      IR Plan #
+                      IR Schedule #
                     </span>
                     <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                       :
@@ -2637,6 +2530,7 @@ export const ProcurementWorkspaceV2: React.FC<ProcurementWorkspaceV2Props> = ({
                 ]}
               />
             </div>
+            <RelatedActivity receipts={receipts.filter(receipt => receipt.irPlanNumber === selectedPlanDetail.irPlanNumber)} plans={[selectedPlanDetail]} />
           </div>
         )}
       </Drawer>

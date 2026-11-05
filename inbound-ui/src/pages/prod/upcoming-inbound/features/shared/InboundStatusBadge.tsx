@@ -9,12 +9,13 @@ import type {
 } from '../../core/type';
 
 export interface StatusBadgeProps {
-  type: 'deliveryPlan' | 'qc' | 'supervisor' | 'sap' | 'planning' | 'po';
+  type: 'deliveryPlan' | 'qc' | 'supervisor' | 'sap' | 'planning' | 'po' | 'queue';
   value?: string;
   className?: string;
+  color?: string;
 }
 
-export const InboundStatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) => {
+export const InboundStatusBadge: React.FC<StatusBadgeProps> = ({ type, value, color, className }) => {
   if (!value) return <Tag style={{ borderRadius: 100, padding: '2px 10px', fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' }}>N/A</Tag>;
 
   const baseStyle: React.CSSProperties = {
@@ -28,6 +29,8 @@ export const InboundStatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) 
     fontSize: 12,
     lineHeight: '18px',
   };
+
+  if (type === 'queue') return <Tag className={className} color={color} style={baseStyle}>{value}</Tag>;
 
   if (type === 'planning') {
     switch (value as IESPlanningStatus) {
@@ -194,13 +197,14 @@ export const InboundStatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) 
   }
 
   if (type === 'qc') {
-    switch (value as QCResultStatus) {
+    switch (value as string) {
+      case 'Passed':
       case 'Pass':
         return (
           <Tag
             style={{ ...baseStyle, color: '#14532d', background: '#dcfce7', border: '1px solid #bbf7d0' }}
           >
-            QC Pass
+            Passed
           </Tag>
         );
       case 'Partial Reject':
@@ -211,20 +215,23 @@ export const InboundStatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) 
             Partial Reject
           </Tag>
         );
+      case 'Fail':
+      case 'Rejected':
       case 'Reject':
         return (
           <Tag
             style={{ ...baseStyle, color: '#991b1b', background: '#fee2e2', border: '1px solid #fecaca' }}
           >
-            QC Rejected
+            Rejected
           </Tag>
         );
+      case 'Conditional Pass':
       case 'On Hold':
         return (
           <Tag
             style={{ ...baseStyle, color: '#854d0e', background: '#fefce8', border: '1px solid #fef08a' }}
           >
-            QC On Hold
+            On Hold
           </Tag>
         );
       default:
@@ -261,7 +268,7 @@ export const InboundStatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) 
           <Tag
             style={{ ...baseStyle, color: '#14532d', background: '#dcfce7', border: '1px solid #bbf7d0' }}
           >
-            SAP Posted
+            Posted to SAP
           </Tag>
         );
       case 'Posting Failed':

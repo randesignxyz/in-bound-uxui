@@ -1,3 +1,5 @@
+import { normalizeReceivingNumber } from '../core/receivingNumber';
+import { createQCFollowUps } from '../core/qcFollowUp';
 import type { GoodsReceipt, IRPlan, PurchaseOrder } from '../core/type';
 import {
   SAMPLE_GOODS_RECEIPTS,
@@ -13,10 +15,27 @@ export interface LocalInboundSnapshot {
   receipts: GoodsReceipt[];
 }
 
+// Keep grNumber unchanged: legacy records use it as their internal relationship key.
+const withReceivingNumber = (receipt: GoodsReceipt): GoodsReceipt => ({
+  ...receipt,
+  receivingNumber: normalizeReceivingNumber(receipt.receivingNumber || receipt.grNumber),
+});
+
+const withExistingQCFollowUps = (receipts: GoodsReceipt[]): GoodsReceipt[] => {
+  const restored = receipts.map(withReceivingNumber);
+  // Add missing children for receipts approved before this workflow was introduced.
+  for (const receipt of receipts) {
+    if (receipt.processState === 'SAP_POSTED' || receipt.sapPostingStatus === 'Posted') {
+      restored.push(...createQCFollowUps(receipt, restored));
+    }
+  }
+  return restored;
+};
+
 const defaultSnapshot = (): LocalInboundSnapshot => ({
   irPlans: SAMPLE_IR_PLANS,
   purchaseOrders: SAMPLE_PURCHASE_ORDERS,
-  receipts: SAMPLE_GOODS_RECEIPTS,
+  receipts: SAMPLE_GOODS_RECEIPTS.map(withReceivingNumber),
 });
 
 export const loadLocalInboundSnapshot = (): LocalInboundSnapshot => {
@@ -42,7 +61,7 @@ export const loadLocalInboundSnapshot = (): LocalInboundSnapshot => {
     return {
       irPlans: parsed.irPlans,
       purchaseOrders: parsed.purchaseOrders,
-      receipts: parsed.receipts,
+      receipts: withExistingQCFollowUps(parsed.receipts),
     };
   } catch {
     return defaultSnapshot();

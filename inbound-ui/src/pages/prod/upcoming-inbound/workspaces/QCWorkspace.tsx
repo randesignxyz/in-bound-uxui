@@ -1,3 +1,9 @@
+import { RowActionButton, rowActionColumn } from '../shared/ui/RowActionButton';
+import { formatQuantities, getPostingQuantity } from '../core/quantity';
+import { getQCQueueState, matchesQCQueue, qcQueueLabels, getQCFollowUp, type QCQueue } from '../core/qcQueue';
+import { getReceiptIrNumber } from '../core/workflow/goods-receipt';
+import { WorkspaceTaskHeader, WorkspaceHeader, WorkspaceEmpty, workspacePagination, exportReceipts } from '../shared/ui/WorkspaceUI';
+import type { ExportFormat } from '../shared/ui/workspaceExport';
 import React, { useState, useMemo } from 'react';
 import {
   Table,
@@ -7,7 +13,6 @@ import {
   Typography,
   Input,
   Select,
-  Modal,
   Drawer,
   Form,
   DatePicker,
@@ -31,10 +36,7 @@ import {
   SendOutlined,
   FileDoneOutlined,
   ClockCircleOutlined,
-  ExportOutlined,
   ReloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -65,57 +67,31 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
   onRefresh,
   onNavigateToRole,
 }) => {
-  const [activeTab, setActiveTab] = useState<string>('PENDING');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [activeTab, setActiveTab] = useState<QCQueue>('PENDING');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [statusFilter, setStatusFilter] = useState<QCQueue>('ALL');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('ALL');
   const [dateRange, setDateRange] = useState<any>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<GoodsReceipt | null>(null);
-  const [isInspectionModalOpen, setIsInspectionModalOpen] = useState<boolean>(false);
+  const [isInspectionPageOpen, setIsInspectionPageOpen] = useState<boolean>(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState<boolean>(false);
 
   // QC Form state
   const [inspectionItems, setInspectionItems] = useState<GRItem[]>([]);
   const [overallQcRemark, setOverallQcRemark] = useState<string>('');
 
-  // Tab counts
-  const tabCounts = useMemo(() => {
-    return {
-      all: receipts.length,
-      pendingQC: receipts.filter((r) => r.deliveryPlanStatus === 'Waiting for QC' || r.processState === 'QC_PENDING').length,
-      passed: receipts.filter((r) => r.qcResult === 'Pass' || r.deliveryPlanStatus === 'QC Completed').length,
-      rejected: receipts.filter((r) => r.qcResult === 'Fail' || r.items.some((i) => (i.qcRejectedQty || 0) > 0)).length,
-      onHold: receipts.filter((r) => r.qcResult === 'Conditional Pass' || r.items.some((i) => (i.qcOnHoldQty || 0) > 0)).length,
-    };
-  }, [receipts]);
+  const tabCounts = useMemo(() => ({
+    all: receipts.length,
+    pendingQC: receipts.filter(r => matchesQCQueue(r, 'PENDING')).length,
+    passed: receipts.filter(r => matchesQCQueue(r, 'PASSED')).length,
+    rejected: receipts.filter(r => matchesQCQueue(r, 'REJECTED')).length,
+    onHold: receipts.filter(r => matchesQCQueue(r, 'ON_HOLD')).length,
+  }), [receipts]);
 
   // Filter receipts for QC Queue
   const filteredReceipts = useMemo(() => {
     return receipts.filter((r) => {
-      // 1. Tab Filter
-      if (activeTab === 'PENDING' && !(r.deliveryPlanStatus === 'Waiting for QC' || r.processState === 'QC_PENDING')) {
-        return false;
-      }
-      if (activeTab === 'PASSED' && !(r.qcResult === 'Pass' || r.deliveryPlanStatus === 'QC Completed')) {
-        return false;
-      }
-      if (activeTab === 'REJECTED_HOLD' && !(r.qcResult === 'Fail' || r.qcResult === 'Conditional Pass' || r.items.some((i) => (i.qcRejectedQty || 0) > 0 || (i.qcOnHoldQty || 0) > 0))) {
-        return false;
-      }
-
-      // 2. Status Dropdown Filter
-      if (statusFilter !== 'ALL') {
-        if (statusFilter === 'PENDING' && !(r.deliveryPlanStatus === 'Waiting for QC' || r.processState === 'QC_PENDING')) {
-          return false;
-        }
-        if (statusFilter === 'PASSED' && r.qcResult !== 'Pass') {
-          return false;
-        }
-        if (statusFilter === 'REJECTED' && r.qcResult !== 'Fail') {
-          return false;
-        }
-      }
+      if (!matchesQCQueue(r, activeTab) || !matchesQCQueue(r, statusFilter)) return false;
 
       // 3. Warehouse Filter
       if (warehouseFilter !== 'ALL' && r.receiverWarehouseName && !r.receiverWarehouseName.includes(warehouseFilter)) {
@@ -125,7 +101,7 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
       // 4. Search Filter
       if (searchTerm) {
         const q = searchTerm.toLowerCase().trim();
-        const matchesGR = r.grNumber?.toLowerCase().includes(q);
+        const matchesGR = [getReceiptIrNumber(r), r.grNumber, r.sapDocNum, r.sapGrNumber].some(number => number?.toLowerCase().includes(q));
         const matchesIR = r.irPlanNumber?.toLowerCase().includes(q);
         const matchesSupplier = r.supplier?.toLowerCase().includes(q);
         const matchesDN = r.deliveryNoteNumber?.toLowerCase().includes(q);
@@ -189,7 +165,8 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
 
     setInspectionItems(clonedItems);
     setOverallQcRemark(receipt.qcNotes || '');
-    setIsInspectionModalOpen(true);
+    setIsDetailDrawerOpen(false);
+    setIsInspectionPageOpen(true);
   };
 
   // Update item QC partition
@@ -273,7 +250,7 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
       ...selectedReceipt,
       items: inspectionItems,
       qcResult: overallResult,
-      qcInspectedBy: 'QC Inspector (Me)',
+      qcInspectedBy: 'QC Lab (Demo)',
       qcInspectionDate: dayjs().format('YYYY-MM-DD HH:mm'),
       qcNotes: overallQcRemark,
       deliveryPlanStatus: 'Pending Supervisor',
@@ -282,9 +259,9 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
         ...(selectedReceipt.activities || []),
         {
           id: `act-qc-${Date.now()}`,
-          title: `QC Inspection: ${overallResult}`,
-          description: `QC review finalized with result: ${overallResult}. Accepted: ${inspectionItems.reduce((s, i) => s + (i.qcAcceptedQty || 0), 0)}, Rejected: ${inspectionItems.reduce((s, i) => s + (i.qcRejectedQty || 0), 0)}, Hold: ${inspectionItems.reduce((s, i) => s + (i.qcOnHoldQty || 0), 0)}.`,
-          performedBy: 'QC Inspector',
+          title: `QC Inspection: ${getQCQueueState({ ...selectedReceipt, items: inspectionItems, qcResult: overallResult, deliveryPlanStatus: 'Pending Supervisor', processState: 'PENDING_SUPERVISOR_REVIEW' }).label}`,
+          description: `Accepted: ${formatQuantities(inspectionItems, i => i.qcAcceptedQty ?? 0)}; Rejected: ${formatQuantities(inspectionItems, i => i.qcRejectedQty ?? 0)}; On Hold: ${formatQuantities(inspectionItems, i => i.qcOnHoldQty ?? 0)}. Sent to Supervisor for review. ${inspectionItems.map(i => [i.qcRejectedReason, i.qcOnHoldReason].filter(Boolean).join("; ")).filter(Boolean).join("; ")}`,
+          performedBy: 'QC Lab (Demo)',
           timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
           state: 'done',
         },
@@ -292,23 +269,23 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
     };
 
     onSubmitQCReview(updatedReceipt);
-    message.success(`QC Result (${overallResult}) submitted! GR ${updatedReceipt.grNumber} routed to Warehouse Supervisor.`);
-    setIsInspectionModalOpen(false);
+    message.success(`QC result (${getQCQueueState(updatedReceipt).label}) submitted! Receiving record ${getReceiptIrNumber(updatedReceipt)} routed to Warehouse Supervisor.`);
+    setIsInspectionPageOpen(false);
     setSelectedReceipt(updatedReceipt);
   };
 
-  const handleExport = () => {
-    message.success('Exporting QC Inspection Queue to Excel format...');
+  const handleExport = (format: ExportFormat) => {
+    exportReceipts('qc-receipts', filteredReceipts, format);
   };
 
   // QC Queue Columns
   const columns: ColumnsType<GoodsReceipt> = [
     {
-      title: 'GR #',
+      title: 'Receiving #',
       dataIndex: 'grNumber',
       key: 'grNumber',
       width: 130,
-      render: (gr: string, record: GoodsReceipt) => (
+      render: (_: string, record: GoodsReceipt) => (
         <span
           className="po-link"
           onClick={() => {
@@ -316,42 +293,44 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
             setIsDetailDrawerOpen(true);
           }}
         >
-          {gr || record.irPlanNumber}
+          {getReceiptIrNumber(record) || '—'}
         </span>
       ),
     },
     {
-      title: 'Status',
-      dataIndex: 'deliveryPlanStatus',
+      title: 'QC Status',
       key: 'status',
-      width: 150,
-      render: (status: string) => (
-        <InboundStatusBadge type="deliveryPlan" value={status || 'Waiting for QC'} />
-      ),
+      width: 160,
+      render: (_: unknown, record: GoodsReceipt) => {
+        const state = getQCQueueState(record);
+        return <InboundStatusBadge type="queue" value={state.label} color={state.color} />;
+      },
     },
     {
-      title: 'IR Plan #',
+      title: 'IR Schedule #',
       dataIndex: 'irPlanNumber',
       key: 'irPlanNumber',
-      width: 120,
-      render: (ir: string, record: GoodsReceipt) => (
-        <span
-          className="po-link"
-          onClick={() => {
-            setSelectedReceipt(record);
-            setIsDetailDrawerOpen(true);
-          }}
-        >
-          {ir || '—'}
-        </span>
-      ),
+      width: 170,
+      render: (ir: string, record: GoodsReceipt) => <div>
+        <Text strong>{ir || '—'}</Text>
+        {record.parentIrNumber && <div><Text type="secondary" style={{ fontSize: 11 }}>
+          From {record.parentIrNumber} · {record.qcFollowUpType === 'ON_HOLD' ? 'On Hold' : 'Rejected'}
+        </Text></div>}
+      </div>,
+    },
+    {
+      title: 'WH Location',
+      key: 'followUpLocation',
+      width: 230,
+      render: (_: unknown, record: GoodsReceipt) =>
+        <span style={{ whiteSpace: 'nowrap' }}>{record.receiverWarehouseName || '—'}</span>,
     },
     {
       title: 'PO #',
       key: 'poNumber',
       width: 130,
       render: (_: any, record: GoodsReceipt) => (
-        <span className="po-link">
+        <span>
           {record.poNumber}
         </span>
       ),
@@ -360,85 +339,77 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
       title: 'Vendor',
       dataIndex: 'supplier',
       key: 'vendor',
-      render: (sup: string) => <span className="vendor-name">{sup}</span>,
+      width: 220,
+      render: (sup: string) => <span className="vendor-name" style={{ whiteSpace: 'nowrap' }}>{sup}</span>,
     },
     {
-      title: 'Received Qty (WH)',
+      title: 'Received Qty',
       key: 'whReceived',
       width: 160,
       render: (_: any, record: GoodsReceipt) => {
-        const totalReceived = record.items.reduce((s, i) => s + (i.receiveQty || 0), 0);
         return (
           <div>
-            <Text strong style={{ color: '#2563eb' }}>{totalReceived.toLocaleString()}</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}> PCS ({record.items.length} items)</Text>
+            <Text strong>{formatQuantities(record.items, i => i.receiveQty ?? 0)}</Text>
           </div>
         );
       },
     },
+    ...([
+      { title: 'Accepted', field: 'qcAcceptedQty' },
+      { title: 'Rejected', field: 'qcRejectedQty' },
+      { title: 'On Hold', field: 'qcOnHoldQty' },
+    ] as const).map(({ title, field }) => ({
+      title,
+      key: field,
+      width: 110,
+      align: 'right' as const,
+      render: (_: unknown, record: GoodsReceipt) => {
+        const state = getQCQueueState(record);
+        if (state.pending || (!state.passed && !state.rejected && !state.onHold)) return '—';
+        return <Text>{formatQuantities(record.items, item => item[field] ?? 0)}</Text>;
+      },
+    })),
     {
-      title: 'QC Partition (Acc / Rej / Hold)',
-      key: 'qcPartition',
-      width: 200,
-      render: (_: any, record: GoodsReceipt) => {
-        const acc = record.items.reduce((s, i) => s + (i.qcAcceptedQty || 0), 0);
-        const rej = record.items.reduce((s, i) => s + (i.qcRejectedQty || 0), 0);
-        const hold = record.items.reduce((s, i) => s + (i.qcOnHoldQty || 0), 0);
-
-        if (record.deliveryPlanStatus === 'Waiting for QC' || record.processState === 'QC_PENDING') {
-          return <Tag color="purple">Awaiting Inspection</Tag>;
-        }
-
-        return (
-          <Space size={4}>
-            <Tag color="green">Acc: {acc}</Tag>
-            {rej > 0 && <Tag color="red">Rej: {rej}</Tag>}
-            {hold > 0 && <Tag color="gold">Hold: {hold}</Tag>}
-          </Space>
-        );
+      title: 'Reason / Next Step',
+      key: 'qcFollowUp',
+      width: 220,
+      render: (_: unknown, record: GoodsReceipt) => {
+        const state = getQCQueueState(record);
+        if (!state.rejected && !state.onHold) return '—';
+        const reasons = Array.from(new Set(record.items.flatMap(item => [
+          (item.qcRejectedQty || 0) > 0 ? item.qcRejectedReason : undefined,
+          (item.qcOnHoldQty || 0) > 0 ? item.qcOnHoldReason : undefined,
+        ]).filter(Boolean)));
+        return <Space direction="vertical" size={2}>
+          <Text>{reasons.join('; ') || record.qcNotes || 'Reason not recorded'}</Text>
+          <Text type="secondary">Next: {getQCFollowUp(record)}</Text>
+        </Space>;
       },
     },
     {
-      title: 'QC Result',
-      key: 'qcResult',
-      width: 120,
+      ...rowActionColumn,
       render: (_: any, record: GoodsReceipt) => {
-        if (!record.qcResult || record.deliveryPlanStatus === 'Waiting for QC') {
-          return <InboundStatusBadge type="qc" value="Pending" />;
-        }
-        return <InboundStatusBadge type="qc" value={record.qcResult} />;
-      },
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      width: 140,
-      render: (_: any, record: GoodsReceipt) => {
-        const isPending = record.deliveryPlanStatus === 'Waiting for QC' || record.processState === 'QC_PENDING';
+        const isPending = getQCQueueState(record).pending;
         return (
           <Space>
             {isPending ? (
-              <Button
-                size="small"
-                type="primary"
+              <RowActionButton
+                variant="primary"
                 icon={<SafetyCertificateOutlined />}
                 onClick={() => handleStartInspection(record)}
-                style={{ background: '#722ed1', borderColor: '#722ed1', fontWeight: 500 }}
               >
-                Inspect Goods
-              </Button>
+                Start Inspection
+              </RowActionButton>
             ) : (
-              <Button
-                size="small"
-                type="link"
+              <RowActionButton
                 icon={<EyeOutlined />}
                 onClick={() => {
                   setSelectedReceipt(record);
                   setIsDetailDrawerOpen(true);
                 }}
               >
-                View Result
-              </Button>
+                View Inspection
+              </RowActionButton>
             )}
           </Space>
         );
@@ -446,99 +417,200 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
     },
   ];
 
-  return (
-    <div className="procurement-workspace">
-      {/* 1. Header Row */}
-      <div className="workspace-header-row">
-        <div className="header-titles" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1 className="main-title" style={{ margin: 0 }}>Quality Control & Inspection</h1>
-            <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={onRefresh}
-                className="action-btn"
-              >
-                Refresh
-              </Button>
-              <Button
-                type="primary"
-                icon={<ExportOutlined />}
-                onClick={handleExport}
-                className="action-btn export-primary-btn"
-                style={{
-                  background: '#B49A00',
-                  borderColor: '#B49A00',
-                  color: '#ffffff',
-                  fontWeight: 600,
-                }}
-              >
-                Export
-              </Button>
-            </div>
-          </div>
-          <p className="main-subtitle" style={{ margin: '4px 0 0 0' }}>
-            Inspect physically received shipments, record multi-parameter quality checks, and route approved partitions to Supervisor
-          </p>
+  if (isInspectionPageOpen && selectedReceipt) {
+    return <div className="procurement-workspace inbound-task-page qc-inspection-page">
+      <WorkspaceTaskHeader title="QC Inspection" onBack={() => setIsInspectionPageOpen(false)} />
+      <div className="create-plan-container">
+      <section className="po-figma-details-card qc-inspection-hero" aria-label="Receiving record summary">
+        <div className="qc-inspection-section-title">
+          <FileTextOutlined />
+          <span>Receiving Summary</span>
         </div>
+        <div className="qc-inspection-summary-grid">
+          {[
+            ['Receiving #', getReceiptIrNumber(selectedReceipt)],
+            ['IR Schedule #', selectedReceipt.irPlanNumber],
+            ['PO #', selectedReceipt.poReferences?.map(po => po.poNumber).join(', ') || selectedReceipt.poNumber],
+            ['Vendor', selectedReceipt.supplier],
+            ['WH Location', selectedReceipt.receiverWarehouseName],
+            ['Received Qty', formatQuantities(selectedReceipt.items, item => item.receiveQty)],
+          ].map(([label, value]) => (
+            <div className="qc-inspection-summary-field" key={label}>
+              <span>{label}</span><strong>{value || '—'}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="qc-inspection-content" aria-label="Quality inspection">
+        <div className="qc-inspection-table-card">
+          <div className="qc-inspection-section-title">
+            <SafetyCertificateOutlined />
+            <span>Inspection Line Items ({inspectionItems.length})</span>
+          </div>
+          <Table
+            className="po-custom-table qc-inspection-table"
+            dataSource={inspectionItems.map((item, itemIdx) => ({ ...item, itemIdx, rowKey: `${item.code}-${itemIdx}` }))}
+            rowKey="rowKey"
+            pagination={false}
+            scroll={{ x: 1500 }}
+            columns={[
+              { title: 'Item Code', dataIndex: 'code', key: 'code', width: 140,
+                render: (code: string) => <Text strong>{code}</Text> },
+              { title: 'Item Description', dataIndex: 'name', key: 'name', width: 230 },
+              { title: 'PO #', dataIndex: 'poNumber', key: 'poNumber', width: 130 },
+              { title: 'Received Qty', key: 'received', width: 130,
+                render: (_: unknown, item: GRItem) => <Text strong>{item.receiveQty.toLocaleString()} {item.uom}</Text> },
+              { title: 'Accepted', key: 'accepted', width: 145,
+                render: (_: unknown, item: GRItem & { itemIdx: number }) => <InputNumber
+                  min={0} max={item.receiveQty} value={item.qcAcceptedQty}
+                  onChange={(value) => handleUpdatePartition(item.itemIdx, 'qcAcceptedQty', value || 0)}
+                  style={{ width: 115 }} /> },
+              { title: 'Rejected', key: 'rejected', width: 240,
+                render: (_: unknown, item: GRItem & { itemIdx: number }) => <div className={`qc-inspection-disposition-cell${(item.qcRejectedQty || 0) > 0 ? ' has-reason' : ''}`}>
+                  <InputNumber
+                    min={0} max={item.receiveQty} value={item.qcRejectedQty}
+                    onChange={(value) => handleUpdatePartition(item.itemIdx, 'qcRejectedQty', value || 0)}
+                    style={{ width: 115 }}
+                  />
+                  {(item.qcRejectedQty || 0) > 0 && <div className="qc-inspection-reason-group">
+                    <Input
+                      aria-label={`Rejection reason for ${item.code}`}
+                      status={!item.qcRejectedReason?.trim() ? 'error' : undefined}
+                      placeholder="Describe defect (required)"
+                      value={item.qcRejectedReason}
+                      onChange={(event) => {
+                        const updated = [...inspectionItems];
+                        updated[item.itemIdx].qcRejectedReason = event.target.value;
+                        setInspectionItems(updated);
+                      }}
+                    />
+                    <span role={!item.qcRejectedReason?.trim() ? 'alert' : undefined} className="qc-inspection-required qc-inspection-required-rejected">
+                      {!item.qcRejectedReason?.trim() ? 'Rejection reason required' : '\u00a0'}
+                    </span>
+                  </div>}
+                </div> },
+              { title: 'On Hold', key: 'hold', width: 240,
+                render: (_: unknown, item: GRItem & { itemIdx: number }) => <div className={`qc-inspection-disposition-cell${(item.qcOnHoldQty || 0) > 0 ? ' has-reason' : ''}`}>
+                  <InputNumber
+                    min={0} max={item.receiveQty} value={item.qcOnHoldQty}
+                    onChange={(value) => handleUpdatePartition(item.itemIdx, 'qcOnHoldQty', value || 0)}
+                    style={{ width: 115 }}
+                  />
+                  {(item.qcOnHoldQty || 0) > 0 && <div className="qc-inspection-reason-group">
+                    <Input
+                      aria-label={`On-hold reason for ${item.code}`}
+                      status={!item.qcOnHoldReason?.trim() ? 'warning' : undefined}
+                      placeholder="Hold reason (required)"
+                      value={item.qcOnHoldReason}
+                      onChange={(event) => {
+                        const updated = [...inspectionItems];
+                        updated[item.itemIdx].qcOnHoldReason = event.target.value;
+                        setInspectionItems(updated);
+                      }}
+                    />
+                    <span role={!item.qcOnHoldReason?.trim() ? 'alert' : undefined} className="qc-inspection-required qc-inspection-required-hold">
+                      {!item.qcOnHoldReason?.trim() ? 'On-hold reason required' : '\u00a0'}
+                    </span>
+                  </div>}
+                </div> },
+              { title: 'Validation', key: 'validation', width: 150,
+                render: (_: unknown, item: GRItem) => {
+                  const total = (item.qcAcceptedQty || 0) + (item.qcRejectedQty || 0) + (item.qcOnHoldQty || 0);
+                  return <Tag color={total === item.receiveQty ? 'green' : 'red'}>
+                    {total}/{item.receiveQty} {total === item.receiveQty ? 'Matched' : 'Unmatched'}
+                  </Tag>;
+                } },
+            ]}
+            expandable={{
+              defaultExpandAllRows: true,
+              expandedRowRender: (item: GRItem & { itemIdx: number }) => {
+                const itemIdx = item.itemIdx;
+                const checks = item.qcChecks || {
+                  packagingCondition: 'Pass', productAppearance: 'Pass', quantityVerification: 'Pass',
+                  batchVerification: 'Pass', dateVerification: 'Pass', handlingTempCondition: 'Pass',
+                };
+                return <div className="qc-inspection-row-details">
+              {/* 6-Point Inspection Checklist */}
+              <div className="qc-inspection-checklist">
+                <Text strong style={{ fontSize: 13, color: '#475569', display: 'block', marginBottom: 12 }}>
+                  6-Point Physical Quality Checks
+                </Text>
+                <Row gutter={[12, 8]}>
+                  {[
+                    { key: 'packagingCondition', label: '1. Packaging Condition' },
+                    { key: 'productAppearance', label: '2. Product Appearance' },
+                    { key: 'quantityVerification', label: '3. Quantity Verification' },
+                    { key: 'batchVerification', label: '4. Batch & Lot No.' },
+                    { key: 'dateVerification', label: '5. Date (Mfg/Exp)' },
+                    { key: 'handlingTempCondition', label: '6. Storage Temp & Seal' },
+                  ].map((chk) => (
+                    <Col xs={12} sm={8} md={4} key={chk.key}>
+                      <Text style={{ fontSize: 13, display: 'block', color: '#64748b' }}>{chk.label}</Text>
+                      <Select
+                        size="middle"
+                        style={{ width: '100%', marginTop: 2 }}
+                        value={(checks as any)[chk.key] || 'Pass'}
+                        onChange={(v) => handleUpdateCheck(itemIdx, chk.key as any, v)}
+                        options={[
+                          { label: 'Pass', value: 'Pass' },
+                          { label: 'Fail', value: 'Fail' },
+                          { label: 'N/A', value: 'N/A' },
+                        ]}
+                      />
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+
+                </div>;
+              },
+            }}
+          />
+        </div>
+
+        <div className="qc-inspection-remarks">
+          <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>
+            Overall QC Summary Remarks
+          </Text>
+          <Input.TextArea
+            rows={2}
+            value={overallQcRemark}
+            onChange={(e) => setOverallQcRemark(e.target.value)}
+            placeholder="Optional summary remarks for Warehouse Supervisor"
+          />
+        </div>
+
+      </section>
+
+      <footer className="inbound-task-actions">
+        <Button onClick={() => setIsInspectionPageOpen(false)}>Cancel</Button>
+        <Button type="primary" icon={<SendOutlined />} onClick={handleSubmitInspection}>Submit to Supervisor</Button>
+      </footer>
       </div>
+    </div>;
+  }
 
-      {/* 2. KPI Summary Cards */}
+  return (
+    <div className="procurement-workspace inbound-role-workspace">
+      <WorkspaceHeader
+        title="Quality Control — Inspection"
+        onRefresh={onRefresh}
+        onExport={handleExport}
+      />
+
+      {/* QC queues use the same ordering and counts in cards, tabs, and filters. */}
       <div className="summary-cards-row">
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <span className="kpi-title">Awaiting QC</span>
-            <div className="kpi-icon-badge purple">
-              <SafetyCertificateOutlined />
-            </div>
-          </div>
-          <div className="kpi-value purple">{tabCounts.pendingQC}</div>
-          <div className="kpi-subtitle">Pending inspection</div>
-        </div>
+        {[
+          { label: 'To Inspect', count: tabCounts.pendingQC, color: 'purple', icon: <SafetyCertificateOutlined /> },
+          { label: 'On Hold', count: tabCounts.onHold, color: 'amber', icon: <StopOutlined /> },
+          { label: 'Rejected', count: tabCounts.rejected, color: 'orange', icon: <CloseCircleOutlined /> },
+          { label: 'Passed', count: tabCounts.passed, color: 'green', icon: <CheckCircleOutlined /> },
+          { label: 'All Receipts', count: tabCounts.all, color: 'blue', icon: <FileDoneOutlined /> },
+        ].map(card => <div className="kpi-card" key={card.label}>
+          <div className="kpi-top"><span className="kpi-title">{card.label}</span><div className={`kpi-icon-badge ${card.color}`}>{card.icon}</div></div>
+          <div className={`kpi-value ${card.color}`}>{card.count}</div>
 
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <span className="kpi-title">QC Passed</span>
-            <div className="kpi-icon-badge green">
-              <CheckCircleOutlined />
-            </div>
-          </div>
-          <div className="kpi-value green">{tabCounts.passed}</div>
-          <div className="kpi-subtitle">Accepted goods</div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <span className="kpi-title">Rejected Goods</span>
-            <div className="kpi-icon-badge orange">
-              <CloseCircleOutlined />
-            </div>
-          </div>
-          <div className="kpi-value orange">{tabCounts.rejected}</div>
-          <div className="kpi-subtitle">Defective items</div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <span className="kpi-title">Quarantine / Hold</span>
-            <div className="kpi-icon-badge amber">
-              <StopOutlined />
-            </div>
-          </div>
-          <div className="kpi-value amber">{tabCounts.onHold}</div>
-          <div className="kpi-subtitle">Requires retest</div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <span className="kpi-title">Total Processed</span>
-            <div className="kpi-icon-badge blue">
-              <FileDoneOutlined />
-            </div>
-          </div>
-          <div className="kpi-value blue">{tabCounts.all}</div>
-          <div className="kpi-subtitle">All QC transactions</div>
-        </div>
+        </div>)}
       </div>
 
       {/* 3. Single-Line Filter Toolbar Card with Title Labels */}
@@ -548,7 +620,7 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 240px', minWidth: 200, maxWidth: 300 }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Search</span>
             <Input
-              placeholder="Search GR #, IR Plan, vendor..."
+              placeholder="Search Receiving #, IR Schedule #, vendor..."
               prefix={<SearchOutlined style={{ color: '#9ca3af', marginRight: 4 }} />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -563,13 +635,8 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
             <Select
               style={{ width: '100%', height: 36 }}
               value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { label: 'All Status', value: 'ALL' },
-                { label: 'Awaiting QC', value: 'PENDING' },
-                { label: 'QC Passed', value: 'PASSED' },
-                { label: 'QC Rejected', value: 'REJECTED' },
-              ]}
+              onChange={(value: QCQueue) => { setStatusFilter(value); setActiveTab('ALL'); }}
+              options={(['ALL', 'PENDING', 'ON_HOLD', 'REJECTED', 'PASSED'] as QCQueue[]).map(value => ({ label: value === 'ALL' ? 'All Statuses' : qcQueueLabels[value], value }))}
             />
           </div>
 
@@ -630,59 +697,15 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
       <div className="main-content-card">
         <div className="tab-action-bar">
           <div className="tabs-list">
-            <button
-              className={`tab-button ${activeTab === 'PENDING' ? 'active' : ''}`}
-              onClick={() => setActiveTab('PENDING')}
-            >
-              <span>Awaiting QC</span>
-              <span className="tab-count-badge">{tabCounts.pendingQC}</span>
-            </button>
-
-            <button
-              className={`tab-button ${activeTab === 'PASSED' ? 'active' : ''}`}
-              onClick={() => setActiveTab('PASSED')}
-            >
-              <span>QC Passed</span>
-              <span className="tab-count-badge">{tabCounts.passed}</span>
-            </button>
-
-            <button
-              className={`tab-button ${activeTab === 'REJECTED_HOLD' ? 'active' : ''}`}
-              onClick={() => setActiveTab('REJECTED_HOLD')}
-            >
-              <span>Rejected / Hold</span>
-              <span className="tab-count-badge">{tabCounts.rejected + tabCounts.onHold}</span>
-            </button>
-
-            <button
-              className={`tab-button ${activeTab === 'ALL' ? 'active' : ''}`}
-              onClick={() => setActiveTab('ALL')}
-            >
-              <span>All QC Records</span>
-              <span className="tab-count-badge">{tabCounts.all}</span>
-            </button>
+            {(['PENDING', 'ON_HOLD', 'REJECTED', 'PASSED', 'ALL'] as QCQueue[]).map(queue => (
+              <button key={queue} className={`tab-button ${activeTab === queue ? 'active' : ''}`}
+                onClick={() => { setActiveTab(queue); setStatusFilter('ALL'); }}>
+                <span>{qcQueueLabels[queue]}</span>
+                <span className="tab-count-badge">{{ PENDING: tabCounts.pendingQC, ON_HOLD: tabCounts.onHold, REJECTED: tabCounts.rejected, PASSED: tabCounts.passed, ALL: tabCounts.all }[queue]}</span>
+              </button>
+            ))}
           </div>
 
-          <div className="view-controls">
-            <div className="view-switcher-group">
-              <Tooltip title="Table View">
-                <button
-                  className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
-                  onClick={() => setViewMode('table')}
-                >
-                  <UnorderedListOutlined />
-                </button>
-              </Tooltip>
-              <Tooltip title="Cards View">
-                <button
-                  className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
-                  onClick={() => setViewMode('cards')}
-                >
-                  <AppstoreOutlined />
-                </button>
-              </Tooltip>
-            </div>
-          </div>
         </div>
 
         {/* Table View */}
@@ -690,22 +713,24 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
           columns={columns}
           dataSource={filteredReceipts}
           rowKey="grNumber"
-          pagination={{ pageSize: 8, showTotal: (t) => `Total ${t} items` }}
+          pagination={workspacePagination}
+          scroll={{ x: 1450 }}
+          locale={{ emptyText: <WorkspaceEmpty filtered={Boolean(searchTerm || statusFilter !== 'ALL' || warehouseFilter !== 'ALL' || dateRange)} description={{ PENDING: 'No receipts to inspect. New work appears here after warehouse submission.', ON_HOLD: 'No receipts are on hold or awaiting retest.', REJECTED: 'No rejected or partially rejected receipts.', PASSED: 'No passed inspections yet.', ALL: 'No receiving records yet.' }[activeTab]} /> }}
           className="po-custom-table"
         />
       </div>
 
       {/* 5. Detail / QC Inspection Drawer (920px) */}
-      <Drawer
+      <Drawer rootClassName="inbound-detail"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: 24 }}>
             <Space size={10}>
               <SafetyCertificateOutlined style={{ color: '#722ed1', fontSize: 18 }} />
               <span style={{ fontWeight: 700, fontSize: 16 }}>
-                QC Inspection Details: {selectedReceipt?.grNumber}
+                QC Inspection Details: {selectedReceipt ? getReceiptIrNumber(selectedReceipt) : '—'}
               </span>
             </Space>
-            {selectedReceipt && <InboundStatusBadge type="qc" value={selectedReceipt.qcResult || 'Pending'} />}
+            {selectedReceipt && <InboundStatusBadge type="queue" color={getQCQueueState(selectedReceipt).color} value={getQCQueueState(selectedReceipt).label} />}
           </div>
         }
         open={isDetailDrawerOpen}
@@ -715,11 +740,11 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              Quality Control Inspection Record • Linked to GR {selectedReceipt?.grNumber}
+              Quality Control Inspection Record • Receiving record {selectedReceipt ? getReceiptIrNumber(selectedReceipt) : '—'}
             </Text>
             <Space size={12}>
               <Button onClick={() => setIsDetailDrawerOpen(false)}>Close</Button>
-              {selectedReceipt && (selectedReceipt.deliveryPlanStatus === 'Waiting for QC' || !selectedReceipt.qcResult) && (
+              {selectedReceipt && getQCQueueState(selectedReceipt).pending && (
                 <Button
                   type="primary"
                   icon={<SafetyCertificateOutlined />}
@@ -727,9 +752,9 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
                     setIsDetailDrawerOpen(false);
                     handleStartInspection(selectedReceipt);
                   }}
-                  style={{ background: '#722ed1', borderColor: '#722ed1', fontWeight: 600 }}
+                  style={{ background: '#B49A00', borderColor: '#B49A00', fontWeight: 600 }}
                 >
-                  Conduct QC Inspection
+                  Start Inspection
                 </Button>
               )}
             </Space>
@@ -764,35 +789,33 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
                       QC Inspection Verification & Disposition
                     </span>
                   </div>
-                  <Tag color={selectedReceipt.qcResult === 'Pass' ? 'green' : selectedReceipt.qcResult === 'Fail' ? 'red' : 'purple'} style={{ fontSize: 12, fontWeight: 600, padding: '2px 10px', borderRadius: 12 }}>
-                    {selectedReceipt.qcResult ? `QC ${selectedReceipt.qcResult} (${passRate}%)` : 'Pending Inspection'}
-                  </Tag>
+                  <InboundStatusBadge type="queue" color={getQCQueueState(selectedReceipt).color} value={getQCQueueState(selectedReceipt).label} />
                 </div>
 
-                <Progress
+                {new Set(selectedReceipt.items.map(item => item.uom)).size === 1 && <Progress
                   percent={passRate}
                   strokeColor="#722ed1"
                   trailColor="#e2e8f0"
-                  status={selectedReceipt.qcResult === 'Fail' ? 'exception' : 'active'}
+                  status={selectedReceipt.qcResult === 'Fail' ? 'exception' : 'normal'}
                   style={{ marginBottom: 12 }}
-                />
+                />}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 12 }}>
                   <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
                     <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>WH Received</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{totalReceivedQty.toLocaleString()} Units</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a'}}>{formatQuantities(selectedReceipt.items, i => i.receiveQty ?? 0)}</div>
                   </div>
                   <div style={{ background: '#f0fdf4', padding: '10px 12px', borderRadius: 8, border: '1px solid #bbf7d0' }}>
                     <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 500 }}>Accepted Qty</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#16a34a' }}>{totalAcceptedQty.toLocaleString()} Units</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a'}}>{formatQuantities(selectedReceipt.items, i => i.qcAcceptedQty ?? 0)}</div>
                   </div>
                   <div style={{ background: totalRejectedQty > 0 ? '#fef2f2' : '#f8fafc', padding: '10px 12px', borderRadius: 8, border: totalRejectedQty > 0 ? '1px solid #fecaca' : '1px solid #e2e8f0' }}>
                     <div style={{ fontSize: 11, color: totalRejectedQty > 0 ? '#dc2626' : '#64748b', fontWeight: 500 }}>Rejected Qty</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: totalRejectedQty > 0 ? '#dc2626' : '#0f172a' }}>{totalRejectedQty.toLocaleString()} Units</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a'}}>{formatQuantities(selectedReceipt.items, i => i.qcRejectedQty ?? 0)}</div>
                   </div>
                   <div style={{ background: totalOnHoldQty > 0 ? '#fefce8' : '#f8fafc', padding: '10px 12px', borderRadius: 8, border: totalOnHoldQty > 0 ? '1px solid #fef08a' : '1px solid #e2e8f0' }}>
                     <div style={{ fontSize: 11, color: totalOnHoldQty > 0 ? '#854d0e' : '#64748b', fontWeight: 500 }}>On Hold Qty</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: totalOnHoldQty > 0 ? '#ca8504' : '#0f172a' }}>{totalOnHoldQty.toLocaleString()} Units</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a'}}>{formatQuantities(selectedReceipt.items, i => i.qcOnHoldQty ?? 0)}</div>
                   </div>
                 </div>
               </div>
@@ -821,27 +844,27 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
                   QC Inspection & Logistics Header
                 </div>
                 <div className="po-grid-container" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {/* Row 1: GR # vs IR Plan # */}
+                  {/* Row 1: Receiving # vs IR Schedule # */}
                   <div className="po-grid-row" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
                     <div className="label-value-pair" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                       <span className="field-label" style={{ width: 140, fontSize: 13, fontWeight: 500, color: '#6b7280', flexShrink: 0 }}>
-                        Goods Receipt #
+                        Receiving #
                       </span>
                       <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                         :
                       </span>
                       <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: 'rgba(0,0,0,0.85)' }}>
-                        {selectedReceipt.grNumber}
+                        {getReceiptIrNumber(selectedReceipt)}
                       </span>
                     </div>
                     <div className="label-value-pair" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                       <span className="field-label" style={{ width: 140, fontSize: 13, fontWeight: 500, color: '#6b7280', flexShrink: 0 }}>
-                        IR Plan #
+                        IR Schedule #
                       </span>
                       <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                         :
                       </span>
-                      <span className="field-value po-link" style={{ fontSize: 14, fontWeight: 600, color: '#2563eb' }}>
+                      <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
                         {selectedReceipt.irPlanNumber}
                       </span>
                     </div>
@@ -937,246 +960,25 @@ export const QCWorkspace: React.FC<QCWorkspaceProps> = ({
                     { title: 'Item Code', dataIndex: 'code', key: 'code', width: 120, render: (c) => <Text strong style={{ color: '#334155' }}>{c}</Text> },
                     { title: 'Item Name', dataIndex: 'name', key: 'name', render: (n) => <span style={{ fontWeight: 500 }}>{n}</span> },
                     { title: 'WH Received', dataIndex: 'receiveQty', key: 'receiveQty', width: 120, render: (q, r) => `${(q || 0).toLocaleString()} ${r.uom}` },
-                    { title: 'Accepted', dataIndex: 'qcAcceptedQty', key: 'qcAcceptedQty', width: 110, render: (q, r) => <Tag color="green">{(q || 0).toLocaleString()} {r.uom}</Tag> },
-                    { title: 'Rejected', dataIndex: 'qcRejectedQty', key: 'qcRejectedQty', width: 110, render: (q, r) => <Tag color={q > 0 ? 'red' : 'default'}>{(q || 0).toLocaleString()} {r.uom}</Tag> },
-                    { title: 'On Hold', dataIndex: 'qcOnHoldQty', key: 'qcOnHoldQty', width: 110, render: (q, r) => <Tag color={q > 0 ? 'gold' : 'default'}>{(q || 0).toLocaleString()} {r.uom}</Tag> },
+                    { title: 'Accepted', dataIndex: 'qcAcceptedQty', key: 'qcAcceptedQty', width: 110, render: (q, r) => <Text>{(q ?? 0).toLocaleString()} {r.uom}</Text> },
+                    { title: 'Rejected', dataIndex: 'qcRejectedQty', key: 'qcRejectedQty', width: 110, render: (q, r) => <Text>{(q ?? 0).toLocaleString()} {r.uom}</Text> },
+                    { title: 'On Hold', dataIndex: 'qcOnHoldQty', key: 'qcOnHoldQty', width: 110, render: (q, r) => <Text>{(q ?? 0).toLocaleString()} {r.uom}</Text> },
                     { title: 'Result', dataIndex: 'qcResult', key: 'qcResult', width: 110, render: (r) => <InboundStatusBadge type="qc" value={r || 'Pass'} /> },
                   ]}
                 />
               </div>
 
               {/* 3. Audit Trail Card */}
-              <div
-                className="drawer-section"
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 10,
-                  padding: '16px 20px',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)',
-                }}
-              >
-                <div
-                  className="drawer-section-title"
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    marginBottom: 14,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <ClockCircleOutlined style={{ color: '#2563eb' }} />
-                  <span>Audit Trail & Activity Log</span>
-                </div>
-                <AuditTrailTimeline
+              <AuditTrailTimeline receipt={selectedReceipt}
                   activities={selectedReceipt.activities}
                   adjustments={selectedReceipt.supervisorAdjustments}
                 />
-              </div>
             </div>
           );
         })()}
       </Drawer>
 
-      {/* QC-03 Multi-Parameter Inspection Modal */}
-      <Modal
-        title={
-          <Space>
-            <SafetyCertificateOutlined style={{ color: '#722ed1', fontSize: 18 }} />
-            <span style={{ fontWeight: 600 }}>QC Inspection: {selectedReceipt?.grNumber} ({selectedReceipt?.supplier})</span>
-          </Space>
-        }
-        open={isInspectionModalOpen}
-        onCancel={() => setIsInspectionModalOpen(false)}
-        width={1000}
-        footer={[
-          <Button key="cancel" onClick={() => setIsInspectionModalOpen(false)}>Cancel</Button>,
-          <Button
-            key="submit"
-            type="primary"
-            icon={<SendOutlined />}
-            onClick={handleSubmitInspection}
-            style={{ background: '#722ed1', borderColor: '#722ed1' }}
-          >
-            Submit QC Decision & Route to Supervisor
-          </Button>,
-        ]}
-      >
-        <Alert
-          message="Quality Control Checklist & Partition Rules"
-          description="Warehouse physically accepted the shipment. QC determines the usable balance by splitting Received QTY into Accepted, Rejected, and On-Hold."
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
 
-        {inspectionItems.map((item, itemIdx) => {
-          const checks = item.qcChecks || {
-            packagingCondition: 'Pass',
-            productAppearance: 'Pass',
-            quantityVerification: 'Pass',
-            batchVerification: 'Pass',
-            dateVerification: 'Pass',
-            handlingTempCondition: 'Pass',
-          };
-          const totalPartition = (item.qcAcceptedQty || 0) + (item.qcRejectedQty || 0) + (item.qcOnHoldQty || 0);
-          const isMatched = totalPartition === item.receiveQty;
-
-          return (
-            <div
-              key={item.code}
-              style={{
-                background: '#ffffff',
-                border: !isMatched ? '1px solid #dc2626' : '1px solid #e2e8f0',
-                borderRadius: 8,
-                padding: 16,
-                marginBottom: 16,
-              }}
-            >
-              <Row gutter={[16, 8]} align="middle" justify="space-between">
-                <Col xs={24} md={10}>
-                  <Space direction="vertical" size={2}>
-                    <Space>
-                      <Tag color="cyan">PO: {item.poNumber}</Tag>
-                      <Text strong style={{ fontSize: 14, color: '#334155' }}>{item.code}</Text>
-                    </Space>
-                    <Text style={{ fontSize: 13, color: '#1e293b' }}>{item.name}</Text>
-                  </Space>
-                </Col>
-
-                <Col xs={24} md={14} style={{ textAlign: 'right' }}>
-                  <Space wrap size={12}>
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>WH Received</Text>
-                      <Text strong>{item.receiveQty} {item.uom}</Text>
-                    </div>
-
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block', color: '#16a34a' }}>Accepted</Text>
-                      <InputNumber
-                        min={0}
-                        max={item.receiveQty}
-                        value={item.qcAcceptedQty}
-                        onChange={(val) => handleUpdatePartition(itemIdx, 'qcAcceptedQty', val || 0)}
-                        style={{ width: 85, height: 32 }}
-                      />
-                    </div>
-
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block', color: '#dc2626' }}>Rejected</Text>
-                      <InputNumber
-                        min={0}
-                        max={item.receiveQty}
-                        value={item.qcRejectedQty}
-                        onChange={(val) => handleUpdatePartition(itemIdx, 'qcRejectedQty', val || 0)}
-                        style={{ width: 85, height: 32 }}
-                      />
-                    </div>
-
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block', color: '#d97706' }}>On Hold</Text>
-                      <InputNumber
-                        min={0}
-                        max={item.receiveQty}
-                        value={item.qcOnHoldQty}
-                        onChange={(val) => handleUpdatePartition(itemIdx, 'qcOnHoldQty', val || 0)}
-                        style={{ width: 85, height: 32 }}
-                      />
-                    </div>
-
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Validation</Text>
-                      <Tag color={isMatched ? 'green' : 'red'}>
-                        {totalPartition}/{item.receiveQty} {isMatched ? 'Matched' : 'Unmatched'}
-                      </Tag>
-                    </div>
-                  </Space>
-                </Col>
-              </Row>
-
-              {/* 6-Point Inspection Checklist */}
-              <div style={{ marginTop: 12, background: '#f8fafc', padding: 12, borderRadius: 6, border: '1px solid #f1f5f9' }}>
-                <Text strong style={{ fontSize: 12, color: '#475569', display: 'block', marginBottom: 8 }}>
-                  6-Point Physical Quality Checks
-                </Text>
-                <Row gutter={[12, 8]}>
-                  {[
-                    { key: 'packagingCondition', label: '1. Packaging Condition' },
-                    { key: 'productAppearance', label: '2. Product Appearance' },
-                    { key: 'quantityVerification', label: '3. Quantity Verification' },
-                    { key: 'batchVerification', label: '4. Batch & Lot No.' },
-                    { key: 'dateVerification', label: '5. Date (Mfg/Exp)' },
-                    { key: 'handlingTempCondition', label: '6. Storage Temp & Seal' },
-                  ].map((chk) => (
-                    <Col xs={12} sm={8} md={4} key={chk.key}>
-                      <Text style={{ fontSize: 11, display: 'block', color: '#64748b' }}>{chk.label}</Text>
-                      <Select
-                        size="small"
-                        style={{ width: '100%', marginTop: 2 }}
-                        value={(checks as any)[chk.key] || 'Pass'}
-                        onChange={(v) => handleUpdateCheck(itemIdx, chk.key as any, v)}
-                        options={[
-                          { label: 'Pass', value: 'Pass' },
-                          { label: 'Fail', value: 'Fail' },
-                          { label: 'N/A', value: 'N/A' },
-                        ]}
-                      />
-                    </Col>
-                  ))}
-                </Row>
-              </div>
-
-              {/* Rejection / Hold Reasons */}
-              {(item.qcRejectedQty || 0) > 0 && (
-                <div style={{ marginTop: 10, padding: '8px 12px', background: '#fef2f2', borderRadius: 6, border: '1px solid #fee2e2' }}>
-                  <Text strong style={{ color: '#dc2626', fontSize: 12 }}>Rejection Reason *</Text>
-                  <Input
-                    placeholder="Describe defect e.g. Torn bag, foreign contamination, label unreadable"
-                    value={item.qcRejectedReason}
-                    onChange={(e) => {
-                      const updated = [...inspectionItems];
-                      updated[itemIdx].qcRejectedReason = e.target.value;
-                      setInspectionItems(updated);
-                    }}
-                    style={{ marginTop: 4, height: 32 }}
-                  />
-                </div>
-              )}
-
-              {(item.qcOnHoldQty || 0) > 0 && (
-                <div style={{ marginTop: 10, padding: '8px 12px', background: '#fffbeb', borderRadius: 6, border: '1px solid #fef3c7' }}>
-                  <Text strong style={{ color: '#d97706', fontSize: 12 }}>Quarantine / Hold Reason *</Text>
-                  <Input
-                    placeholder="Describe reason e.g. Awaiting lab microbiology test results (48h incubation)"
-                    value={item.qcOnHoldReason}
-                    onChange={(e) => {
-                      const updated = [...inspectionItems];
-                      updated[itemIdx].qcOnHoldReason = e.target.value;
-                      setInspectionItems(updated);
-                    }}
-                    style={{ marginTop: 4, height: 32 }}
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        <div style={{ marginTop: 12 }}>
-          <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>
-            Overall QC Summary Remarks
-          </Text>
-          <Input.TextArea
-            rows={2}
-            value={overallQcRemark}
-            onChange={(e) => setOverallQcRemark(e.target.value)}
-            placeholder="Optional summary remarks for Warehouse Supervisor"
-          />
-        </div>
-      </Modal>
     </div>
   );
 };

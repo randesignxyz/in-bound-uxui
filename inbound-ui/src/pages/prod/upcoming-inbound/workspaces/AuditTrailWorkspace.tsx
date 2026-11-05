@@ -1,3 +1,9 @@
+import { RowActionButton, rowActionColumn } from '../shared/ui/RowActionButton';
+import { WorkspaceHeader, WorkspaceEmpty, workspacePagination } from '../shared/ui/WorkspaceUI';
+import { exportWorkspace, type ExportFormat } from '../shared/ui/workspaceExport';
+import { AuditTrailTimeline } from '../features/shared/AuditTrailTimeline';
+import { getPostingQuantity, formatQuantities } from '../core/quantity';
+import { getReceiptIrNumber } from '../core/workflow/goods-receipt';
 import React, { useState, useMemo } from 'react';
 import {
   Table,
@@ -53,6 +59,7 @@ import './ProcurementWorkspace.less';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
+const postedQuantity = (receipt: GoodsReceipt, item: GoodsReceipt['items'][number]) => item.sapPostedQty ?? (receipt.sapPostingStatus === 'Posted' || receipt.processState === 'SAP_POSTED' ? getPostingQuantity(item) : 0);
 
 export interface AuditTrailWorkspaceProps {
   receipts: GoodsReceipt[];
@@ -81,7 +88,6 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
   onRefresh,
 }) => {
   const [activeTab, setActiveTab] = useState<'ALL_EVENTS' | 'ADJUSTMENTS' | 'VISUAL_JOURNEY'>('ALL_EVENTS');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [selectedGrFilter, setSelectedGrFilter] = useState<string>('ALL');
@@ -94,27 +100,12 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
     const list: FlattenedAuditEvent[] = [];
 
     receipts.forEach((r) => {
-      // Add default creation event if none exists
-      if (!r.activities || r.activities.length === 0) {
-        list.push({
-          id: `evt-${r.id}-init`,
-          grNumber: r.grNumber || 'N/A',
-          irPlanNumber: r.irPlanNumber || 'N/A',
-          poNumber: r.poNumber || 'N/A',
-          supplier: r.supplier || 'N/A',
-          eventTitle: 'IR Plan Scheduled & Dispatched',
-          description: `Delivery scheduled for ${r.expectedDate || '27-08-2026'}. Expected ${r.items.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0)} units.`,
-          department: 'Procurement',
-          performedBy: 'Keo Srey',
-          timestamp: '2026-08-22 09:30',
-          state: 'done',
-          receiptRef: r,
-        });
-      } else {
+      if (r.activities?.length) {
         r.activities.forEach((act, idx) => {
           let dept: 'Procurement' | 'Warehouse' | 'QC' | 'Supervisor' | 'System' = 'Warehouse';
           const title = act.title.toLowerCase();
-          if (title.includes('plan') || title.includes('ir')) dept = 'Procurement';
+          if (/supervisor/i.test(act.performedBy || '') || /supervisor|post|sap/.test(title)) dept = 'Supervisor';
+          else if (/\bir\b|schedule|procurement|plan/.test(title)) dept = 'Procurement';
           else if (title.includes('qc') || title.includes('inspection')) dept = 'QC';
           else if (title.includes('supervisor') || title.includes('post') || title.includes('sap')) dept = 'Supervisor';
           else if (title.includes('system') || title.includes('sync')) dept = 'System';
@@ -172,6 +163,10 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
   // Filtered Events
   const filteredEvents = useMemo(() => {
     return allEvents.filter((evt) => {
+      if (dateRange?.[0] && dateRange?.[1]) {
+        const date = dayjs(evt.timestamp);
+        if (!date.isValid() || date.isBefore(dateRange[0], 'day') || date.isAfter(dateRange[1], 'day')) return false;
+      }
       // Department Filter
       if (deptFilter !== 'ALL' && evt.department !== deptFilter) {
         return false;
@@ -187,7 +182,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
         const q = searchTerm.toLowerCase();
         const mTitle = evt.eventTitle.toLowerCase().includes(q);
         const mDesc = evt.description.toLowerCase().includes(q);
-        const mGR = evt.grNumber.toLowerCase().includes(q);
+        const mGR = getReceiptIrNumber(evt.receiptRef).toLowerCase().includes(q) || evt.grNumber.toLowerCase().includes(q);
         const mIR = evt.irPlanNumber.toLowerCase().includes(q);
         const mPO = evt.poNumber.toLowerCase().includes(q);
         const mUser = evt.performedBy.toLowerCase().includes(q);
@@ -199,7 +194,20 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
 
       return true;
     });
-  }, [allEvents, deptFilter, selectedGrFilter, searchTerm]);
+  }, [allEvents, deptFilter, selectedGrFilter, searchTerm, dateRange]);
+
+  const filteredAdjustments = allAdjustments.filter(adjustment => {
+    if (deptFilter !== 'ALL' && deptFilter !== 'Supervisor') return false;
+    if (selectedGrFilter !== 'ALL' && adjustment.grNumber !== selectedGrFilter) return false;
+    if (dateRange?.[0] && dateRange?.[1]) {
+      const date = dayjs(adjustment.timestamp);
+      if (!date.isValid() || date.isBefore(dateRange[0], 'day') || date.isAfter(dateRange[1], 'day')) return false;
+    }
+    const query = searchTerm.toLowerCase();
+    return [adjustment.itemCode, adjustment.itemName, adjustment.reason, adjustment.changedBy,
+      getReceiptIrNumber(adjustment.receiptRef), adjustment.receiptRef.poNumber, adjustment.receiptRef.irPlanNumber,
+      adjustment.supplier].some(value => value?.toLowerCase().includes(query));
+  });
 
   // Reset Filters
   const handleResetFilters = () => {
@@ -210,8 +218,19 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
     message.info('Audit filters reset.');
   };
 
-  const handleExport = () => {
-    message.success('Exporting full Audit Trail logs to Excel / CSV format...');
+  const handleExport = (format: ExportFormat) => {
+    if (activeTab === 'ADJUSTMENTS') {
+      exportWorkspace('inbound-adjustments', [
+        ['Timestamp', 'Receiving #', 'Item', 'Previous Quantity', 'New Quantity', 'Reason', 'Changed By'],
+        ...filteredAdjustments.map(entry => [entry.timestamp, getReceiptIrNumber(entry.receiptRef), entry.itemCode,
+          entry.previousValue, entry.newValue, entry.reason, entry.changedBy]),
+      ], format);
+      return;
+    }
+    exportWorkspace('inbound-activity', [
+      ['Timestamp', 'Receiving #', 'IR Schedule #', 'PO #', 'Role', 'Action', 'Details', 'Performed By'],
+      ...filteredEvents.map(event => [event.timestamp, getReceiptIrNumber(event.receiptRef), event.irPlanNumber, event.poNumber, event.department, event.eventTitle, event.description, event.performedBy]),
+    ], format);
   };
 
   const getTimelineIcon = (state: string) => {
@@ -257,23 +276,13 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
       ),
     },
     {
-      title: 'IR Plan #',
+      title: 'IR Schedule #',
       key: 'irPlanNumber',
       width: 120,
-      render: (_: any, record: FlattenedAuditEvent) => (
-        <span
-          className="po-link"
-          onClick={() => {
-            setSelectedReceipt(record.receiptRef);
-            setIsDetailDrawerOpen(true);
-          }}
-        >
-          {record.irPlanNumber || '—'}
-        </span>
-      ),
+      render: (_: any, record: FlattenedAuditEvent) => <span>{record.irPlanNumber || '—'}</span>,
     },
     {
-      title: 'GR #',
+      title: 'Receiving #',
       dataIndex: 'grNumber',
       key: 'grNumber',
       width: 130,
@@ -285,7 +294,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             setIsDetailDrawerOpen(true);
           }}
         >
-          {gr || record.irPlanNumber}
+          {getReceiptIrNumber(record.receiptRef) || '—'}
         </span>
       ),
     },
@@ -333,21 +342,17 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
       ),
     },
     {
-      title: 'Action',
-      key: 'action',
-      width: 100,
+      ...rowActionColumn,
       render: (_: any, record: FlattenedAuditEvent) => (
-        <Button
-          size="small"
-          type="link"
+        <RowActionButton
           icon={<EyeOutlined />}
           onClick={() => {
             setSelectedReceipt(record.receiptRef);
             setIsDetailDrawerOpen(true);
           }}
         >
-          View GR
-        </Button>
+          View Activity
+        </RowActionButton>
       ),
     },
   ];
@@ -355,7 +360,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
   // Adjustment Columns
   const adjustmentColumns = [
     {
-      title: 'GR #',
+      title: 'Receiving #',
       dataIndex: 'grNumber',
       key: 'grNumber',
       width: 130,
@@ -367,7 +372,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             setIsDetailDrawerOpen(true);
           }}
         >
-          {gr}
+          {getReceiptIrNumber(record.receiptRef)}
         </span>
       ),
     },
@@ -434,41 +439,9 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
   ];
 
   return (
-    <div className="procurement-workspace">
-      {/* 1. Header Row matching standard template */}
-      <div className="workspace-header-row">
-        <div className="header-titles" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1 className="main-title" style={{ margin: 0 }}>Inbound Audit Trail & Compliance Log</h1>
-            <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={onRefresh}
-                className="action-btn"
-              >
-                Refresh
-              </Button>
-              <Button
-                type="primary"
-                icon={<ExportOutlined />}
-                onClick={handleExport}
-                className="action-btn export-primary-btn"
-                style={{
-                  background: '#B49A00',
-                  borderColor: '#B49A00',
-                  color: '#ffffff',
-                  fontWeight: 600,
-                }}
-              >
-                Export
-              </Button>
-            </div>
-          </div>
-          <p className="main-subtitle" style={{ margin: '4px 0 0 0' }}>
-            Immutable end-to-end audit logs, supervisor quantity adjustments, SAP synchronization history, and transaction lifecycle tracking
-          </p>
-        </div>
-      </div>
+    <div className="procurement-workspace inbound-role-workspace">
+      <WorkspaceHeader title="Audit Trail — Activity History"
+        onRefresh={onRefresh} onExport={handleExport} />
 
       {/* 2. KPI Summary Cards Grid */}
       <div className="summary-cards-row">
@@ -480,7 +453,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value blue">{tabCounts.allEvents}</div>
-          <div className="kpi-subtitle">Logged activities</div>
+
         </div>
 
         <div className="kpi-card">
@@ -491,7 +464,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value amber">{tabCounts.adjustments}</div>
-          <div className="kpi-subtitle">Quantity overrides</div>
+
         </div>
 
         <div className="kpi-card">
@@ -502,7 +475,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value green">{tabCounts.postedSap}</div>
-          <div className="kpi-subtitle">Completed GRPOs</div>
+
         </div>
 
         <div className="kpi-card">
@@ -513,7 +486,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value orange">{tabCounts.discrepancies}</div>
-          <div className="kpi-subtitle">Missing / Over counts</div>
+
         </div>
 
         <div className="kpi-card">
@@ -524,7 +497,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value purple">{tabCounts.activeWorkflows}</div>
-          <div className="kpi-subtitle">In-flight transactions</div>
+
         </div>
       </div>
 
@@ -535,7 +508,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 240px', minWidth: 200, maxWidth: 300 }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Search</span>
             <Input
-              placeholder="Search event, GR #, PO #, user, reason..."
+              placeholder="Search event, Receiving #, PO #, user, reason..."
               prefix={<SearchOutlined style={{ color: '#9ca3af', marginRight: 4 }} />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -562,9 +535,9 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             />
           </div>
 
-          {/* Specific Shipment (GR) */}
+          {/* Specific Receiving Record */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 180 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Shipment (GR)</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Receiving Record</span>
             <Select
               style={{ width: '100%', height: 36 }}
               value={selectedGrFilter}
@@ -572,7 +545,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
               options={[
                 { label: 'All Shipments', value: 'ALL' },
                 ...receipts.map((r) => ({
-                  label: `${r.grNumber} (${r.supplier})`,
+                  label: `${getReceiptIrNumber(r)} (${r.supplier})`,
                   value: r.grNumber,
                 })),
               ]}
@@ -644,26 +617,6 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             </button>
           </div>
 
-          <div className="view-controls">
-            <div className="view-switcher-group">
-              <Tooltip title="Table View">
-                <button
-                  className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
-                  onClick={() => setViewMode('table')}
-                >
-                  <UnorderedListOutlined />
-                </button>
-              </Tooltip>
-              <Tooltip title="Cards View">
-                <button
-                  className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
-                  onClick={() => setViewMode('cards')}
-                >
-                  <AppstoreOutlined />
-                </button>
-              </Tooltip>
-            </div>
-          </div>
         </div>
 
         {/* Tab 1: Chronological Event Log */}
@@ -672,7 +625,8 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
             columns={eventColumns}
             dataSource={filteredEvents}
             rowKey="id"
-            pagination={{ pageSize: 10, showTotal: (t) => `Total ${t} events logged` }}
+            pagination={workspacePagination}
+            locale={{ emptyText: <WorkspaceEmpty filtered={Boolean(searchTerm || deptFilter !== 'ALL' || selectedGrFilter !== 'ALL' || dateRange)} description="No activity recorded yet." /> }}
             className="po-custom-table"
           />
         )}
@@ -681,17 +635,17 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
         {activeTab === 'ADJUSTMENTS' && (
           <div>
             <Alert
-              message="Immutable Audit Compliance"
-              description="Supervisor quantity modifications never delete or overwrite the original physical receiving counts or QC accepted figures. All delta adjustments are permanently timestamped with mandatory rationale."
+              message="Quantity Adjustment History"
+              description="Review original and adjusted quantities, the recorded reason, and who made each change."
               type="warning"
               showIcon
               style={{ marginBottom: 16 }}
             />
             <Table
               columns={adjustmentColumns}
-              dataSource={allAdjustments}
+              dataSource={filteredAdjustments}
               rowKey="id"
-              pagination={{ pageSize: 8, showTotal: (t) => `Total ${t} adjustment entries` }}
+              pagination={workspacePagination}
               className="po-custom-table"
             />
           </div>
@@ -705,13 +659,13 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                 <Text strong>Select Shipment Journey:</Text>
                 <Select
                   style={{ width: 300 }}
-                  value={selectedReceipt?.grNumber}
+                  value={selectedReceipt ? getReceiptIrNumber(selectedReceipt) : '—'}
                   onChange={(val) => {
                     const found = receipts.find((r) => r.grNumber === val);
                     if (found) setSelectedReceipt(found);
                   }}
                   options={receipts.map((r) => ({
-                    label: `${r.grNumber} - ${r.supplier} (PO: ${r.poNumber})`,
+                    label: `${getReceiptIrNumber(r)} - ${r.supplier} (PO: ${r.poNumber})`,
                     value: r.grNumber,
                   }))}
                 />
@@ -731,63 +685,10 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                   <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, padding: 20 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <HistoryOutlined style={{ color: '#2563eb' }} />
-                      <span>End-to-End Inbound Journey: {selectedReceipt.grNumber}</span>
+                      <span>End-to-End Inbound Journey: {getReceiptIrNumber(selectedReceipt)}</span>
                     </div>
 
-                    <Timeline
-                      style={{ marginTop: 16 }}
-                      items={(selectedReceipt.activities || [
-                        {
-                          id: 'act-1',
-                          title: 'Procurement: IR Plan Created',
-                          description: `Scheduled inbound shipment from PO ${selectedReceipt.poNumber}`,
-                          performedBy: 'Keo Srey',
-                          timestamp: '2026-08-22 09:30',
-                          state: 'done',
-                        },
-                        {
-                          id: 'act-2',
-                          title: 'Warehouse: Physical Intake & Batch Lotting',
-                          description: `Truck arrived. Received ${selectedReceipt.items.reduce((s, i) => s + i.receiveQty, 0)} units with delivery note verification.`,
-                          performedBy: 'Warehouse Staff',
-                          timestamp: '2026-08-27 10:15',
-                          state: 'done',
-                        },
-                        {
-                          id: 'act-3',
-                          title: 'QC: Quality Inspection & Partitions',
-                          description: 'Passed 6-point physical verification. Accepted for storage.',
-                          performedBy: 'QC Inspector',
-                          timestamp: '2026-08-27 11:30',
-                          state: 'done',
-                        },
-                        {
-                          id: 'act-4',
-                          title: 'Supervisor: Authorization & SAP GRPO Posting',
-                          description: `Approved final quantities. Posted into SAP B1 (${selectedReceipt.sapDocNum || 'DocNum: 10045928'}).`,
-                          performedBy: 'Warehouse Supervisor',
-                          timestamp: '2026-08-27 13:00',
-                          state: 'done',
-                        },
-                      ]).map((act) => ({
-                        dot: getTimelineIcon(act.state),
-                        children: (
-                          <div style={{ paddingBottom: 12 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Text strong style={{ fontSize: 13, color: '#0f172a' }}>{act.title}</Text>
-                              <span style={{ fontSize: 11, color: '#64748b' }}>{act.timestamp}</span>
-                            </div>
-                            <div style={{ color: '#475569', fontSize: 12, marginTop: 3 }}>{act.description}</div>
-                            {act.performedBy && (
-                              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>
-                                <UserOutlined style={{ marginRight: 4 }} />
-                                {act.performedBy}
-                              </div>
-                            )}
-                          </div>
-                        ),
-                      }))}
-                    />
+                    <AuditTrailTimeline receipt={selectedReceipt} activities={selectedReceipt.activities} adjustments={selectedReceipt.supervisorAdjustments} />
                   </div>
                 </Col>
 
@@ -806,7 +707,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                           <span style={{ fontSize: 12, color: '#1e3a8a' }}>Planned Order QTY</span>
                         </div>
                         <Text strong style={{ fontSize: 14 }}>
-                          {selectedReceipt.items.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0).toLocaleString()} PCS
+                          {formatQuantities(selectedReceipt.items, i => i.plannedQty ?? i.poQty ?? 0)}
                         </Text>
                       </div>
 
@@ -816,7 +717,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                           <span style={{ fontSize: 12, color: '#9a3412' }}>Actual Received QTY</span>
                         </div>
                         <Text strong style={{ fontSize: 14, color: '#ea580c' }}>
-                          {selectedReceipt.items.reduce((s, i) => s + (i.receiveQty || 0), 0).toLocaleString()} PCS
+                          {formatQuantities(selectedReceipt.items, i => i.receiveQty ?? 0)}
                         </Text>
                       </div>
 
@@ -826,7 +727,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                           <span style={{ fontSize: 12, color: '#581c87' }}>QC Accepted QTY</span>
                         </div>
                         <Text strong style={{ fontSize: 14, color: '#9333ea' }}>
-                          {selectedReceipt.items.reduce((s, i) => s + (i.qcAcceptedQty || i.receiveQty || 0), 0).toLocaleString()} PCS
+                          {formatQuantities(selectedReceipt.items, i => i.qcAcceptedQty ?? 0)}
                         </Text>
                       </div>
 
@@ -836,7 +737,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                           <span style={{ fontSize: 12, color: '#14532d' }}>Final SAP Posted QTY</span>
                         </div>
                         <Text strong style={{ fontSize: 14, color: '#16a34a' }}>
-                          {selectedReceipt.items.reduce((s, i) => s + (i.finalGrQty !== undefined ? i.finalGrQty : (i.qcAcceptedQty || i.receiveQty || 0)), 0).toLocaleString()} PCS
+                          {formatQuantities(selectedReceipt.items, i => postedQuantity(selectedReceipt, i))}
                         </Text>
                       </div>
                     </div>
@@ -845,9 +746,9 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                       type="primary"
                       icon={<EyeOutlined />}
                       onClick={() => setIsDetailDrawerOpen(true)}
-                      style={{ width: '100%', marginTop: 18, background: '#2563eb', borderColor: '#2563eb', height: 36, fontWeight: 600 }}
+                      style={{ width: '100%', marginTop: 18, background: '#B49A00', borderColor: '#B49A00', height: 36, fontWeight: 600 }}
                     >
-                      Open Full Transaction Drawer
+                      View Activity
                     </Button>
                   </div>
                 </Col>
@@ -858,13 +759,13 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
       </div>
 
       {/* 5. Detail Drawer (920px) */}
-      <Drawer
+      <Drawer rootClassName="inbound-detail"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: 24 }}>
             <Space size={10}>
               <HistoryOutlined style={{ color: '#2563eb', fontSize: 18 }} />
               <span style={{ fontWeight: 700, fontSize: 16 }}>
-                Inbound Transaction Audit: {selectedReceipt?.grNumber}
+                Inbound Transaction Audit: {selectedReceipt ? getReceiptIrNumber(selectedReceipt) : '—'}
               </span>
             </Space>
             {selectedReceipt && (
@@ -893,7 +794,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
           const totalPlanned = selectedReceipt.items?.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0) || 0;
           const totalReceived = selectedReceipt.items?.reduce((s, i) => s + (i.receiveQty || 0), 0) || 0;
           const totalQcAccepted = selectedReceipt.items?.reduce((s, i) => s + (i.qcAcceptedQty || 0), 0) || 0;
-          const totalFinalPosted = selectedReceipt.items?.reduce((s, i) => s + (i.finalGrQty !== undefined ? i.finalGrQty : (i.qcAcceptedQty || i.receiveQty || 0)), 0) || 0;
+          const totalFinalPosted = selectedReceipt.items?.reduce((s, i) => s + postedQuantity(selectedReceipt, i), 0) || 0;
           const fulfillmentRate = totalPlanned > 0 ? Math.min(100, Math.round((totalFinalPosted / totalPlanned) * 1000) / 10) : 100;
 
           return (
@@ -919,34 +820,34 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                     color={selectedReceipt.deliveryPlanStatus === 'Posted' ? 'success' : 'processing'}
                     style={{ fontSize: 12, fontWeight: 600, padding: '2px 10px', borderRadius: 12 }}
                   >
-                    {selectedReceipt.deliveryPlanStatus === 'Posted' ? 'Completed & Posted' : `Fulfillment: ${fulfillmentRate}%`}
+                    {selectedReceipt.deliveryPlanStatus === 'Posted' ? 'Completed & Posted' : 'In Progress'}
                   </Tag>
                 </div>
 
-                <Progress
+                {new Set(selectedReceipt.items.map(item => item.uom)).size === 1 && <Progress
                   percent={fulfillmentRate}
                   strokeColor="#2563eb"
                   trailColor="#e2e8f0"
                   status={selectedReceipt.deliveryPlanStatus === 'Posted' ? 'normal' : 'active'}
                   style={{ marginBottom: 12 }}
-                />
+                />}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 12 }}>
                   <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
                     <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Planned PO Qty</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{totalPlanned.toLocaleString()} Units</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a'}}>{formatQuantities(selectedReceipt.items, i => i.plannedQty ?? i.poQty ?? 0)}</div>
                   </div>
                   <div style={{ background: '#eff6ff', padding: '10px 12px', borderRadius: 8, border: '1px solid #bfdbfe' }}>
                     <div style={{ fontSize: 11, color: '#1e40af', fontWeight: 500 }}>WH Received</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#2563eb' }}>{totalReceived.toLocaleString()} Units</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a'}}>{formatQuantities(selectedReceipt.items, i => i.receiveQty ?? 0)}</div>
                   </div>
                   <div style={{ background: '#f0fdf4', padding: '10px 12px', borderRadius: 8, border: '1px solid #bbf7d0' }}>
                     <div style={{ fontSize: 11, color: '#166534', fontWeight: 500 }}>QC Accepted</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#16a34a' }}>{totalQcAccepted.toLocaleString()} Units</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a'}}>{formatQuantities(selectedReceipt.items, i => i.qcAcceptedQty ?? 0)}</div>
                   </div>
                   <div style={{ background: '#fefce8', padding: '10px 12px', borderRadius: 8, border: '1px solid #fef08a' }}>
                     <div style={{ fontSize: 11, color: '#854d0e', fontWeight: 500 }}>Final SAP Posted</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#ca8504' }}>{totalFinalPosted.toLocaleString()} Units</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a'}}>{formatQuantities(selectedReceipt.items, i => postedQuantity(selectedReceipt, i))}</div>
                   </div>
                 </div>
               </div>
@@ -978,18 +879,18 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                   <div className="po-grid-row" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
                     <div className="label-value-pair" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                       <span className="field-label" style={{ width: 140, fontSize: 13, fontWeight: 500, color: '#6b7280', flexShrink: 0 }}>
-                        GR #
+                        Receiving #
                       </span>
                       <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                         :
                       </span>
                       <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: '#2563eb' }}>
-                        {selectedReceipt.grNumber}
+                        {getReceiptIrNumber(selectedReceipt)}
                       </span>
                     </div>
                     <div className="label-value-pair" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                       <span className="field-label" style={{ width: 140, fontSize: 13, fontWeight: 500, color: '#6b7280', flexShrink: 0 }}>
-                        IR Plan #
+                        IR Schedule #
                       </span>
                       <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                         :
@@ -1039,7 +940,7 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                     </div>
                     <div className="label-value-pair" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                       <span className="field-label" style={{ width: 140, fontSize: 13, fontWeight: 500, color: '#6b7280', flexShrink: 0 }}>
-                        SAP DocNum
+                        SAP GR #
                       </span>
                       <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                         :
@@ -1089,50 +990,13 @@ export const AuditTrailWorkspace: React.FC<AuditTrailWorkspaceProps> = ({
                     { title: 'Item Name & Description', dataIndex: 'name', key: 'name' },
                     { title: 'PO / Plan', key: 'plan', render: (_, r) => `${r.plannedQty || r.poQty} ${r.uom}` },
                     { title: 'WH Received', dataIndex: 'receiveQty', key: 'receiveQty', render: (q, r) => `${q} ${r.uom}` },
-                    { title: 'QC Accepted', dataIndex: 'qcAcceptedQty', key: 'qcAcceptedQty', render: (q, r) => <Tag color="green">{q || 0} {r.uom}</Tag> },
-                    { title: 'Final Posted', key: 'final', render: (_, r) => <Text strong style={{ color: '#0f172a' }}>{r.finalGrQty !== undefined ? r.finalGrQty : (r.qcAcceptedQty || r.receiveQty)} {r.uom}</Text> },
+                    { title: 'QC Accepted', dataIndex: 'qcAcceptedQty', key: 'qcAcceptedQty', render: (q, r) => <Text>{q ?? 0} {r.uom}</Text> },
+                    { title: 'Final Posted', key: 'final', render: (_, r) => <Text strong style={{ color: '#0f172a' }}>{postedQuantity(selectedReceipt, r)} {r.uom}</Text> },
                   ]}
                 />
               </div>
 
-            {selectedReceipt.supervisorAdjustments && selectedReceipt.supervisorAdjustments.length > 0 && (
-              <div className="drawer-section">
-                <div className="drawer-section-title">
-                  <AuditOutlined style={{ color: '#ca8504' }} />
-                  <span>Supervisor Adjustments Log ({selectedReceipt.supervisorAdjustments.length})</span>
-                </div>
-                <Table
-                  size="small"
-                  dataSource={selectedReceipt.supervisorAdjustments}
-                  columns={adjustmentColumns}
-                  rowKey="id"
-                  pagination={false}
-                  className="po-custom-table"
-                />
-              </div>
-            )}
-
-            <div className="drawer-section">
-              <div className="drawer-section-title">
-                <HistoryOutlined style={{ color: '#2563eb' }} />
-                <span>Complete Activity Timeline</span>
-              </div>
-              <Timeline
-                items={(selectedReceipt.activities || []).map((act) => ({
-                  dot: getTimelineIcon(act.state),
-                  children: (
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Text strong>{act.title}</Text>
-                        <span style={{ fontSize: 11, color: '#64748b' }}>{act.timestamp}</span>
-                      </div>
-                      <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>{act.description}</div>
-                      {act.performedBy && <div style={{ fontSize: 11, color: '#94a3b8' }}><UserOutlined style={{ marginRight: 4 }} />{act.performedBy}</div>}
-                    </div>
-                  ),
-                }))}
-              />
-            </div>
+              <AuditTrailTimeline receipt={selectedReceipt} activities={selectedReceipt.activities} adjustments={selectedReceipt.supervisorAdjustments} />
             </div>
           );
         })()}

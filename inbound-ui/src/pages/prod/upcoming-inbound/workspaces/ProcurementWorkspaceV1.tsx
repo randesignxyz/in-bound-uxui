@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { ExportButton } from '../shared/ui/WorkspaceUI';
+import { exportWorkspace, type ExportFormat } from '../shared/ui/workspaceExport';
 import {
   Table,
   Button,
@@ -32,7 +34,6 @@ import {
   EyeOutlined,
   FileTextOutlined,
   SendOutlined,
-  ExportOutlined,
   ClockCircleOutlined,
   DollarOutlined,
   WarningOutlined,
@@ -522,8 +523,11 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
     setActiveTab('IR_PLAN');
   };
 
-  const handleExport = () => {
-    message.success('Exporting Purchase Orders data to Excel format...');
+  const handleExport = (format: ExportFormat) => {
+    exportWorkspace('purchase-orders', [
+      ['PO #', 'Vendor', 'Status'],
+      ...filteredPOs.map(po => [po.poNumber, po.supplier, po.docStatus]),
+    ], format);
   };
 
   const handleResetFilters = () => {
@@ -679,6 +683,13 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
           </span>
         );
       },
+    },
+    {
+      title: 'IR Schedule Date',
+      dataIndex: 'deliveryDate',
+      key: 'deliveryDate',
+      width: 160,
+      render: (date: string) => <span>{date || '—'}</span>,
     },
     {
       title: 'Schedule Status',
@@ -1263,10 +1274,8 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
               >
                 Refresh
               </Button>
-              <Button
-                type="primary"
-                icon={<ExportOutlined />}
-                onClick={handleExport}
+              <ExportButton
+                onExport={handleExport}
                 className="action-btn export-primary-btn"
                 style={{
                   background: '#B49A00',
@@ -1274,9 +1283,7 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
                   color: '#ffffff',
                   fontWeight: 600,
                 }}
-              >
-                Export
-              </Button>
+              />
             </div>
           </div>
         </div>
@@ -2288,7 +2295,7 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
                 }}
               >
                 <InboxOutlined style={{ color: '#ca8504' }} />
-                <span>Scheduled Line Items & Allocated Quantities ({selectedPlanDetail.items?.length || 0})</span>
+                <span>Scheduled Line Items & Allocated Qty ({selectedPlanDetail.items?.length || 0})</span>
               </div>
               <Table
                 size="small"

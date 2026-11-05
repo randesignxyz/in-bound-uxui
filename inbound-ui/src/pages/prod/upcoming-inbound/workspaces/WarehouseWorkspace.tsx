@@ -1,3 +1,8 @@
+import { RowActionButton, rowActionColumn } from '../shared/ui/RowActionButton';
+import { RelatedActivity } from '../features/shared/RelatedActivity';
+import { formatQuantities, getPostingQuantity } from '../core/quantity';
+import { WorkspaceTaskHeader, WorkspaceHeader, WorkspaceEmpty, workspacePagination, exportReceipts } from '../shared/ui/WorkspaceUI';
+import type { ExportFormat } from '../shared/ui/workspaceExport';
 import React, { useState, useMemo } from 'react';
 import {
   Table,
@@ -18,7 +23,6 @@ import {
   Alert,
   Divider,
   message,
-  Statistic,
   Tooltip,
   Progress,
   Upload,
@@ -37,14 +41,10 @@ import {
   FileDoneOutlined,
   SendOutlined,
   SaveOutlined,
-  EditOutlined,
   WarningOutlined,
   BarcodeOutlined,
   SyncOutlined,
-  ExportOutlined,
   ReloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
   FileTextOutlined,
   PlusOutlined,
   ArrowLeftOutlined,
@@ -61,10 +61,16 @@ import type {
 } from '../core/type';
 import { InboundStatusBadge } from '../features/shared/InboundStatusBadge';
 import { AuditTrailTimeline } from '../features/shared/AuditTrailTimeline';
+import { getReceiptIrNumber } from '../core/workflow/goods-receipt';
 import './ProcurementWorkspace.less';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
+const STORAGE_WAREHOUSE_OPTIONS = [
+  { label: 'WHM1 - Main Raw Materials', value: 'WHM1 - Main Raw Materials' },
+  { label: 'WHM2 - Packaging', value: 'WHM2 - Packaging' },
+  { label: 'WHM3 - Finished Goods', value: 'WHM3 - Finished Goods' },
+];
 
 export interface WarehouseWorkspaceProps {
   receipts: GoodsReceipt[];
@@ -85,7 +91,6 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>('TO_RECEIVE');
   const [workspaceView, setWorkspaceView] = useState<'list' | 'physical-receive'>('list');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('ALL');
@@ -106,7 +111,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
   const [driverContact, setDriverContact] = useState<string>('+855 12 889 001');
   const [actualArrivalDate, setActualArrivalDate] = useState<dayjs.Dayjs | null>(dayjs());
   const [actualArrivalTime, setActualArrivalTime] = useState<dayjs.Dayjs | null>(dayjs('09:15', 'HH:mm'));
-  const [receiverWarehouse, setReceiverWarehouse] = useState<string>('WHM1 - Main Raw Materials');
+  const [receiverWarehouse, setReceiverWarehouse] = useState<string>('');
   const [vendorAttachments, setVendorAttachments] = useState<{ uid: string; name: string; size?: number; type?: string; status?: string }[]>([]);
 
   // Open IR Plan Drawer with dynamic fallback if not found in irPlans
@@ -207,7 +212,8 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       // 4. Search Filter
       if (searchTerm) {
         const q = searchTerm.toLowerCase().trim();
-        const matchesGR = r.grNumber?.toLowerCase().includes(q);
+        const matchesGR = [getReceiptIrNumber(r), r.grNumber, r.sapDocNum, r.sapGrNumber]
+          .some(number => number?.toLowerCase().includes(q));
         const matchesIR = r.irPlanNumber?.toLowerCase().includes(q);
         const matchesSupplier = r.supplier?.toLowerCase().includes(q);
         const matchesDN = r.deliveryNoteNumber?.toLowerCase().includes(q);
@@ -342,7 +348,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
     setDriverContact(receipt.driverContact || '+855 12 889 001');
     setActualArrivalDate(receipt.actualArrivalDate ? dayjs(receipt.actualArrivalDate) : dayjs());
     setActualArrivalTime(receipt.actualArrivalTime ? dayjs(receipt.actualArrivalTime, 'HH:mm') : dayjs('09:15', 'HH:mm'));
-    setReceiverWarehouse(receipt.receiverWarehouseName || 'WHM1 - Main Raw Materials');
+    setReceiverWarehouse(receipt.storageWarehouseConfirmed ? receipt.receiverWarehouseName : '');
     setVendorAttachments(initialAttachments);
     setWorkspaceView('physical-receive');
   };
@@ -421,6 +427,10 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 
   // Validate receiving and proceed to Review GR (WH-04)
   const handleProceedToReview = () => {
+    if (!receiverWarehouse) {
+      message.error('Select the warehouse where the received goods will be stored.');
+      return;
+    }
     if (!deliveryNoteNumber?.trim()) {
       message.error('Delivery Note No. is required (or enter NA with remark).');
       return;
@@ -453,6 +463,10 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
   // Final submit to QC (WH-04 -> WH-05)
   const handleConfirmSubmitToQC = () => {
     if (!selectedReceipt) return;
+    if (!receiverWarehouse) {
+      message.error('Select the storage warehouse before submitting to QC.');
+      return;
+    }
 
     const updatedReceipt: GoodsReceipt = {
       ...selectedReceipt,
@@ -463,7 +477,8 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       driverContact,
       actualArrivalDate: actualArrivalDate ? actualArrivalDate.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
       actualArrivalTime: actualArrivalTime ? actualArrivalTime.format('HH:mm') : dayjs().format('HH:mm'),
-      receiverWarehouseName: receiverWarehouse || selectedReceipt.receiverWarehouseName,
+      receiverWarehouseName: receiverWarehouse,
+      storageWarehouseConfirmed: true,
       deliveryPlanStatus: 'Waiting for QC',
       processState: 'QC_PENDING',
       displayStatus: 'Under QC Inspection',
@@ -480,8 +495,8 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         {
           id: `act-${Date.now()}`,
           title: 'Physical Receiving Completed',
-          description: `Received ${activeItems.reduce((s, i) => s + i.receiveQty, 0)} units across ${activeItems.reduce((s, i) => s + (i.batches?.length || 0), 0)} batches. Submitted to QC.`,
-          performedBy: 'Warehouse Staff',
+          description: `Received ${formatQuantities(activeItems, i => i.receiveQty ?? 0)} across ${activeItems.reduce((s, i) => s + (i.batches?.length || 0), 0)} batches. Stored in ${receiverWarehouse}. Submitted to QC.`,
+          performedBy: 'Warehouse (Demo)',
           timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
           state: 'done',
         },
@@ -489,7 +504,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
     };
 
     onSubmitToQC(updatedReceipt);
-    message.success(`Goods Receipt ${updatedReceipt.grNumber} successfully submitted to QC Inspection!`);
+    message.success(`Receiving record ${getReceiptIrNumber(updatedReceipt)} successfully submitted to QC Inspection!`);
     setIsReviewModalOpen(false);
     setWorkspaceView('list');
   };
@@ -508,6 +523,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       actualArrivalDate: actualArrivalDate ? actualArrivalDate.format('YYYY-MM-DD') : selectedReceipt.actualArrivalDate,
       actualArrivalTime: actualArrivalTime ? actualArrivalTime.format('HH:mm') : selectedReceipt.actualArrivalTime,
       receiverWarehouseName: receiverWarehouse || selectedReceipt.receiverWarehouseName,
+      storageWarehouseConfirmed: Boolean(receiverWarehouse),
       deliveryPlanStatus: 'To Receive',
       items: activeItems,
       documentChecklist: {
@@ -522,8 +538,8 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         {
           id: `act-draft-${Date.now()}`,
           title: 'Physical Receiving Draft Saved',
-          description: `Draft counts recorded by Warehouse (${activeItems.reduce((s, i) => s + (i.receiveQty || 0), 0)} units).`,
-          performedBy: 'Warehouse Staff',
+          description: `Draft counts recorded by Warehouse (${formatQuantities(activeItems, i => i.receiveQty ?? 0)}).`,
+          performedBy: 'Warehouse (Demo)',
           timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
           state: 'done',
         },
@@ -532,16 +548,19 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 
     onSaveGR(draftReceipt);
     setSelectedReceipt(draftReceipt);
-    message.success(`Goods Receipt ${draftReceipt.grNumber} draft saved.`);
+    setIsReviewModalOpen(false);
+    message.success(`Receiving record ${getReceiptIrNumber(draftReceipt)} draft saved.`);
     setWorkspaceView('list');
   };
 
   // Create Temporary GR
   const handleCreateTempGR = () => {
     tempGrForm.validateFields().then((vals) => {
+      const temporaryNumber = `RCV-TMP-${Date.now()}`;
       const tempGr = {
         id: Date.now(),
-        grNumber: `TMP-${dayjs().format('MMDD')}-${Math.floor(100 + Math.random() * 900)}`,
+        grNumber: temporaryNumber,
+        receivingNumber: temporaryNumber,
         irPlanNumber: 'TEMP_UNPLANNED',
         deliveryPlanNumber: 'Unscheduled',
         poNumber: 'UNLINKED_PO',
@@ -558,9 +577,9 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         activities: [
           {
             id: `act-temp-${Date.now()}`,
-            title: 'Temporary GR Created',
+            title: 'Temporary Receiving Record Created',
             description: `Unplanned truck arrival received. Reason: ${vals.reason}`,
-            performedBy: 'Warehouse Staff',
+            performedBy: 'Warehouse (Demo)',
             timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
             state: 'done',
           },
@@ -591,24 +610,24 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       } as GoodsReceipt;
 
       onSaveGR(tempGr);
-      message.success(`Temporary GR ${tempGr.grNumber} logged in Exception Queue.`);
+      message.success(`Temporary receiving record ${getReceiptIrNumber(tempGr)} logged in Exception Queue.`);
       setIsTempGrModalOpen(false);
       tempGrForm.resetFields();
     });
   };
 
-  const handleExport = () => {
-    message.success('Exporting Warehouse Goods Receipts to Excel format...');
+  const handleExport = (format: ExportFormat) => {
+    exportReceipts('warehouse-receipts', filteredReceipts, format);
   };
 
   // Table Columns matching Procurement design
   const columns: ColumnsType<GoodsReceipt> = [
     {
-      title: 'GR #',
+      title: 'Receiving #',
       dataIndex: 'grNumber',
       key: 'grNumber',
       width: 130,
-      render: (gr: string, record: GoodsReceipt) => (
+      render: (_: string, record: GoodsReceipt) => (
         <span
           className="po-link"
           onClick={() => {
@@ -616,9 +635,16 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             setIsDetailDrawerOpen(true);
           }}
         >
-          {gr || record.irPlanNumber}
+          {getReceiptIrNumber(record) || '—'}
         </span>
       ),
+    },
+    {
+      title: 'SAP GR #',
+      key: 'sapGrNumber',
+      width: 130,
+      render: (_: unknown, record: GoodsReceipt) =>
+        record.sapDocNum?.trim() || record.sapGrNumber?.trim() || '—',
     },
     {
       title: 'Status',
@@ -630,7 +656,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       ),
     },
     {
-      title: 'IR Plan #',
+      title: 'IR Schedule #',
       dataIndex: 'irPlanNumber',
       key: 'irPlanNumber',
       width: 120,
@@ -681,11 +707,11 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       render: (_: any, record: GoodsReceipt) => (
         <Space wrap size={4}>
           {record.poReferences?.map((p) => (
-            <span key={p.poNumber} className="po-link" style={{ color: '#0f172a', fontWeight: 600 }}>
+            <span key={p.poNumber} style={{ color: '#0f172a', fontWeight: 600 }}>
               {p.poNumber}
             </span>
           )) || (
-            <span className="po-link" style={{ color: '#0f172a', fontWeight: 600 }}>
+            <span style={{ color: '#0f172a', fontWeight: 600 }}>
               {record.poNumber}
             </span>
           )}
@@ -701,9 +727,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       ),
     },
     {
-      title: 'Action',
-      key: 'action',
-      width: 140,
+      ...rowActionColumn,
       render: (_: any, record: GoodsReceipt) => {
         const canReceive =
           record.deliveryPlanStatus === 'To Receive' ||
@@ -714,34 +738,67 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         return (
           <Space>
             {canReceive ? (
-              <button
-                className="btn-po-action"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleStartReceiving(record);
+              <RowActionButton
+                variant="primary"
+                icon={<InboxOutlined />}
+                onClick={() => {
+                    handleStartReceiving(record);
                 }}
               >
-                <InboxOutlined style={{ marginRight: 4, fontSize: 12 }} />
-                <span>Physical Receive</span>
-              </button>
+                <span>Receive Goods</span>
+              </RowActionButton>
             ) : (
-              <button
-                className="btn-po-action"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedReceipt(record);
+              <RowActionButton
+                onClick={() => {
+                    setSelectedReceipt(record);
                   setIsDetailDrawerOpen(true);
                 }}
               >
-                <EyeOutlined style={{ marginRight: 4, fontSize: 12 }} />
-                <span>View GR</span>
-              </button>
+                <span>View Receipt</span>
+              </RowActionButton>
             )}
           </Space>
         );
       },
     },
   ];
+
+  // The receiving page contains the details; this dialog only confirms the hand-off.
+  const receivingReviewModal = (
+    <Modal
+      title={
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <span style={{ display: 'grid', placeItems: 'center', width: 48, height: 48, borderRadius: '50%', background: '#fef9e7', color: '#B49A00', fontSize: 24 }}>
+            <SafetyCertificateOutlined />
+          </span>
+          <span>Submit Goods Receipt to QC?</span>
+        </div>
+      }
+      centered
+      open={isReviewModalOpen}
+      onCancel={() => setIsReviewModalOpen(false)}
+      width={440}
+      styles={{
+        header: { textAlign: 'center', marginBottom: 12 },
+        body: { textAlign: 'center', padding: '0 0 24px' },
+        footer: { textAlign: 'center', marginTop: 8, paddingBottom: 4 },
+      }}
+      footer={
+        <Space size={16}>
+          <Button onClick={() => setIsReviewModalOpen(false)}>Cancel</Button>
+          <Button
+            type="primary"
+            onClick={handleConfirmSubmitToQC}
+            style={{ background: '#B49A00', borderColor: '#B49A00' }}
+          >
+            Confirm & Submit
+          </Button>
+        </Space>
+      }
+    >
+      <Text>Send this goods receipt to QC for inspection?</Text>
+    </Modal>
+  );
 
   // -------------------------------------------------------------
   // VIEW: PHYSICAL RECEIVING & MULTI-BATCH INTAKE PAGE
@@ -758,20 +815,11 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 
     return (
       <div
-        className="procurement-workspace create-ir-plan-view"
+        className="procurement-workspace create-ir-plan-view inbound-task-page"
         style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingBottom: 24 }}
       >
         {/* 1. Top Back Navigation Header */}
-        <div className="create-plan-header">
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined style={{ fontSize: 18 }} />}
-            onClick={() => setWorkspaceView('list')}
-            className="back-nav-btn"
-          >
-            Physical Receiving
-          </Button>
-        </div>
+        <WorkspaceTaskHeader title="Warehouse Receiving" onBack={() => setWorkspaceView('list')} />
 
         <div className="create-plan-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* 2. Combined Hero Details Card (3-Column Layout matching Procurement) */}
@@ -793,7 +841,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
                   <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
-                    IR Plan #
+                    IR Schedule #
                   </span>
                   <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                     :
@@ -847,7 +895,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                     :
                   </span>
                   <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
-                    {selectedReceipt.receiverWarehouseName || 'WHM1 - Main Raw Materials'}
+                    {selectedReceipt.receiverWarehouseName || '—'}
                   </span>
                 </div>
                 <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
@@ -858,7 +906,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                     :
                   </span>
                   <span className="field-value" style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
-                    {totalPlannedQty.toLocaleString()} units ({activeItems.length} items)
+                    {formatQuantities(activeItems, i => i.plannedQty ?? i.poQty ?? 0)} ({activeItems.length} items)
                   </span>
                 </div>
               </div>
@@ -897,6 +945,23 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                   <InboundStatusBadge type="deliveryPlan" value={selectedReceipt.deliveryPlanStatus || 'To Receive'} />
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="po-figma-details-card" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '20px 24px' }}>
+            <label htmlFor="receiving-storage-warehouse" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>
+              Store in Warehouse <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <Select
+              id="receiving-storage-warehouse"
+              placeholder="Select storage warehouse"
+              value={receiverWarehouse || undefined}
+              onChange={setReceiverWarehouse}
+              options={STORAGE_WAREHOUSE_OPTIONS}
+              style={{ width: '100%', maxWidth: 360, height: 36 }}
+            />
+            <div style={{ marginTop: 8, fontSize: 12, color: '#64748b' }}>
+              Confirm where the received goods will be stored before submitting to QC.
             </div>
           </div>
 
@@ -1359,29 +1424,18 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                   ),
                 },
                 {
-                  title: 'Action',
-                  key: 'action',
-                  width: 120,
+                  ...rowActionColumn,
                   render: (_, r: any) => (
                     <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
                       {r.isMainRow ? (
-                        <Button
-                          type="default"
-                          icon={<PlusOutlined />}
-                          className="split-date-btn"
-                          onClick={() => handleAddBatch(r.itemIdx)}
-                          style={{ height: 32, fontSize: 12, fontWeight: 600, color: '#B49A00', borderColor: '#B49A00' }}
-                        >
-                          + Add Batch
-                        </Button>
+                        <RowActionButton icon={<PlusOutlined />} onClick={() => handleAddBatch(r.itemIdx)}>
+                          Add Batch
+                        </RowActionButton>
                       ) : (
-                        <Button
-                          size="small"
-                          type="text"
-                          icon={<DeleteOutlined style={{ color: '#ef4444' }} />}
-                          onClick={() => handleRemoveBatch(r.itemIdx, r.bIdx)}
-                          aria-label={`Remove Lot ${r.bIdx + 1}`}
-                        />
+                        <RowActionButton variant="danger" icon={<DeleteOutlined />}
+                          onClick={() => handleRemoveBatch(r.itemIdx, r.bIdx)}>
+                          Remove
+                        </RowActionButton>
                       )}
                     </div>
                   ),
@@ -1390,9 +1444,11 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             />
           </div>
 
+
+
           {/* 5. Sticky Bottom Action Bar with Live Metrics & Hand-off Buttons */}
           <div
-            className="create-plan-footer"
+            className="create-plan-footer inbound-task-actions"
             style={{
               background: '#ffffff',
               border: '1px solid #e5e7eb',
@@ -1412,14 +1468,14 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Total Planned</span>
                 <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
-                  {totalPlannedQty.toLocaleString()} Units
+                  {formatQuantities(activeItems, i => i.plannedQty ?? i.poQty ?? 0)}
                 </span>
               </div>
               <div style={{ width: 1, height: 28, background: '#e2e8f0' }} />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Total Received</span>
                 <span style={{ fontSize: 15, fontWeight: 700, color: '#16a34a' }}>
-                  {totalReceivedQty.toLocaleString()} Units
+                  {formatQuantities(activeItems, i => i.receiveQty ?? 0)}
                 </span>
               </div>
               <div style={{ width: 1, height: 28, background: '#e2e8f0' }} />
@@ -1432,7 +1488,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                     color: totalDiscrepancy > 0 ? '#dc2626' : '#64748b',
                   }}
                 >
-                  {totalDiscrepancy > 0 ? `-${totalDiscrepancy.toLocaleString()} Missing` : '0 (Match)'}
+                  {formatQuantities(activeItems, i => (i.plannedQty ?? i.poQty ?? 0) - (i.receiveQty ?? 0))}
                 </span>
               </div>
               <div style={{ width: 1, height: 28, background: '#e2e8f0' }} />
@@ -1458,7 +1514,6 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
               </Button>
               <Button
                 type="primary"
-                icon={<SendOutlined />}
                 onClick={handleProceedToReview}
                 style={{
                   background: '#B49A00',
@@ -1474,43 +1529,18 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             </div>
           </div>
         </div>
+        {receivingReviewModal}
       </div>
     );
   }
 
   return (
-    <div className="procurement-workspace">
-      {/* 1. Header Row matching Procurement */}
-      <div className="workspace-header-row">
-        <div className="header-titles" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1 className="main-title" style={{ margin: 0 }}>Warehouse Inbound Management</h1>
-            <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={onRefresh}
-                className="action-btn"
-              >
-                Refresh
-              </Button>
-              <Button
-                type="primary"
-                icon={<ExportOutlined />}
-                onClick={handleExport}
-                className="action-btn export-primary-btn"
-                style={{
-                  background: '#B49A00',
-                  borderColor: '#B49A00',
-                  color: '#ffffff',
-                  fontWeight: 600,
-                }}
-              >
-                Export
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="procurement-workspace inbound-role-workspace inbound-warehouse">
+      <WorkspaceHeader
+        title="Warehouse — Receiving"
+        onRefresh={onRefresh}
+        onExport={handleExport}
+      />
 
       {/* 2. KPI Summary Cards Grid */}
       <div className="summary-cards-row">
@@ -1522,7 +1552,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value blue">{tabCounts.today}</div>
-          <div className="kpi-subtitle">Scheduled for arrival</div>
+
         </div>
 
         <div className="kpi-card">
@@ -1533,7 +1563,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value orange">{tabCounts.overdue}</div>
-          <div className="kpi-subtitle">Past scheduled date</div>
+
         </div>
 
         <div className="kpi-card">
@@ -1544,18 +1574,18 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value purple">{tabCounts.waitingQC}</div>
-          <div className="kpi-subtitle">Submitted for inspection</div>
+
         </div>
 
         <div className="kpi-card">
           <div className="kpi-top">
-            <span className="kpi-title">Completed & Stored</span>
+            <span className="kpi-title">Completed</span>
             <div className="kpi-icon-badge green">
               <CheckCircleOutlined />
             </div>
           </div>
           <div className="kpi-value green">{tabCounts.completed}</div>
-          <div className="kpi-subtitle">Stored in warehouse</div>
+
         </div>
       </div>
 
@@ -1566,7 +1596,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 240px', minWidth: 200, maxWidth: 300 }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Search</span>
             <Input
-              placeholder="Search GR #, PO #, item, vendor..."
+              placeholder="Search Receiving #, SAP GR #, PO #, vendor..."
               prefix={<SearchOutlined style={{ color: '#9ca3af', marginRight: 4 }} />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -1581,9 +1611,9 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             <Select
               style={{ width: '100%', height: 36 }}
               value={statusFilter}
-              onChange={setStatusFilter}
+              onChange={(value) => { setStatusFilter(value); setActiveTab('ALL'); }}
               options={[
-                { label: 'All Status', value: 'ALL' },
+                { label: 'All Statuses', value: 'ALL' },
                 { label: 'To Receive', value: 'To Receive' },
                 { label: 'Waiting for QC', value: 'Waiting for QC' },
                 { label: 'Stored / Completed', value: 'Stored' },
@@ -1604,6 +1634,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                 { label: 'WHM1 - Raw Materials', value: 'WHM1' },
                 { label: 'WHM2 - Packaging', value: 'WHM2' },
                 { label: 'WHM3 - Finished Goods', value: 'WHM3' },
+                { label: 'WH-02 - QC Follow-Up', value: 'WH-02' },
               ]}
             />
           </div>
@@ -1651,7 +1682,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
           <div className="tabs-list">
             <button
               className={`tab-button ${activeTab === 'TO_RECEIVE' ? 'active' : ''}`}
-              onClick={() => setActiveTab('TO_RECEIVE')}
+              onClick={() => { setActiveTab('TO_RECEIVE'); setStatusFilter('ALL'); }}
             >
               <span>To Receive</span>
               <span className="tab-count-badge">{tabCounts.toReceive}</span>
@@ -1659,7 +1690,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 
             <button
               className={`tab-button ${activeTab === 'WAITING_QC' ? 'active' : ''}`}
-              onClick={() => setActiveTab('WAITING_QC')}
+              onClick={() => { setActiveTab('WAITING_QC'); setStatusFilter('ALL'); }}
             >
               <span>Waiting for QC</span>
               <span className="tab-count-badge">{tabCounts.waitingQC}</span>
@@ -1667,7 +1698,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 
             <button
               className={`tab-button ${activeTab === 'COMPLETED' ? 'active' : ''}`}
-              onClick={() => setActiveTab('COMPLETED')}
+              onClick={() => { setActiveTab('COMPLETED'); setStatusFilter('ALL'); }}
             >
               <span>Completed</span>
               <span className="tab-count-badge">{tabCounts.completed}</span>
@@ -1675,33 +1706,13 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 
             <button
               className={`tab-button ${activeTab === 'ALL' ? 'active' : ''}`}
-              onClick={() => setActiveTab('ALL')}
+              onClick={() => { setActiveTab('ALL'); setStatusFilter('ALL'); }}
             >
               <span>All Receipts</span>
               <span className="tab-count-badge">{tabCounts.all}</span>
             </button>
           </div>
 
-          <div className="view-controls">
-            <div className="view-switcher-group">
-              <Tooltip title="Table View">
-                <button
-                  className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
-                  onClick={() => setViewMode('table')}
-                >
-                  <UnorderedListOutlined />
-                </button>
-              </Tooltip>
-              <Tooltip title="Cards View">
-                <button
-                  className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
-                  onClick={() => setViewMode('cards')}
-                >
-                  <AppstoreOutlined />
-                </button>
-              </Tooltip>
-            </div>
-          </div>
         </div>
 
         {/* Table View */}
@@ -1709,19 +1720,21 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
           columns={columns}
           dataSource={filteredReceipts}
           rowKey="grNumber"
-          pagination={{ pageSize: 8, showTotal: (t) => `Total ${t} items` }}
+          pagination={workspacePagination}
+          scroll={{ x: 1000 }}
+          locale={{ emptyText: <WorkspaceEmpty filtered={Boolean(searchTerm || statusFilter !== 'ALL' || warehouseFilter !== 'ALL' || dateRange)} description="No receipts in this queue. Scheduled deliveries appear here after procurement planning." /> }}
           className="po-custom-table"
         />
       </div>
 
       {/* 5. Detail / Track Intake Drawer for Warehouse Goods Receipt */}
-      <Drawer
+      <Drawer rootClassName="inbound-detail"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: 24 }}>
             <Space size={8}>
               <FileTextOutlined style={{ color: '#2563eb', fontSize: 18 }} />
               <span style={{ fontWeight: 700, fontSize: 16 }}>
-                Goods Receipt Details: {selectedReceipt?.grNumber || selectedReceipt?.irPlanNumber}
+                Receiving Details: {selectedReceipt ? getReceiptIrNumber(selectedReceipt) : '—'}
               </span>
             </Space>
             <Space>
@@ -1738,12 +1751,13 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              Warehouse Intake Record • Sourced from IR Plan {selectedReceipt?.irPlanNumber}
+              Warehouse Intake Record • IR Schedule {selectedReceipt?.irPlanNumber}
             </Text>
             <Space size={12}>
               <Button onClick={() => setIsDetailDrawerOpen(false)}>Close</Button>
               {selectedReceipt && (selectedReceipt.deliveryPlanStatus === 'To Receive' || selectedReceipt.deliveryPlanStatus === 'In Progress') && (
                 <Button
+                  type="primary"
                   className="btn-po-action"
                   icon={<InboxOutlined />}
                   onClick={() => {
@@ -1751,7 +1765,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                     handleStartReceiving(selectedReceipt);
                   }}
                 >
-                  Physical Receive
+                  Receive Goods
                 </Button>
               )}
             </Space>
@@ -1787,22 +1801,22 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                   Shipment & Logistics Details
                 </div>
                 <div className="po-grid-container" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {/* Row 1: GR # vs IR Plan # */}
+                  {/* Row 1: GR # vs IR Schedule # */}
                   <div className="po-grid-row" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
                     <div className="label-value-pair" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                       <span className="field-label" style={{ width: 140, fontSize: 13, fontWeight: 500, color: '#6b7280', flexShrink: 0 }}>
-                        Goods Receipt #
+                        Receiving #
                       </span>
                       <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                         :
                       </span>
                       <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: 'rgba(0,0,0,0.85)' }}>
-                        {selectedReceipt.grNumber || 'Pending GR'}
+                        {getReceiptIrNumber(selectedReceipt) || '—'}
                       </span>
                     </div>
                     <div className="label-value-pair" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                       <span className="field-label" style={{ width: 140, fontSize: 13, fontWeight: 500, color: '#6b7280', flexShrink: 0 }}>
-                        IR Plan #
+                        IR Schedule #
                       </span>
                       <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                         :
@@ -2052,43 +2066,17 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
               </div>
 
               {/* 3. Audit Trail Card */}
-              <div
-                className="drawer-section"
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 10,
-                  padding: '16px 20px',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)',
-                }}
-              >
-                <div
-                  className="drawer-section-title"
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    marginBottom: 14,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <ClockCircleOutlined style={{ color: '#2563eb' }} />
-                  <span>Audit Trail & Activity Log</span>
-                </div>
-                <AuditTrailTimeline
+              <AuditTrailTimeline receipt={selectedReceipt}
                   activities={selectedReceipt.activities}
                   adjustments={selectedReceipt.supervisorAdjustments}
                 />
-              </div>
             </div>
           );
         })()}
       </Drawer>
 
       {/* 5A. IR Schedule (IR Plan) Drawer */}
-      <Drawer
+      <Drawer rootClassName="inbound-detail"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: 24 }}>
             <Space size={10}>
@@ -2109,52 +2097,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         onClose={() => setIsIRPlanDrawerOpen(false)}
         width={920}
         styles={{ body: { padding: '20px 24px', background: '#f8fafc' } }}
-        footer={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Sourced from Procurement Inbound Planning • Linked to Warehouse Receiving
-            </Text>
-            <Space size={12}>
-              <Button onClick={() => setIsIRPlanDrawerOpen(false)}>Close</Button>
-              {(() => {
-                const linkedReceipt = receipts.find(
-                  (r) => r.irPlanNumber === selectedIRPlan?.irPlanNumber || r.id === (selectedIRPlan as any)?.id,
-                ) || (selectedReceipt?.irPlanNumber === selectedIRPlan?.irPlanNumber ? selectedReceipt : undefined);
-
-                return (
-                  <>
-                    {linkedReceipt && (
-                      <Button
-                        type="default"
-                        icon={<EyeOutlined />}
-                        onClick={() => {
-                          setSelectedReceipt(linkedReceipt);
-                          setIsIRPlanDrawerOpen(false);
-                          setIsDetailDrawerOpen(true);
-                        }}
-                        style={{ color: '#2563eb', borderColor: '#bfdbfe', fontWeight: 600 }}
-                      >
-                        View Receipt Details
-                      </Button>
-                    )}
-                    {linkedReceipt && (linkedReceipt.deliveryPlanStatus === 'To Receive' || linkedReceipt.deliveryPlanStatus === 'In Progress') && (
-                      <Button
-                        className="btn-po-action"
-                        icon={<InboxOutlined />}
-                        onClick={() => {
-                          setIsIRPlanDrawerOpen(false);
-                          handleStartReceiving(linkedReceipt);
-                        }}
-                      >
-                        Physical Receive
-                      </Button>
-                    )}
-                  </>
-                );
-              })()}
-            </Space>
-          </div>
-        }
+        footer={null}
       >
         {selectedIRPlan && (
           <div className="detail-drawer-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -2190,7 +2133,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
                     <span className="field-label" style={{ width: 105, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
-                      IR Plan #
+                      IR Schedule #
                     </span>
                     <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                       :
@@ -2207,7 +2150,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                       :
                     </span>
                     <span className="field-value">
-                      <span className="po-link" style={{ color: '#2563eb', fontWeight: 600, cursor: 'pointer' }}>
+                      <span style={{ color: '#0f172a', fontWeight: 600 }}>
                         {selectedIRPlan.poNumbers?.[0] || selectedIRPlan.items?.[0]?.poNumber || '26000977'}
                       </span>
                     </span>
@@ -2417,122 +2360,12 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                 ]}
               />
             </div>
+            <RelatedActivity receipts={receipts.filter(receipt => receipt.irPlanNumber === selectedIRPlan.irPlanNumber)} plans={[selectedIRPlan]} />
           </div>
         )}
       </Drawer>
 
-      {/* WH-04 Review GR Modal */}
-      <Modal
-        title={
-          <Space>
-            <CheckCircleOutlined style={{ color: '#16a34a' }} />
-            <span>WH-04 Review Goods Receipt Before Submitting to QC</span>
-          </Space>
-        }
-        open={isReviewModalOpen}
-        onCancel={() => setIsReviewModalOpen(false)}
-        width={850}
-        footer={[
-          <Button key="back" icon={<EditOutlined />} onClick={() => setIsReviewModalOpen(false)}>
-            Back to Edit
-          </Button>,
-          <Button key="draft" icon={<SaveOutlined />} onClick={() => { message.info('Saved as draft.'); setIsReviewModalOpen(false); }}>
-            Save Draft
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            icon={<SendOutlined />}
-            onClick={handleConfirmSubmitToQC}
-            style={{ background: '#16a34a', borderColor: '#16a34a' }}
-          >
-            Submit to QC
-          </Button>,
-        ]}
-      >
-        <Alert
-          message="Summary of Physical Receiving"
-          description="Please verify total received counts and multi-batch details. Once submitted, status will transition to 'Waiting for QC'."
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col span={6}>
-            <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, textAlign: 'center', border: '1px solid #e2e8f0' }}>
-              <Statistic
-                title="Planned Qty"
-                value={activeItems.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0)}
-                suffix="units"
-              />
-            </div>
-          </Col>
-          <Col span={6}>
-            <div style={{ background: '#f0fdf4', padding: 12, borderRadius: 8, textAlign: 'center', border: '1px solid #bbf7d0' }}>
-              <Statistic
-                title="Actual Received Qty"
-                value={activeItems.reduce((s, i) => s + (i.receiveQty || 0), 0)}
-                valueStyle={{ color: '#16a34a' }}
-                suffix="units"
-              />
-            </div>
-          </Col>
-          <Col span={6}>
-            <div style={{ background: '#fef2f2', padding: 12, borderRadius: 8, textAlign: 'center', border: '1px solid #fecaca' }}>
-              <Statistic
-                title="Discrepancy"
-                value={
-                  activeItems.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0) -
-                  activeItems.reduce((s, i) => s + (i.receiveQty || 0), 0)
-                }
-                valueStyle={{ color: '#dc2626' }}
-                suffix="units"
-              />
-            </div>
-          </Col>
-          <Col span={6}>
-            <div style={{ background: '#eff6ff', padding: 12, borderRadius: 8, textAlign: 'center', border: '1px solid #bfdbfe' }}>
-              <Statistic
-                title="Total Batches"
-                value={activeItems.reduce((s, i) => s + (i.batches?.length || 0), 0)}
-              />
-            </div>
-          </Col>
-        </Row>
-
-        <Table
-          size="small"
-          dataSource={activeItems}
-          rowKey="code"
-          pagination={false}
-          className="po-custom-table"
-          columns={[
-            { title: 'Item Code', dataIndex: 'code', key: 'code', render: (t) => <Text strong style={{ color: '#334155' }}>{t}</Text> },
-            { title: 'Item Name', dataIndex: 'name', key: 'name' },
-            { title: 'Planned', key: 'planned', render: (_, r) => (r.plannedQty || r.poQty).toLocaleString() },
-            { title: 'Actual Received', dataIndex: 'receiveQty', key: 'receiveQty', render: (q) => <Tag color="green">{q.toLocaleString()}</Tag> },
-            {
-              title: 'Batches',
-              key: 'batches',
-              render: (_, r) => (
-                <Space direction="vertical" size={2}>
-                  {r.batches?.map((b) => (
-                    <Text key={b.batchNumber} style={{ fontSize: 11 }}>
-                      {b.batchNumber}: {b.batchQty} {r.uom}
-                    </Text>
-                  ))}
-                </Space>
-              ),
-            },
-            {
-              title: 'Discrepancy Remark',
-              key: 'missing',
-              render: (_, r) => r.missingRemark ? <Text type="danger" style={{ fontSize: 11 }}>{r.missingRemark}</Text> : <Text type="secondary">-</Text>,
-            },
-          ]}
-        />
-      </Modal>
+      {receivingReviewModal}
 
       {/* Temporary GR Creation Modal (Exception Flow) */}
       <Modal

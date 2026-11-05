@@ -113,9 +113,12 @@ export interface ReceiptPoItemGroup<TItem extends ReceiptPoGroupedItemShape = GR
 
 export interface GoodsReceipt {
   id?: number;
-  grNumber: string; // e.g. "GR000124"
-  receivingNumber?: string;
+  grNumber: string; // Internal legacy receipt key; use receivingNumber for warehouse display.
+  receivingNumber?: string; // e.g. "RCV000125"; distinct from SAP goods receipt numbers.
   businessUnit?: string;
+  parentIrNumber?: string; // Immediate source for a QC follow-up IR.
+  rootIrNumber?: string; // Original procurement IR, retained across reinspections.
+  qcFollowUpType?: 'REJECTED' | 'ON_HOLD';
   approvedGrNumber?: string;
 
   // IR & Delivery Plan references
@@ -128,6 +131,7 @@ export interface GoodsReceipt {
   driverContact?: string;
   driverName?: string;
   receiverWarehouseName: string;
+  storageWarehouseConfirmed?: boolean;
   actualArrivalDate?: string;
   actualArrivalTime?: string;
   deliveryNoteNumber: string;   // Required; if 'NA', reason required

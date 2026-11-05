@@ -1,3 +1,4 @@
+import { normalizeReceivingNumber } from '../receivingNumber';
 import type {
   GoodsReceipt,
   ReceiptPoGroupedItemShape,
@@ -129,7 +130,7 @@ export function groupReceiptItemsByPO<TItem extends ReceiptPoGroupedItemShape>(
 export function getReceiptIrNumber(
   receipt: Pick<GoodsReceipt, 'receivingNumber' | 'grNumber'>,
 ) {
-  return receipt.receivingNumber?.trim() || receipt.grNumber;
+  return normalizeReceivingNumber(receipt.receivingNumber?.trim() || receipt.grNumber);
 }
 
 export function getReceiptApprovedGrNumber(

@@ -1,3 +1,4 @@
+import { SHOW_GLOBAL_AUDIT_TRAIL } from '../core/workspaceFeatures';
 import React, { useState } from 'react';
 import {
   Typography,
@@ -165,7 +166,7 @@ export const UserFlowWorkspace: React.FC<UserFlowWorkspaceProps> = ({ onNavigate
       ],
       businessRules: 'Audit logs are strictly append-only and cannot be altered, overwritten, or deleted by any system role.',
     },
-  ];
+  ].filter(step => SHOW_GLOBAL_AUDIT_TRAIL || step.roleKey !== 'AUDIT_TIMELINE');
 
   const scenarios = [
     {

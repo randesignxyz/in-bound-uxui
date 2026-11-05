@@ -1,27 +1,40 @@
+import { QuantityAdjustments } from './QuantityAdjustments';
 import React from 'react';
-import { Timeline, Card, Typography, Table, Tag, Space, Alert, Empty } from 'antd';
+import { getReceiptIrNumber } from '../../core/workflow/goods-receipt';
+import { Timeline, Card, Typography, Empty } from 'antd';
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
   ExclamationCircleOutlined,
-  AuditOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import type { GRActivity, SupervisorAdjustmentAudit } from '../../core/type';
+import type { GRActivity, SupervisorAdjustmentAudit, GoodsReceipt } from '../../core/type';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 interface AuditTrailTimelineProps {
   activities?: GRActivity[];
   adjustments?: SupervisorAdjustmentAudit[];
   currentStep?: number;
+  receipt?: GoodsReceipt;
 }
 
 export const AuditTrailTimeline: React.FC<AuditTrailTimelineProps> = ({
   activities = [],
   adjustments = [],
+  receipt,
 }) => {
+  const nextOwner = !receipt ? undefined
+    : receipt.processState === 'SAP_POSTED' || receipt.sapPostingStatus === 'Posted' ? 'Complete'
+    : receipt.processState === 'SAP_POSTING_FAILED' || receipt.sapPostingStatus === 'Posting Failed' ? 'Supervisor — retry SAP posting'
+    : receipt.processState === 'PENDING_SUPERVISOR_REVIEW' || receipt.deliveryPlanStatus === 'Pending Supervisor' ? 'Supervisor — review'
+    : receipt.deliveryPlanStatus === 'Waiting for QC' || receipt.sendBackTarget === 'QC' ? 'QC Lab — inspect'
+    : 'Warehouse — receive or correct';
+  const sortedActivities = [...activities].sort((a, b) => {
+    const first = Date.parse(a.timestamp), second = Date.parse(b.timestamp);
+    return Number.isNaN(first) || Number.isNaN(second) ? 0 : second - first;
+  });
   const getTimelineIcon = (state: string) => {
     switch (state) {
       case 'done':
@@ -35,63 +48,22 @@ export const AuditTrailTimeline: React.FC<AuditTrailTimelineProps> = ({
     }
   };
 
-  const adjustmentColumns = [
-    {
-      title: 'Item Code',
-      dataIndex: 'itemCode',
-      key: 'itemCode',
-      render: (code: string, record: SupervisorAdjustmentAudit) => (
-        <div>
-          <Text strong>{code}</Text>
-          <div style={{ fontSize: 11, color: '#8c8c8c' }}>{record.itemName}</div>
-        </div>
-      ),
-    },
-    {
-      title: 'Field',
-      dataIndex: 'fieldName',
-      key: 'fieldName',
-      render: (text: string) => <Tag color="blue">{text}</Tag>,
-    },
-    {
-      title: 'Previous',
-      dataIndex: 'previousValue',
-      key: 'previousValue',
-      render: (val: any) => <Text delete type="secondary">{val}</Text>,
-    },
-    {
-      title: 'Adjusted Value',
-      dataIndex: 'newValue',
-      key: 'newValue',
-      render: (val: any) => <Text strong style={{ color: '#52c41a' }}>{val}</Text>,
-    },
-    {
-      title: 'Reason for Adjustment',
-      dataIndex: 'reason',
-      key: 'reason',
-      render: (text: string) => <Text style={{ fontSize: 12 }}>{text}</Text>,
-    },
-    {
-      title: 'Changed By / Time',
-      key: 'auditMeta',
-      render: (_: any, record: SupervisorAdjustmentAudit) => (
-        <div>
-          <div><UserOutlined style={{ marginRight: 4 }} />{record.changedBy}</div>
-          <div style={{ fontSize: 11, color: '#8c8c8c' }}>{record.timestamp}</div>
-        </div>
-      ),
-    },
-  ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Card title="End-to-End Activity History" size="small" bordered={false}>
+    <section className="inbound-activity" aria-label="Activity" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <Card title="Activity" size="small">
+        {receipt && <div className="inbound-activity-context">
+          <Text strong>{getReceiptIrNumber(receipt)}</Text>
+          <Text type="secondary">PO: {receipt.poNumber || '—'} · IR Schedule: {receipt.irPlanNumber || '—'}{receipt.sapDocNum ? ` · SAP GR: ${receipt.sapDocNum}` : ''}</Text>
+          <Text>Current status: {receipt.displayStatus || receipt.deliveryPlanStatus || 'To Receive'}</Text>
+          <Text>Next: {nextOwner}</Text>
+        </div>}
         {activities.length === 0 ? (
           <Empty description="No activity records yet" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Timeline
             style={{ marginTop: 12 }}
-            items={activities.map((activity) => ({
+            items={sortedActivities.map((activity) => ({
               dot: getTimelineIcon(activity.state),
               children: (
                 <div style={{ paddingBottom: 8 }}>
@@ -113,34 +85,7 @@ export const AuditTrailTimeline: React.FC<AuditTrailTimelineProps> = ({
         )}
       </Card>
 
-      {adjustments && adjustments.length > 0 && (
-        <Card
-          title={
-            <Space>
-              <AuditOutlined style={{ color: '#fa8c16' }} />
-              <span>Supervisor Adjustment Audit Trail ({adjustments.length})</span>
-            </Space>
-          }
-          size="small"
-          bordered={false}
-          style={{ borderColor: '#ffe58f', background: '#fffbe6' }}
-        >
-          <Alert
-            message="Audit Logging Rule Active"
-            description="Supervisor adjustments never overwrite original warehouse physical count or QC values. Every modification is immutably logged with before/after records."
-            type="warning"
-            showIcon
-            style={{ marginBottom: 12 }}
-          />
-          <Table
-            dataSource={adjustments}
-            columns={adjustmentColumns}
-            rowKey="id"
-            pagination={false}
-            size="small"
-          />
-        </Card>
-      )}
-    </div>
+      <QuantityAdjustments adjustments={adjustments} />
+    </section>
   );
 };

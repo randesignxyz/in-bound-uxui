@@ -1,3 +1,8 @@
+import { RowActionButton, rowActionColumn } from '../shared/ui/RowActionButton';
+import { RelatedActivity } from '../features/shared/RelatedActivity';
+import { formatQuantities, getPostingQuantity } from '../core/quantity';
+import { WorkspaceTaskHeader, WorkspaceHeader, WorkspaceEmpty, workspacePagination, exportReceipts } from '../shared/ui/WorkspaceUI';
+import type { ExportFormat } from '../shared/ui/workspaceExport';
 import React, { useState, useMemo } from 'react';
 import {
   Table,
@@ -18,9 +23,9 @@ import {
   Alert,
   Divider,
   message,
-  Statistic,
   Tooltip,
   Progress,
+  Upload,
 } from 'antd';
 import {
   InboxOutlined,
@@ -36,16 +41,15 @@ import {
   FileDoneOutlined,
   SendOutlined,
   SaveOutlined,
-  EditOutlined,
   WarningOutlined,
   BarcodeOutlined,
   SyncOutlined,
-  ExportOutlined,
   ReloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
   FileTextOutlined,
   PlusOutlined,
+  ArrowLeftOutlined,
+  PaperClipOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
@@ -57,10 +61,16 @@ import type {
 } from '../core/type';
 import { InboundStatusBadge } from '../features/shared/InboundStatusBadge';
 import { AuditTrailTimeline } from '../features/shared/AuditTrailTimeline';
+import { getReceiptIrNumber } from '../core/workflow/goods-receipt';
 import './ProcurementWorkspace.less';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
+const STORAGE_WAREHOUSE_OPTIONS = [
+  { label: 'WHM1 - Main Raw Materials', value: 'WHM1 - Main Raw Materials' },
+  { label: 'WHM2 - Packaging', value: 'WHM2 - Packaging' },
+  { label: 'WHM3 - Finished Goods', value: 'WHM3 - Finished Goods' },
+];
 
 export interface WarehouseWorkspaceProps {
   receipts: GoodsReceipt[];
@@ -80,18 +90,29 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
   onNavigateToRole,
 }) => {
   const [activeTab, setActiveTab] = useState<string>('TO_RECEIVE');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [workspaceView, setWorkspaceView] = useState<'list' | 'physical-receive'>('list');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('ALL');
   const [dateRange, setDateRange] = useState<any>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<GoodsReceipt | null>(null);
   const [selectedIRPlan, setSelectedIRPlan] = useState<IRPlan | null>(null);
-  const [isReceivingModalOpen, setIsReceivingModalOpen] = useState<boolean>(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
   const [isTempGrModalOpen, setIsTempGrModalOpen] = useState<boolean>(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState<boolean>(false);
   const [isIRPlanDrawerOpen, setIsIRPlanDrawerOpen] = useState<boolean>(false);
+
+  // Dedicated Physical Receiving Form State
+  const [deliveryNoteNumber, setDeliveryNoteNumber] = useState<string>('');
+  const [deliveryNoteDate, setDeliveryNoteDate] = useState<dayjs.Dayjs | null>(dayjs());
+  const [deliveryNoteRemark, setDeliveryNoteRemark] = useState<string>('');
+  const [truckPlateNumber, setTruckPlateNumber] = useState<string>('PP-2AB-9988');
+  const [driverName, setDriverName] = useState<string>('Sokha Men');
+  const [driverContact, setDriverContact] = useState<string>('+855 12 889 001');
+  const [actualArrivalDate, setActualArrivalDate] = useState<dayjs.Dayjs | null>(dayjs());
+  const [actualArrivalTime, setActualArrivalTime] = useState<dayjs.Dayjs | null>(dayjs('09:15', 'HH:mm'));
+  const [receiverWarehouse, setReceiverWarehouse] = useState<string>('');
+  const [vendorAttachments, setVendorAttachments] = useState<{ uid: string; name: string; size?: number; type?: string; status?: string }[]>([]);
 
   // Open IR Plan Drawer with dynamic fallback if not found in irPlans
   const handleOpenIRPlan = (irNumber?: string, fallbackReceipt?: GoodsReceipt) => {
@@ -150,7 +171,6 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
     return {
       all: receipts.length,
       toReceive: receipts.filter((r) => r.deliveryPlanStatus === 'To Receive' || !r.deliveryPlanStatus).length,
-      inProgress: receipts.filter((r) => r.deliveryPlanStatus === 'In Progress' || r.processState === 'RECEIVED_CHECKING').length,
       waitingQC: receipts.filter((r) => r.deliveryPlanStatus === 'Waiting for QC' || r.processState === 'QC_PENDING').length,
       completed: receipts.filter((r) => r.deliveryPlanStatus === 'Received' || r.deliveryPlanStatus === 'Posted' || r.deliveryPlanStatus === 'QC Completed').length,
       today: receipts.filter((r) => r.expectedDate?.includes('27-08-2026') || r.actualReceiptDate?.includes('27-08-2026')).length,
@@ -163,9 +183,6 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
     return receipts.filter((r) => {
       // 1. Tab Filter
       if (activeTab === 'TO_RECEIVE' && !(r.deliveryPlanStatus === 'To Receive' || !r.deliveryPlanStatus)) {
-        return false;
-      }
-      if (activeTab === 'IN_PROGRESS' && !(r.deliveryPlanStatus === 'In Progress' || r.processState === 'RECEIVED_CHECKING')) {
         return false;
       }
       if (activeTab === 'WAITING_QC' && !(r.deliveryPlanStatus === 'Waiting for QC' || r.processState === 'QC_PENDING')) {
@@ -195,7 +212,8 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       // 4. Search Filter
       if (searchTerm) {
         const q = searchTerm.toLowerCase().trim();
-        const matchesGR = r.grNumber?.toLowerCase().includes(q);
+        const matchesGR = [getReceiptIrNumber(r), r.grNumber, r.sapDocNum, r.sapGrNumber]
+          .some(number => number?.toLowerCase().includes(q));
         const matchesIR = r.irPlanNumber?.toLowerCase().includes(q);
         const matchesSupplier = r.supplier?.toLowerCase().includes(q);
         const matchesDN = r.deliveryNoteNumber?.toLowerCase().includes(q);
@@ -240,21 +258,99 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
   // Start physical receiving from an IR Plan or existing GR
   const handleStartReceiving = (receipt: GoodsReceipt) => {
     setSelectedReceipt(receipt);
-    setActiveItems(JSON.parse(JSON.stringify(receipt.items)));
-    setDnValue(receipt.deliveryNoteNumber || '');
-
-    receivingForm.setFieldsValue({
-      deliveryNoteNumber: receipt.deliveryNoteNumber || '',
-      deliveryNoteRemark: receipt.deliveryNoteRemark || '',
-      truckPlateNumber: receipt.truckPlateNumber || 'PP-2AB-9988',
-      driverName: receipt.driverName || 'Sokha Men',
-      driverContact: receipt.driverContact || '+855 12 889 001',
-      receiverWarehouseName: receipt.receiverWarehouseName || 'WHM1 - Main Raw Materials',
-      actualArrivalDate: receipt.actualArrivalDate ? dayjs(receipt.actualArrivalDate) : dayjs('2026-08-27'),
-      actualArrivalTime: receipt.actualArrivalTime ? dayjs(receipt.actualArrivalTime, 'HH:mm') : dayjs('09:15', 'HH:mm'),
+    const clonedItems: GRItem[] = (receipt.items || []).map((it, idx) => {
+      const planned = it.plannedQty || it.poQty || 0;
+      const rec = it.receiveQty !== undefined ? it.receiveQty : (it.actualReceivedQty !== undefined ? it.actualReceivedQty : planned);
+      const batches: ItemBatch[] = (it.batches && it.batches.length > 0)
+        ? JSON.parse(JSON.stringify(it.batches))
+        : [
+            {
+              id: `batch-${Date.now()}-${idx}`,
+              batchNumber: `LOT-${dayjs().format('YYYYMM')}-${String(idx + 1).padStart(2, '0')}`,
+              batchQty: rec,
+              productionDate: dayjs().subtract(10, 'day').format('YYYY-MM-DD'),
+              expiryDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
+              bestBeforeDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
+              remark: 'Standard Intake Lot',
+            },
+          ];
+      return {
+        ...it,
+        plannedQty: planned,
+        receiveQty: rec,
+        actualReceivedQty: rec,
+        isMissing: rec < planned,
+        missingRemark: it.missingRemark || '',
+        batches,
+      };
     });
 
-    setIsReceivingModalOpen(true);
+    const linkedPlan = irPlans.find(
+      (p) =>
+        p.irPlanNumber === receipt.irPlanNumber ||
+        p.id === receipt.irPlanNumber ||
+        (receipt.poNumber && p.poNumbers?.includes(receipt.poNumber)),
+    );
+
+    let initialAttachments: { uid: string; name: string; size?: number; type?: string; status?: string }[] = [];
+    if (receipt.documentChecklist?.supportingDocs && receipt.documentChecklist.supportingDocs.length > 0) {
+      initialAttachments = receipt.documentChecklist.supportingDocs.map((doc: any, i: number) => ({
+        uid: `${i}`,
+        name: typeof doc === 'string' ? doc : (doc.fileName || `Attachment-${i + 1}`),
+        size: 1024,
+        type: 'application/pdf',
+        status: 'done',
+      }));
+    } else if (linkedPlan?.attachments && linkedPlan.attachments.length > 0) {
+      initialAttachments = linkedPlan.attachments.map((att: any, i: number) => ({
+        uid: att.uid || `att-${i}`,
+        name: att.name || `Attachment-${i + 1}`,
+        size: att.size || 1024,
+        type: att.type || 'application/pdf',
+        status: 'done',
+      }));
+    } else {
+      // Default standard vendor delivery attachments from Procurement
+      initialAttachments = [
+        {
+          uid: 'att-default-1',
+          name: `Delivery_Note_${receipt.poNumber || receipt.grNumber || 'Vendor'}.pdf`,
+          size: 245000,
+          type: 'application/pdf',
+          status: 'done',
+        },
+        {
+          uid: 'att-default-2',
+          name: `Vendor_Packing_Slip_${receipt.supplier || 'Vendor'}.pdf`,
+          size: 184000,
+          type: 'application/pdf',
+          status: 'done',
+        },
+      ];
+    }
+
+    setActiveItems(clonedItems);
+    setDeliveryNoteNumber(
+      receipt.deliveryNoteNumber && !receipt.deliveryNoteNumber.startsWith('DN-TEMP')
+        ? receipt.deliveryNoteNumber
+        : linkedPlan?.deliveryNoteNumber || receipt.deliveryNoteNumber || `DN-${receipt.grNumber?.slice(-4) || '2026'}`
+    );
+    setDeliveryNoteDate(
+      receipt.actualArrivalDate
+        ? dayjs(receipt.actualArrivalDate)
+        : linkedPlan?.deliveryNoteDate
+          ? dayjs(linkedPlan.deliveryNoteDate)
+          : dayjs()
+    );
+    setDeliveryNoteRemark(receipt.deliveryNoteRemark || linkedPlan?.deliveryNoteRemark || '');
+    setTruckPlateNumber(receipt.truckPlateNumber || 'PP-2AB-9988');
+    setDriverName(receipt.driverName || 'Sokha Men');
+    setDriverContact(receipt.driverContact || '+855 12 889 001');
+    setActualArrivalDate(receipt.actualArrivalDate ? dayjs(receipt.actualArrivalDate) : dayjs());
+    setActualArrivalTime(receipt.actualArrivalTime ? dayjs(receipt.actualArrivalTime, 'HH:mm') : dayjs('09:15', 'HH:mm'));
+    setReceiverWarehouse(receipt.storageWarehouseConfirmed ? receipt.receiverWarehouseName : '');
+    setVendorAttachments(initialAttachments);
+    setWorkspaceView('physical-receive');
   };
 
   // Add batch to item
@@ -263,17 +359,17 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
     const targetItem = updated[itemIndex];
     if (!targetItem.batches) targetItem.batches = [];
 
-    const totalBatchQty = targetItem.batches.reduce((sum, b) => sum + (b.batchQty || 0), 0);
+    const totalBatchQty = targetItem.batches.reduce((sum, b) => sum + (Number(b.batchQty) || 0), 0);
     const remainingQty = Math.max(0, targetItem.receiveQty - totalBatchQty);
 
     targetItem.batches.push({
       id: `batch-${Date.now()}-${targetItem.batches.length + 1}`,
       batchNumber: `LOT-${dayjs().format('YYYYMM')}-${targetItem.batches.length + 1}`,
-      batchQty: remainingQty > 0 ? remainingQty : 50,
-      productionDate: '2026-08-15',
-      expiryDate: '2028-08-15',
-      bestBeforeDate: '2028-08-15',
-      remark: 'New batch',
+      batchQty: remainingQty > 0 ? remainingQty : 0,
+      productionDate: dayjs().subtract(10, 'day').format('YYYY-MM-DD'),
+      expiryDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
+      bestBeforeDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
+      remark: 'Split lot',
     });
 
     setActiveItems(updated);
@@ -286,24 +382,32 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       updated[itemIndex].batches!.splice(batchIndex, 1);
       setActiveItems(updated);
     } else {
-      message.warning('At least one batch record is required for received item.');
+      message.warning('At least one batch record is required for each received item.');
     }
   };
 
-  // Update item field
-  const handleUpdateItemField = (itemIndex: number, field: keyof GRItem, value: any) => {
+  // Update item receive qty
+  const handleUpdateItemReceiveQty = (itemIndex: number, qty: number) => {
     const updated = [...activeItems];
-    (updated[itemIndex] as any)[field] = value;
-    if (field === 'receiveQty') {
-      updated[itemIndex].actualReceivedQty = value;
-      const planned = updated[itemIndex].plannedQty || updated[itemIndex].poQty || 0;
-      if (value < planned) {
-        updated[itemIndex].isMissing = true;
-      } else {
-        updated[itemIndex].isMissing = false;
-        updated[itemIndex].missingRemark = '';
-      }
+    const item = updated[itemIndex];
+    item.receiveQty = qty;
+    item.actualReceivedQty = qty;
+    const planned = item.plannedQty || item.poQty || 0;
+    item.isMissing = qty < planned;
+    if (qty >= planned) {
+      item.missingRemark = '';
     }
+    // Auto-sync single batch if only 1 batch exists
+    if (item.batches && item.batches.length === 1) {
+      item.batches[0].batchQty = qty;
+    }
+    setActiveItems(updated);
+  };
+
+  // Update item discrepancy remark
+  const handleUpdateItemMissingRemark = (itemIndex: number, remark: string) => {
+    const updated = [...activeItems];
+    updated[itemIndex].missingRemark = remark;
     setActiveItems(updated);
   };
 
@@ -323,58 +427,76 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 
   // Validate receiving and proceed to Review GR (WH-04)
   const handleProceedToReview = () => {
-    receivingForm.validateFields().then((headerValues) => {
-      if (headerValues.deliveryNoteNumber === 'NA' && !headerValues.deliveryNoteRemark?.trim()) {
-        message.error('Remark / Reason is strictly mandatory when Delivery Note is NA.');
+    if (!receiverWarehouse) {
+      message.error('Select the warehouse where the received goods will be stored.');
+      return;
+    }
+    if (!deliveryNoteNumber?.trim()) {
+      message.error('Delivery Note No. is required (or enter NA with remark).');
+      return;
+    }
+    if (deliveryNoteNumber === 'NA' && !deliveryNoteRemark?.trim()) {
+      message.error('Remark / Reason is strictly mandatory when Delivery Note is NA.');
+      return;
+    }
+
+    for (const item of activeItems) {
+      const planned = item.plannedQty || item.poQty || 0;
+      const totalBatch = (item.batches || []).reduce((sum, b) => sum + (Number(b.batchQty) || 0), 0);
+      if (totalBatch !== item.receiveQty) {
+        message.error(
+          `Item ${item.code}: Sum of Batch Qty (${totalBatch}) must equal Actual Received Qty (${item.receiveQty}).`,
+        );
         return;
       }
-
-      for (const item of activeItems) {
-        const planned = item.plannedQty || item.poQty;
-        const totalBatch = item.batches?.reduce((sum, b) => sum + (Number(b.batchQty) || 0), 0) || 0;
-        if (totalBatch !== item.receiveQty) {
-          message.error(
-            `Item ${item.code}: Batch Qty Total (${totalBatch}) must equal Actual Received Qty (${item.receiveQty}).`,
-          );
-          return;
-        }
-        if (item.receiveQty < planned && !item.missingRemark?.trim()) {
-          message.error(
-            `Item ${item.code} has missing discrepancy (${planned - item.receiveQty} missing). Discrepancy remark is required.`,
-          );
-          return;
-        }
+      if (item.receiveQty < planned && !item.missingRemark?.trim()) {
+        message.error(
+          `Item ${item.code} has missing discrepancy (${planned - item.receiveQty} missing). Discrepancy remark is required.`,
+        );
+        return;
       }
+    }
 
-      setIsReceivingModalOpen(false);
-      setIsReviewModalOpen(true);
-    });
+    setIsReviewModalOpen(true);
   };
 
   // Final submit to QC (WH-04 -> WH-05)
   const handleConfirmSubmitToQC = () => {
     if (!selectedReceipt) return;
-    const headerValues = receivingForm.getFieldsValue();
+    if (!receiverWarehouse) {
+      message.error('Select the storage warehouse before submitting to QC.');
+      return;
+    }
 
     const updatedReceipt: GoodsReceipt = {
       ...selectedReceipt,
-      deliveryNoteNumber: headerValues.deliveryNoteNumber,
-      deliveryNoteRemark: headerValues.deliveryNoteRemark,
-      truckPlateNumber: headerValues.truckPlateNumber,
-      driverName: headerValues.driverName,
-      driverContact: headerValues.driverContact,
-      actualArrivalDate: headerValues.actualArrivalDate ? dayjs(headerValues.actualArrivalDate).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
-      actualArrivalTime: headerValues.actualArrivalTime ? dayjs(headerValues.actualArrivalTime).format('HH:mm') : dayjs().format('HH:mm'),
+      deliveryNoteNumber,
+      deliveryNoteRemark,
+      truckPlateNumber,
+      driverName,
+      driverContact,
+      actualArrivalDate: actualArrivalDate ? actualArrivalDate.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
+      actualArrivalTime: actualArrivalTime ? actualArrivalTime.format('HH:mm') : dayjs().format('HH:mm'),
+      receiverWarehouseName: receiverWarehouse,
+      storageWarehouseConfirmed: true,
       deliveryPlanStatus: 'Waiting for QC',
       processState: 'QC_PENDING',
+      displayStatus: 'Under QC Inspection',
       items: activeItems,
+      documentChecklist: {
+        ...(selectedReceipt.documentChecklist || { vendorDN: true, goodsReceiptPOForm: false, pmrmStockCardForm: false }),
+        supportingDocs: vendorAttachments.map((f) => ({
+          fileName: f.name,
+          source: 'WAREHOUSE' as const,
+        })),
+      },
       activities: [
         ...(selectedReceipt.activities || []),
         {
           id: `act-${Date.now()}`,
           title: 'Physical Receiving Completed',
-          description: `Received ${activeItems.reduce((s, i) => s + i.receiveQty, 0)} units across ${activeItems.reduce((s, i) => s + (i.batches?.length || 0), 0)} batches. Submitted to QC.`,
-          performedBy: 'Warehouse Staff',
+          description: `Received ${formatQuantities(activeItems, i => i.receiveQty ?? 0)} across ${activeItems.reduce((s, i) => s + (i.batches?.length || 0), 0)} batches. Stored in ${receiverWarehouse}. Submitted to QC.`,
+          performedBy: 'Warehouse (Demo)',
           timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
           state: 'done',
         },
@@ -382,16 +504,63 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
     };
 
     onSubmitToQC(updatedReceipt);
-    message.success(`Goods Receipt ${updatedReceipt.grNumber} successfully submitted to QC Inspection!`);
+    message.success(`Receiving record ${getReceiptIrNumber(updatedReceipt)} successfully submitted to QC Inspection!`);
     setIsReviewModalOpen(false);
+    setWorkspaceView('list');
+  };
+
+  // Save Receiving as Draft (WH-03 -> To Receive / In Progress)
+  const handleSaveDraftReceiving = () => {
+    if (!selectedReceipt) return;
+
+    const draftReceipt: GoodsReceipt = {
+      ...selectedReceipt,
+      deliveryNoteNumber: deliveryNoteNumber || selectedReceipt.deliveryNoteNumber,
+      deliveryNoteRemark: deliveryNoteRemark || selectedReceipt.deliveryNoteRemark,
+      truckPlateNumber: truckPlateNumber || selectedReceipt.truckPlateNumber,
+      driverName: driverName || selectedReceipt.driverName,
+      driverContact: driverContact || selectedReceipt.driverContact,
+      actualArrivalDate: actualArrivalDate ? actualArrivalDate.format('YYYY-MM-DD') : selectedReceipt.actualArrivalDate,
+      actualArrivalTime: actualArrivalTime ? actualArrivalTime.format('HH:mm') : selectedReceipt.actualArrivalTime,
+      receiverWarehouseName: receiverWarehouse || selectedReceipt.receiverWarehouseName,
+      storageWarehouseConfirmed: Boolean(receiverWarehouse),
+      deliveryPlanStatus: 'To Receive',
+      items: activeItems,
+      documentChecklist: {
+        ...(selectedReceipt.documentChecklist || { vendorDN: true, goodsReceiptPOForm: false, pmrmStockCardForm: false }),
+        supportingDocs: vendorAttachments.map((f) => ({
+          fileName: f.name,
+          source: 'WAREHOUSE' as const,
+        })),
+      },
+      activities: [
+        ...(selectedReceipt.activities || []),
+        {
+          id: `act-draft-${Date.now()}`,
+          title: 'Physical Receiving Draft Saved',
+          description: `Draft counts recorded by Warehouse (${formatQuantities(activeItems, i => i.receiveQty ?? 0)}).`,
+          performedBy: 'Warehouse (Demo)',
+          timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
+          state: 'done',
+        },
+      ],
+    };
+
+    onSaveGR(draftReceipt);
+    setSelectedReceipt(draftReceipt);
+    setIsReviewModalOpen(false);
+    message.success(`Receiving record ${getReceiptIrNumber(draftReceipt)} draft saved.`);
+    setWorkspaceView('list');
   };
 
   // Create Temporary GR
   const handleCreateTempGR = () => {
     tempGrForm.validateFields().then((vals) => {
+      const temporaryNumber = `RCV-TMP-${Date.now()}`;
       const tempGr = {
         id: Date.now(),
-        grNumber: `TMP-${dayjs().format('MMDD')}-${Math.floor(100 + Math.random() * 900)}`,
+        grNumber: temporaryNumber,
+        receivingNumber: temporaryNumber,
         irPlanNumber: 'TEMP_UNPLANNED',
         deliveryPlanNumber: 'Unscheduled',
         poNumber: 'UNLINKED_PO',
@@ -408,9 +577,9 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         activities: [
           {
             id: `act-temp-${Date.now()}`,
-            title: 'Temporary GR Created',
+            title: 'Temporary Receiving Record Created',
             description: `Unplanned truck arrival received. Reason: ${vals.reason}`,
-            performedBy: 'Warehouse Staff',
+            performedBy: 'Warehouse (Demo)',
             timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
             state: 'done',
           },
@@ -441,24 +610,24 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       } as GoodsReceipt;
 
       onSaveGR(tempGr);
-      message.success(`Temporary GR ${tempGr.grNumber} logged in Exception Queue.`);
+      message.success(`Temporary receiving record ${getReceiptIrNumber(tempGr)} logged in Exception Queue.`);
       setIsTempGrModalOpen(false);
       tempGrForm.resetFields();
     });
   };
 
-  const handleExport = () => {
-    message.success('Exporting Warehouse Goods Receipts to Excel format...');
+  const handleExport = (format: ExportFormat) => {
+    exportReceipts('warehouse-receipts', filteredReceipts, format);
   };
 
   // Table Columns matching Procurement design
   const columns: ColumnsType<GoodsReceipt> = [
     {
-      title: 'GR #',
+      title: 'Receiving #',
       dataIndex: 'grNumber',
       key: 'grNumber',
       width: 130,
-      render: (gr: string, record: GoodsReceipt) => (
+      render: (_: string, record: GoodsReceipt) => (
         <span
           className="po-link"
           onClick={() => {
@@ -466,34 +635,35 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             setIsDetailDrawerOpen(true);
           }}
         >
-          {gr || record.irPlanNumber}
+          {getReceiptIrNumber(record) || '—'}
         </span>
       ),
+    },
+    {
+      title: 'SAP GR #',
+      key: 'sapGrNumber',
+      width: 130,
+      render: (_: unknown, record: GoodsReceipt) =>
+        record.sapDocNum?.trim() || record.sapGrNumber?.trim() || '—',
     },
     {
       title: 'Status',
       dataIndex: 'deliveryPlanStatus',
       key: 'status',
       width: 150,
-      render: (status: string, record: GoodsReceipt) => {
-        const s = status || 'To Receive';
-        let cls = 'open';
-        if (s === 'In Progress') cls = 'in-progress';
-        if (s === 'Waiting for QC') cls = 'waiting-qc';
-        if (s === 'Stored' || s === 'Completed') cls = 'completed';
-        if (record.expectedDate?.includes('26-08-2026')) cls = 'overdue';
-
-        return <span className={`status-pill ${cls}`}>{s}</span>;
-      },
+      render: (status: string) => (
+        <InboundStatusBadge type="deliveryPlan" value={status || 'To Receive'} />
+      ),
     },
     {
-      title: 'IR Plan #',
+      title: 'IR Schedule #',
       dataIndex: 'irPlanNumber',
       key: 'irPlanNumber',
       width: 120,
       render: (ir: string, record: GoodsReceipt) => (
         <span
           className="po-link"
+          style={{ color: '#0f172a', fontWeight: 600 }}
           onClick={() => handleOpenIRPlan(ir, record)}
         >
           {ir || '—'}
@@ -537,11 +707,11 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       render: (_: any, record: GoodsReceipt) => (
         <Space wrap size={4}>
           {record.poReferences?.map((p) => (
-            <span key={p.poNumber} className="po-link">
+            <span key={p.poNumber} style={{ color: '#0f172a', fontWeight: 600 }}>
               {p.poNumber}
             </span>
           )) || (
-            <span className="po-link">
+            <span style={{ color: '#0f172a', fontWeight: 600 }}>
               {record.poNumber}
             </span>
           )}
@@ -557,31 +727,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
       ),
     },
     {
-      title: 'Received QTY',
-      key: 'qtyComparison',
-      width: 160,
-      render: (_: any, record: GoodsReceipt) => {
-        const planned = record.items.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0);
-        const received = record.items.reduce((s, i) => s + (i.receiveQty || 0), 0);
-        const diff = planned - received;
-
-        return (
-          <div>
-            <Text strong>{received.toLocaleString()}</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}> / {planned.toLocaleString()} PCS</Text>
-            {diff > 0 && (
-              <Tag color="orange" style={{ fontSize: 10, padding: '0 4px', lineHeight: '18px', display: 'block', width: 'fit-content', marginTop: 2 }}>
-                Diff: -{diff} (Missing)
-              </Tag>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      width: 140,
+      ...rowActionColumn,
       render: (_: any, record: GoodsReceipt) => {
         const canReceive =
           record.deliveryPlanStatus === 'To Receive' ||
@@ -592,27 +738,24 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         return (
           <Space>
             {canReceive ? (
-              <Button
-                size="small"
-                type="primary"
+              <RowActionButton
+                variant="primary"
                 icon={<InboxOutlined />}
-                onClick={() => handleStartReceiving(record)}
-                style={{ background: '#2563eb', borderColor: '#2563eb', fontWeight: 500 }}
-              >
-                Physical Receive
-              </Button>
-            ) : (
-              <Button
-                size="small"
-                type="link"
-                icon={<EyeOutlined />}
                 onClick={() => {
-                  setSelectedReceipt(record);
+                    handleStartReceiving(record);
+                }}
+              >
+                <span>Receive Goods</span>
+              </RowActionButton>
+            ) : (
+              <RowActionButton
+                onClick={() => {
+                    setSelectedReceipt(record);
                   setIsDetailDrawerOpen(true);
                 }}
               >
-                View GR
-              </Button>
+                <span>View Receipt</span>
+              </RowActionButton>
             )}
           </Space>
         );
@@ -620,42 +763,784 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
     },
   ];
 
-  return (
-    <div className="procurement-workspace">
-      {/* 1. Header Row matching Procurement */}
-      <div className="workspace-header-row">
-        <div className="header-titles" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <h1 className="main-title" style={{ margin: 0 }}>Warehouse Inbound Management</h1>
-            <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+  // The receiving page contains the details; this dialog only confirms the hand-off.
+  const receivingReviewModal = (
+    <Modal
+      title={
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <span style={{ display: 'grid', placeItems: 'center', width: 48, height: 48, borderRadius: '50%', background: '#fef9e7', color: '#B49A00', fontSize: 24 }}>
+            <SafetyCertificateOutlined />
+          </span>
+          <span>Submit Goods Receipt to QC?</span>
+        </div>
+      }
+      centered
+      open={isReviewModalOpen}
+      onCancel={() => setIsReviewModalOpen(false)}
+      width={440}
+      styles={{
+        header: { textAlign: 'center', marginBottom: 12 },
+        body: { textAlign: 'center', padding: '0 0 24px' },
+        footer: { textAlign: 'center', marginTop: 8, paddingBottom: 4 },
+      }}
+      footer={
+        <Space size={16}>
+          <Button onClick={() => setIsReviewModalOpen(false)}>Cancel</Button>
+          <Button
+            type="primary"
+            onClick={handleConfirmSubmitToQC}
+            style={{ background: '#B49A00', borderColor: '#B49A00' }}
+          >
+            Confirm & Submit
+          </Button>
+        </Space>
+      }
+    >
+      <Text>Send this goods receipt to QC for inspection?</Text>
+    </Modal>
+  );
+
+  // -------------------------------------------------------------
+  // VIEW: PHYSICAL RECEIVING & MULTI-BATCH INTAKE PAGE
+  // -------------------------------------------------------------
+  if (workspaceView === 'physical-receive' && selectedReceipt) {
+    const totalPlannedQty = activeItems.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0);
+    const totalReceivedQty = activeItems.reduce((s, i) => s + (Number(i.receiveQty) || 0), 0);
+    const totalDiscrepancy = totalPlannedQty - totalReceivedQty;
+    const totalBatchesCount = activeItems.reduce((s, i) => s + (i.batches?.length || 0), 0);
+    const poListStr =
+      selectedReceipt.poReferences?.map((p) => p.poNumber).join(', ') ||
+      selectedReceipt.poNumber ||
+      'N/A';
+
+    return (
+      <div
+        className="procurement-workspace create-ir-plan-view inbound-task-page"
+        style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingBottom: 24 }}
+      >
+        {/* 1. Top Back Navigation Header */}
+        <WorkspaceTaskHeader title="Warehouse Receiving" onBack={() => setWorkspaceView('list')} />
+
+        <div className="create-plan-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* 2. Combined Hero Details Card (3-Column Layout matching Procurement) */}
+          <div
+            className="po-figma-details-card combined-plan-hero-card"
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 12,
+              padding: '16px 20px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: 24 }}>
+              {/* Column 1: Plan & PO Information */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
+                    IR Schedule #
+                  </span>
+                  <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
+                    :
+                  </span>
+                  <span className="field-value" style={{ fontSize: 14, fontWeight: 700, color: '#2563eb' }}>
+                    {selectedReceipt.irPlanNumber}
+                  </span>
+                </div>
+                <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
+                    Delivery Plan
+                  </span>
+                  <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
+                    :
+                  </span>
+                  <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                    {selectedReceipt.deliveryPlanNumber || 'Plan 1'}
+                  </span>
+                </div>
+                <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
+                    PO Reference(s)
+                  </span>
+                  <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
+                    :
+                  </span>
+                  <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                    {poListStr}
+                  </span>
+                </div>
+              </div>
+
+              {/* Column 2: Scheduled Delivery & Warehouse */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
+                    Scheduled Date
+                  </span>
+                  <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
+                    :
+                  </span>
+                  <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                    {selectedReceipt.expectedDate || '2026-08-27'}
+                  </span>
+                </div>
+                <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
+                    Destination WH
+                  </span>
+                  <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
+                    :
+                  </span>
+                  <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                    {selectedReceipt.receiverWarehouseName || '—'}
+                  </span>
+                </div>
+                <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
+                    Total Expected
+                  </span>
+                  <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
+                    :
+                  </span>
+                  <span className="field-value" style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
+                    {formatQuantities(activeItems, i => i.plannedQty ?? i.poQty ?? 0)} ({activeItems.length} items)
+                  </span>
+                </div>
+              </div>
+
+              {/* Column 3: Vendor & Creator Details */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
+                    Vendor Name
+                  </span>
+                  <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
+                    :
+                  </span>
+                  <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+                    {selectedReceipt.supplier || 'OMCam Co. Ltd'}
+                  </span>
+                </div>
+                <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
+                    Scheduled By
+                  </span>
+                  <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
+                    :
+                  </span>
+                  <span className="field-value" style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>
+                    {selectedReceipt.createdBy || 'Keo Srey'}
+                  </span>
+                </div>
+                <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="field-label" style={{ width: 110, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
+                    Intake Status
+                  </span>
+                  <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
+                    :
+                  </span>
+                  <InboundStatusBadge type="deliveryPlan" value={selectedReceipt.deliveryPlanStatus || 'To Receive'} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="po-figma-details-card" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '20px 24px' }}>
+            <label htmlFor="receiving-storage-warehouse" style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>
+              Store in Warehouse <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <Select
+              id="receiving-storage-warehouse"
+              placeholder="Select storage warehouse"
+              value={receiverWarehouse || undefined}
+              onChange={setReceiverWarehouse}
+              options={STORAGE_WAREHOUSE_OPTIONS}
+              style={{ width: '100%', maxWidth: 360, height: 36 }}
+            />
+            <div style={{ marginTop: 8, fontSize: 12, color: '#64748b' }}>
+              Confirm where the received goods will be stored before submitting to QC.
+            </div>
+          </div>
+
+          {/* 3. Delivery Note & Vehicle Logistics Form Card */}
+          <div
+            className="po-figma-details-card delivery-note-card"
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 12,
+              padding: '20px 24px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #f1f5f9', paddingBottom: 10 }}>
+              <FileTextOutlined style={{ color: '#B49A00', fontSize: 16 }} />
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#1e293b' }}>
+                Delivery Note
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 24, alignItems: 'start' }}>
+              {/* Left Column: DN & Driver Fields */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                      Delivery Note (DN) No. <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <Input
+                      placeholder="e.g. DN-2026-00892 or NA"
+                      value={deliveryNoteNumber}
+                      onChange={(e) => setDeliveryNoteNumber(e.target.value)}
+                      prefix={<FileTextOutlined style={{ color: '#94a3b8' }} />}
+                      style={{ borderRadius: 8, height: 36 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                      DN Date
+                    </label>
+                    <DatePicker
+                      placeholder="Select DN Date"
+                      value={deliveryNoteDate}
+                      onChange={(d: any) => setDeliveryNoteDate(d)}
+                      style={{ width: '100%', borderRadius: 8, height: 36 }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                      Truck / Container Plate <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <Input
+                      placeholder="e.g. PP-2AB-9988"
+                      value={truckPlateNumber}
+                      onChange={(e) => setTruckPlateNumber(e.target.value)}
+                      prefix={<CarOutlined style={{ color: '#94a3b8' }} />}
+                      style={{ borderRadius: 8, height: 36 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                      Driver Name & Phone
+                    </label>
+                    <Input
+                      placeholder="e.g. Sokha Men (+855 12 889 001)"
+                      value={driverName ? `${driverName} (${driverContact})` : ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setDriverName(val);
+                      }}
+                      prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />}
+                      style={{ borderRadius: 8, height: 36 }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                      Actual Arrival Date
+                    </label>
+                    <DatePicker
+                      placeholder="Arrival Date"
+                      value={actualArrivalDate}
+                      onChange={(d: any) => setActualArrivalDate(d)}
+                      style={{ width: '100%', borderRadius: 8, height: 36 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                      Arrival Time
+                    </label>
+                    <TimePicker
+                      placeholder="Arrival Time"
+                      value={actualArrivalTime}
+                      onChange={(t: any) => setActualArrivalTime(t)}
+                      format="HH:mm"
+                      style={{ width: '100%', borderRadius: 8, height: 36 }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+                    Intake Remarks / Discrepancy Explanation
+                  </label>
+                  <Input.TextArea
+                    rows={2}
+                    placeholder="Enter physical receiving notes, seal verification, driver remarks, or reason if DN is NA..."
+                    value={deliveryNoteRemark}
+                    onChange={(e) => setDeliveryNoteRemark(e.target.value)}
+                    style={{ borderRadius: 8 }}
+                  />
+                </div>
+              </div>
+
+              {/* Right Column: File Upload Area & Attachments List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 20 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569' }}>
+                    Vendor Attachments ({vendorAttachments.length})
+                  </label>
+                </div>
+                <Upload.Dragger
+                  multiple
+                  fileList={vendorAttachments as any}
+                  beforeUpload={(file) => {
+                    const newAtt = {
+                      uid: `${Date.now()}-${file.name}`,
+                      name: file.name,
+                      size: file.size,
+                      type: file.type,
+                      status: 'done',
+                    };
+                    setVendorAttachments((prev) => [...prev, newAtt as any]);
+                    message.success(`${file.name} attached.`);
+                    return false;
+                  }}
+                  onRemove={(file) => {
+                    setVendorAttachments((prev) => prev.filter((f) => f.uid !== file.uid));
+                  }}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1.5px dashed #cbd5e1',
+                    borderRadius: 8,
+                    padding: '14px 12px',
+                  }}
+                  showUploadList={false}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    <InboxOutlined style={{ fontSize: 24, color: '#B49A00' }} />
+                    <div style={{ textAlign: 'left' }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
+                        Click or drag delivery files here to attach
+                      </p>
+                      <p style={{ margin: 0, fontSize: 11, color: '#94a3b8' }}>
+                        Attach DN copy, packing slip, container photos, or COA (PDF, PNG, JPG up to 15MB)
+                      </p>
+                    </div>
+                  </div>
+                </Upload.Dragger>
+                {vendorAttachments.length > 0 && (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                      gap: 6,
+                      marginTop: 6,
+                    }}
+                  >
+                    {vendorAttachments.map((file) => (
+                      <div
+                        key={file.uid}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          minWidth: 0,
+                          padding: '6px 10px',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: 6,
+                          background: '#ffffff',
+                        }}
+                      >
+                        <PaperClipOutlined style={{ color: '#B49A00', flexShrink: 0 }} />
+                        <span
+                          title={file.name}
+                          onClick={() => message.info(`Opening document: ${file.name}`)}
+                          style={{
+                            minWidth: 0,
+                            flex: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontSize: 11,
+                            color: '#2563eb',
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                          }}
+                        >
+                          {file.name}
+                        </span>
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<CloseCircleOutlined />}
+                          onClick={() =>
+                            setVendorAttachments((prev) => prev.filter((item) => item.uid !== file.uid))
+                          }
+                          aria-label={`Remove ${file.name}`}
+                          style={{
+                            flexShrink: 0,
+                            width: 20,
+                            height: 20,
+                            padding: 0,
+                            color: '#94a3b8',
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Multi-Item & Multi-Batch Receiving Table Card */}
+          <div
+            className="schedule-configuration-card"
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 12,
+              padding: '18px 20px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <BarcodeOutlined style={{ color: '#B49A00', fontSize: 16 }} />
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#1e293b' }}>
+                  Received Items
+                </span>
+              </div>
+              <span style={{ fontSize: 12, color: '#64748b' }}>
+                Tip: Click <b>"+ Add Batch"</b> to split lot numbers or cartons for any item line.
+              </span>
+            </div>
+
+            <Table
+              dataSource={activeItems.flatMap((item, itemIdx) => {
+                const batches =
+                  item.batches && item.batches.length > 0
+                    ? item.batches
+                    : [
+                        {
+                          id: `batch-${itemIdx}-0`,
+                          batchNumber: `LOT-${dayjs().format('YYYYMM')}-${itemIdx + 1}`,
+                          batchQty: item.receiveQty || item.plannedQty || 0,
+                          productionDate: dayjs().subtract(10, 'day').format('YYYY-MM-DD'),
+                          expiryDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
+                          bestBeforeDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
+                          remark: '',
+                        },
+                      ];
+                return batches.map((batch, bIdx) => ({
+                  rowKey: `${item.code || itemIdx}-${bIdx}`,
+                  itemIdx,
+                  bIdx,
+                  isMainRow: bIdx === 0,
+                  docLine: item.poLineNumber || (itemIdx + 1),
+                  itemCode: item.code,
+                  itemName: item.name,
+                  poNumber: item.poNumber,
+                  plannedQty: item.plannedQty || item.poQty || 0,
+                  receiveQty: item.receiveQty,
+                  uom: item.uom,
+                  batch,
+                  parentItem: item,
+                  totalBatches: batches.length,
+                }));
+              })}
+              rowKey="rowKey"
+              pagination={false}
+              className="po-custom-table schedule-items-table"
+              columns={[
+                {
+                  title: 'Docline #',
+                  key: 'docLine',
+                  width: 90,
+                  render: (_, r: any) =>
+                    r.isMainRow ? (
+                      <div style={{ minHeight: 32, display: 'flex', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 600, color: '#64748b', fontSize: 13 }}>{r.docLine}</span>
+                      </div>
+                    ) : (
+                      <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                        <span style={{ color: '#cbd5e1' }}>—</span>
+                      </div>
+                    ),
+                },
+                {
+                  title: 'Item Code',
+                  key: 'itemCode',
+                  width: 140,
+                  render: (_, r: any) => {
+                    if (r.isMainRow) {
+                      return (
+                        <div style={{ minHeight: 32, display: 'flex', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 700, color: '#334155', fontSize: 14 }}>{r.itemCode}</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div style={{ height: 32, display: 'flex', alignItems: 'center', gap: 6, paddingLeft: 12 }}>
+                        <span style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>↳</span>
+                        <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>Lot #{r.bIdx + 1}</span>
+                      </div>
+                    );
+                  },
+                },
+                {
+                  title: 'Item Description',
+                  key: 'itemName',
+                  width: 240,
+                  render: (_, r: any) => (
+                    <div style={{ minHeight: 32, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      {r.isMainRow ? (
+                        <>
+                          <span style={{ fontWeight: 600, color: '#334155', fontSize: 13 }}>{r.itemName}</span>
+                          {r.parentItem.isMissing && (
+                            <div style={{ marginTop: 4 }}>
+                              <Input
+                                size="small"
+                                placeholder="Shortage reason (required)..."
+                                value={r.parentItem.missingRemark}
+                                onChange={(e) => handleUpdateItemMissingRemark(r.itemIdx, e.target.value)}
+                                style={{ borderColor: '#fca5a5', background: '#fef2f2', fontSize: 11 }}
+                              />
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <span style={{ color: '#cbd5e1' }}>—</span>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  title: 'Planned Qty',
+                  key: 'plannedQty',
+                  width: 120,
+                  render: (_, r: any) => (
+                    <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                      {r.isMainRow ? (
+                        <span style={{ fontWeight: 600, color: '#334155', fontSize: 13 }}>
+                          {r.plannedQty.toLocaleString()} {r.uom}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#cbd5e1' }}>—</span>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  title: 'Actual Received Qty',
+                  key: 'receiveQty',
+                  width: 140,
+                  render: (_, r: any) => (
+                    <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                      {r.isMainRow ? (
+                        <InputNumber
+                          style={{ width: 130, height: 32 }}
+                          min={0}
+                          value={r.receiveQty}
+                          onChange={(val) => handleUpdateItemReceiveQty(r.itemIdx, val || 0)}
+                          placeholder="Received Qty"
+                          addonAfter={r.uom}
+                        />
+                      ) : (
+                        <span style={{ color: '#cbd5e1' }}>—</span>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  title: 'Batch / Lot Number',
+                  key: 'batchNumber',
+                  width: 150,
+                  render: (_, r: any) => (
+                    <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                      <Input
+                        style={{ height: 32, borderRadius: 6 }}
+                        value={r.batch.batchNumber}
+                        onChange={(e) => handleUpdateBatchField(r.itemIdx, r.bIdx, 'batchNumber', e.target.value)}
+                        placeholder="LOT-YYYYMM"
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  title: 'Batch Qty',
+                  key: 'batchQty',
+                  width: 120,
+                  render: (_, r: any) => (
+                    <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                      <InputNumber
+                        style={{ width: 110, height: 32 }}
+                        min={0}
+                        value={r.batch.batchQty}
+                        onChange={(val) => handleUpdateBatchField(r.itemIdx, r.bIdx, 'batchQty', val || 0)}
+                        placeholder="Qty"
+                        addonAfter={r.uom}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  title: 'Mfg Date',
+                  key: 'mfgDate',
+                  width: 130,
+                  render: (_, r: any) => (
+                    <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                      <DatePicker
+                        style={{ width: 120, height: 32 }}
+                        value={r.batch.productionDate ? dayjs(r.batch.productionDate) : undefined}
+                        onChange={(d: any) =>
+                          handleUpdateBatchField(r.itemIdx, r.bIdx, 'productionDate', d ? d.format('YYYY-MM-DD') : '')
+                        }
+                        placeholder="Mfg Date"
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  title: 'Exp Date',
+                  key: 'expDate',
+                  width: 130,
+                  render: (_, r: any) => (
+                    <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                      <DatePicker
+                        style={{ width: 120, height: 32 }}
+                        value={r.batch.expiryDate ? dayjs(r.batch.expiryDate) : undefined}
+                        onChange={(d: any) =>
+                          handleUpdateBatchField(r.itemIdx, r.bIdx, 'expiryDate', d ? d.format('YYYY-MM-DD') : '')
+                        }
+                        placeholder="Exp Date"
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  ...rowActionColumn,
+                  render: (_, r: any) => (
+                    <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+                      {r.isMainRow ? (
+                        <RowActionButton icon={<PlusOutlined />} onClick={() => handleAddBatch(r.itemIdx)}>
+                          Add Batch
+                        </RowActionButton>
+                      ) : (
+                        <RowActionButton variant="danger" icon={<DeleteOutlined />}
+                          onClick={() => handleRemoveBatch(r.itemIdx, r.bIdx)}>
+                          Remove
+                        </RowActionButton>
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </div>
+
+
+
+          {/* 5. Sticky Bottom Action Bar with Live Metrics & Hand-off Buttons */}
+          <div
+            className="create-plan-footer inbound-task-actions"
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 12,
+              padding: '14px 24px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              position: 'sticky',
+              bottom: 16,
+              zIndex: 10,
+            }}
+          >
+            {/* Live Metrics */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Total Planned</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>
+                  {formatQuantities(activeItems, i => i.plannedQty ?? i.poQty ?? 0)}
+                </span>
+              </div>
+              <div style={{ width: 1, height: 28, background: '#e2e8f0' }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Total Received</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#16a34a' }}>
+                  {formatQuantities(activeItems, i => i.receiveQty ?? 0)}
+                </span>
+              </div>
+              <div style={{ width: 1, height: 28, background: '#e2e8f0' }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Discrepancy</span>
+                <span
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: totalDiscrepancy > 0 ? '#dc2626' : '#64748b',
+                  }}
+                >
+                  {formatQuantities(activeItems, i => (i.plannedQty ?? i.poQty ?? 0) - (i.receiveQty ?? 0))}
+                </span>
+              </div>
+              <div style={{ width: 1, height: 28, background: '#e2e8f0' }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Batches Recorded</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#2563eb' }}>
+                  {totalBatchesCount} Lots
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Button onClick={() => setWorkspaceView('list')} style={{ height: 36, borderRadius: 6, fontWeight: 500 }}>
+                Cancel
+              </Button>
               <Button
-                icon={<ReloadOutlined />}
-                onClick={onRefresh}
-                className="action-btn"
+                icon={<SaveOutlined />}
+                onClick={handleSaveDraftReceiving}
+                style={{ height: 36, borderRadius: 6, fontWeight: 600 }}
               >
-                Refresh
+                Save Draft
               </Button>
               <Button
                 type="primary"
-                icon={<ExportOutlined />}
-                onClick={handleExport}
-                className="action-btn export-primary-btn"
+                onClick={handleProceedToReview}
                 style={{
                   background: '#B49A00',
                   borderColor: '#B49A00',
-                  color: '#ffffff',
+                  height: 36,
+                  borderRadius: 6,
                   fontWeight: 600,
+                  color: '#ffffff',
                 }}
               >
-                Export
+                Review & Submit to QC
               </Button>
             </div>
           </div>
-          <p className="main-subtitle" style={{ margin: '4px 0 0 0' }}>
-            Receive incoming shipments from Procurement IR plans, manage multi-batch lots, and dispatch goods receipts to QC
-          </p>
         </div>
+        {receivingReviewModal}
       </div>
+    );
+  }
+
+  return (
+    <div className="procurement-workspace inbound-role-workspace inbound-warehouse">
+      <WorkspaceHeader
+        title="Warehouse — Receiving"
+        onRefresh={onRefresh}
+        onExport={handleExport}
+      />
 
       {/* 2. KPI Summary Cards Grid */}
       <div className="summary-cards-row">
@@ -667,7 +1552,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value blue">{tabCounts.today}</div>
-          <div className="kpi-subtitle">Scheduled for arrival</div>
+
         </div>
 
         <div className="kpi-card">
@@ -678,18 +1563,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value orange">{tabCounts.overdue}</div>
-          <div className="kpi-subtitle">Past scheduled date</div>
-        </div>
 
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <span className="kpi-title">In Receiving</span>
-            <div className="kpi-icon-badge amber">
-              <SyncOutlined />
-            </div>
-          </div>
-          <div className="kpi-value amber">{tabCounts.inProgress}</div>
-          <div className="kpi-subtitle">Dock receiving active</div>
         </div>
 
         <div className="kpi-card">
@@ -700,18 +1574,18 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             </div>
           </div>
           <div className="kpi-value purple">{tabCounts.waitingQC}</div>
-          <div className="kpi-subtitle">Submitted for inspection</div>
+
         </div>
 
         <div className="kpi-card">
           <div className="kpi-top">
-            <span className="kpi-title">Completed & Stored</span>
+            <span className="kpi-title">Completed</span>
             <div className="kpi-icon-badge green">
               <CheckCircleOutlined />
             </div>
           </div>
           <div className="kpi-value green">{tabCounts.completed}</div>
-          <div className="kpi-subtitle">Stored in warehouse</div>
+
         </div>
       </div>
 
@@ -722,7 +1596,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: '1 1 240px', minWidth: 200, maxWidth: 300 }}>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Search</span>
             <Input
-              placeholder="Search GR #, PO #, item, vendor..."
+              placeholder="Search Receiving #, SAP GR #, PO #, vendor..."
               prefix={<SearchOutlined style={{ color: '#9ca3af', marginRight: 4 }} />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -737,11 +1611,10 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
             <Select
               style={{ width: '100%', height: 36 }}
               value={statusFilter}
-              onChange={setStatusFilter}
+              onChange={(value) => { setStatusFilter(value); setActiveTab('ALL'); }}
               options={[
-                { label: 'All Status', value: 'ALL' },
+                { label: 'All Statuses', value: 'ALL' },
                 { label: 'To Receive', value: 'To Receive' },
-                { label: 'In Progress', value: 'In Progress' },
                 { label: 'Waiting for QC', value: 'Waiting for QC' },
                 { label: 'Stored / Completed', value: 'Stored' },
                 { label: 'Overdue', value: 'OVERDUE' },
@@ -761,6 +1634,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                 { label: 'WHM1 - Raw Materials', value: 'WHM1' },
                 { label: 'WHM2 - Packaging', value: 'WHM2' },
                 { label: 'WHM3 - Finished Goods', value: 'WHM3' },
+                { label: 'WH-02 - QC Follow-Up', value: 'WH-02' },
               ]}
             />
           </div>
@@ -808,23 +1682,15 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
           <div className="tabs-list">
             <button
               className={`tab-button ${activeTab === 'TO_RECEIVE' ? 'active' : ''}`}
-              onClick={() => setActiveTab('TO_RECEIVE')}
+              onClick={() => { setActiveTab('TO_RECEIVE'); setStatusFilter('ALL'); }}
             >
               <span>To Receive</span>
               <span className="tab-count-badge">{tabCounts.toReceive}</span>
             </button>
 
             <button
-              className={`tab-button ${activeTab === 'IN_PROGRESS' ? 'active' : ''}`}
-              onClick={() => setActiveTab('IN_PROGRESS')}
-            >
-              <span>In Progress</span>
-              <span className="tab-count-badge">{tabCounts.inProgress}</span>
-            </button>
-
-            <button
               className={`tab-button ${activeTab === 'WAITING_QC' ? 'active' : ''}`}
-              onClick={() => setActiveTab('WAITING_QC')}
+              onClick={() => { setActiveTab('WAITING_QC'); setStatusFilter('ALL'); }}
             >
               <span>Waiting for QC</span>
               <span className="tab-count-badge">{tabCounts.waitingQC}</span>
@@ -832,7 +1698,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 
             <button
               className={`tab-button ${activeTab === 'COMPLETED' ? 'active' : ''}`}
-              onClick={() => setActiveTab('COMPLETED')}
+              onClick={() => { setActiveTab('COMPLETED'); setStatusFilter('ALL'); }}
             >
               <span>Completed</span>
               <span className="tab-count-badge">{tabCounts.completed}</span>
@@ -840,33 +1706,13 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
 
             <button
               className={`tab-button ${activeTab === 'ALL' ? 'active' : ''}`}
-              onClick={() => setActiveTab('ALL')}
+              onClick={() => { setActiveTab('ALL'); setStatusFilter('ALL'); }}
             >
               <span>All Receipts</span>
               <span className="tab-count-badge">{tabCounts.all}</span>
             </button>
           </div>
 
-          <div className="view-controls">
-            <div className="view-switcher-group">
-              <Tooltip title="Table View">
-                <button
-                  className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
-                  onClick={() => setViewMode('table')}
-                >
-                  <UnorderedListOutlined />
-                </button>
-              </Tooltip>
-              <Tooltip title="Cards View">
-                <button
-                  className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
-                  onClick={() => setViewMode('cards')}
-                >
-                  <AppstoreOutlined />
-                </button>
-              </Tooltip>
-            </div>
-          </div>
         </div>
 
         {/* Table View */}
@@ -874,38 +1720,26 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
           columns={columns}
           dataSource={filteredReceipts}
           rowKey="grNumber"
-          pagination={{ pageSize: 8, showTotal: (t) => `Total ${t} items` }}
+          pagination={workspacePagination}
+          scroll={{ x: 1000 }}
+          locale={{ emptyText: <WorkspaceEmpty filtered={Boolean(searchTerm || statusFilter !== 'ALL' || warehouseFilter !== 'ALL' || dateRange)} description="No receipts in this queue. Scheduled deliveries appear here after procurement planning." /> }}
           className="po-custom-table"
         />
       </div>
 
       {/* 5. Detail / Track Intake Drawer for Warehouse Goods Receipt */}
-      <Drawer
+      <Drawer rootClassName="inbound-detail"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: 24 }}>
             <Space size={8}>
               <FileTextOutlined style={{ color: '#2563eb', fontSize: 18 }} />
               <span style={{ fontWeight: 700, fontSize: 16 }}>
-                Goods Receipt Details: {selectedReceipt?.grNumber || selectedReceipt?.irPlanNumber}
+                Receiving Details: {selectedReceipt ? getReceiptIrNumber(selectedReceipt) : '—'}
               </span>
             </Space>
             <Space>
               {selectedReceipt && (
-                <>
-                  <Tag
-                    color={
-                      selectedReceipt.deliveryPlanStatus === 'In Progress'
-                        ? 'processing'
-                        : selectedReceipt.deliveryPlanStatus === 'Received' || selectedReceipt.deliveryPlanStatus === 'Posted' || selectedReceipt.deliveryPlanStatus === 'QC Completed'
-                        ? 'success'
-                        : 'blue'
-                    }
-                    style={{ fontSize: 12, padding: '2px 8px', whiteSpace: 'nowrap' }}
-                  >
-                    {selectedReceipt.deliveryPlanStatus || 'To Receive'}
-                  </Tag>
-                  <InboundStatusBadge type="deliveryPlan" value={selectedReceipt.deliveryPlanStatus || 'To Receive'} />
-                </>
+                <InboundStatusBadge type="deliveryPlan" value={selectedReceipt.deliveryPlanStatus || 'To Receive'} />
               )}
             </Space>
           </div>
@@ -917,34 +1751,21 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              Warehouse Intake Record • Sourced from IR Plan {selectedReceipt?.irPlanNumber}
+              Warehouse Intake Record • IR Schedule {selectedReceipt?.irPlanNumber}
             </Text>
             <Space size={12}>
               <Button onClick={() => setIsDetailDrawerOpen(false)}>Close</Button>
-              {selectedReceipt?.irPlanNumber && (
-                <Button
-                  type="default"
-                  icon={<FileTextOutlined />}
-                  onClick={() => {
-                    setIsDetailDrawerOpen(false);
-                    handleOpenIRPlan(selectedReceipt.irPlanNumber, selectedReceipt);
-                  }}
-                  style={{ color: '#2563eb', borderColor: '#bfdbfe', fontWeight: 600 }}
-                >
-                  View IR Schedule ({selectedReceipt.irPlanNumber})
-                </Button>
-              )}
               {selectedReceipt && (selectedReceipt.deliveryPlanStatus === 'To Receive' || selectedReceipt.deliveryPlanStatus === 'In Progress') && (
                 <Button
                   type="primary"
+                  className="btn-po-action"
                   icon={<InboxOutlined />}
                   onClick={() => {
                     setIsDetailDrawerOpen(false);
                     handleStartReceiving(selectedReceipt);
                   }}
-                  style={{ background: '#2563eb', borderColor: '#2563eb', fontWeight: 600 }}
                 >
-                  Physical Receive
+                  Receive Goods
                 </Button>
               )}
             </Space>
@@ -954,66 +1775,8 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         {(() => {
           if (!selectedReceipt) return null;
 
-          const totalPlannedQty = selectedReceipt.items.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0);
-          const totalReceivedQty = selectedReceipt.items.reduce((s, i) => s + (i.receiveQty || 0), 0);
-          const totalRemainingQty = Math.max(0, totalPlannedQty - totalReceivedQty);
-          const percentReceived = totalPlannedQty > 0 ? Math.min(100, Math.round((totalReceivedQty / totalPlannedQty) * 1000) / 10) : 0;
-          const totalBatchesCount = selectedReceipt.items.reduce((s, i) => s + (i.batches?.length || 0), 0);
-
           return (
             <div className="detail-drawer-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Dynamic Intake Tracking Banner */}
-              <div
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #bfdbfe',
-                  borderRadius: 12,
-                  padding: '16px 20px',
-                  boxShadow: '0 1px 3px rgba(37, 99, 235, 0.08)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <SyncOutlined spin={selectedReceipt.deliveryPlanStatus === 'In Progress'} style={{ color: '#2563eb', fontSize: 16 }} />
-                    <span style={{ fontSize: 15, fontWeight: 700, color: '#1e3a8a' }}>
-                      Live Inbound Intake Progress
-                    </span>
-                  </div>
-                  <Tag color="blue" style={{ fontSize: 12, fontWeight: 600, padding: '2px 10px', borderRadius: 12 }}>
-                    {totalReceivedQty >= totalPlannedQty ? 'Intake Complete' : `${percentReceived}% Received`}
-                  </Tag>
-                </div>
-
-                <Progress
-                  percent={percentReceived}
-                  strokeColor="#2563eb"
-                  trailColor="#e2e8f0"
-                  status={selectedReceipt.deliveryPlanStatus === 'In Progress' ? 'active' : totalReceivedQty >= totalPlannedQty ? 'success' : 'normal'}
-                  style={{ marginBottom: 12 }}
-                />
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 12 }}>
-                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Total Planned</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{totalPlannedQty.toLocaleString()} Units</div>
-                  </div>
-                  <div style={{ background: '#eff6ff', padding: '10px 12px', borderRadius: 8, border: '1px solid #bfdbfe' }}>
-                    <div style={{ fontSize: 11, color: '#1e40af', fontWeight: 500 }}>Total Received</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#2563eb' }}>{totalReceivedQty.toLocaleString()} Units</div>
-                  </div>
-                  <div style={{ background: totalRemainingQty > 0 ? '#fefce8' : '#f0fdf4', padding: '10px 12px', borderRadius: 8, border: totalRemainingQty > 0 ? '1px solid #fef08a' : '1px solid #bbf7d0' }}>
-                    <div style={{ fontSize: 11, color: totalRemainingQty > 0 ? '#854d0e' : '#16a34a', fontWeight: 500 }}>Remaining Balance</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: totalRemainingQty > 0 ? '#ca8504' : '#16a34a' }}>{totalRemainingQty.toLocaleString()} Units</div>
-                  </div>
-                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Batches Recorded</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
-                      <span style={{ color: '#2563eb' }}>{totalBatchesCount > 0 ? `${totalBatchesCount} Lots Captured` : 'Pending Intake'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* 1. Exact Figma Shipment & Logistics Details Card */}
               <div
                 className="po-figma-details-card"
@@ -1038,22 +1801,22 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                   Shipment & Logistics Details
                 </div>
                 <div className="po-grid-container" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {/* Row 1: GR # vs IR Plan # */}
+                  {/* Row 1: GR # vs IR Schedule # */}
                   <div className="po-grid-row" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
                     <div className="label-value-pair" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                       <span className="field-label" style={{ width: 140, fontSize: 13, fontWeight: 500, color: '#6b7280', flexShrink: 0 }}>
-                        Goods Receipt #
+                        Receiving #
                       </span>
                       <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                         :
                       </span>
                       <span className="field-value" style={{ fontSize: 14, fontWeight: 600, color: 'rgba(0,0,0,0.85)' }}>
-                        {selectedReceipt.grNumber || 'Pending GR'}
+                        {getReceiptIrNumber(selectedReceipt) || '—'}
                       </span>
                     </div>
                     <div className="label-value-pair" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
                       <span className="field-label" style={{ width: 140, fontSize: 13, fontWeight: 500, color: '#6b7280', flexShrink: 0 }}>
-                        IR Plan #
+                        IR Schedule #
                       </span>
                       <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                         :
@@ -1215,7 +1978,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                       dataIndex: 'code',
                       key: 'code',
                       width: 120,
-                      render: (c) => <Text strong style={{ color: '#2563eb' }}>{c}</Text>,
+                      render: (c) => <Text strong style={{ color: '#334155' }}>{c}</Text>,
                     },
                     {
                       title: 'Item Name & Description',
@@ -1303,43 +2066,17 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
               </div>
 
               {/* 3. Audit Trail Card */}
-              <div
-                className="drawer-section"
-                style={{
-                  background: '#ffffff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 10,
-                  padding: '16px 20px',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)',
-                }}
-              >
-                <div
-                  className="drawer-section-title"
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    marginBottom: 14,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <ClockCircleOutlined style={{ color: '#2563eb' }} />
-                  <span>Audit Trail & Activity Log</span>
-                </div>
-                <AuditTrailTimeline
+              <AuditTrailTimeline receipt={selectedReceipt}
                   activities={selectedReceipt.activities}
                   adjustments={selectedReceipt.supervisorAdjustments}
                 />
-              </div>
             </div>
           );
         })()}
       </Drawer>
 
       {/* 5A. IR Schedule (IR Plan) Drawer */}
-      <Drawer
+      <Drawer rootClassName="inbound-detail"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: 24 }}>
             <Space size={10}>
@@ -1360,53 +2097,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
         onClose={() => setIsIRPlanDrawerOpen(false)}
         width={920}
         styles={{ body: { padding: '20px 24px', background: '#f8fafc' } }}
-        footer={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Sourced from Procurement Inbound Planning • Linked to Warehouse Receiving
-            </Text>
-            <Space size={12}>
-              <Button onClick={() => setIsIRPlanDrawerOpen(false)}>Close</Button>
-              {(() => {
-                const linkedReceipt = receipts.find(
-                  (r) => r.irPlanNumber === selectedIRPlan?.irPlanNumber || r.id === (selectedIRPlan as any)?.id,
-                ) || (selectedReceipt?.irPlanNumber === selectedIRPlan?.irPlanNumber ? selectedReceipt : undefined);
-
-                return (
-                  <>
-                    {linkedReceipt && (
-                      <Button
-                        type="default"
-                        icon={<EyeOutlined />}
-                        onClick={() => {
-                          setSelectedReceipt(linkedReceipt);
-                          setIsIRPlanDrawerOpen(false);
-                          setIsDetailDrawerOpen(true);
-                        }}
-                        style={{ color: '#2563eb', borderColor: '#bfdbfe', fontWeight: 600 }}
-                      >
-                        View Receipt Details
-                      </Button>
-                    )}
-                    {linkedReceipt && (linkedReceipt.deliveryPlanStatus === 'To Receive' || linkedReceipt.deliveryPlanStatus === 'In Progress') && (
-                      <Button
-                        type="primary"
-                        icon={<InboxOutlined />}
-                        onClick={() => {
-                          setIsIRPlanDrawerOpen(false);
-                          handleStartReceiving(linkedReceipt);
-                        }}
-                        style={{ background: '#2563eb', borderColor: '#2563eb', fontWeight: 600 }}
-                      >
-                        Physical Receive
-                      </Button>
-                    )}
-                  </>
-                );
-              })()}
-            </Space>
-          </div>
-        }
+        footer={null}
       >
         {selectedIRPlan && (
           <div className="detail-drawer-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1442,7 +2133,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div className="label-value-pair" style={{ display: 'flex', alignItems: 'center' }}>
                     <span className="field-label" style={{ width: 105, fontSize: 13, fontWeight: 500, color: '#64748b', flexShrink: 0 }}>
-                      IR Plan #
+                      IR Schedule #
                     </span>
                     <span className="field-colon" style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)', marginRight: 8, flexShrink: 0 }}>
                       :
@@ -1459,7 +2150,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                       :
                     </span>
                     <span className="field-value">
-                      <span className="po-link" style={{ color: '#2563eb', fontWeight: 600, cursor: 'pointer' }}>
+                      <span style={{ color: '#0f172a', fontWeight: 600 }}>
                         {selectedIRPlan.poNumbers?.[0] || selectedIRPlan.items?.[0]?.poNumber || '26000977'}
                       </span>
                     </span>
@@ -1550,7 +2241,9 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                 size="small"
                 dataSource={(selectedIRPlan.items || []).flatMap((item, itemIdx) => {
                   if (item.schedules && item.schedules.length > 0) {
-                    return item.schedules.map((sched, sIdx) => ({
+                    return item.schedules
+                      .filter((sched) => (Number(sched.plannedQty) || 0) > 0)
+                      .map((sched, sIdx) => ({
                       rowKey: `${item.itemCode || itemIdx}-${sIdx}`,
                       isMainRow: sIdx === 0,
                       itemCode: item.itemCode,
@@ -1562,8 +2255,9 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                       remainingQty: item.remainingQty,
                       deliveryDate: sched.deliveryDate || selectedIRPlan.deliveryDate,
                       parentItem: item,
-                    }));
+                      }));
                   }
+                  if ((Number(item.allocatedQty) || 0) <= 0) return [];
                   return [
                     {
                       rowKey: `${item.itemCode || itemIdx}-0`,
@@ -1591,7 +2285,7 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                     width: 120,
                     render: (_, r: any) => {
                       if (r.isMainRow) {
-                        return <Text strong style={{ color: '#2563eb' }}>{r.itemCode}</Text>;
+                        return <Text strong style={{ color: '#334155' }}>{r.itemCode}</Text>;
                       }
                       return (
                         <div style={{ paddingLeft: 8 }}>
@@ -1666,425 +2360,12 @@ export const WarehouseWorkspace: React.FC<WarehouseWorkspaceProps> = ({
                 ]}
               />
             </div>
+            <RelatedActivity receipts={receipts.filter(receipt => receipt.irPlanNumber === selectedIRPlan.irPlanNumber)} plans={[selectedIRPlan]} />
           </div>
         )}
       </Drawer>
 
-      {/* WH-03 Physical Receiving Modal & WH-03A Multi-Batch Manager */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: 24 }}>
-            <Space>
-              <InboxOutlined style={{ color: '#2563eb', fontSize: 18 }} />
-              <span style={{ fontWeight: 600 }}>
-                WH-03 Physical Receiving & Multi-Batch Intake: {selectedReceipt?.irPlanNumber} ({selectedReceipt?.deliveryPlanNumber})
-              </span>
-            </Space>
-            <Tag color="cyan">GR: {selectedReceipt?.grNumber}</Tag>
-          </div>
-        }
-        open={isReceivingModalOpen}
-        onCancel={() => setIsReceivingModalOpen(false)}
-        width={1050}
-        footer={
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '8px 0',
-            }}
-          >
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Tip: Tap '+ Add Batch' to split carton lots. Total batch sum must match Actual Received Qty.
-            </Text>
-            <Space>
-              <Button onClick={() => setIsReceivingModalOpen(false)}>Cancel</Button>
-              <Button
-                type="default"
-                icon={<SaveOutlined />}
-                onClick={() => {
-                  message.success('Draft physical counts saved locally.');
-                }}
-              >
-                Save Draft
-              </Button>
-              <Button
-                type="primary"
-                icon={<FileDoneOutlined />}
-                onClick={handleProceedToReview}
-                style={{ background: '#2563eb', borderColor: '#2563eb' }}
-              >
-                Review GR (WH-04)
-              </Button>
-            </Space>
-          </div>
-        }
-      >
-        {/* Logistics Header Form */}
-        <Form form={receivingForm} layout="vertical" style={{ marginBottom: 12 }}>
-          <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, border: '1px solid #e2e8f0', marginBottom: 16 }}>
-            <Row gutter={16}>
-              <Col xs={24} sm={8}>
-                <Form.Item
-                  label={<Text strong>Delivery Note / DN <span style={{ color: '#dc2626' }}>*</span></Text>}
-                  name="deliveryNoteNumber"
-                  rules={[{ required: true, message: 'DN is required (or enter NA with remark)' }]}
-                >
-                  <Input
-                    placeholder="e.g. DN-OMC-20260827 or NA"
-                    onChange={(e) => setDnValue(e.target.value)}
-                  />
-                </Form.Item>
-              </Col>
-              {dnValue === 'NA' && (
-                <Col xs={24} sm={16}>
-                  <Form.Item
-                    label={<Text strong style={{ color: '#ca8504' }}>Reason / Remark for DN = NA *</Text>}
-                    name="deliveryNoteRemark"
-                    rules={[{ required: true, message: 'Reason required when DN = NA' }]}
-                  >
-                    <Input placeholder="Explain why physical DN is absent (e.g. digital manifest, phone confirmation)" />
-                  </Form.Item>
-                </Col>
-              )}
-              <Col xs={12} sm={8}>
-                <Form.Item label="Vehicle / Truck No." name="truckPlateNumber">
-                  <Input prefix={<CarOutlined />} placeholder="e.g. PP-2AB-9988" />
-                </Form.Item>
-              </Col>
-              <Col xs={12} sm={8}>
-                <Form.Item label="Driver & Contact" name="driverContact">
-                  <Input prefix={<PhoneOutlined />} placeholder="e.g. Sokha Men (+855 12 889 001)" />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col xs={12} sm={8}>
-                <Form.Item label="Receiving Warehouse" name="receiverWarehouseName">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-              <Col xs={12} sm={8}>
-                <Form.Item label="Actual Arrival Date" name="actualArrivalDate">
-                  <DatePicker style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-              <Col xs={12} sm={8}>
-                <Form.Item label="Arrival Time" name="actualArrivalTime">
-                  <TimePicker style={{ width: '100%' }} format="HH:mm" />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-        </Form>
-
-        {/* WH-03A Multi-Batch Items List */}
-        <Divider orientation="left" style={{ margin: '8px 0 16px' }}>
-          <Text strong>WH-03A Items & Multi-Batch Receiving</Text>
-        </Divider>
-
-        {activeItems.map((item, itemIdx) => {
-          const planned = item.plannedQty || item.poQty;
-          const batches = item.batches || [];
-          const totalBatchQty = batches.reduce((sum, b) => sum + (Number(b.batchQty) || 0), 0);
-          const isBatchMatched = totalBatchQty === item.receiveQty;
-          const isQtyUnder = item.receiveQty < planned;
-          const diff = planned - item.receiveQty;
-
-          return (
-            <div
-              key={item.code}
-              style={{
-                marginBottom: 16,
-                border: !isBatchMatched ? '1px solid #dc2626' : '1px solid #e2e8f0',
-                borderRadius: 8,
-                padding: 14,
-                background: '#ffffff',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-              }}
-            >
-              <Row gutter={[12, 8]} align="middle" justify="space-between">
-                <Col xs={24} md={10}>
-                  <Space direction="vertical" size={2}>
-                    <Space>
-                      <Tag color="cyan">PO: {item.poNumber}</Tag>
-                      <Text strong style={{ fontSize: 14, color: '#2563eb' }}>{item.code}</Text>
-                    </Space>
-                    <Text style={{ fontSize: 13, color: '#1e293b' }}>{item.name}</Text>
-                  </Space>
-                </Col>
-
-                <Col xs={24} md={14} style={{ textAlign: 'right' }}>
-                  <Space wrap size={12}>
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Planned</Text>
-                      <Text strong>{planned} {item.uom}</Text>
-                    </div>
-
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Actual Received</Text>
-                      <InputNumber
-                        min={0}
-                        max={planned * 2}
-                        value={item.receiveQty}
-                        onChange={(val) => handleUpdateItemField(itemIdx, 'receiveQty', val || 0)}
-                        style={{ width: 100, height: 32 }}
-                      />
-                    </div>
-
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Discrepancy</Text>
-                      {diff > 0 ? (
-                        <Tag color="error">Missing: -{diff}</Tag>
-                      ) : diff < 0 ? (
-                        <Tag color="purple">Over: +{Math.abs(diff)}</Tag>
-                      ) : (
-                        <Tag color="green">Exact</Tag>
-                      )}
-                    </div>
-
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Batch Validation</Text>
-                      <Tag color={isBatchMatched ? 'green' : 'red'}>
-                        {totalBatchQty} / {item.receiveQty} {isBatchMatched ? 'Matched' : 'Unmatched'}
-                      </Tag>
-                    </div>
-
-                    <Button
-                      type="dashed"
-                      icon={<BarcodeOutlined />}
-                      onClick={() => handleAddBatch(itemIdx)}
-                      style={{ height: 32 }}
-                    >
-                      + Add Batch
-                    </Button>
-                  </Space>
-                </Col>
-              </Row>
-
-              {/* Missing Remark Input if quantity is short */}
-              {isQtyUnder && (
-                <div style={{ marginTop: 12, padding: '8px 12px', background: '#fef2f2', borderRadius: 6, border: '1px solid #fee2e2' }}>
-                  <Text strong style={{ color: '#dc2626', fontSize: 12 }}>
-                    Missing Quantity Discrepancy Reason *
-                  </Text>
-                  <Input
-                    placeholder="e.g. Short shipment from supplier carton #12, seal was missing"
-                    value={item.missingRemark || ''}
-                    onChange={(e) => handleUpdateItemField(itemIdx, 'missingRemark', e.target.value)}
-                    style={{ marginTop: 4, height: 32 }}
-                  />
-                </div>
-              )}
-
-              {/* Batches Expanded Section */}
-              <div style={{ marginTop: 12, background: '#f8fafc', padding: 12, borderRadius: 6, border: '1px solid #f1f5f9' }}>
-                <Text strong style={{ fontSize: 12, color: '#475569', display: 'block', marginBottom: 8 }}>
-                  Recorded Batches ({batches.length})
-                </Text>
-
-                {batches.map((batch, bIdx) => (
-                  <Row
-                    key={batch.id || bIdx}
-                    gutter={8}
-                    align="middle"
-                    style={{
-                      marginBottom: 8,
-                      background: '#fff',
-                      padding: '6px 10px',
-                      borderRadius: 6,
-                      border: '1px solid #e2e8f0',
-                    }}
-                  >
-                    <Col xs={12} sm={4}>
-                      <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Batch #</Text>
-                      <Input
-                        value={batch.batchNumber}
-                        onChange={(e) => handleUpdateBatchField(itemIdx, bIdx, 'batchNumber', e.target.value)}
-                        placeholder="LOT-XXX"
-                        style={{ height: 32 }}
-                      />
-                    </Col>
-
-                    <Col xs={12} sm={3}>
-                      <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Batch Qty ({item.uom})</Text>
-                      <InputNumber
-                        min={1}
-                        value={batch.batchQty}
-                        onChange={(val) => handleUpdateBatchField(itemIdx, bIdx, 'batchQty', val || 0)}
-                        style={{ width: '100%', height: 32 }}
-                      />
-                    </Col>
-
-                    <Col xs={12} sm={4}>
-                      <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Mfg Date</Text>
-                      <DatePicker
-                        style={{ width: '100%', height: 32 }}
-                        value={batch.productionDate ? dayjs(batch.productionDate) : undefined}
-                        onChange={(d: dayjs.Dayjs | null) => handleUpdateBatchField(itemIdx, bIdx, 'productionDate', d ? d.format('YYYY-MM-DD') : '')}
-                      />
-                    </Col>
-
-                    <Col xs={12} sm={4}>
-                      <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Exp Date</Text>
-                      <DatePicker
-                        style={{ width: '100%', height: 32 }}
-                        value={batch.expiryDate ? dayjs(batch.expiryDate) : undefined}
-                        onChange={(d: dayjs.Dayjs | null) => handleUpdateBatchField(itemIdx, bIdx, 'expiryDate', d ? d.format('YYYY-MM-DD') : '')}
-                      />
-                    </Col>
-
-                    <Col xs={12} sm={4}>
-                      <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Best Before</Text>
-                      <DatePicker
-                        style={{ width: '100%', height: 32 }}
-                        value={batch.bestBeforeDate ? dayjs(batch.bestBeforeDate) : undefined}
-                        onChange={(d: dayjs.Dayjs | null) => handleUpdateBatchField(itemIdx, bIdx, 'bestBeforeDate', d ? d.format('YYYY-MM-DD') : '')}
-                      />
-                    </Col>
-
-                    <Col xs={20} sm={4}>
-                      <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Remark</Text>
-                      <Input
-                        value={batch.remark}
-                        onChange={(e) => handleUpdateBatchField(itemIdx, bIdx, 'remark', e.target.value)}
-                        placeholder="Pallet #"
-                        style={{ height: 32 }}
-                      />
-                    </Col>
-
-                    <Col xs={4} sm={1} style={{ textAlign: 'center' }}>
-                      <Button
-                        size="small"
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleRemoveBatch(itemIdx, bIdx)}
-                        disabled={batches.length === 1}
-                      />
-                    </Col>
-                  </Row>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </Modal>
-
-      {/* WH-04 Review GR Modal */}
-      <Modal
-        title={
-          <Space>
-            <CheckCircleOutlined style={{ color: '#16a34a' }} />
-            <span>WH-04 Review Goods Receipt Before Submitting to QC</span>
-          </Space>
-        }
-        open={isReviewModalOpen}
-        onCancel={() => setIsReviewModalOpen(false)}
-        width={850}
-        footer={[
-          <Button key="back" icon={<EditOutlined />} onClick={() => { setIsReviewModalOpen(false); setIsReceivingModalOpen(true); }}>
-            Back to Edit
-          </Button>,
-          <Button key="draft" icon={<SaveOutlined />} onClick={() => { message.info('Saved as draft.'); setIsReviewModalOpen(false); }}>
-            Save Draft
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            icon={<SendOutlined />}
-            onClick={handleConfirmSubmitToQC}
-            style={{ background: '#16a34a', borderColor: '#16a34a' }}
-          >
-            Submit to QC
-          </Button>,
-        ]}
-      >
-        <Alert
-          message="Summary of Physical Receiving"
-          description="Please verify total received counts and multi-batch details. Once submitted, status will transition to 'Waiting for QC'."
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col span={6}>
-            <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, textAlign: 'center', border: '1px solid #e2e8f0' }}>
-              <Statistic
-                title="Planned Qty"
-                value={activeItems.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0)}
-                suffix="units"
-              />
-            </div>
-          </Col>
-          <Col span={6}>
-            <div style={{ background: '#f0fdf4', padding: 12, borderRadius: 8, textAlign: 'center', border: '1px solid #bbf7d0' }}>
-              <Statistic
-                title="Actual Received Qty"
-                value={activeItems.reduce((s, i) => s + (i.receiveQty || 0), 0)}
-                valueStyle={{ color: '#16a34a' }}
-                suffix="units"
-              />
-            </div>
-          </Col>
-          <Col span={6}>
-            <div style={{ background: '#fef2f2', padding: 12, borderRadius: 8, textAlign: 'center', border: '1px solid #fecaca' }}>
-              <Statistic
-                title="Discrepancy"
-                value={
-                  activeItems.reduce((s, i) => s + (i.plannedQty || i.poQty || 0), 0) -
-                  activeItems.reduce((s, i) => s + (i.receiveQty || 0), 0)
-                }
-                valueStyle={{ color: '#dc2626' }}
-                suffix="units"
-              />
-            </div>
-          </Col>
-          <Col span={6}>
-            <div style={{ background: '#eff6ff', padding: 12, borderRadius: 8, textAlign: 'center', border: '1px solid #bfdbfe' }}>
-              <Statistic
-                title="Total Batches"
-                value={activeItems.reduce((s, i) => s + (i.batches?.length || 0), 0)}
-              />
-            </div>
-          </Col>
-        </Row>
-
-        <Table
-          size="small"
-          dataSource={activeItems}
-          rowKey="code"
-          pagination={false}
-          className="po-custom-table"
-          columns={[
-            { title: 'Item Code', dataIndex: 'code', key: 'code', render: (t) => <Text strong style={{ color: '#2563eb' }}>{t}</Text> },
-            { title: 'Item Name', dataIndex: 'name', key: 'name' },
-            { title: 'Planned', key: 'planned', render: (_, r) => (r.plannedQty || r.poQty).toLocaleString() },
-            { title: 'Actual Received', dataIndex: 'receiveQty', key: 'receiveQty', render: (q) => <Tag color="green">{q.toLocaleString()}</Tag> },
-            {
-              title: 'Batches',
-              key: 'batches',
-              render: (_, r) => (
-                <Space direction="vertical" size={2}>
-                  {r.batches?.map((b) => (
-                    <Text key={b.batchNumber} style={{ fontSize: 11 }}>
-                      {b.batchNumber}: {b.batchQty} {r.uom}
-                    </Text>
-                  ))}
-                </Space>
-              ),
-            },
-            {
-              title: 'Discrepancy Remark',
-              key: 'missing',
-              render: (_, r) => r.missingRemark ? <Text type="danger" style={{ fontSize: 11 }}>{r.missingRemark}</Text> : <Text type="secondary">-</Text>,
-            },
-          ]}
-        />
-      </Modal>
+      {receivingReviewModal}
 
       {/* Temporary GR Creation Modal (Exception Flow) */}
       <Modal

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci --prefix inbound-ui",
+  "buildCommand": "npm run build:inbound",
+  "outputDirectory": "inbound-ui/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

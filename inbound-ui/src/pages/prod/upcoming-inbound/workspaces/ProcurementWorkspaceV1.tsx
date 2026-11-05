@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { ExportButton } from '../shared/ui/WorkspaceUI';
+import { exportWorkspace, type ExportFormat } from '../shared/ui/workspaceExport';
 import {
   Table,
   Button,
@@ -32,7 +34,6 @@ import {
   EyeOutlined,
   FileTextOutlined,
   SendOutlined,
-  ExportOutlined,
   ClockCircleOutlined,
   DollarOutlined,
   WarningOutlined,
@@ -449,35 +450,38 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
 
     const po = activeCreatingPO || purchaseOrders[0];
     let totalPlanned = 0;
-    const finalItems: IRPlanItem[] = scheduleDraftItems.map((draft, idx) => {
-      const itemTotal = draft.schedules.reduce((sum, s) => sum + (Number(s.plannedQty) || 0), 0);
-      totalPlanned += itemTotal;
-      return {
-        id: `item-${idx + 1}`,
-        poNumber: draft.poNumber,
-        itemCode: draft.itemCode,
-        itemName: draft.itemName,
-        uom: draft.uom,
-        totalPoQty: draft.totalPoQty,
-        allocatedQty: itemTotal,
-        remainingQty: Math.max(0, draft.totalPoQty - itemTotal),
-        schedules: draft.schedules.map((s, sIdx) => ({
-          id: `s-${idx}-${sIdx}`,
-          deliveryPlanNumber: s.deliveryPlanNumber || `Plan ${sIdx + 1}`,
-          deliveryDate: s.deliveryDate || po?.expectedDate || '2026-08-28',
-          plannedQty: Number(s.plannedQty) || 0,
-          warehouseCode: s.warehouseCode || po?.receiverWarehouse || 'WHM1',
-          notes: s.notes || '',
-        })),
-      };
-    });
+    const finalItems: IRPlanItem[] = scheduleDraftItems
+      .map((draft, idx) => {
+        const positiveSchedules = draft.schedules.filter((s) => (Number(s.plannedQty) || 0) > 0);
+        const itemTotal = positiveSchedules.reduce((sum, s) => sum + (Number(s.plannedQty) || 0), 0);
+        totalPlanned += itemTotal;
+        return {
+          id: `item-${idx + 1}`,
+          poNumber: draft.poNumber,
+          itemCode: draft.itemCode,
+          itemName: draft.itemName,
+          uom: draft.uom,
+          totalPoQty: draft.totalPoQty,
+          allocatedQty: itemTotal,
+          remainingQty: Math.max(0, draft.totalPoQty - itemTotal),
+          schedules: positiveSchedules.map((s, sIdx) => ({
+            id: `s-${idx}-${sIdx}`,
+            deliveryPlanNumber: s.deliveryPlanNumber || `Plan ${sIdx + 1}`,
+            deliveryDate: s.deliveryDate || po?.expectedDate || '2026-08-28',
+            plannedQty: Number(s.plannedQty) || 0,
+            warehouseCode: s.warehouseCode || po?.receiverWarehouse || 'WHM1',
+            notes: s.notes || '',
+          })),
+        };
+      })
+      .filter((item) => item.allocatedQty > 0);
 
     // Collect all scheduled dates across items
     const allDates = Array.from(
       new Set(
         scheduleDraftItems.flatMap((draft) =>
           draft.schedules
-            .filter((s) => (Number(s.plannedQty) || 0) > 0 || draft.schedules.length === 1)
+            .filter((s) => (Number(s.plannedQty) || 0) > 0)
             .map((s) => s.deliveryDate)
             .filter(Boolean)
         )
@@ -519,8 +523,11 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
     setActiveTab('IR_PLAN');
   };
 
-  const handleExport = () => {
-    message.success('Exporting Purchase Orders data to Excel format...');
+  const handleExport = (format: ExportFormat) => {
+    exportWorkspace('purchase-orders', [
+      ['PO #', 'Vendor', 'Status'],
+      ...filteredPOs.map(po => [po.poNumber, po.supplier, po.docStatus]),
+    ], format);
   };
 
   const handleResetFilters = () => {
@@ -676,6 +683,13 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
           </span>
         );
       },
+    },
+    {
+      title: 'IR Schedule Date',
+      dataIndex: 'deliveryDate',
+      key: 'deliveryDate',
+      width: 160,
+      render: (date: string) => <span>{date || '—'}</span>,
     },
     {
       title: 'Schedule Status',
@@ -1260,10 +1274,8 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
               >
                 Refresh
               </Button>
-              <Button
-                type="primary"
-                icon={<ExportOutlined />}
-                onClick={handleExport}
+              <ExportButton
+                onExport={handleExport}
                 className="action-btn export-primary-btn"
                 style={{
                   background: '#B49A00',
@@ -1271,9 +1283,7 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
                   color: '#ffffff',
                   fontWeight: 600,
                 }}
-              >
-                Export
-              </Button>
+              />
             </div>
           </div>
         </div>
@@ -1640,7 +1650,7 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
             matchingPlanItems.forEach((it) => {
               if (it.schedules && it.schedules.length > 0) {
                 it.schedules.forEach((s) => {
-                  if ((Number(s.plannedQty) || 0) > 0 || it.schedules.length === 1) {
+                  if ((Number(s.plannedQty) || 0) > 0) {
                     allSchedules.push({
                       deliveryPlanNumber: s.deliveryPlanNumber || 'Plan 1',
                       deliveryDate: s.deliveryDate || it.planRef?.deliveryDate || '',
@@ -2285,7 +2295,7 @@ export const ProcurementWorkspaceV1: React.FC<ProcurementWorkspaceV1Props> = ({
                 }}
               >
                 <InboxOutlined style={{ color: '#ca8504' }} />
-                <span>Scheduled Line Items & Allocated Quantities ({selectedPlanDetail.items?.length || 0})</span>
+                <span>Scheduled Line Items & Allocated Qty ({selectedPlanDetail.items?.length || 0})</span>
               </div>
               <Table
                 size="small"

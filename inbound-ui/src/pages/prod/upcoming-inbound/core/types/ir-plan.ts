@@ -27,6 +27,8 @@ export type IRScheduleStatus = 'Pending' | 'In Progress' | 'Completed' | 'Reject
 export interface IRPlan {
   id: string;
   irPlanNumber: string; // e.g. "IR0001"
+  parentIrNumber?: string;
+  qcFollowUpType?: 'REJECTED' | 'ON_HOLD';
   deliveryPlanNumber: string; // e.g. "Plan 1"
   vendor: string;
   poNumbers: string[];

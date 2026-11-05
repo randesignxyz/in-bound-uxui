@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+import { SHOW_GLOBAL_AUDIT_TRAIL } from './core/workspaceFeatures';
+import { formatQuantities, getPostingQuantity, getPostedQuantityForItem } from './core/quantity';
+import { getQCQueueState } from './core/qcQueue';
+import { createQCFollowUps } from './core/qcFollowUp';
+import { getReceiptIrNumber } from './core/workflow/goods-receipt';
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   Typography,
@@ -51,10 +56,10 @@ import { InboundStatusBadge } from './features/shared/InboundStatusBadge';
 
 // Initial Sample Data Store
 import {
-  SAMPLE_IR_PLANS,
-  SAMPLE_PURCHASE_ORDERS,
-  SAMPLE_GOODS_RECEIPTS,
-} from './data/inboundMockStore';
+  loadLocalInboundSnapshot,
+  resetLocalInboundSnapshot,
+  saveLocalInboundSnapshot,
+} from './data/localInboundStore';
 
 import type {
   GoodsReceipt,
@@ -79,28 +84,147 @@ const ROLE_OPTIONS: { label: string; value: InboundRole; icon: React.ReactNode; 
 export default function InboundListview({ routeView }: { routeView?: string }) {
   const [activeRole, setActiveRole] = useState<InboundRole>('PROCUREMENT');
 
-  // Shared in-memory data store across all roles
-  const [irPlans, setIrPlans] = useState<IRPlan[]>(SAMPLE_IR_PLANS);
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(SAMPLE_PURCHASE_ORDERS);
-  const [receipts, setReceipts] = useState<GoodsReceipt[]>(SAMPLE_GOODS_RECEIPTS);
+  // Shared browser-local data store across all roles.
+  const [localSnapshot] = useState(loadLocalInboundSnapshot);
+  const [irPlans, setIrPlans] = useState<IRPlan[]>(localSnapshot.irPlans);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(localSnapshot.purchaseOrders);
+  const [receipts, setReceipts] = useState<GoodsReceipt[]>(localSnapshot.receipts);
+
+  useEffect(() => {
+    saveLocalInboundSnapshot({ irPlans, purchaseOrders, receipts });
+  }, [irPlans, purchaseOrders, receipts]);
+
+  useEffect(() => {
+    setIrPlans((currentPlans) => {
+      let hasChanges = false;
+      const nextPlans = currentPlans.map((plan) => {
+        const linkedReceipt = receipts.find((receipt) => receipt.irPlanNumber === plan.irPlanNumber);
+        if (!linkedReceipt) return plan;
+
+        const nextStatus: IRPlan['status'] =
+          linkedReceipt.deliveryPlanStatus === 'Posted' ||
+          linkedReceipt.processState === 'SAP_POSTED' ||
+          linkedReceipt.sapPostingStatus === 'Posted'
+            ? 'Completed'
+            : linkedReceipt.deliveryPlanStatus === 'To Receive'
+              ? 'Pending'
+              : 'In Progress';
+
+        if (plan.status === nextStatus) return plan;
+        hasChanges = true;
+        return { ...plan, status: nextStatus };
+      });
+
+      return hasChanges ? nextPlans : currentPlans;
+    });
+  }, [receipts]);
+
+  useEffect(() => {
+    setPurchaseOrders((currentPOs) => {
+      let hasChanges = false;
+      const nextPOs = currentPOs.map((po) => {
+        if (po.docStatus !== 'Closed') return po;
+
+        const linkedReceipts = receipts.filter(
+          (receipt) =>
+            !receipt.parentIrNumber &&
+            (
+            receipt.poNumber === po.poNumber ||
+            receipt.poReferences?.some((reference) => reference.poNumber === po.poNumber) ||
+            receipt.items?.some((item) => item.poNumber === po.poNumber)
+            ),
+        );
+        const isFullyReceived =
+          linkedReceipts.length > 0 &&
+          linkedReceipts.every(
+            (receipt) =>
+              receipt.deliveryPlanStatus === 'Posted' ||
+              receipt.processState === 'SAP_POSTED' ||
+              receipt.sapPostingStatus === 'Posted',
+          );
+
+        if (isFullyReceived) return po;
+        hasChanges = true;
+        return { ...po, docStatus: 'In Progress', status: 'In Progress' };
+      });
+
+      return hasChanges ? nextPOs : currentPOs;
+    });
+  }, [receipts]);
 
   // Selected sample transaction for deep dive
   const sampleGR = receipts.find((r) => r.grNumber === 'GR000124') || receipts[0];
 
   // Refresh handler
   const handleRefresh = () => {
-    message.success('Inbound data refreshed from central server.');
+    message.success('Local inbound demo data refreshed.');
+  };
+  const handleResetDemo = () => {
+    const snapshot = resetLocalInboundSnapshot();
+    setIrPlans(snapshot.irPlans);
+    setPurchaseOrders(snapshot.purchaseOrders);
+    setReceipts(snapshot.receipts);
+    setActiveRole('PROCUREMENT');
+    message.success('Inbound demo reset to the original 10 open POs.');
   };
 
   // Procurement: Create IR Plan
   const handleCreateIRPlan = (newPlan: IRPlan) => {
-    setIrPlans((prev) => [newPlan, ...prev]);
+    const scheduledDates = Array.from(
+      new Set(
+        newPlan.items.flatMap((item) =>
+          item.schedules
+            .filter((schedule) => (Number(schedule.plannedQty) || 0) > 0)
+            .map((schedule) => schedule.deliveryDate || newPlan.deliveryDate),
+        ),
+      ),
+    );
+
+    const plansByDate = (scheduledDates.length > 0 ? scheduledDates : [newPlan.deliveryDate]).map(
+      (deliveryDate, dateIndex) => {
+        const items = newPlan.items
+          .map((item) => {
+            const schedules = item.schedules.filter(
+              (schedule) =>
+                (Number(schedule.plannedQty) || 0) > 0 &&
+                (schedule.deliveryDate || newPlan.deliveryDate) === deliveryDate,
+            );
+            const allocatedQty = schedules.reduce(
+              (sum, schedule) => sum + (Number(schedule.plannedQty) || 0),
+              0,
+            );
+            return {
+              ...item,
+              allocatedQty,
+              remainingQty: Math.max(0, item.totalPoQty - allocatedQty),
+              schedules,
+            };
+          })
+          .filter((item) => item.allocatedQty > 0);
+
+        return {
+          ...newPlan,
+          id: `${newPlan.id}-${dateIndex + 1}`,
+          irPlanNumber: `IR${String(irPlans.length + dateIndex + 1).padStart(4, '0')}`,
+          deliveryPlanNumber:
+            scheduledDates.length > 1
+              ? `${newPlan.deliveryPlanNumber}-${dateIndex + 1}`
+              : newPlan.deliveryPlanNumber,
+          deliveryDate,
+          items,
+          totalItems: items.length,
+          totalPlannedQty: items.reduce((sum, item) => sum + item.allocatedQty, 0),
+        };
+      },
+    );
+
+    setIrPlans((prev) => [...plansByDate, ...prev]);
 
     // Update corresponding Purchase Orders and their items in state dynamically
-    const allActiveIRPlans = [newPlan, ...irPlans];
+    const allActiveIRPlans = [...plansByDate, ...irPlans];
     setPurchaseOrders((prev) =>
       prev.map((po) => {
-        if (newPlan.poNumbers.includes(po.poNumber)) {
+        if (plansByDate.some((plan) => plan.poNumbers.includes(po.poNumber))) {
           const updatedItems = (po.items || []).map((item) => {
             const allScheduledForThisItem = allActiveIRPlans
               .filter((plan) => plan.poNumbers?.includes(po.poNumber))
@@ -138,128 +262,116 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
             ...po,
             items: updatedItems,
             status: isFullyPlanned ? 'Fully Scheduled' : 'Partially Scheduled',
-            docStatus: isFullyPlanned ? 'Closed' : totalReceived > 0 ? 'In Progress' : po.docStatus,
+            docStatus: totalReceived > 0 ? 'In Progress' : po.docStatus,
           };
         }
         return po;
       })
     );
 
-    // Automatically create expected Goods Receipt for Warehouse
-    const newGR: GoodsReceipt = {
-      id: Date.now(),
-      grNumber: `GR${String(receipts.length + 125).padStart(6, '0')}`,
-      receivingNumber: `GR${String(receipts.length + 125).padStart(6, '0')}`,
-      businessUnit: 'OFL',
-      irPlanNumber: newPlan.irPlanNumber,
-      deliveryPlanNumber: newPlan.deliveryPlanNumber,
-      deliveryPlanStatus: 'To Receive',
-      poNumber: newPlan.poNumbers[0] || 'UNASSIGNED',
-      poReferences: newPlan.poNumbers.map((po) => ({
-        poNumber: po,
+    // Create one expected warehouse receipt for each IR date.
+    const newReceipts = plansByDate.map((plan, planIndex) => {
+      const timestamp = Date.now() + planIndex;
+      return {
+        id: timestamp,
+        grNumber: `GR${String(receipts.length + 125 + planIndex).padStart(6, '0')}`,
+        receivingNumber: `RCV${String(receipts.length + 125 + planIndex).padStart(6, '0')}`,
         businessUnit: 'OFL',
-        supplier: newPlan.vendor,
-        expectedDate: newPlan.deliveryDate,
-      })),
-      supplier: newPlan.vendor,
-      supplierNames: [newPlan.vendor],
-      receiptType: 'Planned',
-      receiptSourceType: 'PLANNED',
-      poLinkStatus: 'NOT_REQUIRED',
-      deliveryNoteNumber: `DN-${Date.now().toString().slice(-6)}`,
-      receiverWarehouseName: 'WHM1 - Main Raw Materials',
-      expectedDate: newPlan.deliveryDate,
-      postingDate: newPlan.deliveryDate,
-      actualReceiptDate: newPlan.deliveryDate,
-      status: 'Draft',
-      processState: 'RECEIVED_CHECKING',
-      displayStatus: 'Expected Delivery / To Receive',
-      legacyStatus: 'Draft',
-      createdBy: newPlan.createdBy,
-      createdDate: newPlan.createdAt,
-      specMatch: true,
-      qtyMatch: true,
-      qualityCheckRequired: true,
-      documentChecklist: {
-        vendorDN: true,
-        goodsReceiptPOForm: false,
-        pmrmStockCardForm: false,
-        supportingDocs: [],
-      },
-      scenario: {
-        scenarioId: 'sc-new',
-        scenarioName: 'New Scheduled Inbound',
-        scenarioPath: 'NORMAL',
-        stepNumber: 1,
-        totalSteps: 6,
-        stepTitle: 'Scheduled by Procurement',
-      },
-      activities: [
-        {
-          id: `act-init-${Date.now()}`,
-          title: 'IR Plan Confirmed by Procurement',
-          description: `Scheduled ${newPlan.totalPlannedQty.toLocaleString()} units across ${newPlan.items.length} items for PO #${newPlan.poNumbers.join(', ')}.`,
-          performedBy: newPlan.createdBy,
-          timestamp: newPlan.createdAt,
-          state: 'done',
+        irPlanNumber: plan.irPlanNumber,
+        deliveryPlanNumber: plan.deliveryPlanNumber,
+        deliveryPlanStatus: 'To Receive' as const,
+        poNumber: plan.poNumbers[0] || 'UNASSIGNED',
+        poReferences: plan.poNumbers.map((po) => ({
+          poNumber: po,
+          businessUnit: 'OFL',
+          supplier: plan.vendor,
+          expectedDate: plan.deliveryDate,
+        })),
+        supplier: plan.vendor,
+        supplierNames: [plan.vendor],
+        receiptType: 'Planned' as const,
+        receiptSourceType: 'PLANNED' as const,
+        poLinkStatus: 'NOT_REQUIRED' as const,
+        deliveryNoteNumber: plan.deliveryNoteNumber || `DN-${String(timestamp).slice(-6)}`,
+        deliveryNoteRemark: plan.deliveryNoteRemark || plan.notes,
+        actualArrivalDate: plan.deliveryNoteDate || plan.deliveryDate,
+        receiverWarehouseName: 'WHM1 - Main Raw Materials',
+        expectedDate: plan.deliveryDate,
+        postingDate: plan.deliveryDate,
+        actualReceiptDate: plan.deliveryDate,
+        status: 'Draft',
+        processState: 'STORED_ON_HOLD' as const,
+        displayStatus: 'Expected Delivery / To Receive',
+        legacyStatus: 'Draft' as const,
+        createdBy: plan.createdBy,
+        createdDate: plan.createdAt,
+        specMatch: true,
+        qtyMatch: true,
+        qualityCheckRequired: true,
+        documentChecklist: {
+          vendorDN: true,
+          goodsReceiptPOForm: false,
+          pmrmStockCardForm: false,
+          supportingDocs: (plan.attachments || []).map((att) => ({
+            fileName: att.name,
+            source: 'WAREHOUSE' as const,
+          })),
         },
-      ],
-      items: newPlan.items.flatMap((item, idx) => {
-        if (item.schedules && item.schedules.length > 0) {
-          return item.schedules.map((sched, sIdx) => ({
-            id: Date.now() + idx * 100 + sIdx,
-            code: item.itemCode,
-            name: item.itemName,
-            poNumber: item.poNumber,
-            supplier: newPlan.vendor,
-            uom: item.uom,
-            poQty: sched.plannedQty,
-            plannedQty: sched.plannedQty,
-            receiveQty: sched.plannedQty,
-            actualReceivedQty: sched.plannedQty,
-            deliveryDate: sched.deliveryDate,
-            batches: [
-              {
-                id: `b-init-${Date.now()}-${idx}-${sIdx}`,
-                batchNumber: `LOT-${item.itemCode.slice(-4)}-${Date.now().toString().slice(-3)}`,
-                batchQty: sched.plannedQty,
-                productionDate: dayjs().subtract(5, 'day').format('YYYY-MM-DD'),
-                expiryDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
-                bestBeforeDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
-                remark: `Scheduled for ${sched.deliveryDate || newPlan.deliveryDate}`,
-              },
-            ],
-          }));
-        }
-        return [
+        scenario: {
+          scenarioId: 'sc-new',
+          scenarioName: 'New Scheduled Inbound',
+          scenarioPath: 'NORMAL' as const,
+          stepNumber: 1,
+          totalSteps: 6,
+          stepTitle: 'Scheduled by Procurement',
+        },
+        activities: [
           {
-            id: Date.now() + idx,
+            id: `act-init-${timestamp}`,
+            title: 'IR Schedule Created',
+            description: `Scheduled ${formatQuantities(plan.items, i => i.schedules.reduce((sum, schedule) => sum + schedule.plannedQty, 0))} across ${plan.items.length} items for PO #${plan.poNumbers.join(', ')}.`,
+            performedBy: plan.createdBy || 'Procurement (Demo)',
+            timestamp: plan.createdAt,
+            state: 'done' as const,
+          },
+        ],
+        items: plan.items.flatMap((item, itemIndex) =>
+          item.schedules.map((schedule) => ({
+            id: timestamp + itemIndex,
             code: item.itemCode,
             name: item.itemName,
             poNumber: item.poNumber,
-            supplier: newPlan.vendor,
+            supplier: plan.vendor,
             uom: item.uom,
-            poQty: item.allocatedQty,
-            plannedQty: item.allocatedQty,
-            receiveQty: item.allocatedQty,
-            actualReceivedQty: item.allocatedQty,
+            poQty: schedule.plannedQty,
+            plannedQty: schedule.plannedQty,
+            receiveQty: schedule.plannedQty,
+            actualReceivedQty: schedule.plannedQty,
+            deliveryDate: schedule.deliveryDate,
             batches: [
               {
-                id: `b-init-${Date.now()}-${idx}`,
-                batchNumber: `LOT-${item.itemCode.slice(-4)}-${Date.now().toString().slice(-3)}`,
-                batchQty: item.allocatedQty,
+                id: `b-init-${timestamp}-${itemIndex}`,
+                batchNumber: `LOT-${item.itemCode.slice(-4)}-${String(timestamp).slice(-3)}`,
+                batchQty: schedule.plannedQty,
                 productionDate: dayjs().subtract(5, 'day').format('YYYY-MM-DD'),
                 expiryDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
                 bestBeforeDate: dayjs().add(2, 'year').format('YYYY-MM-DD'),
-                remark: 'Standard verified supplier batch',
+                remark: `Scheduled for ${schedule.deliveryDate || plan.deliveryDate}`,
               },
             ],
-          },
-        ];
-      }),
-    };
+          })),
+        ),
+      } as GoodsReceipt;
+    });
 
-    setReceipts((prev) => [newGR, ...prev]);
+    setReceipts((prev) => [...newReceipts, ...prev]);
+  };
+
+  const updateIRPlanStatus = (irPlanNumber: string | undefined, status: IRPlan['status']) => {
+    if (!irPlanNumber) return;
+    setIrPlans((prev) =>
+      prev.map((plan) => (plan.irPlanNumber === irPlanNumber ? { ...plan, status } : plan)),
+    );
   };
 
   // Warehouse: Save / Submit to QC
@@ -269,68 +381,30 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
       deliveryPlanStatus: 'Waiting for QC',
       processState: 'QC_PENDING',
       displayStatus: 'Under QC Inspection',
-      activities: [
-        ...(updatedGR.activities || []),
-        {
-          id: `act-wh-${Date.now()}`,
-          title: 'Warehouse Check-in & Unloading Complete',
-          description: `Received and verified ${updatedGR.items.reduce((s, i) => s + (i.receiveQty || 0), 0).toLocaleString()} units. Dispatched samples to Quality Control lab.`,
-          performedBy: 'Warehouse Team (Dara S.)',
-          timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
-          state: 'done',
-        },
-      ],
     };
 
     setReceipts((prev) => prev.map((r) => (r.grNumber === enrichedGR.grNumber ? enrichedGR : r)));
-
-    Modal.success({
-      title: 'Goods Received & Submitted to QC Lab',
-      content: (
-        <div>
-          <p>
-            Receipt <b>{enrichedGR.grNumber}</b> has been checked in and physical sample dispatched to QC Lab for chemical & visual testing.
-          </p>
-          <p style={{ color: '#64748b', fontSize: 13 }}>
-            Would you like to switch to the <b>QC Workspace</b> to perform the inspection?
-          </p>
-        </div>
-      ),
-      okText: 'Switch to QC Workspace',
-      cancelText: 'Stay in Warehouse',
-      okButtonProps: { style: { background: '#16a34a', borderColor: '#16a34a' } },
-      onOk: () => setActiveRole('QC'),
-    });
+    updateIRPlanStatus(enrichedGR.irPlanNumber, 'In Progress');
   };
 
   // QC: Submit Review to Supervisor
   const handleQCSubmitReview = (updatedGR: GoodsReceipt) => {
     const enrichedGR: GoodsReceipt = {
       ...updatedGR,
-      deliveryPlanStatus: 'QC Completed',
+      deliveryPlanStatus: 'Pending Supervisor',
       processState: 'PENDING_SUPERVISOR_REVIEW',
-      displayStatus: 'QC Passed - Pending Supervisor Approval',
-      activities: [
-        ...(updatedGR.activities || []),
-        {
-          id: `act-qc-${Date.now()}`,
-          title: 'QC Inspection Passed & Certificate Issued',
-          description: `All physical & analytical quality parameters passed specifications. Sent to Supervisor for final SAP GRPO posting.`,
-          performedBy: 'QC Specialist (Chanthy K.)',
-          timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
-          state: 'done',
-        },
-      ],
+      displayStatus: `${getQCQueueState(updatedGR).label} — Pending Supervisor Review`,
     };
 
     setReceipts((prev) => prev.map((r) => (r.grNumber === enrichedGR.grNumber ? enrichedGR : r)));
+    updateIRPlanStatus(enrichedGR.irPlanNumber, 'In Progress');
 
     Modal.success({
-      title: 'QC Inspection Passed & Released',
+      title: 'Inspection Submitted to Supervisor',
       content: (
         <div>
           <p>
-            Receipt <b>{enrichedGR.grNumber}</b> passed all quality parameters and is ready for Supervisor review & SAP GRPO Posting.
+            Receipt <b>{getReceiptIrNumber(enrichedGR)}</b> has an inspection result of <b>{getQCQueueState(updatedGR).label}</b> and is ready for Supervisor review.
           </p>
           <p style={{ color: '#64748b', fontSize: 13 }}>
             Would you like to switch to the <b>Supervisor Workspace</b> to approve and post to SAP?
@@ -354,34 +428,39 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
       displayStatus: 'Completed / Posted to SAP',
       sapDocNum: sapDoc,
       sapPostingStatus: 'Posted',
+      postingDate: dayjs().format('YYYY-MM-DD HH:mm'),
+      items: updatedGR.items.map(item => ({ ...item, sapPostedQty: item.sapPostedQty ?? getPostingQuantity(item) })),
       activities: [
         ...(updatedGR.activities || []),
         {
           id: `act-sup-${Date.now()}`,
-          title: 'Supervisor Approved & Posted to SAP B1',
-          description: `Goods Receipt PO Document #${sapDoc} posted to SAP B1. Stock released into Main Warehouse bin locations.`,
-          performedBy: 'Inbound Supervisor (Bopha N.)',
+          title: updatedGR.sapPostingStatus === 'Posting Failed' || updatedGR.processState === 'SAP_POSTING_FAILED' ? 'SAP Posting Retried — Posted' : 'Approved & Posted to SAP',
+          description: `Posted ${formatQuantities(updatedGR.items, item => item.sapPostedQty ?? getPostingQuantity(item))} to SAP GR #${sapDoc}.`,
+          performedBy: 'Supervisor (Demo)',
           timestamp: dayjs().format('YYYY-MM-DD HH:mm'),
           state: 'done',
         },
       ],
     };
 
-    setReceipts((prev) => prev.map((r) => (r.grNumber === enrichedGR.grNumber ? enrichedGR : r)));
+    setReceipts((prev) => [
+      ...createQCFollowUps(enrichedGR, prev),
+      ...prev.map((r) => (r.grNumber === enrichedGR.grNumber ? enrichedGR : r)),
+    ]);
+    updateIRPlanStatus(enrichedGR.irPlanNumber, 'Completed');
 
     // Synchronize Purchase Order state: Mark PO as Closed or update received quantity
-    const linkedPoNumbers = [
+    const linkedPoNumbers = Array.from(new Set([
       updatedGR.poNumber,
       ...(updatedGR.poReferences || []).map((p) => p.poNumber),
       ...(updatedGR.items || []).map((i) => i.poNumber).filter(Boolean),
-    ].filter(Boolean);
+    ].filter(Boolean)));
 
     setPurchaseOrders((prev) =>
       prev.map((po) => {
         if (linkedPoNumbers.includes(po.poNumber)) {
           const updatedItems = po.items.map((item) => {
-            const grItem = updatedGR.items.find((gi) => gi.code === item.code || gi.name === item.name);
-            const addedQty = grItem ? (grItem.sapPostedQty || grItem.receiveQty || grItem.actualReceivedQty || grItem.poQty || 0) : item.poQty;
+            const addedQty = getPostedQuantityForItem(updatedGR.items, po.poNumber, item.code, updatedGR.poNumber);
             const newReceived = Math.min(item.poQty, (item.receivedQty || 0) + addedQty);
             return {
               ...item,
@@ -408,17 +487,17 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
       content: (
         <div>
           <p>
-            Receipt <b>{enrichedGR.grNumber}</b> has been approved and posted to SAP as Document <b>{sapDoc}</b>.
+            Receipt <b>{getReceiptIrNumber(enrichedGR)}</b> has been approved and posted to SAP as Document <b>{sapDoc}</b>.
           </p>
           <p style={{ color: '#64748b', fontSize: 13 }}>
-            Linked Purchase Order(s) <b>{linkedPoNumbers.join(', ')}</b> have been updated to <b>Closed / Completed</b> in Procurement.
+            Linked Purchase Order(s) <b>{linkedPoNumbers.join(', ')}</b> have been updated with the posted quantities in Procurement.
           </p>
         </div>
       ),
-      okText: 'View in Audit Trail',
+      okText: 'Back to Supervisor',
       cancelText: 'Stay in Supervisor',
-      okButtonProps: { style: { background: '#059669', borderColor: '#059669' } },
-      onOk: () => setActiveRole('AUDIT_TIMELINE'),
+      okButtonProps: { style: { background: '#B49A00', borderColor: '#B49A00' } },
+      onOk: () => setActiveRole('SUPERVISOR'),
     });
   };
 
@@ -429,6 +508,7 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
     reason: string,
   ) => {
     setReceipts((prev) => prev.map((r) => (r.grNumber === updatedGR.grNumber ? updatedGR : r)));
+    updateIRPlanStatus(updatedGR.irPlanNumber, 'In Progress');
   };
 
   // Supervisor: Adjust GR
@@ -437,33 +517,44 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
     adjustment: SupervisorAdjustmentAudit,
   ) => {
     setReceipts((prev) => prev.map((r) => (r.grNumber === updatedGR.grNumber ? updatedGR : r)));
+    updateIRPlanStatus(updatedGR.irPlanNumber, 'In Progress');
   };
 
   // Supervisor: Manual SAP Sync
   const handleSupervisorManualSync = (updatedGR: GoodsReceipt, sapDocNum: string) => {
-    setReceipts((prev) => prev.map((r) => (r.grNumber === updatedGR.grNumber ? updatedGR : r)));
+    setReceipts((prev) => [
+      ...createQCFollowUps(updatedGR, prev),
+      ...prev.map((r) => (r.grNumber === updatedGR.grNumber ? updatedGR : r)),
+    ]);
+    updateIRPlanStatus(updatedGR.irPlanNumber, 'Completed');
 
-    // Synchronize Purchase Order state: Mark PO as Closed
-    const linkedPoNumbers = [
+    // Synchronize only the PO items included in this receipt.
+    const linkedPoNumbers = Array.from(new Set([
       updatedGR.poNumber,
       ...(updatedGR.poReferences || []).map((p) => p.poNumber),
       ...(updatedGR.items || []).map((i) => i.poNumber).filter(Boolean),
-    ].filter(Boolean);
+    ].filter(Boolean)));
 
     setPurchaseOrders((prev) =>
       prev.map((po) => {
         if (linkedPoNumbers.includes(po.poNumber)) {
-          const updatedItems = po.items.map((item) => ({
-            ...item,
-            receivedQty: item.poQty,
-            remainingQty: 0,
-          }));
+          const updatedItems = po.items.map((item) => {
+            const addedQty = getPostedQuantityForItem(updatedGR.items, po.poNumber, item.code, updatedGR.poNumber);
+
+            return {
+              ...item,
+              receivedQty: Math.min(item.poQty, (item.receivedQty ?? 0) + addedQty),
+              remainingQty: Math.max(0, item.poQty - (item.receivedQty ?? 0) - addedQty),
+            };
+          });
+
+          const isFullyReceived = updatedItems.every((item) => item.receivedQty >= item.poQty);
 
           return {
             ...po,
             items: updatedItems,
-            docStatus: 'Closed',
-            status: 'Closed',
+            docStatus: isFullyReceived ? 'Closed' : 'In Progress',
+            status: isFullyReceived ? 'Closed' : 'In Progress',
           };
         }
         return po;
@@ -505,7 +596,7 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
           <Dropdown
             menu={{
               selectedKeys: [activeRole],
-              items: ROLE_OPTIONS.map((opt) => ({
+              items: ROLE_OPTIONS.filter(opt => SHOW_GLOBAL_AUDIT_TRAIL || opt.value !== 'AUDIT_TIMELINE').map((opt) => ({
                 key: opt.value,
                 label: (
                   <div
@@ -593,7 +684,8 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
           receipts={receipts}
           onCreateIRPlan={handleCreateIRPlan}
           onRefresh={handleRefresh}
-          onNavigateToRole={(role) => setActiveRole(role)}
+            onResetDemo={handleResetDemo}
+          onNavigateToRole={(role) => { if (SHOW_GLOBAL_AUDIT_TRAIL || role !== 'AUDIT_TIMELINE') setActiveRole(role); }}
         />
       )}
 
@@ -601,10 +693,18 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
         <WarehouseWorkspace
           receipts={receipts}
           irPlans={irPlans}
-          onSaveGR={(gr) => setReceipts((p) => [gr, ...p])}
+          onSaveGR={(gr) => {
+            setReceipts((prev) => {
+              const exists = prev.some((r) => r.grNumber === gr.grNumber || r.id === gr.id);
+              if (exists) {
+                return prev.map((r) => (r.grNumber === gr.grNumber || r.id === gr.id ? gr : r));
+              }
+              return [gr, ...prev];
+            });
+          }}
           onSubmitToQC={handleWarehouseSubmitToQC}
           onRefresh={handleRefresh}
-          onNavigateToRole={(role) => setActiveRole(role)}
+          onNavigateToRole={(role) => { if (SHOW_GLOBAL_AUDIT_TRAIL || role !== 'AUDIT_TIMELINE') setActiveRole(role); }}
         />
       )}
 
@@ -613,7 +713,7 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
           receipts={receipts}
           onSubmitQCReview={handleQCSubmitReview}
           onRefresh={handleRefresh}
-          onNavigateToRole={(role) => setActiveRole(role)}
+          onNavigateToRole={(role) => { if (SHOW_GLOBAL_AUDIT_TRAIL || role !== 'AUDIT_TIMELINE') setActiveRole(role); }}
         />
       )}
 
@@ -626,11 +726,11 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
           onRetrySAPPosting={handleSupervisorApproveAndPost}
           onManualSAPSync={handleSupervisorManualSync}
           onRefresh={handleRefresh}
-          onNavigateToRole={(role) => setActiveRole(role)}
+          onNavigateToRole={(role) => { if (SHOW_GLOBAL_AUDIT_TRAIL || role !== 'AUDIT_TIMELINE') setActiveRole(role); }}
         />
       )}
 
-      {activeRole === 'AUDIT_TIMELINE' && (
+      {SHOW_GLOBAL_AUDIT_TRAIL && activeRole === 'AUDIT_TIMELINE' && (
         <AuditTrailWorkspace
           receipts={receipts}
           irPlans={irPlans}
@@ -640,7 +740,7 @@ export default function InboundListview({ routeView }: { routeView?: string }) {
 
       {activeRole === 'USER_FLOW' && (
         <UserFlowWorkspace
-          onNavigateToRole={(role) => setActiveRole(role)}
+          onNavigateToRole={(role) => { if (SHOW_GLOBAL_AUDIT_TRAIL || role !== 'AUDIT_TIMELINE') setActiveRole(role); }}
         />
       )}
     </div>
